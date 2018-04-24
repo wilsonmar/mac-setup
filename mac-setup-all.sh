@@ -191,7 +191,7 @@ brew analytics off  # see https://github.com/Homebrew/brew/blob/master/docs/Anal
 function BREW_PKG_INSTALL() {
   local category="$1"  # sample: "DATA_TOOLS"
   local package="$2"   # sample: "mysql"
-#  local apppath="$3"   # sample: "/usr/local/bin"
+  local versions="$3"   # sample: "brew"
 
    fancy_echo "BREW_PKG_INSTALL $category $package ..." >>$LOGFILE
    if ! command -v "$package" >/dev/null; then
@@ -209,7 +209,13 @@ function BREW_PKG_INSTALL() {
          brew remove $package
       fi
    fi
-   # echo "BREW_PKG_INSTALL $($package -v)" >>$LOGFILE
+   if ["$versions" == "--version"]; then
+      echo "BREW_PKG_INSTALL $($package --version)" >>$LOGFILE   
+   elif ["$versions" == "-v"]; then
+      echo "BREW_PKG_INSTALL $($package -v)" >>$LOGFILE   
+   elif ["$versions" == "brew"]; then
+      echo "BREW_PKG_INSTALL $(brew info $package | grep "$package:")" >>$LOGFILE
+   fi
 }
 
 function brew_cask_install() {
@@ -359,6 +365,7 @@ else
    echo "MEANJS_PORT=$MEANJS_PORT" >>$LOGFILE
    echo "MINIKUBE_PORT=$MINKUBE_PORT" >>$LOGFILE
    echo "NEO4J_PORT=$NEO4J_PORT" >>$LOGFILE
+   echo "NEXUS_PORT=$NEXUS_PORT" >>$LOGFILE
    echo "NGINX_PORT=$NGINX_PORT" >>$LOGFILE
    echo "POSTGRESQL_PORT=$POSTGRESQL_PORT" >>$LOGFILE
    echo "PROMETHEUS_PORT=$PROMETHEUS_PORT" >>$LOGFILE
@@ -2557,6 +2564,66 @@ else
 fi
 
 
+function REDIS_INSTALL() {
+      # http://redis.io/
+   if ! command -v redis >/dev/null 2>/dev/null; then 
+      fancy_echo "DATA_TOOLS redis installing ..."
+      brew install redis
+         brew info redis >>$LOGFILE 
+         brew list redis >>$LOGFILE
+   else
+      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
+         fancy_echo "DATA_TOOLS redis upgrading ..."
+         redis-cli --version
+         brew upgrade redis
+      elif [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+         brew remove redis
+         rm ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
+         exit
+      fi
+   fi
+   fancy_echo "$(redis-cli --version)" >>$LOGFILE  # redis-cli 4.0.9
+
+   echo "DATA_TOOLS redis config ..."
+   if [ ! -z "$REDIS_PORT" ]; then # fall-back if not set in secrets.sh:
+      REDIS_PORT="6379"  # default
+   fi
+   if grep -q "port 6379" "/usr/local/etc/redis.conf" ; then    
+      sed -i "s/port 6379/port $REDIS_PORT/g" /usr/local/etc/redis.conf
+   fi
+   #ULIMIT_SET
+}
+if [[ "${DATA_TOOLS,,}" == *"redis"* ]]; then
+   REDIS_INSTALL
+   if [[ "${TRYOUT,,}" == *"redis"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      if grep -q "$(redis-cli ping)" "PONG" ; then    
+         echo "DATA_TOOLS redis started ..."
+         # but connection may be terminated.
+      else
+         echo "DATA_TOOLS redis starting in background ..."
+         /usr/local/opt/redis/bin/redis-server /usr/local/etc/redis.conf &
+         open "http://localhost:$REDIS_PORT/"
+      fi
+   else
+      fancy_echo "DATA_TOOLS redis TRYOUT not specified." >>$LOGFILE
+   fi
+
+   if [[ "$TRYOUT_KEEP" != *"redis"* ]]; then # not specified, so it's gone:
+      echo "DATA_TOOLS redis stopping ..." >>$LOGFILE
+      redis-cli shutdown
+   else
+      PID="$(ps x | grep -m1 '/redis-server' | grep -v "grep" | awk '{print $1}')"
+      echo "DATA_TOOLS redis still running on PID=$PID." >>$LOGFILE
+      # redis-cli --help
+         # Usage: redis { console | start | stop | restart | status | version }
+   fi
+else
+      fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
+fi
+
+
+
+
 function POSTGRESQL_INSTALL() {
 
    # https://www.postgresql.org/download/macosx/  from EnterpriseDB
@@ -2745,10 +2812,52 @@ ANSWERS
 fi
 
 
+function NEXUS_INSTALL() {
+   BREW_PKG_INSTALL "DATA_TOOLS" "nexus" "brew"
+
+   # See https://help.sonatype.com/repomanager3/installation/configuring-the-runtime-environment#ConfiguringtheRuntimeEnvironment-ChangingtheHTTPPort
+   echo "DATA_TOOLS NEXUS_PORT config ..."
+   if [ ! -z "$NEXUS_PORT" ]; then # fall-back if not set in secrets.sh:
+      NEXUS_PORT="8081"  # default
+   fi
+   NEXUS_CONF="$data-dir/etc/nexus.properties"
+   if grep -q "application-port=8081" "$NEXUS_CONF" ; then    
+      sed -i "s/application-port=8081/application-port=$NEXUS_PORT/g" "$NEXUS_CONF"
+   fi
+}
+if [[ "${DATA_TOOLS,,}" == *"nexus"* ]]; then
+   NEXUS_INSTALL
+   if [[ "${TRYOUT,,}" == *"nexus"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      RESPONSE="$(nexus status)" # example: Nexus OSS is running (13756).
+      if grep -q "$(nexus status)" "Nexus OSS is not running." ; then 
+         echo "DATA_TOOLS nexus starting on port $NEXUS_PORT in background ..."
+         nexus start
+         open "http://localhost:$NEXUS_PORT/"
+      else
+         echo "DATA_TOOLS $RESPONSE ..."
+      fi
+   else
+      fancy_echo "DATA_TOOLS nexus TRYOUT not specified." >>$LOGFILE
+   fi
+
+   if [[ "$TRYOUT_KEEP" != *"nexus"* ]]; then # not specified, so it's gone:
+      echo "DATA_TOOLS nexus stopping ..." >>$LOGFILE
+      nexus stop
+   else
+      PID="$(ps x | grep -m1 '/nexus' | grep -v "grep" | awk '{print $1}')"
+      echo "DATA_TOOLS nexus still running on PID=$PID." >>$LOGFILE
+      # nexus
+         # Usage: nexus { console | start | stop | restart | status | version }
+   fi
+else
+      fancy_echo "DATA_TOOLS nexus not specified." >>$LOGFILE
+fi
+
+
 function MYSQL_INSTALL() {
 
    # NOT https://dev.mysql.com/doc/refman/5.6/en/osx-installation-pkg.html
-   BREW_PKG_INSTALL "DATA_TOOLS" "mysql"
+   BREW_PKG_INSTALL "DATA_TOOLS" "mysql" "--version"
    #fancy_echo "$(mysql --version)" >>$LOGFILE  # mysql-cli 4.0.9
 
    # To avoid MySQL stupid error:
@@ -2809,7 +2918,7 @@ function SONAR_INSTALL(){
    # Required: java >= 1.8   
    fancy_echo "SONAR_INSTALL" >>$LOGFILE  # sonar 3.3.4
 
-   BREW_PKG_INSTALL "DATA_TOOLS" "sonar"  # /usr/local/bin/sonar
+   BREW_PKG_INSTALL "DATA_TOOLS" "sonar" "brew" # /usr/local/bin/sonar
                           # linked from /usr/local/Cellar/sonarqube/7.1/bin/sonar
    
    SONAR_CONF="/usr/local/opt/sonarqube/libexec/conf/sonar.properties"
@@ -2823,7 +2932,7 @@ function SONAR_INSTALL(){
 
    # https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner
    # https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner#AnalyzingwithSonarQubeScanner-Installation
-   BREW_PKG_INSTALL "DATA_TOOLS" "sonar-scanner" # previously sonar-runner 
+   BREW_PKG_INSTALL "DATA_TOOLS" "sonar-scanner" "-v" # previously sonar-runner 
 
 }
 if [[ "${TEST_TOOLS,,}" == *"sonar"* ]]; then
