@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+# post-checkout hook
+import argparse
+def parse_args():
+  pass
+def main(args=None):
+  print("Hello from commit-msg.")
+  pass
+if __name__ == "__main__":
+  args = parse_args()
+main(args)
+# exit 0

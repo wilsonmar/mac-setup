@@ -1,0 +1,10 @@
+#!/bin/sh
+# prepare-commit-msg
+
+COMMIT_MSG_FILE=$1  # ".git/COMMIT_EDITMSG"
+#COMMIT_SOURCE=$2    # "message"
+#SHA1=$3             # ?
+echo "prepare-commit-msg: $(cat $COMMIT_MSG_FILE)"
+echo "    branch=$(git rev-parse --abbrev-ref HEAD) in $(basename $(git rev-parse --show-toplevel))"
+# SHA1=$SHA1" 
+exit 0  # OK
