@@ -385,9 +385,11 @@ else
    echo "VIZ_TOOLS=$VIZ_TOOLS" >>$LOGFILE
    echo "LOCALHOSTS=$LOCALHOSTS" >>$LOGFILE
 
+   echo "ELASTIC_PORT=$ELASTIC_PORT" >>$LOGFILE
    echo "GRAFANA_PORT=$GRAFANA_PORT" >>$LOGFILE
    echo "JEKYLL_PORT=$JEKYLL_PORT" >>$LOGFILE
    echo "JENKINS_PORT=$JENKINS_PORT" >>$LOGFILE
+   echo "KIBANA_PORT=$KIBANA_PORT" >>$LOGFILE
    echo "MYSQL_PORT=$MYSQL_PORT" >>$LOGFILE
    echo "MEANJS_PORT=$MEANJS_PORT" >>$LOGFILE
    echo "MINIKUBE_PORT=$MINKUBE_PORT" >>$LOGFILE
@@ -408,7 +410,7 @@ else
         # TODO: Artifactory, Jira, 
    echo "MEDIA_TOOLS=$MEDIA_TOOLS" >>$LOGFILE
 
-fi 
+fi
 
 
 ######### MacOS hidden files configuration:
@@ -622,7 +624,7 @@ if [[ "${MAC_TOOLS,,}" == *"alfred"* ]]; then
    fi
    # Buy the $19 https://www.alfredapp.com/powerpack/
 else
-      fancy_echo "MAC_TOOLS Alfred not specified." >>$LOGFILE
+   fancy_echo "MAC_TOOLS Alfred not specified." >>$LOGFILE
 fi
 
 
@@ -2758,6 +2760,82 @@ if [[ "${DATA_TOOLS,,}" == *"others"* ]]; then
 # See http://zmjones.com/mac-setup/
 fi
  
+if [[ "${DATA_TOOLS,,}" == *"elastic"* ]]; then
+   # https://logz.io/blog/elk-mac/?aliId=12015968
+   # http://www.elasticsearchtutorial.com/elasticsearch-in-5-minutes.html
+   JAVA_INSTALL
+   BREW_INSTALL "DATA_TOOLS" "elasticsearch" "brew"
+   BREW_INSTALL "DATA_TOOLS" "logstash" "brew"
+   BREW_INSTALL "DATA_TOOLS" "kibana" "brew"  # old?
+
+   echo "DATA_TOOLS elasticsearch ELASTIC_PORT config ..."
+   if [ ! -z "$ELASTIC_PORT" ]; then # fall-back if not set in secrets.sh:
+      ELASTIC_PORT="9200"  # default 9200
+   fi
+   if grep -q "http.port: 9200" "/usr/local/etc/elasticsearch/elasticsearch.yml" ; then    
+      sed -i "s/#http.port: 9200/http.port: $ELASTIC_PORT/g" \
+         /usr/local/etc/elasticsearch/elasticsearch.yml
+   fi
+
+   if [ ! -z "$KIBANA_PORT" ]; then # fall-back if not set in secrets.sh:
+      KIBANA_PORT="5601"  # default 5601
+   fi
+   if grep -q "port 5601" "/usr/local/etc/kibana/kibana.yml" ; then    
+      sed -i "s/#server.port: 5601/server.port: $KIBANA_PORT/g" \
+         /usr/local/etc/kibana/kibana.yml
+   fi
+   if grep -q "port 5601" "/etc/logstash/conf.d/syslog.conf" ; then    
+      sed -i "s/#server.port: 5601/server.port: $KIBANA_PORT/g" \
+         /etc/logstash/conf.d/syslog.conf  # the server being monitored.
+   fi
+   # Add Elasticsearch indices in Kibana.
+   # /usr/local/opt/kibana/plugins 
+
+   # X-Packs for Kibana and Logstash are for subscribers.
+   # https://www.elastic.co/guide/en/beats/libbeat/6.2/installing-beats.html
+   # Packetbeat, Metricbeat, Filebeat, Winlogbeat, Heartbeat 
+
+   # https://www.elastic.co/guide/en/kibana/6.x/tutorial-load-dataset.html
+   # https://www.elastic.co/guide/en/elasticsearch/reference/6.x/mapping.html
+   #curl -H 'Content-Type: application/x-ndjson' -XPOST 'localhost:9200/bank/account/_bulk?pretty' --data-binary @accounts.json
+   #curl -H 'Content-Type: application/x-ndjson' -XPOST 'localhost:9200/shakespeare/doc/_bulk?pretty' --data-binary @shakespeare_6.0.json
+   #curl -H 'Content-Type: application/x-ndjson' -XPOST 'localhost:9200/_bulk?pretty' --data-binary @logs.jsonl
+
+   # GET /_cat/indices?v
+
+   if [[ "${TRYOUT,,}" == *"elastic"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "DATA_TOOLS elasticsearch starting ..." >>$LOGFILE
+      brew services start elasticsearch
+      curl "http://localhost:$ELASTIC_PORT" >>$LOGFILE
+
+      brew services start logstash
+      brew services start kibana      
+      open "http://localhost:$KIBANA_PORT/status" # Kibana 
+      brew services list
+
+      #open "http://localhost:&ELASTIC_PORT/_search?pretty"
+      #open "http://localhost:&ELASTIC_PORT/_cat/indices?v"
+      #open "http://localhost:&ELASTIC_PORT/app/kibana#/home?_g=()"
+      #open "http://localhost:&ELASTIC_PORT/filebeat-*/_search?pretty'"
+
+      # tail -f "/usr/local/var/log/elasticsearch/elasticsearch_$MAC_USERID.log"
+
+      if [[ "${TRYOUT_KEEP,,}" == *"elastic"* ]]; then
+         echo "TEST_TOOLS elastic TRYOUT_KEEP ..."
+         brew services stop elasticsearch
+         brew services stop logstash
+         brew services stop kibana      
+         brew services list
+      else
+         fancy_echo "TRYOUT_KEEP elastic running ..."
+      fi
+   else
+      fancy_echo "TRYOUT elastic not specified ..."
+   fi
+else
+   fancy_echo "DATA_TOOLS elasticsearch not specified." >>$LOGFILE
+fi
+
 
 ######### Node language:
 
