@@ -15,16 +15,19 @@ comments: true
 
 The tagline of this repo is "Automatically install and configure the dozens of programs that a developer needs to work offline as a developer of several stacks on a Mac."
 
-This script was created to help people cope with the large number of apps needed to be a "full stack" developer today. This installs several stacks with sample repositories: 
+This script was created to help you cope with the large number of apps needed to be a "full stack" developer today. This installs several stacks with sample repositories: 
  
    * MEAN (MongoDB, Express, Angular, NodeJs) with the MeanJs sample app
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
-   * Python, etc.
+   * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)
+   * etc.
 
-Most tutorials on each of the above have you <strong>manually type</strong> or copy and paste commands, which can take hours, and be error-prone.
+Most tutorials on have you <strong>manually type</strong> or copy and paste commands (often with missing steps), which can take hours, and be error-prone. And don't get me started on webinars with demos that brags rather than teach.
 
-You will benefit most if you configure a <strong>new</strong> laptop for yourself or for other developers joining your organization. You'll skip wasted days installing everything one at a time (and doing it differently than colleagues).
+> This script cuts through all that b.s. by running on your Mac and displaying on your screen.
+
+You will benefit most from this if you configure a <strong>new</strong> laptop for yourself or for other developers joining your organization. You'll skip wasted days installing everything one at a time (and doing it differently than colleagues).
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.
 
 But this script helps with updates too. You can, but don't have to, start from scratch. 
@@ -33,22 +36,27 @@ Although you may use Apple's Time Machine app to backup everything to a USB driv
 This bash script enables you to <strong>work offline</strong> by installing several servers. You manage allocation of port numbers in one place:
 
    <pre>
-     GRAFANA_PORT="8089"    # VIZ_TOOLS from default 8080
-     JEKYLL_PORT="4000"     # from default 4000
-     JENKINS_PORT="8088"    # LOCALHOSTS from default 8080
-     MYSQL_PORT="3060"      # DATA_TOOLS default 3060
-     MEANJS_PORT="3000"     # from default 3000
-     MINIKUBE_PORT="8083"   # from default 8080
-     NEO4J_PORT="7474"      # DATA_TOOL default 7474 HTTPS: 7473
-     NGINX_PORT="8086"      # LOCALHOSTS from default 8080
-     POSTGRESQL_PORT="5432" # DATA_TOOLS default 5432
-     PROMETHEUS_PORT="9090" # MON_TOOLS default 9090
-     REDIS_PORT="6379"      # DATA_TOOLS default 6379
-     SONAR_PORT="9000"      # DATA_TOOLS default 9000
-     TOMCAT_PORT="8087"     # LOCALHOSTS from default 8080
+   ELASTIC_PORT="9200"    # DATA_TOOLS from default 9200
+   GRAFANA_PORT="8089"    # VIZ_TOOLS from default 8080
+   JEKYLL_PORT="4000"     # from default 4000
+   JENKINS_PORT="8088"    # LOCALHOSTS from default 8080
+   KIBANA_PORT="5601"     # DATA_TOOLS default 5601
+   MYSQL_PORT="3060"      # DATA_TOOLS default 3060
+   MEANJS_PORT="3000"     # from default 3000
+   MINIKUBE_PORT="8083"   # from default 8080
+   NEO4J_PORT="7474"      # DATA_TOOL default 7474 HTTPS: 7473
+   NGINX_PORT="8086"      # LOCALHOSTS from default 8080
+   PACT_PORT="6666"       # TEST_TOOLS from default 6666
+   POSTGRESQL_PORT="5432" # DATA_TOOLS default 5432
+   PROMETHEUS_PORT="9090" # MON_TOOLS default 9090
+   REDIS_PORT="6379"      # DATA_TOOLS default 6379
+   SONAR_PORT="9000"      # DATA_TOOLS default 9000
+   TOMCAT_PORT="8087"     # LOCALHOSTS from default 8080
    </pre>
 
-You specify which port numbers and apps you want by editing the <strong>secrets.sh</strong> file in this repo.
+The above are fron the <strong>secrets.sh</strong> file in your $HOME folder, which
+you edit to specify which port numbers and the keywords for apps you want installed.
+Apps belong to a category:
 
 * MAC_TOOLS mas, Ansible, 1Password, PowerShell, Kindle, etc.
 * EDITORS Atom, Code, Eclipse, Emacs, IntelliJ, Macvim, STS, Sublime, Textmate, vim

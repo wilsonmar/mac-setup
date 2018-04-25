@@ -2766,10 +2766,11 @@ if [[ "${DATA_TOOLS,,}" == *"elastic"* ]]; then
    # https://logz.io/blog/elk-mac/?aliId=12015968
    # http://www.elasticsearchtutorial.com/elasticsearch-in-5-minutes.html
    JAVA_INSTALL
+
    BREW_INSTALL "DATA_TOOLS" "elasticsearch" "brew"
    BREW_INSTALL "DATA_TOOLS" "logstash" "brew"
    BREW_INSTALL "DATA_TOOLS" "kibana" "brew"  # old?
-exit
+
    echo "DATA_TOOLS elasticsearch ELASTIC_PORT config ..."
    if [ ! -z "$ELASTIC_PORT" ]; then # fall-back if not set in secrets.sh:
       ELASTIC_PORT="9200"  # default 9200
@@ -2814,7 +2815,8 @@ exit
       brew services start kibana      
       open "http://localhost:$KIBANA_PORT/status" # Kibana 
       brew services list
-
+      
+      #open "http://localhost:&ELASTIC_PORT/status#?_g=()"
       #open "http://localhost:&ELASTIC_PORT/_search?pretty"
       #open "http://localhost:&ELASTIC_PORT/_cat/indices?v"
       #open "http://localhost:&ELASTIC_PORT/app/kibana#/home?_g=()"
@@ -3204,7 +3206,6 @@ if [[ "$JAVA_TOOLS" == *"junit4"* ]]; then
    # 
 fi
 
-
 if [[ "$JAVA_TOOLS" == *"junit5"* ]]; then
    # junit5 reached 2nd GA February 18, 2018 https://junit.org/junit5/docs/current/user-guide/
    # http://junit.org/junit4/
@@ -3403,6 +3404,10 @@ fi
 if [[ "$MON_TOOLS" == *"jprofiler"* ]]; then
    JAVA_INSTALL
    BREW_CASK_INSTALL "MON_TOOLS" "jprofiler" "JProfiler"
+
+      # Creates $HOME/.jprofiler10/config.xml containing the license key.
+      # https://www.ej-technologies.com/resources/jprofiler/help/doc/#jprofiler.offline
+
    if [[ "${TRYOUT,,}" == *"jprofiler"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       open -a "/Applications/JProfiler.app" &
       # jprofiler &
@@ -4823,8 +4828,6 @@ fi
 
 if [[ "${MON_TOOLS,,}" == *"others"* ]]; then
    fancy_echo "MON_TOOLS=$MON_TOOLS" >>$LOGFILE
-# Kibana (with ElasticSearch)
-# Elastic Stack Logstash
 # Dynatrace agent
 # Open Tracing (Cloud Native)
 # AppDynamics agent
@@ -4895,8 +4898,6 @@ fi
 
 if [[ "${VIZ_TOOLS,,}" == *"others"* ]]; then
    fancy_echo "VIZ_TOOLS=$VIZ_TOOLS" >>$LOGFILE
-   # kibana
-   # gafana
 fi
 
 
@@ -4914,7 +4915,7 @@ if [[ "${COLAB_TOOLS,,}" == *"discord"* ]]; then
    # https://discordapp.com/
    BREW_CASK_INSTALL "COLAB_TOOLS" "discord" "Discord" 
    if [[ "${TRYOUT,,}" == *"discord"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS discord starting ..."
+      fancy_echo "COLAB_TOOLS discord starting ..."
       open -a "/Applications/Discord.app" &
    fi
 else
@@ -4924,7 +4925,7 @@ fi
 if [[ "${COLAB_TOOLS,,}" == *"hangouts"* ]]; then
    BREW_CASK_INSTALL "COLAB_TOOLS" "google-hangouts" "Google Hangouts" 
    if [[ "${TRYOUT,,}" == *"google-hangouts"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS google-hangouts starting ..."
+      fancy_echo "COLAB_TOOLS google-hangouts starting ..."
       open -a "/Applications/Google Hangouts.app" &
    fi
 else
@@ -4934,7 +4935,7 @@ fi
 if [[ "${COLAB_TOOLS,,}" == *"hipchat"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "hipchat" "Hipchat"
    if [[ "${TRYOUT,,}" == *"hipchat"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS hipchat starting ..."
+      fancy_echo "COLAB_TOOLS hipchat starting ..."
       open -a "/Applications/Hipchat.app" &
    fi
 else
@@ -4944,7 +4945,7 @@ fi
 if [[ "${COLAB_TOOLS,,}" == *"joinme"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "joinme" "Join me"
    if [[ "${TRYOUT,,}" == *"joinme"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS joinme starting ..."
+      fancy_echo "COLAB_TOOLS joinme starting ..."
       open -a "/Applications/Join me.app" &
    fi
 else
@@ -4953,7 +4954,7 @@ fi
 if [[ "${COLAB_TOOLS,,}" == *"keybase"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "keybase" "Keybase"
    if [[ "${TRYOUT,,}" == *"keybase"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS keybase starting ..."
+      fancy_echo "COLAB_TOOLS keybase starting ..."
       open -a "/Applications/Keybase.app" &
    fi
 else
@@ -4962,7 +4963,7 @@ fi
 if [[ "${COLAB_TOOLS,,}" == *"skype"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "skype" "Skype"
    if [[ "${TRYOUT,,}" == *"skype"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS skype starting ..."
+      fancy_echo "COLAB_TOOLS skype starting ..."
       open -a "/Applications/Skype.app" &
    fi
 else
@@ -4974,7 +4975,7 @@ fi
 if [[ "${COLAB_TOOLS,,}" == *"slack"* ]]; then
    BREW_CASK_INSTALL "COLAB_TOOLS" "slack" "Slack"
    if [[ "${TRYOUT,,}" == *"slack"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS slack starting ..."
+      fancy_echo "COLAB_TOOLS slack starting ..."
       open -a "/Applications/Slack.app" &
    fi
 else
@@ -4983,7 +4984,7 @@ fi
 if [[ "${COLAB_TOOLS,,}" == *"sococo"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "sococo" "Sococo"
    if [[ "${TRYOUT,,}" == *"sococo"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS sococo starting ..."
+      fancy_echo "COLAB_TOOLS sococo starting ..."
       open -a "/Applications/Sococo.app" &
    fi
 else
@@ -4999,7 +5000,7 @@ if [[ "${COLAB_TOOLS,,}" == *"teamviewer"* ]]; then
       fi
 
    if [[ "${TRYOUT,,}" == *"teamviewer"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS teamviewer starting ..."
+      fancy_echo "COLAB_TOOLS teamviewer starting ..."
       open -a "/Applications/Teamviewer.app" &
    fi
 else
@@ -5008,7 +5009,7 @@ fi
 if [[ "${COLAB_TOOLS,,}" == *"whatsapp"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "whatsapp" "Whatsapp"
    if [[ "${TRYOUT,,}" == *"whatsapp"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "EDITORS whatsapp starting ..."
+      fancy_echo "COLAB_TOOLS whatsapp starting ..."
       open -a "/Applications/Whatsapp.app" &
    fi
 else
