@@ -22,7 +22,7 @@ This script was created to help people cope with the large number of apps needed
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
    * Python, etc.
 
-Most tutorials on each of the above have you manually type or copy and paste commands, which can take hours, and be error-prone.
+Most tutorials on each of the above have you <strong>manually type</strong> or copy and paste commands, which can take hours, and be error-prone.
 
 You will benefit most if you configure a <strong>new</strong> laptop for yourself or for other developers joining your organization. You'll skip wasted days installing everything one at a time (and doing it differently than colleagues).
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.

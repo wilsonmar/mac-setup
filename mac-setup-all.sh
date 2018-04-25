@@ -116,6 +116,9 @@ else
 fi
 
 function BASHFILE_EXPORT() {
+
+   # example: BASHFILE_EXPORT "gitup" "open -a /Applications/GitUp.app"
+
    name=$1
    value=$2
 
@@ -123,11 +126,12 @@ function BASHFILE_EXPORT() {
       fancy_echo "$name alias already in $BASHFILE" >>$LOGFILE
    else
       fancy_echo "Adding $name in $BASHFILE..."
-                  "$name='$value'" 
+      # Do it now:
+           "export $name=$value" 
+      # For after a Terminal is started:
       echo "export $name='$value'" >>"$BASHFILE"
    fi
 }
-# BASHFILE_EXPORT "HELLO" "/usr/local/bin"
 
 
 ######### bash completion:
@@ -188,13 +192,18 @@ export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 brew analytics off  # see https://github.com/Homebrew/brew/blob/master/docs/Analytics.md
 
 
-function BREW_PKG_INSTALL() {
+function BREW_INSTALL() {
+
+  # Example call:    BREW_INSTALL "GIT_CLIENTS" "git" "git --version"
+
   local category="$1"  # sample: "DATA_TOOLS"
   local package="$2"   # sample: "mysql"
-  local versions="$3"   # sample: "brew"
+  local versions="$3"  # sample: "brew"
 
-   fancy_echo "BREW_PKG_INSTALL $category $package ..." >>$LOGFILE
-   if ! command -v "$package" >/dev/null; then
+   fancy_echo "BREW_INSTALL $category $package ..." >>$LOGFILE
+   #if ! command -v "$package" >/dev/null; then
+   VER="$(brew cask info $package | grep "$package:")"
+   if ! grep -q "$VER" "$package" ; then
       fancy_echo "$category $package installing ..." >>$LOGFILE
       brew install "$package"
        # brew info "$package" >>$LOGFILE 
@@ -206,26 +215,26 @@ function BREW_PKG_INSTALL() {
          brew cask upgrade $package
       elif [[ "${RUNTYPE,,}" == *"remove"* ]]; then
          fancy_echo "$category $package removing ..." >>$LOGFILE
-         brew remove $package
+         brew uninstall --force $package
       fi
    fi
-   if ["$versions" == "--version"]; then
-      echo "BREW_PKG_INSTALL $($package --version)" >>$LOGFILE   
-   elif ["$versions" == "-v"]; then
-      echo "BREW_PKG_INSTALL $($package -v)" >>$LOGFILE   
-   elif ["$versions" == "brew"]; then
-      echo "BREW_PKG_INSTALL $(brew info $package | grep "$package:")" >>$LOGFILE
+
+   if [[ $versions = *"brew"* ]]; then
+      echo "BREW_INSTALL $(brew info $package | grep "$package:")" >>$LOGFILE
+   elif [[ $versions = "" ]]; then
+      echo "BREW_INSTALL $($package --version)" >>$LOGFILE
+   #else
+   #   echo "BREW_INSTALL $($versions)" >>$LOGFILE   
    fi
 }
 
-function brew_cask_install() {
-  local category="$1"
-  local package="$2"
-  local appname="$3"
+function BREW_CASK_INSTALL() {
 
-  if ! asdf plugin-list | grep -Fq "$name"; then
-    asdf plugin-add "$name" "$url"
-  fi
+   # Example: BREW_CASK_INSTALL "EDITORS" "webstorm" "Webstorm"
+
+   local category="$1"
+   local package="$2"
+   local appname="$3"
 
    if [ ! -d "/Applications/$appname.app" ]; then
       fancy_echo "$category $package installing ..."
@@ -235,39 +244,57 @@ function brew_cask_install() {
          # $package -v
          fancy_echo "$category $package upgrading ..."
          brew cask upgrade $package
-      fi
-      if grep -q "alias $package=" "$BASHFILE" ; then
-         fancy_echo "$category $package PATH to $appname.app already in $BASHFILE" >>$LOGFILE
-      else
-         fancy_echo "$category $package PATH to $appname.app in $BASHFILE..."
-         echo "alias $package='open -a \"/Applications/$appname.app\"'" >>"$BASHFILE"
+      elif [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+         fancy_echo "$category $package removing ..." >>$LOGFILE
+         brew remove $package
+         #rm -rf "/Applications/$appname.app"  #needed with uninstall
       fi
    fi
-   #echo -e "$($package -v)" >>$LOGFILE
+
+   if ! command -v $package >/dev/null; then # define an alias to invoke from command line:
+      if grep -q "alias $package=" "$BASHFILE" ; then
+         fancy_echo "$category $package alias to $appname.app already in $BASHFILE" >>$LOGFILE
+      else
+         fancy_echo "$category $package alias to $appname.app in $BASHFILE ..."
+         echo "alias $package='open -a \"/Applications/$appname.app\"'" >>"$BASHFILE"
+         source $BASHFILE  # Activate by running
+      fi
+   fi
+   echo "BREW_INSTALL $(brew cask info $package | grep "$package:")" >>$LOGFILE
 }
 
 
 ######### Install git client to download the rest:
 
 
-#Mandatory:
-if ! command -v git >/dev/null; then
-    fancy_echo "Installing git using Homebrew ..."
-    brew install git
-       brew info git >>$LOGFILE
-       brew list git >>$LOGFILE
-else
-    if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-       fancy_echo "Git upgrading ..." >>$LOGFILE
-       git --version
-       # To avoid response "Error: git not installed" to brew upgrade git
-       brew uninstall git
-       # QUESTION: This removes .gitconfig file?
-       brew install git
-    fi
-fi
-fancy_echo "$(git --version)"  >>$LOGFILE
+# TODO: Check for git command caz this is Mandatory:
+if [[ "${GIT_CLIENTS,,}" == *"git"* ]]; then
+   BREW_INSTALL "GIT_TOOLS" "git" "git --version"
     # git version 2.14.3 (Apple Git-98)
+fi
+
+function GITHUB_UPDATE() {
+      UPSTREAM="${1:-'@{u}'}"
+      LOCAL="$(git rev-parse @)"
+      REMOTE="$(git rev-parse "$UPSTREAM")"
+      BASE="$(git merge-base @ "$UPSTREAM")"
+      if [ $LOCAL = $REMOTE ]; then
+         echo "Up-to-date"
+      elif [ $LOCAL = $BASE ]; then
+         git fetch  # instead of git pull
+         git log ..@{u} --oneline
+         #git reset --hard HEAD@{1} to go back and discard result of git pull if you don't like it.
+         git merge  # Response: Already up to date.
+      elif [ $REMOTE = $BASE ]; then
+         git add . -A
+         git commit -m"GITHUB_UPDATE in $THISPGM"
+         git push
+      else
+         echo "Plese resolved diverged repo."
+         gitk master..upstream/master
+         #p4merge
+      fi
+}
 
 
 ######### Download/clone GITHUB_REPO_URL repo:
@@ -328,7 +355,7 @@ else
    echo "GITHUB_ACCOUNT=$GITHUB_ACCOUNT" >>$LOGFILE
    echo "GITHUB_REPO=$GITHUB_REPO" >>$LOGFILE
    # DO NOT echo $GITHUB_PASSWORD. Do not cat $SECRETFILE because it contains secrets.
-   echo "GIT_CLIENT=$GIT_CLIENT" >>$LOGFILE
+   echo "GIT_CLIENTS=$GIT_CLIENTS" >>$LOGFILE
    echo "GIT_TOOLS=$GIT_TOOLS" >>$LOGFILE
 
    echo "EDITORS=$EDITORS" >>$LOGFILE
@@ -367,6 +394,7 @@ else
    echo "NEO4J_PORT=$NEO4J_PORT" >>$LOGFILE
    echo "NEXUS_PORT=$NEXUS_PORT" >>$LOGFILE
    echo "NGINX_PORT=$NGINX_PORT" >>$LOGFILE
+   echo "PACT_PORT=$PACT_PORT"   >>$LOGFILE
    echo "POSTGRESQL_PORT=$POSTGRESQL_PORT" >>$LOGFILE
    echo "PROMETHEUS_PORT=$PROMETHEUS_PORT" >>$LOGFILE
    echo "REDIS_PORT=$REDIS_PORT" >>$LOGFILE
@@ -489,20 +517,13 @@ fi
 if [[ "${MAC_TOOLS,,}" == *"coreutils"* ]]; then
    # see https://www.topbug.net/blog/2013/04/14/install-and-use-gnu-command-line-tools-in-mac-os-x/
    # Not a command in /usr/local/bin/coreutils
-      fancy_echo "Installing MAC_TOOLS coreutils ..."
-      brew install coreutils
+   BREW_INSTALL "MAC_TOOLS" "coreutils" "brew"
+
          # Warning: coreutils 8.29 is already installed and up-to-date
          # To reinstall 8.29, run `brew reinstall coreutils`
          # Warning: less 530 is already installed and up-to-date
          # To reinstall 530, run `brew reinstall less`
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading MAC_TOOLS coreutils ..."
-         #coreutils --version  # before upgrade
-         brew reinstall coreutils
-      fi
-   # Cannot echo -e "$(coreutils -v)" >>$LOGFILE 
    # TDDO: add `$(brew --prefix coreutils)/libexec/gnubin` to `$PATH` of /usr/local/opt/coreutils/libexec/gnubin
-
    # Install some other useful utilities like `sponge`.
    # brew install moreutils
    # Install GNU `find`, `locate`, `updatedb`, and `xargs`, `g`-prefixed.
@@ -516,29 +537,9 @@ else
 fi
 
 
-if [[ "${MAC_TOOLS,,}" == *"iterm"* ]]; then
+if [[ "${MAC_TOOLS,,}" == *"iterm2"* ]]; then
    # https://www.iterm2.com/documentation.html
-   if [ ! -d "/Applications/iTerm.app" ]; then 
-      fancy_echo "Installing MAC_TOOLS iterm2 iTerm.app ..."
-      brew cask install iterm2  # 3.1.5
-              brew info iterm2 >>$LOGFILE
-              brew list iterm2 >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading MAC_TOOLS iterm2 ..."
-         echo "MAC_TOOLS iterm2 $(brew cask info iterm2 | grep "iterm2:") upgrading ..." >>$LOGFILE  
-         brew cask upgrade iterm2
-      fi
-   fi
-   echo "$(brew cask info iterm2 | grep "iterm2:")" >>$LOGFILE  
-   
-      if grep -q "alias iterm=" "$BASHFILE" ; then
-         fancy_echo "PATH to iTerm.app already in $BASHFILE" >>$LOGFILE
-      else
-         fancy_echo "Adding PATH to iTterm.app in $BASHFILE..." >>$LOGFILE
-         echo "alias iterm2='open -a \"/Applications/iTerm.app\"'" >>"$BASHFILE"
-      fi
-
+   BREW_CASK_INSTALL "MAC_TOOLS" "iterm2" "iTerm" 
    BASHFILE_EXPORT "CLICOLOR" "1"
 
    if [[ "${TRYOUT,,}" == *"iterm"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
@@ -548,25 +549,13 @@ if [[ "${MAC_TOOLS,,}" == *"iterm"* ]]; then
    # http://sourabhbajaj.com/mac-setup/iTerm/README.html
    # TODO: https://github.com/mbadolato/iTerm2-Color-Schemes/tree/master/schemes
 else
-      fancy_echo "MAC_TOOLS iterm not specified." >>$LOGFILE
+      fancy_echo "MAC_TOOLS iterm2 not specified." >>$LOGFILE
 fi
 
 
 if [[ "${MAC_TOOLS,,}" == *"mas"* ]]; then
    # To manage apps purchased & installed using App Store on MacOS:
-   if ! command -v mas >/dev/null; then  # /usr/local/bin/mas
-      fancy_echo "Installing MAC_TOOLS mas ..."
-      brew install mas
-         brew info mas >>$LOGFILE
-         brew list mas >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading MAC_TOOLS mas ..."
-         mas version  # before upgrade
-         brew upgrade mas
-      fi
-   fi
-   echo -e "$(mas version)" >>$LOGFILE  # mas 1.4.1
+   BREW_INSTALL "MAC_TOOLS" "mas" "mas version"
 
    if [[ "${TRYOUT,,}" == *"mas"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       fancy_echo "TRYOUT: mas listing apps added via App Store ..." >>$LOGFILE
@@ -579,19 +568,9 @@ fi
 
 if [[ "${MAC_TOOLS,,}" == *"ansible"* ]]; then
    # To install programs. See http://wilsonmar.github.io/ansible/
-   if ! command -v ansible >/dev/null; then  # /usr/local/bin/ansible
-      fancy_echo "Installing MAC_TOOLS ansible ..."
-      brew install ansible
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading MAC_TOOLS ansible ..."
-         ansible --version  # before upgrade
-         brew upgrade ansible
-      fi
-   fi
-   echo -e "$(ansible -v)" >>$LOGFILE  # ansible 2.5.0
+   BREW_INSTALL "MAC_TOOLS" "ansible" "ansible -v"
 else
-      fancy_echo "MAC_TOOLS ansible not specified." >>$LOGFILE
+   fancy_echo "MAC_TOOLS ansible not specified." >>$LOGFILE
 fi
 
 
@@ -615,49 +594,27 @@ else
 fi
 
 if [[ "${MAC_TOOLS,,}" == *"powershell"* ]]; then
-    # https://docs.microsoft.com/en-us/powershell/scripting/powershell-scripting?view=powershell-6
-   if [ ! -d "/Applications/PowerShell.app" ]; then 
-      fancy_echo "Installing MAC_TOOLS PowerShell - password needed ..."
-      brew cask install --appdir="/Applications" PowerShell
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         # PowerShell -v
-         fancy_echo "Upgrading MAC_TOOLS PowerShell ..."
-         brew cask upgrade PowerShell
-      fi
-      if grep -q "alias PowerShell=" "$BASHFILE" ; then
-         fancy_echo "PATH to PowerShell.app already in $BASHFILE" >>$LOGFILE
-      else
-         fancy_echo "Adding PATH to PowerShell.app in $BASHFILE..."
-         echo "alias PowerShell='open -a \"/Applications/PowerShell.app\"'" >>"$BASHFILE"
-      fi
+   # https://docs.microsoft.com/en-us/powershell/scripting/powershell-scripting?view=powershell-6
+   # https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-powershell-core-on-macos-and-linux?view=powershell-6#macos-1012
+   BREW_CASK_INSTALL "MAC_TOOLS" "powershell" "PowerShell" 
+      # PowerShell v6.0.2
+   # From https://github.com/PowerShell/PowerShell
+   if [[ "${TRYOUT,,}" == *"powershell"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "MAC_TOOLS powershell verify ..." >>$LOGFILE
+      { echo '$psversiontable';
+        echo 'Get-ExecutionPolicy -List | Format-Table -AutoSize';
+        echo 'exit';
+      } | pwsh &
    fi
-   #echo -e "$(PowerShell -v)" >>$LOGFILE  # powershell v6.0.0-beta.7
 else
-      fancy_echo "MAC_TOOLS powershell not specified." >>$LOGFILE
+   fancy_echo "MAC_TOOLS powershell not specified." >>$LOGFILE
 fi
 
 
 if [[ "${MAC_TOOLS,,}" == *"alfred"* ]]; then
    # https://www.alfredapp.com/ multi-function utility
-   if [ ! -d "/Applications/Alfred 3.app" ]; then 
-      fancy_echo "Installing MAC_TOOLS alfred ..."
-      brew cask install --appdir="/Applications" alfred
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading MAC_TOOLS alfred ..."
-         # alfred -v
-         brew cask upgrade alfred
-      fi
-   fi
-   #echo -e "$(alfred -v)" >>$LOGFILE  # alfred v6.0.0-beta.7
-
-      if grep -q "alias alfred=" "$BASHFILE" ; then    
-         fancy_echo "PATH to alfred 3.app already in $BASHFILE" >>$LOGFILE
-      else
-         fancy_echo "Adding alias alfred to alfred 3.app in $BASHFILE..."
-         echo "alias alfred='open -a \"/Applications/alfred 3.app\"'" >>"$BASHFILE"
-      fi
+   # TODO: Get version 3  $(ls -dt /Applications/Alfred*|head -1)
+   BREW_CASK_INSTALL "MAC_TOOLS" "alfred" "Alfred 3" 
 
    if [[ "${TRYOUT,,}" == *"alfred"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       fancy_echo "Starting alfred ..." >>$LOGFILE
@@ -670,25 +627,13 @@ fi
 
 
 if [[ "${MAC_TOOLS,,}" == *"vmware-fusion"* ]]; then
-   if [ ! -d "/Applications/VMware Fusion.app" ]; then 
-      fancy_echo "Installing MAC_TOOLS vmware-fusion ..."
-      brew cask install --appdir="/Applications" vmware-fusion
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         # vmware-fusion -v
-         fancy_echo "Upgrading MAC_TOOLS vmware-fusion ..."
-         brew cask upgrade vmware-fusion
-      fi
-      if grep -q "alias vmware-fusion=" "$BASHFILE" ; then
-         fancy_echo "PATH to vmware-fusion.app already in $BASHFILE" >>$LOGFILE
-      else
-         fancy_echo "Adding PATH to vmware-fusion.app in $BASHFILE..."
-         echo "alias vmware-fusion='open -a \"/Applications/vmware-fusion.app\"'" >>"$BASHFILE"
-      fi
+   BREW_CASK_INSTALL "MAC_TOOLS" "vmware-fusion" "VMware Fusion" 
+   if [[ "${TRYOUT,,}" == *"vmware-fusion"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "MAC_TOOLS vmware-fusion starting ..." >>$LOGFILE
+      open -a "/Applications/VMware Fusion.app"
    fi
-   #echo -e "$(vmware-fusion -v)" >>$LOGFILE
 else
-      fancy_echo "MAC_TOOLS vmware-fusion not specified." >>$LOGFILE
+   fancy_echo "MAC_TOOLS vmware-fusion not specified." >>$LOGFILE
 fi
 
 
@@ -788,32 +733,8 @@ fi
 }
 
 function VIRTUALBOX_INSTALL() {
-   if [ ! -d "/Applications/VirtualBox.app" ]; then 
-   #if ! command -v virtualbox >/dev/null; then  # /usr/local/bin/virtualbox
-      fancy_echo "Installing virtualbox ..."
-      brew cask install --appdir="/Applications" virtualbox
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "virtualbox upgrading ..."
-         # virtualbox --version
-         brew cask upgrade virtualbox
-      else
-         fancy_echo "virtualbox already installed." >>$LOGFILE
-      fi
-   fi
-   #echo -e "\n$(virtualbox --version)" >>$LOGFILE
-
-   if [ ! -d "/Applications/Vagrant Manager.app" ]; then 
-      fancy_echo "Installing vagrant-manager ..."
-      brew cask install --appdir="/Applications" vagrant-manager
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "vagrant-manager upgrading ..."
-         brew cask upgrade vagrant-manager
-      else
-         fancy_echo "vagrant-manager already installed." >>$LOGFILE
-      fi
-   fi
+   BREW_CASK_INSTALL "VIRTUALBOX_INSTALL" "virtualbox" "VirtualBox" 
+   BREW_CASK_INSTALL "VIRTUALBOX_INSTALL" "vagrant-manager" "Vagrant Manager" 
 }
 
 function PYTHON_INSTALL() {
@@ -823,27 +744,12 @@ function PYTHON_INSTALL() {
      # See https://docs.brew.sh/Homebrew-and-Python
    # See https://docs.python-guide.org/en/latest/starting/install3/osx/
    
-   if ! command -v python >/dev/null; then
-      # No upgrade option.
-      fancy_echo "Installing Python, a pre-requisite for git-cola & GCP ..."
-      brew install python
-         brew info python >>$LOGFILE
-         brew list python >>$LOGFILE
-      # Not brew install pyenv  # Python environment manager.
+   BREW_INSTALL "PYTHON_INSTALL" "python" "python --version"
+      # Python 2.7.14
 
-	  #brew linkapps python
-
-      # pip comes with brew install Python 2 >=2.7.9 or Python 3 >=3.4
-      pip --version
-
-   else
-      fancy_echo -e "\n$(python --version) already installed:" >>$LOGFILE
-   fi
-   command -v python
-   ls -al "$(command -v python)" # /usr/local/bin/python
-
-   echo -e "\n$(python --version)"            >>$LOGFILE
-         # Python 2.7.14
+   # Not brew install pyenv  # Python environment manager.
+	 #brew linkapps python
+   # pip comes with brew install Python 2 >=2.7.9 or Python 3 >=3.4
    echo -e "\n$(pip --version)"            >>$LOGFILE
          # pip 9.0.3 from /usr/local/lib/python2.7/site-packages (python 2.7)
 
@@ -884,13 +790,16 @@ function PYTHON3_INSTALL() {
      # See https://docs.brew.sh/Homebrew-and-Python
    # See https://docs.python-guide.org/en/latest/starting/install3/osx/
    
-   if ! command -v python3 >/dev/null; then
-      # No upgrade option.
-      fancy_echo "Installing Python3, a pre-requisite for awscli and azure ..."
-      brew install python3
-         brew info python3 >>$LOGFILE
-         brew list python3 >>$LOGFILE
-      # 
+   BREW_INSTALL "PYTHON3_INSTALL" "python3" "python3 --version"
+      # Python 3.6.4
+   echo "$(pip3 --version)"            >>$LOGFILE
+      # pip 9.0.3 from /usr/local/lib/python3.6/site-packages (python 3.6)
+
+      if ! python3 -c "import pytz">/dev/null 2>&1 ; then   
+         fancy_echo "Installing utility import pytz ..."
+         python3 -m pip install pytz  # in /usr/local/lib/python3.6/site-packages
+      fi
+
       # To use anaconda, add the /usr/local/anaconda3/bin directory to your PATH environment 
       # variable, eg (for bash shell):
       # export PATH=/usr/local/anaconda3/bin:"$PATH"
@@ -898,44 +807,19 @@ function PYTHON3_INSTALL() {
       #Cask anaconda installs files under "/usr/local". The presence of such
       #files can cause warnings when running "brew doctor", which is considered
       #to be a bug in Homebrew-Cask.
-   fi
-   command -v python3 >>$LOGFILE
-   ls -al "$(command -v python3)" # /usr/local/bin/python
-
-   echo -e "\n$(python3 --version)"            >>$LOGFILE
-      # Python 3.6.4
-   echo -e "\n$(pip3 --version)"            >>$LOGFILE
-      # pip 9.0.3 from /usr/local/lib/python3.6/site-packages (python 3.6)
 
    # NOTE: To make "python" command reach Python3 instead of 2.7, per docs.python-guide.org/en/latest/starting/install3/osx/
    # Put in PATH Python 3.6 bits at /usr/local/bin/ before Python 2.7 bits at /usr/bin/
 
-      if ! python3 -c "import pytz">/dev/null 2>&1 ; then   
-         fancy_echo "Installing utility import pytz ..."
-         python3 -m pip install pytz  # in /usr/local/lib/python3.6/site-packages
-      fi
-
    # QUESTION: What is the MacOS equivalent to pipe every .py file to anaconda's python:
    # assoc .py=Python.File
    # ftype Python.File=C:\path\to\Anaconda\python.exe "%1" %*
-
 }
 
 function GROOVY_INSTALL() {
     # See http://groovy-lang.org/install.html
-   if ! command -v groovy >/dev/null; then  # /usr/local/bin/groovy
-      fancy_echo "Installing groovy ..."
-      brew install groovy
-         brew info groovy >>$LOGFILE
-         brew list groovy >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "groovy upgrading ..."
-         groovy --version  # upgrading from.
-         brew upgrade groovy
-      fi
-   fi
-   groovy --version  # Groovy Version: 2.4.14 JVM: 1.8.0_162 Vendor: Oracle Corporation OS: Mac OS X
+   BREW_INSTALL "GROOVY_INSTALL" "groovy" "groovy --version"
+      # Groovy Version: 2.4.14 JVM: 1.8.0_162 Vendor: Oracle Corporation OS: Mac OS X
 
    BASHFILE_EXPORT "GROOVY_HOME" "/usr/local/opt/groovy/libexec"
    
@@ -1012,18 +896,7 @@ function SCALA_INSTALL() {
    # within Eclipse > Help → Install New Software..., add the Add... button in the dialog.
    # To use with IntelliJ, set the Scala home to: /usr/local/opt/scala/idea
 
-   if ! command -v sbt >/dev/null; then  # /usr/local/bin/sbt
-      fancy_echo "Installing sbt ..."
-      brew install sbt  # --with-docs
-         brew info sbt >>$LOGFILE
-         brew list sbt >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "sbt upgrading ..."
-         # sbt -version  # upgrading from. Too verbose
-         brew upgrade sbt
-      fi
-   fi
+   BREW_INSTALL "SCALA_INSTALL" "sbt" "brew"
    #echo -e "sbt : $(sbt -version)" >>$LOGFILE
      # Getting org.scala-sbt sbt 1.1.4  (this may take some time)...
 
@@ -1034,6 +907,189 @@ function SCALA_INSTALL() {
 
    # https://stackoverflow.com/questions/41110256/how-do-i-tell-intellij-about-scala-installed-with-brew-on-osx
 }
+
+function NODE_INSTALL() {
+   fancy_echo "In function NODE_INSTALL ..." >>$LOGFILE
+   # See https://wilsonmar.github.io/node-starter/
+   # http://treehouse.github.io/installation-guides/mac/node-mac.html
+
+   # We begin with NVM to install Node versions: https://www.airpair.com/javascript/node-js-tutorial
+   # in order to have several diffent versions of node installed simultaneously.
+   # See https://github.com/creationix/nvm
+   BASHFILE_EXPORT "NVM_DIR" "$HOME/.nvm"
+   if [ ! -d "$HOME/.nvm" ]; then
+      fancy_echo "Making $HOME/.nvm folder ..."
+      mkdir $HOME/.nvm
+   fi
+
+   BREW_INSTALL "NODE_INSTALL" "nvm" ""  # node version manager
+         # 0.33.8 
+   echo "npx -v : $(npx -v) "  # 9.7.1 https://medium.com/@maybekatz/introducing-npx-an-npm-package-runner-55f7d4bd282b
+
+   if ! command -v node >/dev/null; then  # /usr/local/bin/node
+      fancy_echo "Installing node using nvm"
+      nvm install node  # use nvm to install the latest version of node.
+         # v9.10.1...
+      nvm install --lts # lastest Long Term Support version  # v8.11.1...
+      # nvm install 8.9.4  # install a specific version
+   else
+      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
+         fancy_echo "node upgrading ..."
+         # nvm i nvm  # instead of brew upgrade node
+      fi
+   fi
+   node --version  >>$LOGFILE
+
+   # Run with latest Long Term Stable version:
+      # nvm is not compatible with the npm config "prefix" option: currently set to "/usr/local/Cellar/nvm/0.33.8/versions/node/v9.10.1"
+   # a) Run with older Long Term Stable version:
+#      nvm run 8.11.1 --version
+      nvm use --lts >>$LOGFILE # (npm v5.6.0)  
+      RESPONSE=$(nvm use --delete-prefix v8.11.1)
+   # b) Run with current newest version:
+      #RESPONSE=$(nvm use --delete-prefix v9.10.1)
+
+      fancy_echo "RESPONSE=$RESPONSE"
+ #     node --version   # v8.11.1 or v9.10.1 
+      npm --version >>$LOzzGFILE
+
+   #echo -e "\n  npm list -g --depth=1 --long" >>$LOGFILE
+   #echo -e "$(npm list -g --depth=1)" >>$LOGFILE
+      # v8.11.1
+      # v9.10.1
+      # node -> stable (-> v9.10.1) (default)
+      # stable -> 9.10 (-> v9.10.1) (default)
+      # iojs -> N/A (default)
+      # lts/* -> lts/carbon (-> v8.11.1)
+      # lts/argon -> v4.9.1 (-> N/A)
+      # lts/boron -> v6.14.1 (-> N/A)
+      # lts/carbon -> v8.11.1
+
+   # npm start
+   # See https://github.com/creationix/howtonode.org by Tim Caswell
+   # Look in folder node-test1
+
+   # $NVM_HOME
+   # $NODE_ENV 
+}
+
+
+function GO_INSTALL() {
+   BREW_INSTALL "GO_INSTALL" "go" "brew"
+   go version >>$LOGFILE  # go version go1.10.1 darwin/amd64
+
+   BASHFILE_EXPORT "GOPATH" "$HOME/golang"
+   BASHFILE_EXPORT "GOROOT" "/usr/local/opt/go/libexec"
+
+      if grep -q "golang/bin" "$BASHFILE" ; then    
+         fancy_echo "export PATH $GOROOT/bin already in $BASHFILE" >>$LOGFILE
+      else
+         fancy_echo "Adding PATH to $GOROOT/bin in $BASHFILE..." >>$LOGFILE
+         printf "\nexport PATH=\"\$PATH:$GOROOT/bin\" # GOROOT" >>"$BASHFILE"  # from brew info go 
+      fi 
+         source "$BASHFILE"
+}
+if [[ "${TEST_TOOLS,,}" == *"pact-go"* ]]; then
+   GO_INSTALL
+
+   # Pact contract testing https://docs.pact.io/ is available in several languages.
+   # See https://github.com/pact-foundation/pact-go
+   # https://dius.com.au/2016/02/03/microservices-pact/
+   PACT_HOME="/usr/local/etc/pact-go" # as if brew'd.
+   fancy_echo "TEST_TOOLS pact-go re-creating $PACT_HOME ..." >>$LOGFILE
+   if [ ! -d "$PACT_HOME" ]; then
+      mkdir "$PACT_HOME"
+      echo "TEST_TOOLS pact-go $PACT_HOME created."
+   else
+#      rm -rf "$PACT_HOME"
+#      mkdir "$PACT_HOME"
+      echo "TEST_TOOLS pact-go $PACT_HOME re-created."
+   fi
+   
+   PACT_VERSION="v0.0.12" # TODO: Extract from webpage.
+
+   DOWNLOAD_URL="https://github.com/pact-foundation/pact-go/releases/download/$PACT_VERSION/pact-go_darwin_amd64.tar.gz"
+   if [ ! -f "$PACT_HOME/pact-go_darwin_amd64.tar.gz" ]; then
+      echo "TEST_TOOLS pact-go downloading $DOWNLOAD_URL ..." >>$LOGFILE
+      curl -L "$DOWNLOAD_URL" -O "$PACT_HOME/pact-go_darwin_amd64.tar.gz" 2>/dev/null # 10.5MB received.
+         # 2>/dev/null to  ignore curl: (3) <url> malformed
+      ls "$PACT_HOME"
+   fi
+
+   if [ ! -f "$PACT_HOME/pact-go_darwin_amd64.tar.gz" ]; then #downloaded:
+      echo "TEST_TOOLS pact-go tar.gz not found."
+   else
+      echo "TEST_TOOLS pact-go unpacking tar.gz to tar ..."
+     #file "$PACT_HOME/pact-go_darwin_amd64.tar.gz" # to see what kind of file it is (redirected?)      
+      tar xvf "$PACT_HOME/pact-go_darwin_amd64.tar.gz" -C "$PACT_HOME"
+         # creates pact folder
+   fi
+
+   if [ ! -d "$PACT_HOME/pact" ]; then # unpacked:
+      echo "TEST_TOOLS pact-go pact folder not found."
+   else
+      echo "TEST_TOOLS pact-go rm tar.gz ..."
+      rm "$PACT_HOME/pact-go_darwin_amd64.tar.gz"
+   fi
+
+   if [[ "${TRYOUT,,}" == *"pact-go"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      echo "TEST_TOOLS pact-go TRYOUT ..."
+
+      pushd "$PACT_HOME"
+      echo "TEST_TOOLS pact-go st $(pwd) for ./pact-go daemon ..." 
+      ./pact-go daemon
+      popd
+
+      if [ ! -d "$PACT_HOME" ]; then
+         mkdir "$PACT_HOME"
+         echo "TEST_TOOLS pact-go $PACT_HOME created."
+      else
+         rm -rf "$PACT_HOME"
+         mkdir "$PACT_HOME"
+         echo "TEST_TOOLS pact-go $PACT_HOME re-created."
+      fi
+
+      if [ ! -d "$GOPATH/src" ]; then
+         mkdir "$GOPATH/src"
+         echo "TEST_TOOLS pact-go GOPATH/src created."
+      else
+         rm -rf "GOPATH/src"
+         mkdir "GOPATH/src"
+         echo "TEST_TOOLS pact-go GOPATH/src re-created."
+      fi
+
+      pushd "$GOPATH/src"
+      if [ ! -d "pact-go" ]; then 
+         go get github.com/pact-foundation/pact-go 
+         #  https://github.com/pact-foundation/pact-go.gif --depth=1
+      else
+            git fetch  # instead of git pull
+            git log ..@{u}
+            #git reset --hard HEAD@{1} to go back and discard result of git pull if you don't like it.
+           git merge  # Response: Already up to date.
+      fi
+      cd $GOPATH/src/github.com/pact-foundation/pact-go/examples/
+      # go get -d github.com/pact-foundation/pact-go to install the source packages
+      
+      go test -v -run TestConsumer
+      popd  # from GITS_PATH
+      echo "TEST_TOOLS pact-go back at $(pwd)" >>$LOGFILE
+
+      if [[ "${TRYOUT_KEEP,,}" == *"pact-go"* ]]; then
+         echo "TEST_TOOLS pact-go TRYOUT_KEEP ..."
+         pushd "$PACT_HOME"
+         echo "At $(pwd) for ./pact-go info" 
+         ./pact-go
+         # PACT_PORT="6666"
+         popd
+      else
+         fancy_echo "TRYOUT pact-go running $pact-go_HOME/bin/pact-go.sh ..."
+      fi
+   fi
+else
+      fancy_echo "TEST_TOOLS pact-go not specified." >>$LOGFILE
+fi
+
 
 if [[ "${TEST_TOOLS,,}" == *"gatling"* ]]; then
    SCALA_INSTALL  # prerequiste - see http://twitter.github.io/scala_school
@@ -1048,10 +1104,10 @@ if [[ "${TEST_TOOLS,,}" == *"gatling"* ]]; then
       GATLING_VERSION="gatling-version.html"; wget -q "https://gatling.io/download/" -O $outputFile; cat "$outputFile" | sed -n -e '/<\/header>/,/<\/footer>/ p' | grep "Last stable release:" | sed 's/<\/\?[^>]\+>//g' | awk -F' ' '{ print $4 }'; rm -f $outputFile
       fancy_echo "TEST_TOOLS gatling download to $GATLING_VERSION $GATLING_HOME ..."
       DOWNLOAD_URL="gatling-version.html"; wget -q "https://gatling.io/download/" -O $outputFile; cat "$outputFile" | sed -n -e '/<\/header>/,/<\/footer>/ p' | grep "Format:" | sed -n 's/.*href="\([^"]*\).*/\1/p' ; rm -f $outputFile
-          #"https://repo1.maven.org/maven2/io/gatling/highcharts/gatling-charts-highcharts-bundle/$GATLING_VERSION/gatling-charts-highcharts-bundle-$GATLING_VERSION-bundle.zip"
-      curl "$DOWNLOAD_URL" -o "$GATLING_HOME/gatling.zip"  # 55.3M renamed
-      unzip "$GATLING_HOME/gatling.zip"  # to gatling-charts-highcharts-bundle-2.3.1
-      rm    "$GATLING_HOME/gatling.zip"
+          #"https://repo1.maven.org/maven2/io/gatling/highcharts/gatling-charts-highcharts-bundle/$GATLING_VERSION/gatling-charts-highcharts-bundle-$GATLING_VERSION-bundle.tar.gz"
+      curl "$DOWNLOAD_URL" -o "$GATLING_HOME/gatling.tar.gz"  # 55.3M renamed
+      unzip "$GATLING_HOME/gatling.tar.gz"  # to gatling-charts-highcharts-bundle-2.3.1
+      rm    "$GATLING_HOME/gatling.tar.gz"
       cd "gatling-charts-highcharts-bundle-$GATLING_VERSION" 
       mv -v * "$GATLING_HOME"  # overwrite all files
       # rsync -u "gatling-charts-highcharts-bundle-$GATLING_VERSION" "$GATLING_HOME" # to skip files newer on the receiver.
@@ -1084,638 +1140,6 @@ else
 fi
 
 
-function NODE_INSTALL() {
-   fancy_echo "In function NODE_INSTALL ..." >>$LOGFILE
-   # See https://wilsonmar.github.io/node-starter/
-   # http://treehouse.github.io/installation-guides/mac/node-mac.html
-
-   # We begin with NVM to install Node versions: https://www.airpair.com/javascript/node-js-tutorial
-   # in order to have several diffent versions of node installed simultaneously.
-   # See https://github.com/creationix/nvm
-   BASHFILE_EXPORT "NVM_DIR" "$HOME/.nvm"
-   if [ ! -d "$HOME/.nvm" ]; then
-      fancy_echo "Making $HOME/.nvm folder ..."
-      mkdir $HOME/.nvm
-   fi
-
-   if ! command -v nvm >/dev/null; then  # /usr/local/bin/node
-      fancy_echo "Installing nvm (to manage node versions)"
-      brew install nvm  # curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
-         brew info nvm >>$LOGFILE
-         #brew list nvm >>$LOGFILE
-         # 0.33.8 
-      # TODO: How to tell if nvm.sh has run?
-      fancy_echo "Running /usr/local/opt/nvm/nvm.sh ..."
-      source "/usr/local/opt/nvm/nvm.sh"  # nothing returned.
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "nvm upgrading ..."
-         brew upgrade nvm
-      fi
-   fi
-   fancy_echo "nvm --version : $(nvm --version) ..." # 0.33.8
-   fancy_echo "npx -v : $(npx -v) ..."  # 9.7.1 https://medium.com/@maybekatz/introducing-npx-an-npm-package-runner-55f7d4bd282b
-   
-
-   if ! command -v node >/dev/null; then  # /usr/local/bin/node
-      fancy_echo "Installing node using nvm"
-      nvm install node  # use nvm to install the latest version of node.
-         # v9.10.1...
-      nvm install --lts # lastest Long Term Support version  # v8.11.1...
-      # nvm install 8.9.4  # install a specific version
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "node upgrading ..."
-         # nvm i nvm  # instead of brew upgrade node
-      fi
-   fi
-   node --version  >>$LOGFILE
-   
-     nvm --version >>$LOGFILE
-   # Run with latest Long Term Stable version:
-      # nvm is not compatible with the npm config "prefix" option: currently set to "/usr/local/Cellar/nvm/0.33.8/versions/node/v9.10.1"
-   # a) Run with older Long Term Stable version:
-#      nvm run 8.11.1 --version
-      nvm use --lts >>$LOGFILE # (npm v5.6.0)  
-      RESPONSE=$(nvm use --delete-prefix v8.11.1)
-   # b) Run with current newest version:
-      #RESPONSE=$(nvm use --delete-prefix v9.10.1)
-
-      fancy_echo "RESPONSE=$RESPONSE"
- #     node --version   # v8.11.1 or v9.10.1 
-      npm --version >>$LOGFILE
-
-   #echo -e "\n  npm list -g --depth=1 --long" >>$LOGFILE
-   #echo -e "$(npm list -g --depth=1)" >>$LOGFILE
-      # v8.11.1
-      # v9.10.1
-      # node -> stable (-> v9.10.1) (default)
-      # stable -> 9.10 (-> v9.10.1) (default)
-      # iojs -> N/A (default)
-      # lts/* -> lts/carbon (-> v8.11.1)
-      # lts/argon -> v4.9.1 (-> N/A)
-      # lts/boron -> v6.14.1 (-> N/A)
-      # lts/carbon -> v8.11.1
-
-   # npm start
-   # See https://github.com/creationix/howtonode.org by Tim Caswell
-   # Look in folder node-test1
-
-   # $NVM_HOME
-   # $NODE_ENV 
-}
-
-
-function GO_INSTALL() {
-   if ! command -v go >/dev/null; then  # /usr/local/bin/go
-      fancy_echo "Installing go ..."
-      brew install go
-         brew info go >>$LOGFILE
-         brew list go >>$LOGFILE
-   else
-      # specific to each MacOS version
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "go upgrading ..."
-         go version   # upgrading from.
-         brew upgrade go
-      fi
-   fi
-   go version  # go version go1.10.1 darwin/amd64
-
-   BASHFILE_EXPORT "GOPATH" "$HOME/golang"
-   BASHFILE_EXPORT "GOROOT" "/usr/local/opt/go/libexec"
-
-      if grep -q "golang/bin" "$BASHFILE" ; then    
-         fancy_echo "export PATH $GOROOT/bin already in $BASHFILE" >>$LOGFILE
-      else
-         fancy_echo "Adding PATH to $GOROOT/bin in $BASHFILE..." >>$LOGFILE
-         printf "\nexport PATH=\"\$PATH:$GOROOT/bin\" # GOROOT" >>"$BASHFILE"  # from brew info go 
-      fi 
-         source "$BASHFILE"
-}
-
-
-######### Git clients:
-
-
-fancy_echo "GIT_CLIENT=$GIT_CLIENT in secrets.sh ..." >>$LOGFILE
-echo "The last one installed is set as the Git client." >>$LOGFILE
-# See https://www.slant.co/topics/465/~best-git-clients-for-macos
-          # git, cola, github, gitkraken, smartgit, sourcetree, tower, magit, gitup. 
-          # See https://git-scm.com/download/gui/linux
-          # https://www.slant.co/topics/465/~best-git-clients-for-macos
-
-#[core]
-#  editor = vim
-#  whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
-#  excludesfile = ~/.gitignore
-#[push]
-#  default = matching
-
-#[diff]
-#  tool = vimdiff
-#[difftool]
-#  prompt = false
-
-if [[ "${GIT_CLIENT,,}" == *"cola"* ]]; then
-   # https://git-cola.github.io/  (written in Python)
-   # https://medium.com/@hamen/installing-git-cola-on-osx-eaa9368b4ee
-   if ! command -v git-cola >/dev/null; then  # not recognized:
-      PYTHON_INSTALL  # function defined at top of this file.
-      fancy_echo "Installing GIT_CLIENT=\"cola\" using Homebrew ..."
-      brew install git-cola
-         brew info git-cola >>$LOGFILE
-         brew list git-cola >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading GIT_CLIENT=\"cola\" using Homebrew ..."
-         brew upgrade git-cola
-      fi
-   fi
-   git-cola --version
-      # cola version 3.0
-   if [[ "${TRYOUT,,}" == *"cola"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Starting git-cola in background ..."
-      git-cola &
-   fi
-fi
-
-
-# GitHub Desktop is written by GitHub, Inc.,
-# open sourced at https://github.com/desktop/desktop
-# so people can just click a button on GitHub to download a repo from an internet browser.
-if [[ "${GIT_CLIENT,,}" == *"github"* ]]; then
-    # https://desktop.github.com/
-    if [ ! -d "/Applications/GitHub Desktop.app" ]; then 
-        fancy_echo "Installing GIT_CLIENT=\"github\" using Homebrew ..."
-        brew cask uninstall github
-        brew cask install --appdir="/Applications" github
-    else
-        if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-           fancy_echo "Upgrading GIT_CLIENT=\"github\" using Homebrew ..."
-           brew cask upgrade github
-        else
-           fancy_echo "GIT_CLIENT=\"github\" already installed" >>$LOGFILE
-        fi
-    fi
-   if [[ "${TRYOUT,,}" == *"github"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Opening GitHub Desktop GUI ..." 
-      open "/Applications/GitHub Desktop.app"
-   fi
-else
-      fancy_echo "GIT_CLIENTS github not specified." >>$LOGFILE
-fi
-
-
-if [[ "${GIT_CLIENT,,}" == *"gitkraken"* ]]; then
-   # GitKraken from https://www.gitkraken.com/ and https://blog.axosoft.com/gitflow/
-   if [ ! -d "/Applications/GitKraken.app" ]; then 
-       fancy_echo "Installing GIT_CLIENT=\"gitkraken\" using Homebrew ..."
-       brew cask uninstall gitkraken
-       brew cask install --appdir="/Applications" gitkraken
-   else
-       if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-          fancy_echo "Upgrading GIT_CLIENT=\"gitkraken\" using Homebrew ..."
-          brew cask upgrade gitkraken
-       else
-          fancy_echo "GIT_CLIENT=\"gitkraken\" already installed" >>$LOGFILE
-       fi
-   fi
-
-   BASHFILE_EXPORT "GITKRAKEN" "/Applications/GitKraken.app"
-
-   gitkraken -v
-   if [[ "${TRYOUT,,}" == *"gitkraken"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Opening GitKraken ..."
-      open "/Applications/GitKraken.app"
-   fi
-else
-      fancy_echo "GIT_CLIENTS gitkraken not specified." >>$LOGFILE
-fi
-
-
-if [[ "${GIT_CLIENT,,}" == *"sourcetree"* ]]; then
-    # See https://www.sourcetreeapp.com/
-    if [ ! -d "/Applications/Sourcetree.app" ]; then 
-        fancy_echo "Installing GIT_CLIENT=\"sourcetree\" using Homebrew ..."
-        brew cask uninstall sourcetree
-        brew cask install --appdir="/Applications" sourcetree
-    else
-        if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-           fancy_echo "Upgrading GIT_CLIENT=\"sourcetree\" using Homebrew ..."
-           brew cask upgrade sourcetree
-           # WARNING: This requires your MacOS password.
-        else
-           fancy_echo "GIT_CLIENT=\"sourcetree\" already installed:" >>$LOGFILE
-        fi
-    fi
-   if [[ "${TRYOUT,,}" == *"sourcetree"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Opening Sourcetree ..."
-      open "/Applications/Sourcetree.app"
-   fi
-else
-      fancy_echo "GIT_CLIENTS sourcetree not specified." >>$LOGFILE
-fi
-
-
-if [[ "${GIT_CLIENT,,}" == *"smartgit"* ]]; then
-    # SmartGit from https://syntevo.com/smartgit
-    if [ ! -d "/Applications/SmartGit.app" ]; then 
-        fancy_echo "Installing GIT_CLIENT=\"smartgit\" using Homebrew ..."
-        brew cask uninstall smartgit
-        brew cask install --appdir="/Applications" smartgit
-    else
-        if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-           fancy_echo "Upgrading GIT_CLIENT=\"smartgit\" using Homebrew ..."
-           brew cask upgrade smartgit
-        else
-           fancy_echo "GIT_CLIENT=\"smartgit\" already installed:"
-        fi
-    fi
-   if [[ "${TRYOUT,,}" == *"smartgit"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Opening SmartGit ..."
-      open "/Applications/SmartGit.app"
-   fi
-else
-      fancy_echo "GIT_CLIENTS smartgit not specified." >>$LOGFILE
-fi
-
-
-if [[ "${GIT_CLIENT,,}" == *"tower"* ]]; then
-    # Tower from https://www.git-tower.com/learn/git/ebook/en/desktop-gui/advanced-topics/git-flow
-    if [ ! -d "/Applications/Tower.app" ]; then 
-        fancy_echo "Installing GIT_CLIENT=\"tower\" using Homebrew ..."
-        brew cask uninstall tower
-        brew cask install --appdir="/Applications" tower
-    else
-        if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-           fancy_echo "Upgrading GIT_CLIENT=\"tower\" using Homebrew ..."
-           # current version?
-           brew cask upgrade tower
-        else
-           fancy_echo "GIT_CLIENT=\"tower\" already installed" >>$LOGFILE
-        fi
-    fi
-    # version?
-   if [[ "${TRYOUT,,}" == *"tower"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Opening Tower ..."
-      open "/Applications/Tower.app"
-   fi
-else
-      fancy_echo "GIT_CLIENTS tower not specified." >>$LOGFILE
-fi
-
-
-if [[ "${GIT_CLIENT,,}" == *"magit"* ]]; then
-    # See https://www.slant.co/topics/465/viewpoints/18/~best-git-clients-for-macos~macvim
-    #     "Useful only for people who use Emacs text editor."
-    # https://magit.vc/manual/magit/
-    if ! command -v magit >/dev/null; then
-        fancy_echo "Installing GIT_CLIENT=\"magit\" using Homebrew ..."
-         brew tap dunn/emacs
-         brew install magit
-            brew info magit >>$LOGFILE
-            brew list magit >>$LOGFILE
-    else
-        if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-           fancy_echo "Upgrading GIT_CLIENT=\"magit\" using Homebrew ..."
-           brew upgrade magit
-        else
-           fancy_echo "GIT_CLIENT=\"magit\" already installed:" >>$LOGFILE
-        fi
-    fi
-   # TODO: magit -v
-   if [[ "${TRYOUT,,}" == *"magit"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Cannot Start magit in background ..." >>$LOGFILE
-      #magit & 
-   fi
-else
-      fancy_echo "GIT_CLIENTS magit not specified." >>$LOGFILE
-fi
-
-
-if [[ "${GIT_CLIENT,,}" == *"gitup"* ]]; then
-   # http://gitup.co/
-   # https://github.com/git-up/GitUp
-   # https://gitup.vc/manual/gitup/
-   if ! command -v gitup >/dev/null; then
-      fancy_echo "Installing GIT_CLIENT=\"gitup\" using Homebrew ..."
-      # https://s3-us-west-2.amazonaws.com/gitup-builds/stable/GitUp.zip
-      brew cask install --appdir="/Applications" gitup
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading GIT_CLIENT=\"gitup\" using Homebrew ..."
-         brew upgrade gitup
-      else
-         fancy_echo "GIT_CLIENT=\"gitup\" already installed:" >>$LOGFILE
-      fi
-   fi
-   # gitup -v does not work
-   if [[ "${TRYOUT,,}" == *"gitup"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Starting GitUp in background ..." >>$LOGFILE
-      gitup &
-   fi
-else
-      fancy_echo "GIT_CLIENTS gitup not specified." >>$LOGFILE
-fi
-
-
-######### Git web browser setting:
-
-
-# Install browser using Homebrew to display GitHub to paste SSH key at the end.
-fancy_echo "BROWSERS=$BROWSERS in secrets.sh ..." >>$LOGFILE
-      echo "The last one installed is set as the Git browser." >>$LOGFILE
-
-if [[ "${BROWSERS,,}" == *"safari"* ]]; then
-   if ! command -v safari >/dev/null; then
-      fancy_echo "No install needed on MacOS for BROWSERS=\"safari\"."
-      # /usr/bin/safaridriver
-   else
-      fancy_echo "No upgrade on MacOS for BROWSERS=\"safari\"."
-   fi
-   git config --global web.browser safari
-
-   #fancy_echo "Opening safari ..."
-   #safari
-fi
-
-
-if [[ "${BROWSERS,,}" == *"brave"* ]]; then
-   # brave is more respectful of user data.
-   if [ ! -d "/Applications/Brave.app" ]; then 
-      fancy_echo "Installing BROWSERS=\"brave\" using Homebrew ..."
-      brew cask uninstall brave
-      brew cask install --appdir="/Applications" brave
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading BROWSERS=\"brave\" using Homebrew ..."
-         brew cask upgrade brave
-      fi
-   fi
-   git config --global web.browser brave
-
-   # fancy_echo "Opening brave ..."
-   # open "/Applications/brave.app"
-else
-      fancy_echo "BROWSERS brave not specified." >>$LOGFILE
-fi
-
-
-# See Complications at
-# https://stackoverflow.com/questions/19907152/how-to-set-google-chrome-as-git-default-browser
-
-# [web]
-# browser = google-chrome
-#[browser "chrome"]
-#    cmd = C:/Program Files (x86)/Google/Chrome/Application/chrome.exe
-#    path = C:/Program Files (x86)/Google/Chrome/Application/
-
-if [[ "${BROWSERS,,}" == *"chrome"* ]]; then
-   # google-chrome is the most tested and popular.
-   if [ ! -d "/Applications/Google Chrome.app" ]; then 
-      fancy_echo "Installing BROWSERS=\"google-chrome\" using Homebrew ..."
-      brew cask uninstall google-chrome
-      brew cask install --appdir="/Applications" google-chrome
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading BROWSERS=\"google-chrome\" using Homebrew ..."
-         brew cask upgrade google-chrome
-      else
-         fancy_echo "BROWSERS=\"google-chrome\" already installed." >>$LOGFILE
-      fi
-   fi
-   git config --global web.browser google-chrome
-
-   # fancy_echo "Opening Google Chrome ..."
-   # open "/Applications/Google Chrome.app"
-else
-      fancy_echo "BROWSERS chrome not specified." >>$LOGFILE
-fi
-
-
-if [[ "${BROWSERS,,}" == *"firefox"* ]]; then
-   # firefox is more respectful of user data.
-   if [ ! -d "/Applications/Firefox.app" ]; then 
-      fancy_echo "Installing BROWSERS=\"firefox\" using Homebrew ..."
-      brew cask uninstall firefox
-      brew cask install --appdir="/Applications" firefox
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading BROWSERS=\"firefox\" using Homebrew ..."
-         brew cask upgrade firefox
-      fi
-   fi
-   git config --global web.browser firefox
-
-   #fancy_echo "Opening firefox ..."
-   #open "/Applications/Firefox.app"
-else
-      fancy_echo "BROWSERS firefox not specified." >>$LOGFILE
-fi
-
-# Other alternatives listed at https://git-scm.com/docs/git-web--browse.html
-
-   # brew install links
-   #    brew info links >>$LOGFILE
-   #    brew list links >>$LOGFILE
-
-   #git config --global web.browser cygstart
-   #git config --global browser.cygstart.cmd cygstart
-
-
-######### Diff/merge tools:
-
-
-# Based on https://gist.github.com/tony4d/3454372 
-fancy_echo "Configuring to enable git mergetool..." >>$LOGFILE
-if [[ "$GITCONFIG" = *"[difftool]"* ]]; then  # contains text.
-   fancy_echo "[difftool] p4merge already in $GITCONFIG" >>$LOGFILE
-else
-   fancy_echo "Adding [difftool] p4merge in $GITCONFIG..." >>$LOGFILE
-   git config --global merge.tool p4mergetool
-   git config --global mergetool.p4mergetool.cmd "/Applications/p4merge.app/Contents/Resources/launchp4merge \$PWD/\$BASE \$PWD/\$REMOTE \$PWD/\$LOCAL \$PWD/\$MERGED"
-   # false = prompting:
-   git config --global mergetool.p4mergetool.trustExitCode false
-   git config --global mergetool.keepBackup true
-
-   git config --global diff.tool p4mergetool
-   git config --global difftool.prompt false
-   git config --global difftool.p4mergetool.cmd "/Applications/p4merge.app/Contents/Resources/launchp4merge \$LOCAL \$REMOTE"
-
-   # Auto-type in "adduid":
-   # gpg --edit-key "$KEY" answer adduid"
-   # NOTE: By using git config command, repeated invocation would not duplicate lines.
-
-   # git mergetool
-   # You will be prompted to run "p4mergetool", hit enter and the visual merge editor will launch.
-
-   # See https://danlimerick.wordpress.com/2011/06/19/git-for-window-tip-use-p4merge-as-mergetool/
-   # git difftool
-fi
-
-
-######### Local Linter services:
-
-
-# This Bash file was run through online at https://www.shellcheck.net/
-# See https://github.com/koalaman/shellcheck#user-content-in-your-editor
-
-# To ignore/override an error identified:
-# shellcheck disable=SC1091
-
-#brew install shellcheck
-#   brew info shellcheck >>$LOGFILE
-#   brew list shellcheck >>$LOGFILE
-
-# This enables Git hooks to run on pre-commit to check Bash scripts being committed.
-
-
-######### Git tig repo viewer:
-
-
-if [[ "${GIT_TOOLS,,}" == *"gerrit"* ]]; then
-   # https://gerrit-releases.storage.googleapis.com/index.html
-   JAVA_INSTALL  # pre-requisite
-   if ! command -v git-gerrit >/dev/null; then  # in /usr/local/bin/git-gerrit
-      fancy_echo "Installing git-gerrit for code reviews ..."
-      brew install git-gerrit
-         brew info git-gerrit >>$LOGFILE
-         brew list git-gerrit >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-           # git-gerrit version 2.15.1
-         fancy_echo "git-gerrit upgrading ..."
-         brew upgrade git-gerrit 
-      fi
-   fi
-   # TODO: git-gerrit init
-   #fancy_echo "   git-gerrit :" >>$LOGFILE
-
-   if [[ "${TRYOUT,,}" == *"git-gerrit"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "Cannot Start git-gerrit in background ..." >>$LOGFILE
-      #magit & 
-   fi
-else
-      fancy_echo "GIT_TOOLS gerrit not specified." >>$LOGFILE
-fi
-
-
-######### Git tig repo viewer:
-
-
-if [[ "${GIT_TOOLS,,}" == *"tig"* ]]; then
-   if ! command -v tig >/dev/null; then  # in /usr/local/bin/tig
-      fancy_echo "Installing tig for formatting git logs ..."
-      brew install tig
-         brew info tig >>$LOGFILE
-         brew list tig >>$LOGFILE
-      # See https://jonas.github.io/tig/
-      # A sample of the default configuration has been installed to:
-      #   /usr/local/opt/tig/share/tig/examples/tigrc
-      # to override the system-wide default configuration, copy the sample to:
-      #   /usr/local/etc/tigrc
-      # Bash completion has been installed to:
-      #   /usr/local/etc/bash_completion.d
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         tig version | grep tig  
-          # git version 2.16.3
-          # tig version 2.2.9
-         fancy_echo "tig upgrading ..."
-         brew upgrade tig 
-      fi
-  fi
-  fancy_echo "tig --version: $(tig --version)" >>$LOGFILE
-     # tig version 2.3.3
-else
-      fancy_echo "GIT_TOOLS tig not specified." >>$LOGFILE
-fi
-
-
-######### BFG to identify and remove passwords and large or troublesome blobs.
-
-
-# See https://rtyley.github.io/bfg-repo-cleaner/ 
-
-# Install sub-folder under git-utilities:
-# git clone https://github.com/rtyley/bfg-repo-cleaner --depth=0
-
-#git clone --mirror $WORK_REPO  # = git://example.com/some-big-repo.git
-
-#JAVA_INSTALL
-
-#java -jar bfg.jar --replace-text banned.txt \
-#    --strip-blobs-bigger-than 100M \
-#    $SECRETSFILE
-
-
-######### Git Large File Storage:
-
-
-# Git Large File Storage (LFS) replaces large files such as audio samples, videos, datasets, and graphics with text pointers inside Git, while storing the file contents on a remote server like GitHub.com or GitHub Enterprise. During install .gitattributes are defined.
-# See https://git-lfs.github.com/
-# See https://help.github.com/articles/collaboration-with-git-large-file-storage/
-# https://www.atlassian.com/git/tutorials/git-lfs
-# https://www.youtube.com/watch?v=p3Pse1UkEhI
-
-if [[ "${GIT_TOOLS,,}" == *"lfs"* ]]; then
-   if ! command -v git-lfs >/dev/null; then  # in /usr/local/bin/git-lfs
-      fancy_echo "Installing git-lfs for managing large files in git ..."
-      brew install git-lfs
-         brew info git-lfs >>$LOGFILE
-         brew list git-lfs >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "git-lfs upgrading ..."
-         git-lfs version # git-lfs/2.4.0 (GitHub; darwin amd64; go 1.10)
-         brew upgrade git-lfs 
-      fi
-   fi
-   echo -e "\n   git-lfs version:" >>$LOGFILE
-   echo -e "$(git-lfs version)" >>$LOGFILE
-   # git-lfs/2.4.0 (GitHub; darwin amd64; go 1.10)
-
-   # Update global git config (creates hooks pre-push, post-checkout, post-commit, post-merge)
-   #  git lfs install
-
-   # Update system git config:
-   #  git lfs install --system
-
-   # See https://help.github.com/articles/configuring-git-large-file-storage/
-   # Set LFS to kick into action based on file name extensions such as *.psd by
-   # running command:  (See https://git-scm.com/docs/gitattributes)
-   # git lfs track "*.psd"
-   #    The command appends to the repository's .gitattributes file:
-   # *.psd filter=lfs diff=lfs merge=lfs -text
-
-   #  git lfs track "*.mp4"
-   #  git lfs track "*.mp3"
-   #  git lfs track "*.jpeg"
-   #  git lfs track "*.jpg"
-   #  git lfs track "*.png"
-   #  git lfs track "*.ogg"
-   # CAUTION: Quotes are important in the entries above.
-   # CAUTION: Git clients need to be LFS-aware.
-
-   # Based on https://github.com/git-lfs/git-lfs/issues/1720
-   git config lfs.transfer.maxretries 10
-
-   # Define alias to stop lfs
-   #git config --global alias.plfs "\!git -c filter.lfs.smudge= -c filter.lfs.required=false pull && git lfs pull"
-   #$ git plfs
-else
-      fancy_echo "GIT_TOOLS lfs not specified." >>$LOGFILE
-fi
-
-######### TODO: .gitattributes
-
-
-# See https://github.com/alexkaratarakis/gitattributes for templates
-# Make sure .gitattributes is tracked
-# git add .gitattributes
-# TODO: https://github.com/alexkaratarakis/gitattributes/blob/master/Common.gitattributes
-
 
 ######### Text editors:
 
@@ -1723,7 +1147,7 @@ fi
 # Specified in secrets.sh
           # nano, pico, vim, sublime, code, atom, macvim, textmate, emacs, intellij, sts, eclipse.
           # NOTE: nano and vim are built into MacOS, so no install.
-fancy_echo "EDITORS=$EDITORS..." >>$LOGFILE
+fancy_echo "EDITORS=$EDITORS" >>$LOGFILE
       echo "The last one installed is the Git default." >>$LOGFILE
 
 # INFO: https://danlimerick.wordpress.com/2011/06/12/git-for-windows-tip-setting-an-editor/
@@ -1738,7 +1162,8 @@ if [[ "${EDITORS,,}" == *"emacs"* ]]; then
 fi
 
 if [[ "${EDITORS,,}" == *"nano"* ]]; then
-   brew install nano
+   # comes with MacOS
+   BREW_INSTALL "EDITORS" "nano" "nano --version"
    git config --global core.editor nano
 fi
 
@@ -1758,24 +1183,11 @@ fi
 
 if [[ "${EDITORS,,}" == *"brackets"* ]]; then
    # Cross-platform code editor for the web, written in JavaScript, HTML and CSS 
-   if [ ! -d "/Applications/Brackets.app" ]; then 
-      fancy_echo "Installing brackets text editor ..." >>$LOGFILE
-      brew cask install --appdir="/Applications" brackets
-      # Brackets not in /usr/local/bin/brackets
-   fi
-
-      if grep -q "alias brackets=" "$BASHFILE" ; then
-         fancy_echo "PATH to brackets already in $BASHFILE" >>$LOGFILE
-      else
-         fancy_echo "Adding PATH to brackets in $BASHFILE" >>$LOGFILE
-         echo "" >>"$BASHFILE"
-         echo "alias brackets='open -a \"/Applications/Brackets.app\"'" >>"$BASHFILE"
-         source "$BASHFILE"
-      fi 
+   BREW_CASK_INSTALL "EDITORS" "brackets" "Brackets" 
       # NO brackets -v  # version 1.12 on 2018-04-17
       # so cannot git config --global core.editor brackets
 else
-      fancy_echo "EDITORS brackets not specified." >>$LOGFILE
+   fancy_echo "EDITORS brackets not specified." >>$LOGFILE
 fi
 
 if [[ "${EDITORS,,}" == *"vim"* ]]; then
@@ -1788,76 +1200,39 @@ fi
 
 if [[ "${EDITORS,,}" == *"sublime"* ]]; then
    # /usr/local/bin/subl
-   if [ ! -d "/Applications/Sublime Text.app" ]; then 
-      fancy_echo "Installing Sublime Text text editor using Homebrew ..."
-      brew cask uninstall sublime-text
-      brew cask install --appdir="/Applications" sublime-text
- 
-      if grep -q "/usr/local/bin/subl" "$BASHFILE" ; then    
-         fancy_echo "PATH to Sublime already in $BASHFILE" >>$LOGFILE
-      else
+   BREW_CASK_INSTALL "EDITORS" "sublime-text" "Sublime Text" 
+      # Sublime Text Build 3143
+
          fancy_echo "Adding PATH to SublimeText in $BASHFILE..."
          echo "" >>"$BASHFILE"
          echo "export PATH=\"\$PATH:/usr/local/bin/subl\"" >>"$BASHFILE"
          source "$BASHFILE"
-      fi 
  
-      if grep -q "alias subl=" "$BASHFILE" ; then
-         fancy_echo "PATH to Sublime already in $BASHFILE" >>$LOGFILE
-      else
-         echo "" >>"$BASHFILE"
-         echo "alias subl='open -a \"/Applications/Sublime Text.app\"'" >>"$BASHFILE"
-         source "$BASHFILE"
-      fi 
       # Only install the following during initial install:
       # TODO: Configure Sublime for spell checker, etc. https://github.com/SublimeLinter/SublimeLinter-shellcheck
       # install Package Control see https://gist.github.com/patriciogonzalezvivo/77da993b14a48753efda
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Sublime Text upgrading ..."
-         subl --version  # Sublime Text Build 3143
-            # To avoid response "Error: git not installed" to brew upgrade git
-         brew cask reinstall sublime-text
-      fi
-   fi
-   git config --global core.editor code
-   echo -e "\n$(subl --version)" >>$LOGFILE
-   #subl --version
-      # Sublime Text Build 3143
 
-   #fancy_echo "Opening Sublime Text app in background ..."
-   #subl &
+   if [[ "${TRYOUT,,}" == *"sublime"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS sublime-text starting ..."
+      open -a "/Applications/Sublime Text.app" &
+      # subl &
+   fi
 else
-      fancy_echo "EDITORS sublime not specified." >>$LOGFILE
+   fancy_echo "EDITORS sublime not specified." >>$LOGFILE
 fi
 
 
 if [[ "${EDITORS,,}" == *"code"* ]]; then
-    if ! command -v code >/dev/null; then
-        fancy_echo "Installing Visual Studio Code text editor using Homebrew ..."
-        brew install caskroom/cask/visual-studio-code
-                         brew info visual-studio-code >>$LOGFILE
-                         brew list visual-studio-code >>$LOGFILE
-    else
-       if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-          fancy_echo "VS Code upgrading ..."
-          code --version
-          # No upgrade - "Error: No available formula with the name "visual-studio-code" 
-          brew uninstall visual-studio-code
-          brew install visual-studio-code
-       else
-          fancy_echo "VS Code already installed:" >>$LOGFILE
-       fi
-    fi
-    git config --global core.editor code
-    echo "Visual Studio Code: $(code --version)" >>$LOGFILE
+   BREW_CASK_INSTALL "EDITORS" "visual-studio-code" "Visual Studio Code" 
     # code --version
       # 1.21.1
       # 79b44aa704ce542d8ca4a3cc44cfca566e7720f1
       # x64
 
+   git config --global core.editor code
+
    # https://github.com/timonwong/vscode-shellcheck
-   fancy_echo "Installing Visual Studio Code Shellcheck extension"
+   fancy_echo "EDITORS Visual Studio Code Shellcheck extension"
    code --install-extension timonwong.shellcheck
    #fancy_echo "Opening Visual Studio Code ..."
    #open "/Applications/Visual Studio Code.app"
@@ -1866,7 +1241,7 @@ if [[ "${EDITORS,,}" == *"code"* ]]; then
 
    # $HOME/Library/Application Support/Code
 else
-      fancy_echo "EDITORS code not specified." >>$LOGFILE
+   fancy_echo "EDITORS code not specified." >>$LOGFILE
 fi
 
 
@@ -2132,15 +1507,391 @@ fi
 
 if [[ "${EDITORS,,}" == *"webstorm"* ]]; then
    # See http://www.jetbrains.com/webstorm/
-   brew_cask_install "EDITORS" "webstorm" "Webstorm" 
+   BREW_CASK_INSTALL "EDITORS" "webstorm" "Webstorm"
+   if [[ "${TRYOUT,,}" == *"webstorm"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS webstorm starting ..."
+      open -a "/Applications/Webstorm.app" &
+   fi
 fi
 
 if [[ "${EDITORS,,}" == *"android-studio-preview"* ]]; then
    # See https://developer.android.com/studio/preview/index.html
-   brew_cask_install "EDITORS" "android-studio-preview" "Android Studio" 
+   BREW_CASK_INSTALL "EDITORS" "android-studio-preview" "Android Studio" 
+   if [[ "${TRYOUT,,}" == *"android-studio-preview"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS android-studio-preview starting ..."
+      open -a "/Applications/Android Studio Preview.app" &
+   fi
 fi
 
 # Other EDITORS: Unity for VR.
+
+
+
+######### Git clients:
+
+
+fancy_echo "GIT_CLIENTS=$GIT_CLIENTS" >>$LOGFILE
+echo "The last one installed is set as the Git client." >>$LOGFILE
+# See https://www.slant.co/topics/465/~best-git-clients-for-macos
+          # git, cola, github, gitkraken, smartgit, sourcetree, tower, magit, gitup. 
+          # See https://git-scm.com/download/gui/linux
+          # https://www.slant.co/topics/465/~best-git-clients-for-macos
+
+#[core]
+#  editor = vim
+#  whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+#  excludesfile = ~/.gitignore
+#[push]
+#  default = matching
+
+#[diff]
+#  tool = vimdiff
+#[difftool]
+#  prompt = false
+
+if [[ "${GIT_CLIENTS,,}" == *"cola"* ]]; then
+   # https://git-cola.github.io/  (written in Python)
+   # https://medium.com/@hamen/installing-git-cola-on-osx-eaa9368b4ee
+   BREW_INSTALL "GIT_CLIENTS" "git-cola" "git-cola --version"
+      # cola version 3.0
+   if [[ "${TRYOUT,,}" == *"cola"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "Starting git-cola in background ..."
+      git-cola &
+   fi
+fi
+
+
+# GitHub Desktop is written by GitHub, Inc.,
+# open sourced at https://github.com/desktop/desktop
+# so people can just click a button on GitHub to download a repo from an internet browser.
+if [[ "${GIT_CLIENTS,,}" == *"github"* ]]; then
+    # https://desktop.github.com/
+   BREW_CASK_INSTALL "GIT_CLIENTS" "github" "GitHub Desktop" 
+   if [[ "${TRYOUT,,}" == *"github"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "Opening GitHub Desktop GUI ..." 
+      open "/Applications/GitHub Desktop.app"
+   fi
+else
+   fancy_echo "GIT_CLIENTS github not specified." >>$LOGFILE
+fi
+
+
+if [[ "${GIT_CLIENTS,,}" == *"gitkraken"* ]]; then
+   # GitKraken from https://www.gitkraken.com/ and https://blog.axosoft.com/gitflow/
+   BREW_CASK_INSTALL "EDITORS" "gitkraken" "GitKraken" 
+   #gitkraken -v
+   BASHFILE_EXPORT "GITKRAKEN" "/Applications/GitKraken.app"
+   if [[ "${TRYOUT,,}" == *"gitkraken"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "Opening GitKraken ..."
+      open "/Applications/GitKraken.app"
+   fi
+else
+   fancy_echo "GIT_CLIENTS gitkraken not specified." >>$LOGFILE
+fi
+
+
+if [[ "${GIT_CLIENTS,,}" == *"sourcetree"* ]]; then
+    # See https://www.sourcetreeapp.com/
+   BREW_CASK_INSTALL "EDITORS" "sourcetree" "Sourcetree" 
+   if [[ "${TRYOUT,,}" == *"sourcetree"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "Opening Sourcetree ..."
+      open "/Applications/Sourcetree.app"
+   fi
+else
+   fancy_echo "GIT_CLIENTS sourcetree not specified." >>$LOGFILE
+fi
+
+
+if [[ "${GIT_CLIENTS,,}" == *"smartgit"* ]]; then
+    # SmartGit from https://syntevo.com/smartgit
+   BREW_CASK_INSTALL "EDITORS" "smartgit" "SmartGit" 
+   if [[ "${TRYOUT,,}" == *"smartgit"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "Opening SmartGit ..."
+      open -a "/Applications/SmartGit.app"
+   fi
+else
+   fancy_echo "GIT_CLIENTS smartgit not specified." >>$LOGFILE
+fi
+
+
+if [[ "${GIT_CLIENTS,,}" == *"tower"* ]]; then
+    # Tower from https://www.git-tower.com/learn/git/ebook/en/desktop-gui/advanced-topics/git-flow
+   BREW_CASK_INSTALL "EDITORS" "tower" "Tower" 
+   # version?
+   if [[ "${TRYOUT,,}" == *"tower"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "Opening Tower ..."
+      open -a "/Applications/Tower.app"
+   fi
+else
+  fancy_echo "GIT_CLIENTS tower not specified." >>$LOGFILE
+fi
+
+
+if [[ "${GIT_CLIENTS,,}" == *"magit"* ]]; then
+    # See https://www.slant.co/topics/465/viewpoints/18/~best-git-clients-for-macos~macvim
+    #     "Useful only for people who use Emacs text editor."
+
+    # https://magit.vc/manual/magit/
+   BREW_INSTALL "GIT_CLIENTS" "magit" "brew"
+      # TODO: magit -v
+   if [[ "${TRYOUT,,}" == *"magit"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "ERROR: Cannot Start magit in background ..." >>$LOGFILE
+      #emacs magit & 
+   fi
+else
+      fancy_echo "GIT_CLIENTS magit not specified." >>$LOGFILE
+fi
+
+
+if [[ "${GIT_CLIENTS,,}" == *"gitup"* ]]; then
+   # http://gitup.co/
+   # https://github.com/git-up/GitUp
+   # https://gitup.vc/manual/gitup/
+   BREW_CASK_INSTALL "GIT_CLIENTS" "gitup" "GitUp"
+      # https://s3-us-west-2.amazonaws.com/gitup-builds/stable/GitUp.tar.gz
+   BASHFILE_EXPORT "gitup" "open -a /Applications/GitUp.app"
+
+   if [[ "${TRYOUT,,}" == *"gitup"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "Starting GitUp in background ..." >>$LOGFILE
+      gitup &
+   fi
+else
+      fancy_echo "GIT_CLIENTS gitup not specified." >>$LOGFILE
+fi
+
+
+######### Git web browser setting:
+
+
+# Install browser using Homebrew to display GitHub to paste SSH key at the end.
+fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
+      echo "The last one installed is set as the Git browser." >>$LOGFILE
+
+if [[ "${BROWSERS,,}" == *"safari"* ]]; then
+   if ! command -v safari >/dev/null; then
+      fancy_echo "No install needed on MacOS for BROWSERS=\"safari\"."
+      # /usr/bin/safaridriver
+   else
+      fancy_echo "No upgrade on MacOS for BROWSERS=\"safari\"."
+   fi
+   git config --global web.browser safari
+
+   #fancy_echo "Opening safari ..."
+   #safari
+fi
+
+
+if [[ "${BROWSERS,,}" == *"brave"* ]]; then
+   # brave is more respectful of user data.
+   BREW_CASK_INSTALL "EDITORS" "brave" "Brave" 
+   git config --global web.browser brave
+   if [[ "${TRYOUT,,}" == *"brave"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "BROWSERS brave starting ..."
+      open -a "/Applications/Brave.app" &
+   fi
+else
+   fancy_echo "BROWSERS brave not specified." >>$LOGFILE
+fi
+
+
+# See Complications at
+# https://stackoverflow.com/questions/19907152/how-to-set-google-chrome-as-git-default-browser
+
+# [web]
+# browser = google-chrome
+#[browser "chrome"]
+#    cmd = C:/Program Files (x86)/Google/Chrome/Application/chrome.exe
+#    path = C:/Program Files (x86)/Google/Chrome/Application/
+
+if [[ "${BROWSERS,,}" == *"chrome"* ]]; then
+   # google-chrome is the most tested and popular.
+   BREW_CASK_INSTALL "BROWSERS" "chrome" "Google Chome" 
+   git config --global web.browser google-chrome
+   if [[ "${TRYOUT,,}" == *"webstorm"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS webstorm starting ..."
+      open -a "/Applications/Webstorm.app" &
+   fi
+else
+   fancy_echo "BROWSERS chrome not specified." >>$LOGFILE
+fi
+
+
+if [[ "${BROWSERS,,}" == *"firefox"* ]]; then
+   # firefox is more respectful of user data.
+   BREW_CASK_INSTALL "BROWSERS" "firefox" "Firefox" 
+   git config --global web.browser firefox
+   if [[ "${TRYOUT,,}" == *"firefox"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS firefox starting ..."
+      open -a "/Applications/Firefox.app" &
+   fi
+else
+      fancy_echo "BROWSERS firefox not specified." >>$LOGFILE
+fi
+
+# Other alternatives listed at https://git-scm.com/docs/git-web--browse.html
+
+   # brew install links
+   #    brew info links >>$LOGFILE
+   #    brew list links >>$LOGFILE
+
+   #git config --global web.browser cygstart
+   #git config --global browser.cygstart.cmd cygstart
+
+
+######### Diff/merge tools:
+
+
+# Based on https://gist.github.com/tony4d/3454372 
+fancy_echo "Configuring to enable git mergetool..." >>$LOGFILE
+if [[ "$GITCONFIG" = *"[difftool]"* ]]; then  # contains text.
+   fancy_echo "[difftool] p4merge already in $GITCONFIG" >>$LOGFILE
+else
+   fancy_echo "Adding [difftool] p4merge in $GITCONFIG..." >>$LOGFILE
+   git config --global merge.tool p4mergetool
+   git config --global mergetool.p4mergetool.cmd "/Applications/p4merge.app/Contents/Resources/launchp4merge \$PWD/\$BASE \$PWD/\$REMOTE \$PWD/\$LOCAL \$PWD/\$MERGED"
+   # false = prompting:
+   git config --global mergetool.p4mergetool.trustExitCode false
+   git config --global mergetool.keepBackup true
+
+   git config --global diff.tool p4mergetool
+   git config --global difftool.prompt false
+   git config --global difftool.p4mergetool.cmd "/Applications/p4merge.app/Contents/Resources/launchp4merge \$LOCAL \$REMOTE"
+
+   # Auto-type in "adduid":
+   # gpg --edit-key "$KEY" answer adduid"
+   # NOTE: By using git config command, repeated invocation would not duplicate lines.
+
+   # git mergetool
+   # You will be prompted to run "p4mergetool", hit enter and the visual merge editor will launch.
+
+   # See https://danlimerick.wordpress.com/2011/06/19/git-for-window-tip-use-p4merge-as-mergetool/
+   # git difftool
+fi
+
+
+######### Local Linter services:
+
+
+# This Bash file was run through online at https://www.shellcheck.net/
+# See https://github.com/koalaman/shellcheck#user-content-in-your-editor
+
+# To ignore/override an error identified:
+# shellcheck disable=SC1091
+
+#brew install shellcheck
+#   brew info shellcheck >>$LOGFILE
+#   brew list shellcheck >>$LOGFILE
+
+# This enables Git hooks to run on pre-commit to check Bash scripts being committed.
+
+
+######### Git tig repo viewer:
+
+
+if [[ "${GIT_TOOLS,,}" == *"git-gerrit"* ]]; then
+   # https://gerrit-releases.storage.googleapis.com/index.html
+   JAVA_INSTALL  # pre-requisite
+   BREW_INSTALL "GIT_TOOLS" "git-gerrit" "brew"
+   if [[ "${TRYOUT,,}" == *"git-gerrit"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "Cannot Start git-gerrit in background ..." >>$LOGFILE
+      git-gerrit & 
+   fi
+else
+    fancy_echo "GIT_TOOLS git-gerrit not specified." >>$LOGFILE
+fi
+
+
+######### Git tig repo viewer:
+
+
+if [[ "${GIT_TOOLS,,}" == *"tig"* ]]; then
+   BREW_INSTALL "GIT_TOOLS" "tig" ""
+     # tig version 2.3.3
+
+      # See https://jonas.github.io/tig/
+      # A sample of the default configuration has been installed to:
+      #   /usr/local/opt/tig/share/tig/examples/tigrc
+      # to override the system-wide default configuration, copy the sample to:
+      #   /usr/local/etc/tigrc
+      # Bash completion has been installed to:
+      #   /usr/local/etc/bash_completion.d
+else
+   fancy_echo "GIT_TOOLS tig not specified." >>$LOGFILE
+fi
+
+
+######### BFG to identify and remove passwords and large or troublesome blobs.
+
+
+# See https://rtyley.github.io/bfg-repo-cleaner/ 
+
+# Install sub-folder under git-utilities:
+# git clone https://github.com/rtyley/bfg-repo-cleaner --depth=0
+
+#git clone --mirror $WORK_REPO  # = git://example.com/some-big-repo.git
+
+#JAVA_INSTALL
+
+#java -jar bfg.jar --replace-text banned.txt \
+#    --strip-blobs-bigger-than 100M \
+#    $SECRETSFILE
+
+
+######### Git Large File Storage:
+
+
+# Git Large File Storage (LFS) replaces large files such as audio samples, videos, datasets, and graphics with text pointers inside Git, while storing the file contents on a remote server like GitHub.com or GitHub Enterprise. During install .gitattributes are defined.
+# See https://git-lfs.github.com/
+# See https://help.github.com/articles/collaboration-with-git-large-file-storage/
+# https://www.atlassian.com/git/tutorials/git-lfs
+# https://www.youtube.com/watch?v=p3Pse1UkEhI
+
+if [[ "${GIT_TOOLS,,}" == *"lfs"* ]]; then
+   BREW_INSTALL "GIT_TOOLS" "git" "brew"
+   echo "$(git-lfs version)" >>$LOGFILE
+      # git-lfs/2.4.0 (GitHub; darwin amd64; go 1.10)
+
+   # Update global git config (creates hooks pre-push, post-checkout, post-commit, post-merge)
+   #  git lfs install
+
+   # Update system git config:
+   #  git lfs install --system
+
+   # See https://help.github.com/articles/configuring-git-large-file-storage/
+   # Set LFS to kick into action based on file name extensions such as *.psd by
+   # running command:  (See https://git-scm.com/docs/gitattributes)
+   # git lfs track "*.psd"
+   #    The command appends to the repository's .gitattributes file:
+   # *.psd filter=lfs diff=lfs merge=lfs -text
+
+   #  git lfs track "*.mp4"
+   #  git lfs track "*.mp3"
+   #  git lfs track "*.jpeg"
+   #  git lfs track "*.jpg"
+   #  git lfs track "*.png"
+   #  git lfs track "*.ogg"
+   # CAUTION: Quotes are important in the entries above.
+   # CAUTION: Git clients need to be LFS-aware.
+
+   # Based on https://github.com/git-lfs/git-lfs/issues/1720
+   git config lfs.transfer.maxretries 10
+
+   # Define alias to stop lfs
+   #git config --global alias.plfs "\!git -c filter.lfs.smudge= -c filter.lfs.required=false pull && git lfs pull"
+   #$ git plfs
+else
+      fancy_echo "GIT_TOOLS lfs not specified." >>$LOGFILE
+fi
+
+
+######### TODO: .gitattributes
+
+
+# See https://github.com/alexkaratarakis/gitattributes for templates
+# Make sure .gitattributes is tracked
+# git add .gitattributes
+# TODO: https://github.com/alexkaratarakis/gitattributes/blob/master/Common.gitattributes
+
 
 
 ######### ~/.gitconfig [user] and [core] settings:
@@ -2228,19 +1979,8 @@ fi
 
 
 if [[ "${GIT_TOOLS,,}" == *"diff-so-fancy"* ]]; then
-   if ! command -v diff-so-fancy >/dev/null; then
-      fancy_echo "Installing GIT_TOOLS=\"diff-so-fancy\" using Homebrew ..."
-      brew install diff-so-fancy
-         brew info diff-so-fancy >>$LOGFILE
-         brew list diff-so-fancy >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "EDITORS=\"diff-so-fancy\" upgrading ..."
-         brew cask upgrade diff-so-fancy
-      else
-         fancy_echo "EDITORS=\"diff-so-fancy\" already installed:" >>$LOGFILE
-      fi
-   fi
+   BREW_INSTALL "GIT_TOOLS" "diff-so-fancy" "brew"
+
    # Configuring based on https://github.com/so-fancy/diff-so-fancy
    git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
 
@@ -2297,12 +2037,9 @@ fi
 # https://github.com/git/git/blob/master/contrib/completion/git-prompt.sh
 # See http://maximomussini.com/posts/bash-git-prompt/
 
-if ! command -v brew >/dev/null; then
-   fancy_echo "Installing bash-git-prompt using Homebrew ..."
+if [[ "${GIT_TOOLS,,}" == *"bash-git-prompt"* ]]; then
    # From https://github.com/magicmonty/bash-git-prompt
-   brew install bash-git-prompt
-      brew info bash-git-prompt >>$LOGFILE
-      brew list bash-git-prompt >>$LOGFILE
+   BREW_INSTALL "GIT_TOOLS" "bash-git-prompt" "brew"
 
    if grep -q "gitprompt.sh" "$BASHFILE" ; then    
       fancy_echo "gitprompt.sh already in $BASHFILE"
@@ -2314,16 +2051,8 @@ if ! command -v brew >/dev/null; then
       echo "fi" >>"$BASHFILE"
    fi
 else
-    if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-       fancy_echo "Brew upgrading ..."
-       # ?  --version
-       brew upgrade bash-git-prompt
-    else
-       fancy_echo "brew bash-git-prompt already installed:" >>$LOGFILE
-    fi
+      fancy_echo "GIT_TOOLS bash-git-prompt not specified." >>$LOGFILE
 fi
-# ? --version
-
 
 ######### bash colors:
 
@@ -2384,31 +2113,16 @@ fi
 
 if [[ "${GIT_TOOLS,,}" == *"p4merge"* ]]; then
    # See https://www.perforce.com/products/helix-core-apps/merge-diff-tool-p4merge
-   if [ ! -d "/Applications/p4merge.app" ]; then 
-      fancy_echo "Installing p4merge diff engine app using Homebrew ..."
-      brew cask uninstall p4merge
-      brew cask install --appdir="/Applications" p4merge
-      # TODO: Configure p4merge using shell commands.
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "p4merge diff engine app upgrading ..."
-         # p4merge --version
-         # To avoid response "Error: git not installed" to brew upgrade git
-         brew cask reinstall p4merge
-      else
-         fancy_echo "p4merge diff engine app already installed:" >>$LOGFILE
-      fi
-   fi
-   # TODO: p4merge --version err in pop-up
+   BREW_CASK_INSTALL "GIT_TOOLS" "p4merge" "p4merge" 
 
    if grep -q "alias p4merge=" "$BASHFILE" ; then    
-      fancy_echo "p4merge alias already in $BASHFILE" >>$LOGFILE
+      fancy_echo "GIT_TOOLS p4merge alias already in $BASHFILE" >>$LOGFILE
    else
-      fancy_echo "Adding p4merge alias in $BASHFILE..."
+      fancy_echo "GIT_TOOLS p4merge alias in $BASHFILE..."
       echo "alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'" >>"$BASHFILE"
    fi 
 else
-      fancy_echo "GIT_TOOLS p4merge not specified." >>$LOGFILE
+   fancy_echo "GIT_TOOLS p4merge not specified." >>$LOGFILE
 fi
 
 # TODO: Different diff/merge engines
@@ -2438,14 +2152,7 @@ if [[ "${GIT_TOOLS,,}" == *"git-flow"* ]]; then
    # https://buildamodule.com/video/change-management-and-version-control-deploying-releases-features-and-fixes-with-git-how-to-use-a-scalable-git-branching-model-called-gitflow
 
    # Per https://github.com/nvie/gitflow/wiki/Mac-OS-X
-   if ! command -v git-flow >/dev/null; then
-      fancy_echo "Installing git-flow ..."
-      brew install git-flow
-         brew info git-flow >>$LOGFILE
-         brew list git-flow >>$LOGFILE
-   else
-      fancy_echo "git-flow already installed." >>$LOGFILE
-   fi
+   BREW_INSTALL "GIT_TOOLS" "git-flow" "brew"
 
    #[gitflow "prefix"]
    #  feature = feature-
@@ -2508,23 +2215,12 @@ fi
 
 function REDIS_INSTALL() {
       # http://redis.io/
-   if ! command -v redis >/dev/null 2>/dev/null; then 
-      fancy_echo "DATA_TOOLS redis installing ..."
-      brew install redis
-         brew info redis >>$LOGFILE 
-         brew list redis >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "DATA_TOOLS redis upgrading ..."
-         redis-cli --version
-         brew upgrade redis
-      elif [[ "${RUNTYPE,,}" == *"remove"* ]]; then
-         brew remove redis
-         rm ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
-         exit
-      fi
-   fi
+   BREW_INSTALL "GIT_TOOLS" "redis" "brew"
    fancy_echo "$(redis-cli --version)" >>$LOGFILE  # redis-cli 4.0.9
+
+      if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+         rm ~/Library/LaunchAgents/homebrew.mxcl.redis.plist
+      fi
 
    echo "DATA_TOOLS redis config ..."
    if [ ! -z "$REDIS_PORT" ]; then # fall-back if not set in secrets.sh:
@@ -2813,26 +2509,39 @@ fi
 
 
 function NEXUS_INSTALL() {
-   BREW_PKG_INSTALL "DATA_TOOLS" "nexus" "brew"
+   BREW_INSTALL "DATA_TOOLS" "nexus" "brew"
 
    # See https://help.sonatype.com/repomanager3/installation/configuring-the-runtime-environment#ConfiguringtheRuntimeEnvironment-ChangingtheHTTPPort
-   echo "DATA_TOOLS NEXUS_PORT config ..."
    if [ ! -z "$NEXUS_PORT" ]; then # fall-back if not set in secrets.sh:
       NEXUS_PORT="8081"  # default
    fi
-   NEXUS_CONF="$data-dir/etc/nexus.properties"
-   if grep -q "application-port=8081" "$NEXUS_CONF" ; then    
+   echo "NEXUS_INSTALL port $NEXUS_PORT ..."
+      # /usr/local/var/nexus contains logs, db, 
+      # /usr/local/bin/nexus not a directory
+      # /usr/local/var/homebrew/linked/nexus linked to 
+      # /usr/local/opt/nexus   
+   NEXUS_CONF="/usr/local/opt/nexus/libexec/conf/nexus.properties"
+   if grep -q "application-host=0.0.0.0" "$NEXUS_CONF" ; then
+      sed -i "s/application-host=0.0.0.0/application-host=127.0.0.1/g" "$NEXUS_CONF"
+   fi
+   if grep -q "application-port=$NEXUS_PORT" "$NEXUS_CONF" ; then
+      echo "NEXUS_INSTALL already" >>$LOGFILE
+   else
+      # TODO: Find port in conf.
       sed -i "s/application-port=8081/application-port=$NEXUS_PORT/g" "$NEXUS_CONF"
    fi
+   # https://support.sonatype.com/hc/en-us/articles/213465508-How-can-I-reset-a-forgotten-admin-password-
+   # nexus stop
+   # Add user (nexus-basedir)/../sonatype-work/nexus/conf/security.xml
 }
 if [[ "${DATA_TOOLS,,}" == *"nexus"* ]]; then
    NEXUS_INSTALL
    if [[ "${TRYOUT,,}" == *"nexus"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       RESPONSE="$(nexus status)" # example: Nexus OSS is running (13756).
-      if grep -q "$(nexus status)" "Nexus OSS is not running." ; then 
+      if [[ "$(nexus status)" == *"Nexus OSS is not running."* ]]; then 
          echo "DATA_TOOLS nexus starting on port $NEXUS_PORT in background ..."
          nexus start
-         open "http://localhost:$NEXUS_PORT/"
+         open "http://localhost:$NEXUS_PORT/nexus"
       else
          echo "DATA_TOOLS $RESPONSE ..."
       fi
@@ -2854,74 +2563,13 @@ else
 fi
 
 
-function MYSQL_INSTALL() {
-
-   # NOT https://dev.mysql.com/doc/refman/5.6/en/osx-installation-pkg.html
-   BREW_PKG_INSTALL "DATA_TOOLS" "mysql" "--version"
-   #fancy_echo "$(mysql --version)" >>$LOGFILE  # mysql-cli 4.0.9
-
-   # To avoid MySQL stupid error:
-   if [ ! -d "/usr/local/etc/my.cnf.d" ]; then
-      echo "DATA_TOOLS mysql making /usr/local/etc/my.cnf.d ..."
-      mkdir /usr/local/etc/my.cnf.d
-   fi
-
-   
-   sudo chmod -R 777 /usr/local/var/mysql/
-   # . ERROR! The server quit without updating PID file (/usr/local/var/mysql/Wilsons-MacBook-Pro.local.pid).
-
-   # QUESTION: mv .err to what is the use for /usr/local/var/mysql/Wilsons-MacBook-Pro.local.pid
-   # sudo chown _mysql /usr/local/var/mysql/*
-
-   # edit /etc/my.cnf
-
-   #ULIMIT_SET
-}
-if [[ "${DATA_TOOLS,,}" == *"mysql"* ]]; then
-   MYSQL_INSTALL
-
-   if [[ "${TRYOUT,,}" == *"mysql"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      if grep -q "$(mysql-cli ping)" "PONG" ; then    
-         echo "DATA_TOOLS mysql started ..."
-         # but connection may be terminated.
-      else
-         echo "DATA_TOOLS mysql starting in background ..."
-         sudo mysql.server start --skip-grant-tables
-         # brew services restart mysql  # ==> Successfully started `mysql` (label: homebrew.mxcl.mysql)
-      
-         mysql -uroot
-         # TODO: ERROR 2002 (HY000): Can't connect to local MySQL server through socket '/tmp/mysql.sock' (61)
-         open "http://localhost:$mysql_PORT/"
-
-         # login:
-
-      fi
-   else
-      fancy_echo "DATA_TOOLS mysql TRYOUT not specified." >>$LOGFILE
-   fi
-
-   if [[ "$TRYOUT_KEEP" != *"mysql"* ]]; then # not specified, so it's gone:
-      echo "DATA_TOOLS mysql stopping ..." >>$LOGFILE
-      brew services stop mysql
-   else
-      PID="$(ps x | grep -m1 '/mysql-server' | grep -v "grep" | awk '{print $1}')"
-      echo "DATA_TOOLS mysql still running on PID=$PID." >>$LOGFILE
-      # mysql-cli --help
-         # Usage: mysql { console | start | stop | restart | status | version }
-   fi
-else
-      fancy_echo "DATA_TOOLS mysql not specified." >>$LOGFILE
-fi
-
-
 function SONAR_INSTALL(){
    # Required: java >= 1.8   
    fancy_echo "SONAR_INSTALL" >>$LOGFILE  # sonar 3.3.4
 
-   BREW_PKG_INSTALL "DATA_TOOLS" "sonar" "brew" # /usr/local/bin/sonar
+   BREW_INSTALL "DATA_TOOLS" "sonar" "brew" # /usr/local/bin/sonar
                           # linked from /usr/local/Cellar/sonarqube/7.1/bin/sonar
-   
-   SONAR_CONF="/usr/local/opt/sonarqube/libexec/conf/sonar.properties"
+   SONAR_CONF="/usr/local/opt/sonarqube/libexec/conf/nexus.properties"
             # "/usr/local/Cellar/sonarqube/7.1/libexec/conf/sonar.properties"
    if [ ! -z "$SONAR_PORT" ]; then # fall-back if not set in secrets.sh:
       SONAR_PORT="9000"  # default 9000
@@ -2932,7 +2580,7 @@ function SONAR_INSTALL(){
 
    # https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner
    # https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner#AnalyzingwithSonarQubeScanner-Installation
-   BREW_PKG_INSTALL "DATA_TOOLS" "sonar-scanner" "-v" # previously sonar-runner 
+   BREW_INSTALL "DATA_TOOLS" "sonar-scanner" "sonar-scanner -v" # previously sonar-runner 
 
 }
 if [[ "${TEST_TOOLS,,}" == *"sonar"* ]]; then
@@ -3032,20 +2680,7 @@ fi
 
 function RSTUDIO_INSTALL() { 
    # See https://wilsonmar.github.io/R 
-
-   if [ ! -d "/Applications/Utilities/XQuartz.app" ]; then # satisfy pre-requisite
-      fancy_echo "RSTUDIO_INSTALL: Installing xquartz  [REBOOT MacOS?] ..."
-      brew cask install xquartz  # installs libmpc, isl, gcc
-         brew cask info xquartz >>$LOGFILE
-         brew cask list xquartz >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "RSTUDIO_INSTALL: Upgrading xquartz ..."
-         brew cask info xquartz | grep "xquartz:" # multi-line
-         brew upgrade xquartz
-      fi
-   fi
-   fancy_echo "RSTUDIO_INSTALL: $(brew cask info xquartz | grep "xquartz:")" >>$LOGFILE
+   BREW_CASK_INSTALL "RSTUDIO_INSTALL" "xquartz" "XQuartz" 
       # 2.7.11
 
    # alternate name for r is r-app?
@@ -3155,19 +2790,12 @@ if [[ "${NODE_TOOLS,,}" == *"sfdx"* ]]; then
    NODE_INSTALL
    # ref https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm#sfdx_setup_install_cli
    # Instead of npm install --global sfdx-cli
-   if ! command -v sfdx >/dev/null; then  # /usr/local/bin/sfdx
-      fancy_echo "NODE_TOOLS sfdx installing ..."
+
+   # This is cask but no GUI
+   if ! command -v sfdx >/dev/null; then
       brew cask install sfdx
-         brew cask info sfdx >>$LOGFILE
-         brew cask list sfdx >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "NODE_TOOLS sfdx upgrading from:"
-         sfdx --version  # before upgrade
-         brew cask upgrade sfdx
-      fi
-   fi
-   echo -e "$(sfdx --version)" >>$LOGFILE  # sfdx-cli/6.12.0-8b887b22cc (darwin-x64) node-v8.9.4
+   fi 
+
    sfdx plugins --core >>$LOGFILE
       # @salesforce/plugin-generator 0.0.5 (core)
       # builtins 1.0.0 (core)
@@ -3369,13 +2997,12 @@ if [[ "${NODE_TOOLS,,}" == *"meanjs"* ]]; then
    pushd "$GITS_PATH"
    if [ ! -d "meanjs" ]; then 
       git clone https://github.com/meanjs/mean.git  meanjs --depth=1
+      cd meanjs
    else
-         git fetch  # instead of git pull
-         git log ..@{u}
-         #git reset --hard HEAD@{1} to go back and discard result of git pull if you don't like it.
-         git merge  # Response: Already up to date.
+      cd meanjs
+      GITHUB_UPDATE 
    fi
-   cd meanjs
+
    echo "NODE_TOOLS meanjs at $(pwd) after clone" >>$LOGFILE
    fancy_echo "NODE_TOOLS meanjs npm install ..."
    npm install
@@ -3441,7 +3068,7 @@ if [[ "$JAVA_TOOLS" == *"maven"* ]]; then
          brew upgrade maven
       fi
    fi
-   echo -e "$(mvn --version)" >>$LOGFILE  # Apache Maven 3.5.0 
+   fancy_echo "$(mvn --version)" >>$LOGFILE  # Apache Maven 3.5.0 
 else
       fancy_echo "JAVA_TOOLS maven not specified." >>$LOGFILE
 fi
@@ -3450,19 +3077,8 @@ fi
 if [[ "$JAVA_TOOLS" == *"gradle"* ]]; then
     # no xml angle brackets! Uses Groovy DSL
     # See http://www.gradle.org/docs/1.6/userguide/userguide.html
-   if ! command -v gradle >/dev/null; then
-      fancy_echo "Installing JAVA_TOOLS gradle for Java ..."
-      brew install gradle
-         brew info gradle >>$LOGFILE
-         brew list gradle >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         # gradle -v
-         fancy_echo "JAVA_TOOLS gradle upgrading ..."
-         brew upgrade gradle
-      fi
-   fi
-   echo -e "$(gradle -v)" >>$LOGFILE  # Gradle 4.6 between lines
+   BREW_INSTALL "JAVA_TOOLS" "gradle" ""
+      # 4.7
    # http://www.gradle.org/docs/1.6/userguide/plugins.html
    # http://www.gradle.org/docs/1.6/userguide/gradle_command_line.html
    # gradle setupBuild  # reads build.gradle
@@ -3474,25 +3090,21 @@ fi
 
 
 if [[ "$JAVA_TOOLS" == *"ant"* ]]; then
-    # 
-   if ! command -v ant >/dev/null; then
-      fancy_echo "Installing JAVA_TOOLS ant for Java ..."
-      brew install ant
-         brew info ant >>$LOGFILE
-         brew list ant >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "JAVA_TOOLS ant upgrading ..."
-         # ant -v
-         brew upgrade ant
-      else
-         fancy_echo "JAVA_TOOLS ant already installed:" >>$LOGFILE
-      fi
+   BREW_INSTALL "JAVA_TOOLS" "ant" ""
+      # /usr/local/Cellar/ant/1.10.3/bin/ant
+   ant --execdebug
+   unset ANT_HOME  # https://github.com/Homebrew/legacy-homebrew/issues/32851
+
+   if [[ "${TRYOUT,,}" == *"ant"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      # To avoid Error: Could not find or load main class org.apache.tools.ant.launch.Launcher
+      #      export ANT_HOME=/usr/local/var/homebrew/linked/ant
+      #echo "export ANT_HOME=/usr/local/var/homebrew/linked/ant" >>$BASHFILE
+      ant &  # GUI
+         # Buildfile: build.xml does not exist!
+         # Build failed
    fi
-   # echo -e "$(ant -v)" >>$LOGFILE
-   # Ant can pick up the Test.jmx file, execute it, and generate an easily-readable HTML report.
 else
-      fancy_echo "JAVA_TOOLS ant not specified." >>$LOGFILE
+   fancy_echo "JAVA_TOOLS ant not specified." >>$LOGFILE
 fi
 
 
@@ -3600,7 +3212,7 @@ if [[ "$JAVA_TOOLS" == *"jmeter"* ]]; then
 
    FILE="jmeter-plugins-standard-1.4.0.jar"  # TODO: Check if version has changed since Jan 4, 2018.
       # From https://jmeter-plugins.org/downloads/old/
-      # From https://jmeter-plugins.org/downloads/file/JMeterPlugins-Standard-1.4.0.zip
+      # From https://jmeter-plugins.org/downloads/file/JMeterPlugins-Standard-1.4.0.tar.gz
    FILE_PATH="$JMETER_HOME/libexec/lib/ext/jmeter-plugins-standard.jar"
    if [ -f $FILE_PATH ]; then  # file exists within folder 
       fancy_echo "$FILE already installed. Skipping install." >>$LOGFILE
@@ -3710,25 +3322,21 @@ fi
 
 if [[ "$MON_TOOLS" == *"jprofiler"* ]]; then
    JAVA_INSTALL
-   if ! command -v jprofiler >/dev/null; then
-      fancy_echo "MON_TOOLS jprofiler installing ..."
-      brew cask install --appdir="/Applications" jprofiler
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "MON_TOOLS jprofiler upgrading ..."
-         jprofiler --version
-         brew cask install --appdir="/Applications" jprofiler 
-      fi
+   BREW_CASK_INSTALL "MON_TOOLS" "jprofiler" "JProfiler"
+   if [[ "${TRYOUT,,}" == *"jprofiler"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      open -a "/Applications/JProfiler.app" &
+      # jprofiler &
    fi
-   echo -e "\n$(jprofiler --version)" >>$LOGFILE
 else
-      fancy_echo "MON_TOOLS jprofiler not specified." >>$LOGFILE
+   fancy_echo "MON_TOOLS jprofiler not specified." >>$LOGFILE
 fi
 
+if [[ "$MON_TOOLS" == *"others"* ]]; then
+   fancy_echo "MON_TOOLS others ..." >>$LOGFILE
+  # Others: Jprobe, Jconsole, VisualVM,
 # https://www.bonusbits.com/wiki/HowTo:Setup_Charles_Proxy_on_Mac
 # brew install nmap
-#    brew info nmap >>$LOGFILE
-#    brew list nmap >>$LOGFILE
+fi
 
 
 ######### Python modules:
@@ -3740,21 +3348,11 @@ fancy_echo "PYTHON_TOOLS=$PYTHON_TOOLS" >>$LOGFILE
 
 if [[ "${PYTHON_TOOLS,,}" == *"anaconda"* ]]; then
    PYTHON_INSTALL
-   VER="$(brew cask info anaconda | grep "anaconda:")"
-   if grep -q "$VER" "anaconda" ; then
-         fancy_echo "PYTHON_TOOLS=\"anaconda\" install for libraries ..."
-         brew cask install --appdir="/Applications" anaconda
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-            fancy_echo "PYTHON_TOOLS=\"anaconda upgrading ..."
-            anaconda --version  # anaconda 5.1.0
-            brew cask upgrade anaconda
-      fi
-   fi
+
+   BREW_INSTALL "PYTHON_TOOLS" "anaconda" "brew"
       #echo -e "\n  anaconda" >>$LOGFILE
       # echo -e "$(anaconda --version)" >>$LOGFILE
       #echo -e "$(conda list)" >>$LOGFILE
-   fancy_echo "PYTHON_TOOLS $(brew cask info anaconda)"  >>$LOGFILE  # anaconda: 5.1.0
 
       if grep -q "/usr/local/anaconda3/bin" "$BASHFILE" ; then    
          fancy_echo "anaconda3 PATH already in $BASHFILE"
@@ -3763,28 +3361,16 @@ if [[ "${PYTHON_TOOLS,,}" == *"anaconda"* ]]; then
          echo "export PATH=\"/usr/local/anaconda3/bin:$PATH\"" >>"$BASHFILE"
       fi
 else
-      fancy_echo "PYTHON_TOOLS anaconda not specified." >>$LOGFILE
+   fancy_echo "PYTHON_TOOLS anaconda not specified." >>$LOGFILE
 fi
 
 
 if [[ "${PYTHON_TOOLS,,}" == *"opencv"* ]]; then
-   #PYTHON_INSTALL 
-      fancy_echo "At PYTHON_TOOLS opencv ..." 
+   PYTHON_INSTALL
+   fancy_echo "At PYTHON_TOOLS opencv ..." 
    # See https://www.learnopencv.com/how-to-compile-opencv-sample-code/
    # https://www.learnopencv.com/install-opencv3-on-macos/
-   VER="$(brew info opencv | grep "opencv:")"   # opencv: stable 3.4.1 (bottled)
-   if grep -q "$VER" "opencv" ; then
-      fancy_echo "PYTHON_TOOLS opencv installing ..." 
-      # dependencies: eigen, lame, x264, xvid, ffmpeg, libtiff, ilmbase, openexr, numpy, tbb
-      brew install opencv
-         brew info opencv >>$LOGFILE
-      # list too long:  brew list opencv >>$LOGFILE  
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "PYTHON_TOOLS opencv $(ls /usr/local/Cellar/opencv/) upgrading ..." 
-         brew upgrade opencv 
-      fi
-   fi
+   BREW_INSTALL "PYTHON_TOOLS" "opencv" "brew"
    VER=$(ls /usr/local/Cellar/opencv/)  # 3.4.1_2
    fancy_echo "PYTHON_TOOLS opencv $VER links ::" >>$LOGFILE
    # symlink to your Python 2.7 site-packages per https://alyssaq.github.io/2014/installing-opencv-on-mac-osx-with-homebrew/
@@ -3800,7 +3386,7 @@ if [[ "${PYTHON_TOOLS,,}" == *"opencv"* ]]; then
       # exit
    fi
 else
-      fancy_echo "PYTHON_TOOLS opencv not specified." >>$LOGFILE
+   fancy_echo "PYTHON_TOOLS opencv not specified." >>$LOGFILE
 fi
 
 if [[ "${PYTHON_TOOLS,,}" == *"robotframework"* ]]; then
@@ -3824,8 +3410,9 @@ if [[ "${PYTHON_TOOLS,,}" == *"robotframework"* ]]; then
       fancy_echo "TODO: TRYOUT robotframework" 
    fi
 else
-      fancy_echo "PYTHON_TOOLS robotframework not specified." >>$LOGFILE
+   fancy_echo "PYTHON_TOOLS robotframework not specified." >>$LOGFILE
 fi
+
 
 if [[ "${PYTHON_TOOLS,,}" == *"others"* ]]; then
    PYTHON_INSTALL  # Exit if Python install not successful.
@@ -3842,6 +3429,7 @@ fi
 
 
 ######### Git Signing:
+
 
 if [[ "${GIT_TOOLS,,}" == *"signing"* ]]; then
 
@@ -4149,19 +3737,7 @@ fi
 
 if [[ "${CLOUDS,,}" == *"vagrant"* ]]; then
    VIRTUALBOX_INSTALL # pre-requisite
-   if ! command -v vagrant >/dev/null; then
-      fancy_echo "Installing vagrant ..."
-      brew cask install --appdir="/Applications" vagrant
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "vagrant upgrading ..."
-         vagrant --version
-            # Vagrant 2.0.0
-         brew cask upgrade vagrant
-      fi
-   fi
-   echo -e "\n$(vagrant --version)" >>$LOGFILE
-
+   BREW_INSTALL "CLOUDS" "vagrant" ""
 
    if [[ "${TRYOUT,,}" == *"hooks"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       if [[ "${GIT_LANG,,}" == *"python"* ]]; then  # contains azure.
@@ -4189,7 +3765,7 @@ if [[ "${CLOUDS,,}" == *"vagrant"* ]]; then
       #vagrant destroy 
    fi
 else
-      fancy_echo "CLOUDS vagrant not specified." >>$LOGFILE
+   fancy_echo "CLOUDS vagrant not specified." >>$LOGFILE
 fi
 
 
@@ -4231,7 +3807,7 @@ else
 fi
 
 
-if [[ "${CLOUDS,,}" == *"aws"* ]]; then  # contains aws.
+if [[ "${CLOUDS,,}" == *"awscli"* ]]; then  # contains aws.
    fancy_echo "awscli requires Python3."
    # See https://docs.aws.amazon.com/cli/latest/userguide/cli-install-macos.html#awscli-install-osx-pip
    PYTHON3_INSTALL  # function defined at top of this file.
@@ -4253,7 +3829,7 @@ if [[ "${CLOUDS,,}" == *"aws"* ]]; then  # contains aws.
    # TODO: https://github.com/bonusbits/devops_bash_config_examples/blob/master/shared/.bash_aws
    # For aws-cli commands, see http://docs.aws.amazon.com/cli/latest/userguide/ 
 else
-      fancy_echo "CLOUDS aws not specified." >>$LOGFILE
+   fancy_echo "CLOUDS awscli not specified." >>$LOGFILE
 fi
 
 
@@ -4598,18 +4174,8 @@ if [[ "${CLOUDS,,}" == *"minikube"* ]]; then
    fi
    echo -e "\n$(kubectl version)" >>$LOGFILE  # version: v0.25.2 
 
-   if ! command -v minikube >/dev/null; then  # not in /usr/local/bin/minikube
-      fancy_echo "Installing minikube using Homebrew ..."
-      brew cask install --appdir="/Applications" minikube
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "minikube upgrading ..."
-         minikube version  # minikube version: v0.25.2 
-            # ... and many other lines.
-         brew cask upgrade minikube
-      fi
-   fi
-   echo -e "\n$(minikube version)" >>$LOGFILE  # version: v0.25.2 
+   BREW_INSTALL "CLOUDS" "minikube" "brew"
+   echo "CLOUDS $(minikube version)" >>$LOGFILE  # version: v0.25.2 
 
    if [[ "${TRYOUT,,}" == *"minikube"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       fancy_echo "TRYOUT run minikube ..."
@@ -5109,22 +4675,10 @@ fi
 
 
 if [[ "${MON_TOOLS,,}" == *"wireshark"* ]]; then
-   if [ ! -d "/Applications/Wireshark.app" ]; then 
-      # https://www.wireshark.org/download.html
-      fancy_echo "Installing MON_TOOLS=wireshark ..."
-      brew cask install --appdir="/Applications" wireshark
-      brew info wireshark >>$LOGFILE
-      brew list wireshark >>$LOGFILE
-      # brew cask install wireshark-chmodbpf
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading MON_TOOLS=wireshark ..."
-         wireshark -v  # first line.
-         brew cask upgrade wireshark
-      fi
-   fi
-   echo -e "$(tshark -v | grep TShark)" >>$LOGFILE  # wireshark v6.0.0-beta.7
+   BREW_CASK_INSTALL "MON_TOOLS" "wireshark" "Wireshark" 
+   # brew cask install wireshark-chmodbpf
 
+   echo -e "$(tshark -v | grep TShark)" >>$LOGFILE  # wireshark v6.0.0-beta.7
    if [[ "${TRYOUT,,}" == *"wireshark"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       fancy_echo "Starting TShark to Wireshark.app ..." >>$LOGFILE
       #open -a "/Applications/Wireshark.app"
@@ -5132,7 +4686,7 @@ if [[ "${MON_TOOLS,,}" == *"wireshark"* ]]; then
    fi
    # See https://wiki.wireshark.org/Tools
 else
-      fancy_echo "MON_TOOLS wireshark not specified." >>$LOGFILE
+   fancy_echo "MON_TOOLS wireshark not specified." >>$LOGFILE
 fi
 
 if [[ "${MON_TOOLS,,}" == *"prometheus"* ]]; then
@@ -5197,7 +4751,8 @@ if [[ "${MON_TOOLS,,}" == *"others"* ]]; then
 
 # Graphite MacOS app
 # brew cask install istat-menus  # iStat Menus.app - macos stats on Launch bar
-
+   # com.bjango.istatmenus.agent.plist
+   # com.bjango.istatmenus.status.plist
 # fluentd has no brew only dmg for clouds https://docs.fluentd.org/v0.12/articles/install-by-dmg
 # StatsD # Node-based. from 2016
 # collectd  # portable C. needs plugins
@@ -5215,19 +4770,8 @@ fi
 
 
 if [[ "${VIZ_TOOLS,,}" == *"grafana"* ]]; then
-   if [ ! -d "/Applications/grafana.app" ]; then 
       # http://docs.grafana.org/installation/mac/
-      fancy_echo "Installing VIZ_TOOLS=grafana ..."
-      brew install grafana
-         brew info grafana >>$LOGFILE
-         brew list grafana >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading VIZ_TOOLS=grafana ..."
-         # grafana -v  # first line.
-         brew reinstall grafana
-      fi
-   fi
+   BREW_INSTALL "VIZ_TOOLS" "grafana" "brew"
 
    if [[ "${TRYOUT,,}" == *"grafana"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
 
@@ -5287,37 +4831,105 @@ fi
    # GONE: brew cask install --appdir="/Applications" gotomeeting   # 32-bit
 
 if [[ "${COLAB_TOOLS,,}" == *"hangouts"* ]]; then
-   brew cask install --appdir="/Applications" google-hangouts
+   BREW_CASK_INSTALL "COLAB_TOOLS" "google-hangouts" "Google Hangouts" 
+   if [[ "${TRYOUT,,}" == *"google-hangouts"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS google-hangouts starting ..."
+      open -a "/Applications/Google Hangouts.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS hangouts not specified." >>$LOGFILE
 fi
 if [[ "${COLAB_TOOLS,,}" == *"hipchat"* ]]; then 
-   brew cask install --appdir="/Applications" hipchat
+   BREW_CASK_INSTALL "COLAB_TOOLS" "hipchat" "Hipchat"
+   if [[ "${TRYOUT,,}" == *"hipchat"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS hipchat starting ..."
+      open -a "/Applications/Hipchat.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS hipchat not specified." >>$LOGFILE
 fi
 if [[ "${COLAB_TOOLS,,}" == *"joinme"* ]]; then 
-   brew cask install --appdir="/Applications" joinme
+   BREW_CASK_INSTALL "COLAB_TOOLS" "joinme" "Join me"
+   if [[ "${TRYOUT,,}" == *"joinme"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS joinme starting ..."
+      open -a "/Applications/Join me.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS joinme not specified." >>$LOGFILE
 fi
 if [[ "${COLAB_TOOLS,,}" == *"keybase"* ]]; then 
-   brew cask install --appdir="/Applications" keybase  # encrypted https://keybase.io/
+   BREW_CASK_INSTALL "COLAB_TOOLS" "keybase" "Keybase"
+   if [[ "${TRYOUT,,}" == *"keybase"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS keybase starting ..."
+      open -a "/Applications/Keybase.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS keybase not specified." >>$LOGFILE
 fi
 if [[ "${COLAB_TOOLS,,}" == *"skype"* ]]; then 
-   brew cask install --appdir="/Applications" skype  # unselect show birthdays
+   BREW_CASK_INSTALL "COLAB_TOOLS" "skype" "Skype"
+   if [[ "${TRYOUT,,}" == *"skype"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS skype starting ..."
+      open -a "/Applications/Skype.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS skype not specified." >>$LOGFILE
 fi
    # obsolete: brew cask install --appdir="/Applications" microsoft-lync
    #brew cask install --appdir="/Applications" skype-for-business  # unselect show birthdays
 
 if [[ "${COLAB_TOOLS,,}" == *"slack"* ]]; then
-   brew cask install --appdir="/Applications" slack  # installed to "~/Applications" by default.
+   BREW_CASK_INSTALL "COLAB_TOOLS" "slack" "Slack"
+   if [[ "${TRYOUT,,}" == *"slack"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS slack starting ..."
+      open -a "/Applications/Slack.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS slack not specified." >>$LOGFILE
 fi
 if [[ "${COLAB_TOOLS,,}" == *"sococo"* ]]; then 
-   brew cask install --appdir="/Applications" sococo
+   BREW_CASK_INSTALL "COLAB_TOOLS" "sococo" "Sococo"
+   if [[ "${TRYOUT,,}" == *"sococo"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS sococo starting ..."
+      open -a "/Applications/Sococo.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS sococo not specified." >>$LOGFILE
 fi
 if [[ "${COLAB_TOOLS,,}" == *"teamviewer"* ]]; then 
-   brew cask install --appdir="/Applications" teamviewer
+   BREW_CASK_INSTALL "COLAB_TOOLS" "teamviewer" "Teamviewer"
+
+      if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+         rm ~/Library/LaunchAgents/com.teamviewer.teamviewer.plist
+         rm ~/Library/LaunchAgents/com.teamviewer.teamviewer_desktop.plist
+         break
+      fi
+
+   if [[ "${TRYOUT,,}" == *"teamviewer"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS teamviewer starting ..."
+      open -a "/Applications/Teamviewer.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS teamviewer not specified." >>$LOGFILE
 fi
 if [[ "${COLAB_TOOLS,,}" == *"whatsapp"* ]]; then 
-   brew cask install --appdir="/Applications" whatsapp
+   BREW_CASK_INSTALL "COLAB_TOOLS" "whatsapp" "Whatsapp"
+   if [[ "${TRYOUT,,}" == *"whatsapp"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS whatsapp starting ..."
+      open -a "/Applications/Whatsapp.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS whatsapp not specified." >>$LOGFILE
 fi
 if [[ "${COLAB_TOOLS,,}" == *"zoom"* ]]; then 
-   brew cask install --appdir="/Applications" zoom   # 32-bit
+   # CAUTION: 32-bit
+   BREW_CASK_INSTALL "COLAB_TOOLS" "zoom" "Zoom"
+   if [[ "${TRYOUT,,}" == *"zoom"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "COLAB_TOOLS zoom starting ..."
+      open -a "/Applications/Zoom.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS zoom not specified." >>$LOGFILE
 fi
     #https://zapier.com/blog/disable-mic-webcam-notifications/
 
@@ -5325,18 +4937,29 @@ fi
 ######### MEDIA TOOLS:
 
 
+if [[ "${MEDIA_TOOLS,,}" == *"camtasia"* ]]; then
+   # https://www.amazon.com/kindle-dbs/fd/kcp
+   BREW_CASK_INSTALL "MEDIA_TOOLS" "camtasia" "Camtasia"
+   #echo -e "$(camtasia -v)" >>$LOGFILE  # Kindle v6.0.0-beta.7
+
+      if grep -q "alias camtasia=" "$BASHFILE" ; then    
+         fancy_echo "MEDIA_TOOLS camtasia.app PATH already in $BASHFILE" >>$LOGFILE
+      else
+         fancy_echo "MEDIA_TOOLS camtasia.app PATH adding in $BASHFILE..."
+         echo "alias camtasia='open -a \"/Applications/Camtasia.app\"'" >>"$BASHFILE"
+      fi
+
+   if [[ "${TRYOUT,,}" == *"camtasia"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "MEDIA_TOOLS camtasia starting ..." >>$LOGFILE
+      open -a "/Applications/Camtasia.app"
+   fi
+else
+   fancy_echo "MEDIA_TOOLS camtasia not specified." >>$LOGFILE
+fi
+
 if [[ "${MEDIA_TOOLS,,}" == *"kindle"* ]]; then
    # https://www.amazon.com/kindle-dbs/fd/kcp
-   if [ ! -d "/Applications/Kindle.app" ]; then 
-      fancy_echo "MEDIA_TOOLS kindle installing ..."
-      brew cask install --appdir="/Applications" kindle
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "MEDIA_TOOLS Kindle upgrading ..."
-         # kindle -v
-         brew cask upgrade kindle
-      fi
-   fi
+   BREW_CASK_INSTALL "MEDIA_TOOLS" "kindle" "Kindle"
 
       if grep -q "alias kindle=" "$BASHFILE" ; then    
          fancy_echo "MEDIA_TOOLS Kindle.app PATH already in $BASHFILE" >>$LOGFILE
@@ -5351,7 +4974,7 @@ if [[ "${MEDIA_TOOLS,,}" == *"kindle"* ]]; then
       open -a "/Applications/Kindle.app"
    fi
 else
-      fancy_echo "MEDIA_TOOLS kindle not specified." >>$LOGFILE
+   fancy_echo "MEDIA_TOOLS kindle not specified." >>$LOGFILE
 fi
 
 
@@ -5405,6 +5028,25 @@ else
       fancy_echo "MEDIA_TOOLS tesseract not specified." >>$LOGFILE
 fi
 
+if [[ "${MEDIA_TOOLS,,}" == *"real-vnc"* ]]; then 
+   BREW_CASK_INSTALL "MEDIA_TOOLS" "real-vnc" "VNC Viewer" 
+   # and VNC Server 
+
+      if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+         rm ~/Library/LaunchAgents/com.realvnc.vncserver.peruser.plist
+         rm ~/Library/LaunchAgents/com.realvnc.vncserver.prelogin.plist
+         break
+      fi
+
+   if [[ "${TRYOUT,,}" == *"real-vnc"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS real-vnc starting ..."
+      open -a "/Applications/VNC Viewer.app" &
+      # real-vnc &
+   fi
+fi
+
+# brew cask install --appdir="/Applications" audacity   # audio recording and editing
+
 
 if [[ "${MEDIA_TOOLS,,}" == *"others"* ]]; then
    fancy_echo "Installing MEDIA_TOOLS=others ..."  >>$LOGFILE
@@ -5424,7 +5066,6 @@ if [[ "${MEDIA_TOOLS,,}" == *"others"* ]]; then
 # brew cask install --appdir="/Applications" gimp       # image file editing
 # brew cask install --appdir="/Applications" sketchup   # image file editing
 
-# brew cask install --appdir="/Applications" audacity   # audio recording and editing
 # https://www.reaper.fm/
 
 # brew cask install --appdir="/Applications" camtasia   # screen recording and video editing
@@ -5442,19 +5083,7 @@ fi
 if [[ "${LOCALHOSTS,,}" == *"jenkins"* ]]; then
    # https://wilsonmar.github.io/jenkins-setup
    JAVA_INSTALL  # pre-requisite
-   if ! command -v jenkins >/dev/null; then  # in /usr/local/bin/jenkins
-      fancy_echo "Installing LOCALHOSTS=jenkins ..."
-      brew install jenkins
-         brew info jenkins >>$LOGFILE
-         brew list jenkins >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading LOCALHOSTS=jenkins ..."
-         jenkins --version  # 2.113
-         brew upgrade jenkins
-      fi
-   fi
-   fancy_echo -e "LOCALHOSTS=jenkins :: $(jenkins --version)" >>$LOGFILE
+   BREW_INSTALL "LOCALHOSTS" "jenkins" "--jenkins"
    
    if [[ "${TRYOUT,,}" == *"jenkins"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       JENKINS_VERSION=$(jenkins --version)  # 2.113
