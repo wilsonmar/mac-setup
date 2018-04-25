@@ -202,7 +202,7 @@ function BREW_INSTALL() {
 
    fancy_echo "BREW_INSTALL $category $package ..." >>$LOGFILE
    #if ! command -v "$package" >/dev/null; then
-   VER="$(brew cask info $package | grep "$package:")"
+   VER="$(brew info $package | grep "$package:")"
    if ! grep -q "$VER" "$package" ; then
       fancy_echo "$category $package installing ..." >>$LOGFILE
       brew install "$package"
@@ -845,30 +845,32 @@ function JAVA_INSTALL() {
       # CAUTION: A specific version of JVM needs to be specified because code that use it need to be upgraded.
    fi
 
-   TEMP=$(java -version | grep "java version") # | cut -d'=' -f 2 ) # | awk -F= '{ print $2 }'
+   # TODO: Fix 
+   TEMP=$(java -version | grep "java version") #| cut -d'=' -f 2 ) # | awk -F= '{ print $2 }'
    JAVA_VERSION=${TEMP#*=};
    echo "JAVA_VERSION=$JAVA_VERSION"
    export JAVA_VERSION=$(java -version)
-   echo -e "\n$(java -version)" >>$LOGFILE
+   echo "JAVA_VERSION=$JAVA_VERSION" >>$LOGFILE
       # java version "1.8.0_144"
       # Java(TM) SE Runtime Environment (build 1.8.0_144-b01)
       # Java HotSpot(TM) 64-Bit Server VM (build 25.144-b01, mixed mode)
-   echo -e "$($JAVA_HOME)" >>$LOGFILE
-      # /Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home is a directory
+   if [ ! -z ${JAVA_HOME+x} ]; then  # variable has NOT been defined already.
+      JAVA_HOME="$(/usr/libexec/java_home -v 1.8)"
+      #echo "export JAVA_HOME=$(/usr/libexec/java_home -v 9)" >>$BASHFILE
+         # /Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home is a directory
+   fi
+      echo "JAVA_INSTALL JAVA_HOME=$JAVA_HOME" >>$LOGFILE
 
    # https://stackoverflow.com/questions/3601515/how-to-check-if-a-variable-is-set-in-bash
-   if [ ! -z ${JAVA_HOME+x} ]; then  # variable has NOT been defined already.
-      echo "$JAVA_HOME=$JAVA_HOME"
+   if grep -q "JAVA_HOME=" "$BASHFILE" ; then    
+      echo "JAVA_INSTALL JAVA_HOME=$JAVA_HOME" >>$LOGFILE
    else 
-      echo "JAVA_HOME being set ..." # per http://sourabhbajaj.com/mac-setup/Java/
-      echo "export JAVA_HOME=$(/usr/libexec/java_home -v $JAVA_VERSION)" >>$BASHFILE
-      #echo "export JAVA_HOME=$(/usr/libexec/java_home -v 9)" >>$BASHFILE
-   fi
+      echo "export JAVA_HOME=$JAVA_HOME" >>$BASHFILE
    # /Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home
    #   echo "export IDEA_JDK=$(/usr/libexec/java_home -v $JAVA_VERSION)" >>$BASHFILE
    #   echo "export RUBYMINE_JDK=$(/usr/libexec/java_home -v $JAVA_VERSION)" >>$BASHFILE
       source $BASHFILE
-
+   fi
    # TODO: https://github.com/alexkaratarakis/gitattributes/blob/master/Java.gitattributes
 }
 
@@ -2767,7 +2769,7 @@ if [[ "${DATA_TOOLS,,}" == *"elastic"* ]]; then
    BREW_INSTALL "DATA_TOOLS" "elasticsearch" "brew"
    BREW_INSTALL "DATA_TOOLS" "logstash" "brew"
    BREW_INSTALL "DATA_TOOLS" "kibana" "brew"  # old?
-
+exit
    echo "DATA_TOOLS elasticsearch ELASTIC_PORT config ..."
    if [ ! -z "$ELASTIC_PORT" ]; then # fall-back if not set in secrets.sh:
       ELASTIC_PORT="9200"  # default 9200
@@ -4908,6 +4910,17 @@ fi
    # GONE? brew cask install --appdir="/Applications" Colloquy. ## IRC http://colloquy.info/downloads.html
    # GONE: brew cask install --appdir="/Applications" gotomeeting   # 32-bit
 
+if [[ "${COLAB_TOOLS,,}" == *"discord"* ]]; then
+   # https://discordapp.com/
+   BREW_CASK_INSTALL "COLAB_TOOLS" "discord" "Discord" 
+   if [[ "${TRYOUT,,}" == *"discord"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "EDITORS discord starting ..."
+      open -a "/Applications/Discord.app" &
+   fi
+else
+   fancy_echo "COLAB_TOOLS discord not specified." >>$LOGFILE
+fi
+
 if [[ "${COLAB_TOOLS,,}" == *"hangouts"* ]]; then
    BREW_CASK_INSTALL "COLAB_TOOLS" "google-hangouts" "Google Hangouts" 
    if [[ "${TRYOUT,,}" == *"google-hangouts"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
@@ -4917,6 +4930,7 @@ if [[ "${COLAB_TOOLS,,}" == *"hangouts"* ]]; then
 else
    fancy_echo "COLAB_TOOLS hangouts not specified." >>$LOGFILE
 fi
+
 if [[ "${COLAB_TOOLS,,}" == *"hipchat"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "hipchat" "Hipchat"
    if [[ "${TRYOUT,,}" == *"hipchat"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
@@ -4926,6 +4940,7 @@ if [[ "${COLAB_TOOLS,,}" == *"hipchat"* ]]; then
 else
    fancy_echo "COLAB_TOOLS hipchat not specified." >>$LOGFILE
 fi
+
 if [[ "${COLAB_TOOLS,,}" == *"joinme"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "joinme" "Join me"
    if [[ "${TRYOUT,,}" == *"joinme"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
