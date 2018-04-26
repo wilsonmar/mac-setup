@@ -1,4 +1,4 @@
-The tagline of this repo is "Automatically install and configure the <strong>most popular programs</strong> developer need to work offline as a developer of several stacks on a Mac."
+The tagline of this repo is "Automatically install and configure the <strong>most popular programs</strong> to work offline as a developer of several stacks on a Mac and in clouds."
 
 Bash scripts in this repo install, configure, then start programs running to prove that installation was successful. The "stacks" installed include:
 
@@ -9,7 +9,7 @@ Bash scripts in this repo install, configure, then start programs running to pro
    * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io
    * DevSecOps "stack" of Git, Jenkins, Nexus, Vagrant, Docker, Terraform, etc.
 
-By enabling you to switch quickly among sets of programs, scripts in this repo <strong>you can quickly evaluate</strong> the technical aspects of each stack and individual program not just conceptually, but really working together at the same time. The script in this repo is thousands of lines long so that you can mix and match what you install.
+By enabling you to switch quickly among sets of programs, scripts in this repo <strong>you can quickly evaluate</strong> the technical aspects of each stack and individual program not just conceptually, but really working together at the same time. The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
 
 <a name="Homebrew"></a>
 
@@ -85,7 +85,7 @@ Programa organzied by categories:
 
 * LOCALHOSTS Apache (httpd, apachectl), iron
 * TEST_TOOLS selenium, sikulix, golum, dbunit?
-* CLOUDS icloud, aws, gcp, azure, cf, heroku, docker, vagrant, terraform, serverless
+* CLOUD_TOOLS aws, gcp, azure, cf, heroku, docker, vagrant, terraform, serverless
 
 * MON_TOOLS (for monitoring) WireShark, Prometheus, others
 * VIZ_TOOLS (for visualization) Grafana, others (Prometheus, Kibana, Graphite)
@@ -115,9 +115,11 @@ Yes, you can just run brew yourself, one at a time. But logic in the script goes
 
 The section below explains to someone relatively new to Mac machines the steps to automate installation of additional MacOS application programs. Along the way, we explore basic skills to use a command-line Terminal and common commands.
 
+1. Get <a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>, <a target="_blank" href="https://wilsonmar.github.io/macos-bootup/">boot-up</a>
+
 1. Obtain the Mac's Launch bar by positioning your mouse at the bottom edge of the screen until it appears.
 
-2. If you don't see an icon for the Terminal program, click the magnifying glass icon always at the upper-right corner and type in Term until "Terminal app" is highlighted, then press Enter to accept it. 
+2. If you don't see an icon for the <a target="_blank" href="https://wilsonmar.github.io/mac-osx-terminal/">Terminal program</a>, click the magnifying glass icon always at the upper-right corner and type in Term until "Terminal app" is highlighted, then press Enter to accept it. 
 
 3. Click menu Shell then click New Window for a Terminal session.
 
@@ -330,336 +332,14 @@ Popular apps</a> include:
 The brew "mas" manages Apple Store apps, but it only manages apps that have already been paid for. But mas does not install apps new to your Apple Store account.
 
 
-<a name="JAVA_TOOLS"></a>
-
-## Java tools via Maven, Ant
-
-Apps added by specifying in JAVA_TOOLS are GUI apps.
-
-Most other Java dependencies are specified by manually added in each custom app's <strong>pom.xml</strong> file
-to specify what Maven downloads from the Maven Central online repository of installers at
-
-   <a target="_blank" href="
-   http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.dbunit%22">
-   http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.dbunit%22</a>
-
-Popular in the Maven Repository are:
-
-   * <strong>yarn</strong> for code generation. JHipster uses it as an integrated tool in Java Spring development.
-   * <strong>DbUnit</strong> extends the JUnit TestCase class to put databases into a known state between test runs. Written by Manuel Laflamme, DbUnit is added in the Maven pom.xml (or Ant) for download from Maven Central. See http://dbunit.wikidot.com/
-   * <strong>mockito</strong> enables calls to be mocked as if they have been creted.
-   Insert file java-mockito-maven.xml as a dependency to maven pom.xml
-   See https://www.youtube.com/watch?v=GKUlQMrbtHE - May 28, 2016
-   and https://zeroturnaround.com/rebellabs/rebel-labs-report-go-away-bugs-keeping-your-code-safe-with-junit-testng-and-mockito/9/
-
-   * <strong>TestNG</strong> 
-   See http://testng.org/doc/download.html
-   and https://docs.mendix.com/howto/testing/create-automated-tests-with-testng
-   
-   When using Gradle, insert file java-testng-gradle as a dependency to gradle working within Eclipse plug-in
-   Build from source git://github.com/cbeust/testng.git using ./build-with-gradle
-   
-TODO: The Python edition of this will insert specs such as this in pom.xml files.   
-
-<a name="Logging"></a>
-
-## Logging
-
-The script outputs logs to a file.
-
-This is so that during runs, what appears on the command console are only what is relevant to debugging the current issue.
-
-At the end of the script, the log is shown in an editor to <strong>enable search</strong> through the whole log.
-
-
-<a name="JenkinsStart"></a>
-
-## Jenkins server
-
-To start the Jenkins server to a specified port:
-
-    <pre>jenkins --httpPort=$JENKINS_PORT  &</pre>
-
-   The "&" puts the process in the background so that the script can continue running.
-
-   The response is a bunch of lines ending with
-   "INFO: Jenkins is fully up and running".
-
-Several other methods (which don't work now) are presented on the internet:
-
-   * <tt>sudo service jenkins start</tt>
-
-   * <a target="_blank" href="https://three1415.wordpress.com/2014/12/29/changing-jenkins-port-on-mac-os-x/">
-   This blog, on Dec 29, 2014</a> recommends
-
-   <pre>sudo defaults write /Library/Preferences/org.jenkins-ci httpPort "$JENKINS_PORT"
-   sudo launchctl unload /Library/LaunchDaemons/org.jenkins-ci.plist
-   sudo launchctl load /Library/LaunchDaemons/org.jenkins-ci.plist
-   </pre>
-
-
-<a name="JenkinsJava"></a>
-
-The command "jenkins" above is actually a bash script that invokes Java:
-
-   <pre>#!/bin/bash
-   JAVA_HOME="$(/usr/libexec/java_home --version 1.8)" \
-   exec java  -jar /usr/local/Cellar/jenkins/2.113/libexec/jenkins.war "$@"
-   </pre>
-
-The code within "$(...)" is run to obtain the value. In this case, it's:
-
-    <pre>/Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home
-    </pre>
-
-   The link above is the folder where MacOS keeps the Java SDK.
-   Java executables (java, javac, etc.) are in the bin folder below that location.
-
-The path to jenkins.war and jenkins-cli.war executable files are physcally at:
-
-   <pre>ls /usr/local/opt/jenkins/libexec</pre>
-
-
-<a name="Jenkins"></a>
-
-### Mac Plist file for Jenkins
-
-Instead of specifying the port in the command, change the configuration file.
-
-On MacOS, services are defined by <strong>plist</strong> files containing XML, 
-such as this for Jenkins server:
-
-   <pre>
-&LT;?xml version="1.0" encoding="UTF-8"?>
-&LT;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-&LT;plist version="1.0">
-  &LT;dict>
-    &LT;key>Label&LT;/key>
-    &LT;string>homebrew.mxcl.jenkins&LT;/string>
-    &LT;key>ProgramArguments&LT;/key>
-    &LT;array>
-      &LT;string>/usr/libexec/java_home&LT;/string>
-      &LT;string>-v&LT;/string>
-      &LT;string>1.8&LT;/string>
-      &LT;string>--exec&LT;/string>
-      &LT;string>java&LT;/string>
-      &LT;string>-Dmail.smtp.starttls.enable=true&LT;/string>
-      &LT;string>-jar&LT;/string>
-      &LT;string>/usr/local/opt/jenkins/libexec/jenkins.war&LT;/string>
-      &LT;string>--httpListenAddress=127.0.0.1&LT;/string>
-      &LT;string>--httpPort=8080&LT;/string>
-    &LT;/array>
-    &LT;key>RunAtLoad&LT;/key>
-    &LT;true/>
-  &LT;/dict>
-&LT;/plist>
-   </pre>
-
-The "1.8" is the version of Java, <a href="#JenkinsJava"> described below</a>.
-
-The "httpPort=8080" default is customized using this variable in secrets.sh:
-
-      JENKINS_PORT="8082"  # default 8080
-
-The above is file <tt>homebrew.mxcl.jenkins.plist</tt> within folder 
-<tt>/usr/local/opt/jenkins</tt> installed by brew.
-The folder is a symlink created by brew to the physical path where brew installed it:
-
-      /usr/local/Cellar/Jenkins/2.113/homebrew.mxcl.jenkins.plist
-
-The "2.113" means that several versions of Jenkins can be installed side-by-side.
-This version number changes over time. So it is captured by command:
-
-   <pre>JENKINS_VERSION=$(jenkins --version)  # 2.113</pre>
-
-The folder is actually a symlnk which points to the physical folder defined by:
-JENKINS_CONF="/usr/local/Cellar/Jenkins/$JENKINS_VERSION/homebrew.mxcl.jenkins.plist"
-
-The path is defined in a variable so simplify the sed command to make the change:
-
-         sed -i "s/httpPort=8080/httpPort=$JENKINS_PORT/g" $JENKINS_CONF
-               # --httpPort=8080 is default.
-
-
-<a name="JenkinsFirstTime"></a>
-
-### Jenkins GUI in browser
-
-The command to view the server in the default internet browser (such as Safari, Chrome, etc.) is:
-
-   <pre>open "http://localhost:$JENKINS_PORT"</pre>
-
-   It's "http" and not "https" because a certificate has not been established yet.
-
-When executed the first time, Jenkins displays this screen:
-
-
-However, we don't want to open it from the command line script, but from a GUI automation script.
-
-<a name="JenkinsGUIAuto"></a>
-
-### Jenkins GUI automation
-
-The script invokes a GUI automation script that opens the file mentioned on the web page above:
-
-   <pre>/Users/wilsonmar/.jenkins/secrets/initialAdminPassword</pre>
-
-   "/Users/wilsonmar" is represented by the environment variable named $HOME or ~ symbol,
-   which would be different for you, with your own MacOS account name.
-   Thus, the generic coding is:
-
-   <pre>JENKINS_SECRET=$(<$HOME/.jenkins/secrets/initialAdminPassword)</pre>
-
-The file (and now $JENKINS_SECRET) contains a string in clear-text like "851ed535fd3249ab95a274d23242655c".
-
-We then call a GUI automation script to get that string to paste it in the box labeled "Administrator Password"
-based on the id "security-token" defined in this HTML:
-
-   <pre>&LT;input id="security-token" class="form-control" type="password" name="j_password">
-   </pre>
-
-   This was determined by obtaining the outer HTML from Chrome Developer Tools.
-
-The call is:
-
-   <pre>python tests/jenkins_secret_chrome.py  chrome  $JENKINS_PORT  $JENKINS_SECRET
-   </pre>
-
-We use Selenium Python because it reads and writes system environment variables.
-
-Use of Selenium and Python this way requires them to be installed before Jenkins and other web servers.
-
-
-<a name="JenkinsShutdown"></a>
-
-### Jenkins shutdown (kill)
-
-To shut down Jenkins, 
-
-   <pre>PID="ps -A | grep -m1 'jenkins' | awk '{print $1}'"
-   fancy_echo "Shutting downn jenkins $PID ..."
-   kill $PID</pre>
-
-The above is the automated approach to the manual on recommended by many blogs on the internet:
-
-   Some say in Finder look for Applications -> Utilities -> Activity Monitor
-   
-   Others say use command:
-
-   <pre>ps -el | grep jenkins</pre>
-
-   Two lines would appear. One is the bash command to do the ps command. 
-   
-   The PID desired is the one that lists the path used to invoke Jenkins, 
-   <a href="#JenkinsJava">described above</a>:
-
-   <pre>/usr/bin/java -jar /usr/local/Cellar/jenkins/2.113/libexec/jenkins.war</pre>
-
-   <pre>kill <em>2134</em></pre>
-
-   That is the equivalent of Windows command "taskkill /F /PID XXXX"
-
-   There is also:
-
-   <pre>sudo service jenkins stop</pre>
-
-Either way, the response expected is:
-
-   <pre>INFO: JVM is terminating. Shutting down Winstone</pre>
-
-
-<a name="PythonGUI"></a>
-
-## Python GUI Automation
-
-If the title is not found an error message like this appears on the console:
-
-   <pre>
-  File "tests/jenkins_secret_chrome.py", line 30, in <module>
-    assert "Jenkins [Jenkins]" in driver.title  # bail out if not found.
-AssertionError
-   </pre>
-
-
-<a name="DelayToView"></a>
-
-### Delay to view
-
-Some put in a 5 second delay:
-
-   <pre>time.sleep(5)</pre>
-
-Use of this feature requires a library to be specified at the top of the file:
-
-   <pre>import sys</pre>
-
-<a name="ScreenShot"></a>
-
-### Screen shot picture
-
-Some also take a photo to "prove" that the result was achieved:
-
-   <pre>driver.save_screenshot('jenkins_secret_chrome.py' +utc_offset_sec+ '.png')</pre>
-
-We put the name of the script file in the picture name to trace back to its origin.
-We put a time stamp in ISO 8601 format so that several png files sort by date.
-
-utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
-datetime.datetime.now().replace(tzinfo=datetime.timezone(offset=utc_offset_sec)).isoformat()
-
-The long explanation is https://docs.python.org/2/library/datetime.html
-
-
-<a name="EndOfScript"></a>
-
-### End of script
-
-<a target="_blank" href="https://stackoverflow.com/questions/15067107/difference-between-webdriver-dispose-close-and-quit">
-NOTE</a>:
-
-   * webDriver.Close() - Close the browser window that currently has focus
-   * webDriver.Quit() - Calls Dispose()
-   * webDriver.Dispose() Closes all browser windows and safely ends the session
-
-driver.quit() means that someone watching the script execute would only see the web app's screen for a split second. 
-
-   We prefer to use id rather than name fields because the HTML standard states that id's are 
-   supposed to be unique in each web page.
-
-<hr />
-
-<a name="Groovy"></a>
-
-## Groovy
-
-Other similar scripts (listed in "References" below) run
-
-http://groovy-lang.org/install.html
-
-
-<a name="CLOUD_TOOLS"></a>
+<a name="CloudSync"></a>
 
 ## Cloud Sync
 
+Apps for syncing to cloud providers are installed mostly for manual use:
+
 Dropbox, OneDrive, Google Drive, Amazon Drive
 
-
-<a name="FONTS"></a>
-
-## Scape for Fonts in GitHub
- 
-Some developers have not put their stuff from GitHub into Homebrew. So we need to read (scrape) the website and see what is listed, then grab the text and URL to download.
-
-Such is the situation with font files at 
-https://github.com/adobe-fonts/source-code-pro/releases/tag/variable-fonts
-The two files desired downloaded using the curl command are:
-
-* https://github.com/adobe-fonts/source-code-pro/releases/download/variable-fonts/SourceCodeVariable-Italic.ttf
-* https://github.com/adobe-fonts/source-code-pro/releases/download/variable-fonts/SourceCodeVariable-Roman.ttf
-
-The files are downloaded into <a target="_blank" href="https://support.apple.com/en-us/HT201722">where MacOS holds fonts available to all users</a>: <tt>/Library/Fonts/</tt>
-
-<a target="_blank" href="http://sourabhbajaj.com/mac-setup/iTerm/README.html">ITerm2 can make use of these font files</a>.
 
 
 <a name="More"></a>

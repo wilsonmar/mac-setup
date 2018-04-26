@@ -373,7 +373,7 @@ else
    echo "MONGODB_DATA_PATH=$MONGODB_DATA_PATH" >>$LOGFILE
    echo "TEST_TOOLS=$TEST_TOOLS" >>$LOGFILE
 
-   echo "CLOUDS=$CLOUDS" >>$LOGFILE
+   echo "CLOUD_TOOLS=$CLOUD_TOOLS" >>$LOGFILE
    # AWS_ACCESS_KEY_ID=""
    # AWS_SECRET_ACCESS_KEY=""
    # AWS_REGION="us-west-1"
@@ -3831,17 +3831,17 @@ fi
 ######### Cloud CLI/SDK:
 
 
-fancy_echo "CLOUDS=\"$CLOUDS\"" >>$LOGFILE
+fancy_echo "CLOUD_TOOLS=\"$CLOUD_TOOLS\"" >>$LOGFILE
 
-if [[ "${CLOUDS,,}" == *"icloud"* ]]; then
+if [[ "${CLOUD_TOOLS,,}" == *"icloud"* ]]; then
    if [ ! -d "/Library/Mobile Documents/com~apple~CloudDocs/" ]; then # found dir:
-      fancy_echo "CLOUDS=icloud folder has $(find . -type f | wc -l) files ..."
+      fancy_echo "CLOUD_TOOLS=icloud folder has $(find . -type f | wc -l) files ..."
    fi
 fi
 
-if [[ "${CLOUDS,,}" == *"vagrant"* ]]; then
+if [[ "${CLOUD_TOOLS,,}" == *"vagrant"* ]]; then
    VIRTUALBOX_INSTALL # pre-requisite
-   BREW_INSTALL "CLOUDS" "vagrant" ""
+   BREW_INSTALL "CLOUD_TOOLS" "vagrant" ""
 
    if [[ "${TRYOUT,,}" == *"hooks"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       if [[ "${GIT_LANG,,}" == *"python"* ]]; then  # contains azure.
@@ -3869,15 +3869,15 @@ if [[ "${CLOUDS,,}" == *"vagrant"* ]]; then
       #vagrant destroy 
    fi
 else
-   fancy_echo "CLOUDS vagrant not specified." >>$LOGFILE
+   fancy_echo "CLOUD_TOOLS vagrant not specified." >>$LOGFILE
 fi
 
 
 # See https://wilsonmar.github.io/gcp
-if [[ "${CLOUDS,,}" == *"gcp"* ]]; then
+if [[ "${CLOUD_TOOLS,,}" == *"gcp"* ]]; then
    # See https://cloud.google.com/sdk/docs/
    if [ ! -f "$(command -v gcloud) " ]; then  # /usr/local/bin/gcloud not installed
-      fancy_echo "Installing CLOUDS=$CLOUDS = brew cask install --appdir=\"/Applications\" google-cloud-sdk ..."
+      fancy_echo "Installing CLOUD_TOOLS=$CLOUD_TOOLS = brew cask install --appdir=\"/Applications\" google-cloud-sdk ..."
       PYTHON_INSTALL  # function defined at top of this file.
       brew tap caskroom/cask
       brew cask install --appdir="/Applications" google-cloud-sdk  # to ./google-cloud-sdk
@@ -3887,7 +3887,7 @@ if [[ "${CLOUDS,,}" == *"gcp"* ]]; then
          # core 2018.03.16
          # gsutil 4.29
    else
-      fancy_echo "CLOUDS=$CLOUDS = google-cloud-sdk already installed." >>$LOGFILE
+      fancy_echo "CLOUD_TOOLS=$CLOUD_TOOLS = google-cloud-sdk already installed." >>$LOGFILE
    fi
    # NOTE: gcloud command on its own results in an error.
 
@@ -3907,11 +3907,11 @@ if [[ "${CLOUDS,,}" == *"gcp"* ]]; then
    fancy_echo "Run \"gcloud config set account your-account\""
       # Response is "Updated property [core/account]."
 else
-      fancy_echo "CLOUDS gcp not specified." >>$LOGFILE
+      fancy_echo "CLOUD_TOOLS gcp not specified." >>$LOGFILE
 fi
 
 
-if [[ "${CLOUDS,,}" == *"awscli"* ]]; then  # contains aws.
+if [[ "${CLOUD_TOOLS,,}" == *"awscli"* ]]; then  # contains aws.
    fancy_echo "awscli requires Python3."
    # See https://docs.aws.amazon.com/cli/latest/userguide/cli-install-macos.html#awscli-install-osx-pip
    PYTHON3_INSTALL  # function defined at top of this file.
@@ -3933,11 +3933,11 @@ if [[ "${CLOUDS,,}" == *"awscli"* ]]; then  # contains aws.
    # TODO: https://github.com/bonusbits/devops_bash_config_examples/blob/master/shared/.bash_aws
    # For aws-cli commands, see http://docs.aws.amazon.com/cli/latest/userguide/ 
 else
-   fancy_echo "CLOUDS awscli not specified." >>$LOGFILE
+   fancy_echo "CLOUD_TOOLS awscli not specified." >>$LOGFILE
 fi
 
 
-if [[ "${CLOUDS,,}" == *"terraform"* ]]; then  # contains aws.
+if [[ "${CLOUD_TOOLS,,}" == *"terraform"* ]]; then  # contains aws.
    if ! command -v terraform >/dev/null; then
       # see https://www.terraform.io/
       fancy_echo "Installing terraform ..."
@@ -3963,11 +3963,11 @@ if [[ "${CLOUDS,,}" == *"terraform"* ]]; then  # contains aws.
          echo "alias tfs=\"terraform show\"" >>"$BASHFILE"
       fi
 else
-      fancy_echo "CLOUDS terraform not specified." >>$LOGFILE
+      fancy_echo "CLOUD_TOOLS terraform not specified." >>$LOGFILE
 fi
 
 
-if [[ "${CLOUDS,,}" == *"azure"* ]]; then  # contains azure.
+if [[ "${CLOUD_TOOLS,,}" == *"azure"* ]]; then  # contains azure.
    # See https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-macos?view=azure-cli-latest
    # Issues at https://github.com/Azure/azure-cli/issues
 
@@ -4065,10 +4065,10 @@ if [[ "${CLOUDS,,}" == *"azure"* ]]; then  # contains azure.
       # See https://www.robinosborne.co.uk/2014/11/18/scripting-a-statsd-mongodb-elasticsearch-metrics-server-on-azure-with-powershell/
    fi
 else
-      fancy_echo "CLOUDS azure not specified." >>$LOGFILE
+      fancy_echo "CLOUD_TOOLS azure not specified." >>$LOGFILE
 fi
 
-if [[ "${CLOUDS,,}" == *"serverless"* ]]; then
+if [[ "${CLOUD_TOOLS,,}" == *"serverless"* ]]; then
 
       if ! command -v serverless >/dev/null; then  # not installed.
          NODE_INSTALL
@@ -4121,11 +4121,11 @@ if [[ "${CLOUDS,,}" == *"serverless"* ]]; then
       serverless remove
    fi
 else
-      fancy_echo "CLOUDS serverless not specified." >>$LOGFILE
+      fancy_echo "CLOUD_TOOLS serverless not specified." >>$LOGFILE
 fi
 
 
-if [[ "${CLOUDS,,}" == *"heroku"* ]]; then  # contains heroku.
+if [[ "${CLOUD_TOOLS,,}" == *"heroku"* ]]; then  # contains heroku.
    # https://cli.heroku.com
    if ! command -v heroku >/dev/null; then  # not installed.
       # https://devcenter.heroku.com/articles/heroku-cli
@@ -4144,11 +4144,11 @@ if [[ "${CLOUDS,,}" == *"heroku"* ]]; then  # contains heroku.
    echo -e "$(heroku -v)" >>$LOGFILE  
       # heroku-cli/6.16.8-ae149be (darwin-x64) node-v9.10.1
 else
-      fancy_echo "CLOUDS heroku not specified." >>$LOGFILE
+      fancy_echo "CLOUD_TOOLS heroku not specified." >>$LOGFILE
 fi
 
 
-if [[ "${CLOUDS,,}" == *"openstack"* ]]; then  # contains openstack.
+if [[ "${CLOUD_TOOLS,,}" == *"openstack"* ]]; then  # contains openstack.
    # See https://iujetstream.atlassian.net/wiki/spaces/JWT/pages/40796180/Installing+the+Openstack+clients+on+OS+X
    PYTHON_INSTALL  # function defined at top of this file.
    if ! command -v openstack >/dev/null; then  # not installed.
@@ -4189,12 +4189,12 @@ if [[ "${CLOUDS,,}" == *"openstack"* ]]; then  # contains openstack.
    fi
 else
    if [[ "${TRYOUT,,}" == *"openstack"* ]]; then
-      fancy_echo "ERROR: \"openstack\" needs to be in CLOUDS for TRYOUT."
+      fancy_echo "ERROR: \"openstack\" needs to be in CLOUD_TOOLS for TRYOUT."
    fi
 fi
 
 
-if [[ "${CLOUDS,,}" == *"docker"* ]]; then  # contains gcp.
+if [[ "${CLOUD_TOOLS,,}" == *"docker"* ]]; then  # contains gcp.
    # First remove boot2docker and Kitematic https://github.com/boot2docker/boot2docker/issues/437
    if ! command -v docker >/dev/null; then  # /usr/local/bin/docker
       fancy_echo "Installing docker ..."
@@ -4252,12 +4252,12 @@ if [[ "${CLOUDS,,}" == *"docker"* ]]; then  # contains gcp.
    fi
 else
    if [[ "${TRYOUT,,}" == *"docker"* ]]; then
-      fancy_echo "ERROR: \"docker\" needs to be in CLOUDS for TRYOUT."
+      fancy_echo "ERROR: \"docker\" needs to be in CLOUD_TOOLS for TRYOUT."
    fi
 fi
 
 
-if [[ "${CLOUDS,,}" == *"minikube"* ]]; then 
+if [[ "${CLOUD_TOOLS,,}" == *"minikube"* ]]; then 
    # See https://kubernetes.io/docs/tasks/tools/install-minikube/
    PYTHON_INSTALL  # function defined at top of this file.
    VIRTUALBOX_INSTALL # pre-requisite
@@ -4278,15 +4278,15 @@ if [[ "${CLOUDS,,}" == *"minikube"* ]]; then
    fi
    echo -e "\n$(kubectl version)" >>$LOGFILE  # version: v0.25.2 
 
-   BREW_INSTALL "CLOUDS" "minikube" "brew"
-   echo "CLOUDS $(minikube version)" >>$LOGFILE  # version: v0.25.2 
+   BREW_INSTALL "CLOUD_TOOLS" "minikube" "brew"
+   echo "CLOUD_TOOLS $(minikube version)" >>$LOGFILE  # version: v0.25.2 
 
    if [[ "${TRYOUT,,}" == *"minikube"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       fancy_echo "TRYOUT run minikube ..."
       kubectl cluster-info
       #kubectl cluster-info dump  # for diagnostis
       # based on https://kubernetes.io/docs/getting-started-guides/minikube/
-      fancy_echo "TRYOUT CLOUDS=\"minikube\" starting (Downloading Minikube ISO) ..."
+      fancy_echo "TRYOUT CLOUD_TOOLS=\"minikube\" starting (Downloading Minikube ISO) ..."
       minikube start
       # Subsequent calls:
          # Starting local Kubernetes v1.9.4 cluster...
@@ -4336,7 +4336,7 @@ if [[ "${CLOUDS,,}" == *"minikube"* ]]; then
          # Machine stopped.
    fi
 else
-      fancy_echo "CLOUDS minikube not specified." >>$LOGFILE
+      fancy_echo "CLOUD_TOOLS minikube not specified." >>$LOGFILE
 fi
 
 
@@ -4353,7 +4353,7 @@ fi
 # See https://www.ibm.com/blogs/bluemix/2017/02/command-line-tools-watson-services/
 
 
-if [[ "${CLOUDS,,}" == *"cf"* ]]; then  # contains aws.
+if [[ "${CLOUD_TOOLS,,}" == *"cf"* ]]; then  # contains aws.
    # See https://docs.cloudfoundry.org/cf-cli/install-go-cli.html
    if ! command -v cf >/dev/null; then
       fancy_echo "Installing cf (Cloud Foundry CLI) ..."
@@ -4380,7 +4380,7 @@ if [[ "${CLOUDS,,}" == *"cf"* ]]; then  # contains aws.
    fi
 else
    if [[ "${TRYOUT,,}" == *"cf"* ]]; then
-      fancy_echo "ERROR: \"cf\" needs to be in CLOUDS for TRYOUT."
+      fancy_echo "ERROR: \"cf\" needs to be in CLOUD_TOOLS for TRYOUT."
    fi
 fi
 
