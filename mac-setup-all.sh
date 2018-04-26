@@ -77,7 +77,7 @@ cleanup2() {
     exit $err 
 }
 sig_cleanup() {
-    echo "At sig_cleanup() LOGFILE=$LOGFILE"
+    echo "Run interrupted."
     trap '' EXIT # some shells will call EXIT after the INT handler
     false # sets $?
     cleanup
@@ -202,9 +202,9 @@ function BREW_INSTALL() {
   local versions="$3"  # sample: "brew"
 
    fancy_echo "BREW_INSTALL $category $package ..." >>$LOGFILE
-   #if ! command -v "$package" >/dev/null; then
+   #if ! command -v "$package" >/dev/null; then xxx
    VER="$(brew info $package | grep "$package:")"
-   if ! grep -q "$VER" "$package" ; then
+   if [[ "$VER" != *"$package"* ]]; then
       fancy_echo "$category $package installing ..." >>$LOGFILE
       brew install "$package"
        # brew info "$package" >>$LOGFILE 
@@ -222,8 +222,10 @@ function BREW_INSTALL() {
 
    if [[ $versions = *"brew"* ]]; then
       echo "BREW_INSTALL $(brew info $package | grep "$package:")" >>$LOGFILE
-   elif [[ $versions = "" ]]; then
-      echo "BREW_INSTALL $($package --version)" >>$LOGFILE
+   #elif [[ -z "${versions// }"  ]]; then  #it's blank
+   #   "$($package --version)" >>$LOGFILE
+   elif [[ $versions = "version" ]]; then
+      echo "BREW_INSTALL $($package version)" >>$LOGFILE
    #else
    #   echo "BREW_INSTALL $($versions)" >>$LOGFILE   
    fi
@@ -374,6 +376,8 @@ else
    echo "TEST_TOOLS=$TEST_TOOLS" >>$LOGFILE
 
    echo "CLOUD_TOOLS=$CLOUD_TOOLS" >>$LOGFILE
+   echo "IRON_TOKEN=$IRON_TOKEN" >>$LOGFILE 
+   echo "IRON_PROJECT_ID=$IRON_PROJECT_ID" >>$LOGFILE 
    # AWS_ACCESS_KEY_ID=""
    # AWS_SECRET_ACCESS_KEY=""
    # AWS_REGION="us-west-1"
@@ -422,6 +426,7 @@ GITS_PATH_INIT() {
    fi
 
    if [ ! -d "$GITS_PATH" ]; then  # no path, so create:
+      fancy_echo "GITS_PATH_INIT creating $GITS_PATH ..." 
       mkdir "$GITS_PATH"
    fi
 
@@ -771,7 +776,7 @@ function PYTHON_INSTALL() {
    # Not brew install pyenv  # Python environment manager.
 	 #brew linkapps python
    # pip comes with brew install Python 2 >=2.7.9 or Python 3 >=3.4
-   echo -e "\n$(pip --version)"            >>$LOGFILE
+   fancy_echo "$(pip --version)"            >>$LOGFILE
          # pip 9.0.3 from /usr/local/lib/python2.7/site-packages (python 2.7)
 
    # Define command python as going to version 2.7:
@@ -998,9 +1003,7 @@ function NODE_INSTALL() {
 
 
 function GO_INSTALL() {
-   BREW_INSTALL "GO_INSTALL" "go" "brew"
-   go version >>$LOGFILE  # go version go1.10.1 darwin/amd64
-
+   BREW_INSTALL "GO_INSTALL" "go" "version"
    BASHFILE_EXPORT "GOPATH" "$HOME/golang"
    BASHFILE_EXPORT "GOROOT" "/usr/local/opt/go/libexec"
 
@@ -2339,26 +2342,6 @@ if [[ "${DATA_TOOLS,,}" == *"redis"* ]]; then
 else
       fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
 fi
-
-function MYSQL_INSTALL() {
-
-   # sudo launchctl unload -w /System/Library/LaunchDaemons/org.apache.httpd.plist 2>/dev/null
-
-   # /etc/init.d/mysql stop
-   # mysqld_safe –skip-grant-tables &
-      # –skip-grant-tables option so mysql will not prompt for password.
-   # mysql -u root -p'abc' -e 'show databases;'
-   # /usr/local/var/mysql
-
-   # https://www.cyberciti.biz/faq/mysql-change-root-password/
-   # Set root first time:
-   # mysqladmin -u root password "$MYSQL_PASSWORD"
-
-
-   # Change (or update) a root password abc to newpass:
-   # mysqladmin -u root -p'abc' password '123456'
-
-}
 
 
 function POSTGRESQL_INSTALL() {
@@ -3727,25 +3710,6 @@ fi
 ######### LOCALHOSTS SERVERS ::
 
 
-if [[ "${LOCALHOSTS,,}" == *"iron.io"* ]]; then
-   # See http://dev.ironcli.io/worker/cli/
-   DOCKER_INSTALL  # pre-requisite
-   GO_INSTALL
-   # NOTE: brew ironcli installs IronMQ, another product which conflicts with this.
-   BREW_INSTALL "LOCALHOSTS" "iron-functions" ""
-      # /usr/local/Cellar/iron-functions/0.2.72: 4 files, 16.4MB from https://github.com/iron-io/functions
-
-   GITS_PATH_INIT "iron.io"
-exit #debugging
-   pushd "$GITS_PATH/iron.io"
-   curl -sSL https://cli.iron.io/install | sh
-   popd
-
-else
-      fancy_echo "LOCALHOSTS ironcli not specified." >>$LOGFILE
-fi
-
-
 if [[ "${LOCALHOSTS,,}" == *"nginx"* ]]; then
    # See https://wilsonmar.github.io/nginx
    JAVA_INSTALL  # pre-requisite
@@ -3865,10 +3829,74 @@ fi
    # QUESTION: Supply passphrase or create keys without passphrase
 
 
+
 ######### Cloud CLI/SDK:
 
 
 fancy_echo "CLOUD_TOOLS=\"$CLOUD_TOOLS\"" >>$LOGFILE
+
+function DOCKER_INSTALL() {
+   # First remove boot2docker and Kitematic https://github.com/boot2docker/boot2docker/issues/437
+   if ! command -v docker >/dev/null; then  # /usr/local/bin/docker
+      fancy_echo "Installing docker ..."
+      brew install docker  docker-compose  docker-machine  xhyve  docker-machine-driver-xhyve
+      # This creates folder ~/.docker
+      # Docker images are stored in $HOME/Library/Containers/com.docker.docker
+      brew link --overwrite docker
+      # /usr/local/bin/docker -> /Applications/Docker.app/Contents/Resources/bin/docker
+      brew link --overwrite docker-machine
+      brew link --overwrite docker-compose
+
+      # docker-machine-driver-xhyve driver requires superuser privileges to access the hypervisor. To enable, execute:
+      sudo chown root:wheel /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+      sudo chmod u+s /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+   else
+      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
+         fancy_echo "docker upgrading ..."
+         docker version
+         brew upgrade docker-machine-driver-xhyve
+         brew upgrade xhyve
+         brew upgrade docker-compose  
+         brew upgrade docker-machine 
+         brew upgrade docker 
+      fi
+   fi
+   fancy_echo "DOCKER_INSTALL $(docker --version)" >>$LOGFILE
+      # Docker version 18.03.0-ce, build 0520e24
+      # Client:
+       # Version: 18.03.0-ce
+       # API version: 1.37
+       # Go version:  go1.9.4
+       # Git commit:  0520e24
+       # Built: Wed Mar 21 23:06:22 2018
+       # OS/Arch: darwin/amd64
+       # Experimental:  false
+       # Orchestrator:  swarm
+}
+if [[ "${CLOUD_TOOLS,,}" == *"docker"* ]]; then  # contains gcp.
+   DOCKER_INSTALL
+
+   if [[ "${TRYOUT,,}" == *"docker"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      fancy_echo "TRYOUT run docker ..."
+      docker-machine create default
+
+      # See https://github.com/bonusbits/devops_bash_config_examples/blob/master/shared/.bash_docker
+      # https://www.upcloud.com/support/how-to-configure-docker-swarm/
+      # docker-machine --help
+      # Create a machine:
+      # docker-machine create default --driver xhyve --xhyve-experimental-nfs-share
+      # docker-machine create -d virtualbox dev1
+      # eval $(docker-machine env default)
+      # docker-machine upgrade dev1
+      # docker-machine rm dev2fi
+
+      # docker run -d dockerswarm/swarm:master join --advertise=192.168.1.105:2375 consul://192.168.1.103:8500
+      # sudo docker run -d dockerswarm/swarm:master join --advertise=192.168.1.105:2375 consul://192.168.1.103:8500
+   fi
+else
+   fancy_echo "CLOUD_TOOLS docker not specified." >>$LOGFILE
+fi
+
 
 if [[ "${CLOUD_TOOLS,,}" == *"icloud"* ]]; then
    if [ ! -d "/Library/Mobile Documents/com~apple~CloudDocs/" ]; then # found dir:
@@ -3909,6 +3937,34 @@ else
    fancy_echo "CLOUD_TOOLS vagrant not specified." >>$LOGFILE
 fi
 
+
+if [[ "${CLOUD_TOOLS,,}" == *"iron.io"* ]]; then
+   # See http://dev.ironcli.io/worker/cli/
+   DOCKER_INSTALL  # pre-requisite
+   GO_INSTALL
+   # NOTE: brew ironcli installs IronMQ http://dev.iron.io/mq/3/on-premise/installation/single.html
+   BREW_INSTALL "CLOUD_TOOLS" "iron-functions" ""
+      # /usr/local/Cellar/iron-functions/0.2.72: 4 files, 16.4MB from https://github.com/iron-io/functions
+
+   GITS_PATH_INIT "iron.io"
+   fancy_echo "CLOUD_TOOLS $GITS_PATH/iron.io reseting ..." >>$LOGFILE
+   rm -rf "$GITS_PATH/iron.io"
+   mkdir "$GITS_PATH/iron.io"
+   pushd "$GITS_PATH/iron.io"
+   curl -sSL https://cli.iron.io/install | sh
+   popd
+
+   if [[ "${TRYOUT,,}" == *"ironcli"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+
+      IRON_TOKEN="$IRON_TOKEN"
+      IRON_PROJECT_ID="iron1"
+   fi
+
+exit #debugging
+
+else
+   fancy_echo "CLOUD_TOOLS iron.io not specified." >>$LOGFILE
+fi
 
 # See https://wilsonmar.github.io/gcp
 if [[ "${CLOUD_TOOLS,,}" == *"gcp"* ]]; then
@@ -4229,70 +4285,6 @@ else
       fancy_echo "ERROR: \"openstack\" needs to be in CLOUD_TOOLS for TRYOUT."
    fi
 fi
-
-
-DOCKER_INSTALL() {
-   # First remove boot2docker and Kitematic https://github.com/boot2docker/boot2docker/issues/437
-   if ! command -v docker >/dev/null; then  # /usr/local/bin/docker
-      fancy_echo "Installing docker ..."
-      brew install docker  docker-compose  docker-machine  xhyve  docker-machine-driver-xhyve
-      # This creates folder ~/.docker
-      # Docker images are stored in $HOME/Library/Containers/com.docker.docker
-      brew link --overwrite docker
-      # /usr/local/bin/docker -> /Applications/Docker.app/Contents/Resources/bin/docker
-      brew link --overwrite docker-machine
-      brew link --overwrite docker-compose
-
-      # docker-machine-driver-xhyve driver requires superuser privileges to access the hypervisor. To enable, execute:
-      sudo chown root:wheel /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
-      sudo chmod u+s /usr/local/opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "docker upgrading ..."
-         docker version
-         brew upgrade docker-machine-driver-xhyve
-         brew upgrade xhyve
-         brew upgrade docker-compose  
-         brew upgrade docker-machine 
-         brew upgrade docker 
-      fi
-   fi
-   fancy_echo "DOCKER_INSTALL $(docker --version)" >>$LOGFILE
-      # Docker version 18.03.0-ce, build 0520e24
-      # Client:
-       # Version: 18.03.0-ce
-       # API version: 1.37
-       # Go version:  go1.9.4
-       # Git commit:  0520e24
-       # Built: Wed Mar 21 23:06:22 2018
-       # OS/Arch: darwin/amd64
-       # Experimental:  false
-       # Orchestrator:  swarm
-}
-if [[ "${CLOUD_TOOLS,,}" == *"docker"* ]]; then  # contains gcp.
-   DOCKER_INSTALL
-
-   if [[ "${TRYOUT,,}" == *"docker"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      fancy_echo "TRYOUT run docker ..."
-      docker-machine create default
-
-      # See https://github.com/bonusbits/devops_bash_config_examples/blob/master/shared/.bash_docker
-      # https://www.upcloud.com/support/how-to-configure-docker-swarm/
-      # docker-machine --help
-      # Create a machine:
-      # docker-machine create default --driver xhyve --xhyve-experimental-nfs-share
-      # docker-machine create -d virtualbox dev1
-      # eval $(docker-machine env default)
-      # docker-machine upgrade dev1
-      # docker-machine rm dev2fi
-
-      # docker run -d dockerswarm/swarm:master join --advertise=192.168.1.105:2375 consul://192.168.1.103:8500
-      # sudo docker run -d dockerswarm/swarm:master join --advertise=192.168.1.105:2375 consul://192.168.1.103:8500
-   fi
-else
-   fancy_echo "CLOUD_TOOLS docker not specified." >>$LOGFILE
-fi
-
 
 if [[ "${CLOUD_TOOLS,,}" == *"minikube"* ]]; then 
    # See https://kubernetes.io/docs/tasks/tools/install-minikube/
