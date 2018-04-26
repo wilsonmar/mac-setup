@@ -64,12 +64,12 @@ Docker instances use the same ports, such as:
    PROMETHEUS_PORT="9090" # MON_TOOLS default 9090
    </pre>
 
-The above list is fron the <strong>secrets.sh</strong> file in your $HOME folder, which
+The above list is from the <strong>secrets.sh</strong> file in your $HOME folder, which
 you edit to specify which port numbers and <strong>keywords to specify apps</strong> you want installed.
 
    The file's name is suffixed with ".sh" because it is a runnable script that establishes memory variables for a <a href="#MainScript">Setup script</a> to reference.
 
-Keywords to trigger install are organzied by categories:
+Keywords to trigger install are organized by categories:
 
 <a name="Categories"></a>
 

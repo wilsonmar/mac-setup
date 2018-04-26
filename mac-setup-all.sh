@@ -5492,5 +5492,5 @@ MSG="End of script $THISPGM after $((DIFF/60))m $((DIFF%60))s seconds elapsed."
 fancy_echo "$MSG"
 echo -e "\n$MSG" >>$LOGFILE
 
-say "script ended."  # through speaker
+say "script ended."  # through speaker on Mac.
 #END
