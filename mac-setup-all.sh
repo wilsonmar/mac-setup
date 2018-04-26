@@ -352,6 +352,7 @@ else
    #fancy_echo "git ls-files -v|grep '^h' ::" >>$LOGFILE
    #echo "$(git ls-files -v|grep '^S')" >>$LOGFILE
 
+   MAC_USERID=$(id -un 2>/dev/null || true)  # example: wilsonmar
    echo "SECRETSFILE=$SECRETSFILE ::" >>$LOGFILE
    echo "RUNTYPE=$RUNTYPE ::" >>$LOGFILE
    echo "GIT_NAME=$GIT_NAME">>$LOGFILE
