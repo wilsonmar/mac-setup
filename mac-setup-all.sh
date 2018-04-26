@@ -3835,7 +3835,7 @@ fi
 
 fancy_echo "CLOUD_TOOLS=\"$CLOUD_TOOLS\"" >>$LOGFILE
 
-function DOCKER_INSTALL() {
+function DOCKER_INSTALL() {  # https://docs.docker.com/install/
    # First remove boot2docker and Kitematic https://github.com/boot2docker/boot2docker/issues/437
    if ! command -v docker >/dev/null; then  # /usr/local/bin/docker
       fancy_echo "Installing docker ..."
@@ -3938,32 +3938,36 @@ else
 fi
 
 
-if [[ "${CLOUD_TOOLS,,}" == *"iron.io"* ]]; then
-   # See http://dev.ironcli.io/worker/cli/
+if [[ "${CLOUD_TOOLS,,}" == *"ironworker"* ]]; then
+   # See http://dev.iron.io/worker/cli/
    DOCKER_INSTALL  # pre-requisite
    GO_INSTALL
    # NOTE: brew ironcli installs IronMQ http://dev.iron.io/mq/3/on-premise/installation/single.html
    BREW_INSTALL "CLOUD_TOOLS" "iron-functions" ""
       # /usr/local/Cellar/iron-functions/0.2.72: 4 files, 16.4MB from https://github.com/iron-io/functions
 
-   GITS_PATH_INIT "iron.io"
-   fancy_echo "CLOUD_TOOLS $GITS_PATH/iron.io reseting ..." >>$LOGFILE
-   rm -rf "$GITS_PATH/iron.io"
-   mkdir "$GITS_PATH/iron.io"
-   pushd "$GITS_PATH/iron.io"
+   GITS_PATH_INIT "ironworker"
+   fancy_echo "CLOUD_TOOLS $GITS_PATH/ironworker reseting ..." >>$LOGFILE
+   rm -rf "$GITS_PATH/ironworker"
+   mkdir "$GITS_PATH/ironworker"
+   pushd "$GITS_PATH/ironworker"
    curl -sSL https://cli.iron.io/install | sh
    popd
 
    if [[ "${TRYOUT,,}" == *"ironcli"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-
-      IRON_TOKEN="$IRON_TOKEN"
-      IRON_PROJECT_ID="iron1"
+      echo "CLOUD_TOOLS ironworker $GITS_PATH/ironworker reseting ..." >>$LOGFILE
+      # Per http://dev.iron.io/worker/getting_started/
+      # $IRON_TOKEN
+      # $IRON_PROJECT_ID
+      # docker run --rm -v "$(pwd)":/worker -w /worker IMAGE[:TAG] 'MY_COMMAND -payload MY_PAYLOAD.json'
+      # tests/iron_hello.rb
+      # worker-us-east.iron.io
    fi
 
 exit #debugging
 
 else
-   fancy_echo "CLOUD_TOOLS iron.io not specified." >>$LOGFILE
+   fancy_echo "CLOUD_TOOLS ironworker not specified." >>$LOGFILE
 fi
 
 # See https://wilsonmar.github.io/gcp
