@@ -413,6 +413,24 @@ else
 
 fi
 
+GITS_PATH_INIT() {
+
+   newdir=$1
+
+   if [ ! -z "$GITS_PATH" ]; then # fall-back if not set in secrets.sh:
+      GITS_PATH="$HOME/gits"  # the default
+   fi
+
+   if [ ! -d "$GITS_PATH" ]; then  # no path, so create:
+      mkdir "$GITS_PATH"
+   fi
+
+   if [[ ! -z "${newdir// }" ]]; then  #it's not blank
+      fancy_echo "GITS_PATH_INIT creating newdir=$newdir ..." 
+      mkdir "$GITS_PATH/$newdir"
+   fi
+}
+
 
 ######### MacOS hidden files configuration:
 
@@ -3709,6 +3727,25 @@ fi
 ######### LOCALHOSTS SERVERS ::
 
 
+if [[ "${LOCALHOSTS,,}" == *"iron.io"* ]]; then
+   # See http://dev.ironcli.io/worker/cli/
+   DOCKER_INSTALL  # pre-requisite
+   GO_INSTALL
+   # NOTE: brew ironcli installs IronMQ, another product which conflicts with this.
+   BREW_INSTALL "LOCALHOSTS" "iron-functions" ""
+      # /usr/local/Cellar/iron-functions/0.2.72: 4 files, 16.4MB from https://github.com/iron-io/functions
+
+   GITS_PATH_INIT "iron.io"
+exit #debugging
+   pushd "$GITS_PATH/iron.io"
+   curl -sSL https://cli.iron.io/install | sh
+   popd
+
+else
+      fancy_echo "LOCALHOSTS ironcli not specified." >>$LOGFILE
+fi
+
+
 if [[ "${LOCALHOSTS,,}" == *"nginx"* ]]; then
    # See https://wilsonmar.github.io/nginx
    JAVA_INSTALL  # pre-requisite
@@ -4194,7 +4231,7 @@ else
 fi
 
 
-if [[ "${CLOUD_TOOLS,,}" == *"docker"* ]]; then  # contains gcp.
+DOCKER_INSTALL() {
    # First remove boot2docker and Kitematic https://github.com/boot2docker/boot2docker/issues/437
    if ! command -v docker >/dev/null; then  # /usr/local/bin/docker
       fancy_echo "Installing docker ..."
@@ -4220,18 +4257,20 @@ if [[ "${CLOUD_TOOLS,,}" == *"docker"* ]]; then  # contains gcp.
          brew upgrade docker 
       fi
    fi
-   echo -e "\n$(docker --version)" >>$LOGFILE
+   fancy_echo "DOCKER_INSTALL $(docker --version)" >>$LOGFILE
       # Docker version 18.03.0-ce, build 0520e24
-   echo -e "\n$(docker version)" >>$LOGFILE
       # Client:
-       # Version:	18.03.0-ce
-       # API version:	1.37
-       # Go version:	go1.9.4
-       # Git commit:	0520e24
-       # Built:	Wed Mar 21 23:06:22 2018
-       # OS/Arch:	darwin/amd64
-       # Experimental:	false
-       # Orchestrator:	swarm
+       # Version: 18.03.0-ce
+       # API version: 1.37
+       # Go version:  go1.9.4
+       # Git commit:  0520e24
+       # Built: Wed Mar 21 23:06:22 2018
+       # OS/Arch: darwin/amd64
+       # Experimental:  false
+       # Orchestrator:  swarm
+}
+if [[ "${CLOUD_TOOLS,,}" == *"docker"* ]]; then  # contains gcp.
+   DOCKER_INSTALL
 
    if [[ "${TRYOUT,,}" == *"docker"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       fancy_echo "TRYOUT run docker ..."
@@ -4251,9 +4290,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"docker"* ]]; then  # contains gcp.
       # sudo docker run -d dockerswarm/swarm:master join --advertise=192.168.1.105:2375 consul://192.168.1.103:8500
    fi
 else
-   if [[ "${TRYOUT,,}" == *"docker"* ]]; then
-      fancy_echo "ERROR: \"docker\" needs to be in CLOUD_TOOLS for TRYOUT."
-   fi
+   fancy_echo "CLOUD_TOOLS docker not specified." >>$LOGFILE
 fi
 
 
@@ -4336,7 +4373,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"minikube"* ]]; then
          # Machine stopped.
    fi
 else
-      fancy_echo "CLOUD_TOOLS minikube not specified." >>$LOGFILE
+   fancy_echo "CLOUD_TOOLS minikube not specified." >>$LOGFILE
 fi
 
 
