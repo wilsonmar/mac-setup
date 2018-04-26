@@ -21,6 +21,8 @@ Most of the apps installed make use of installation code defined in the Homebrew
    https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb">
    https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb</a>
 
+   PROTIP: Before downloads a brew formula, we recommend that you look at Ruby code to verfy what really occurs and especially where files come from. In fact, we recommend that you install a binary repository proxy that supply you vetted files from a trusted server instead of retrieving whatever is the latest on the public Homebrew server.
+
    Homebrew currently has over 4,500 formulas.
 
 Various commands such as curl, sed, cut, etc. are used as well, especially to install and configure programs which don't have brew installation formulas.
