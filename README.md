@@ -69,7 +69,7 @@ you edit to specify which port numbers and <strong>keywords to specify apps</str
 
    The file's name is suffixed with ".sh" because it is a runnable script that establishes memory variables for a <a href="#MainScript">Setup script</a> to reference.
 
-Programa organzied by categories:
+Keywords to trigger install are organzied by categories:
 
 <a name="Categories"></a>
 
