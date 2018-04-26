@@ -131,7 +131,7 @@ function BASHFILE_EXPORT() {
    else
       fancy_echo "Adding $name in $BASHFILE..."
       # Do it now:
-           "export $name=$value" 
+            export "$name=$value" 
       # For after a Terminal is started:
       echo "export $name='$value'" >>"$BASHFILE"
    fi
@@ -169,7 +169,7 @@ ruby -v >>$LOGFILE  # ruby 2.5.0p0 (2017-12-25 revision 61468) [x86_64-darwin16]
 # sudo chflags norestricted /usr/local && sudo chown $(whoami):admin /usr/local && sudo chown -R $(whoami):admin /usr/local
 
 #Mandatory:
-if command_exists brew ; then
+if ! command_exists brew ; then
     fancy_echo "Installing homebrew using Ruby..."   >>$LOGFILE
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     brew tap caskroom/cask
@@ -205,11 +205,11 @@ function BREW_INSTALL() {
   local package="$2"   # sample: "mysql"
   local versions="$3"  # sample: "brew"
 
-   fancy_echo "BREW_INSTALL $category $package ..." >>$LOGFILE
+   fancy_echo "BREW_INSTALL $category $package ..."
    #if ! command -v "$package" >/dev/null; then
    VER="$(brew info $package | grep "$package:")"
-   if [[ "$VER" != *"$package"* ]]; then
-      fancy_echo "$category $package installing ..." >>$LOGFILE
+   if [[ "$VER" == *"$package"* ]]; then
+      fancy_echo "$category $package installing ..."
       brew install "$package"
        # brew info "$package" >>$LOGFILE 
        # brew list "$package" >>$LOGFILE
@@ -224,14 +224,21 @@ function BREW_INSTALL() {
       fi
    fi
 
-   if [[ $versions = *"brew"* ]]; then
+   if [[ $versions == *"brew"* ]]; then
       echo "BREW_INSTALL $(brew info $package | grep "$package:")" >>$LOGFILE
    #elif [[ -z "${versions// }"  ]]; then  #it's blank
    #   "$($package --version)" >>$LOGFILE
-   elif [[ $versions = "version" ]]; then
+   elif [[ $versions == "version" ]]; then
       echo "BREW_INSTALL $($package version)" >>$LOGFILE
-   #else
-   #   echo "BREW_INSTALL $($versions)" >>$LOGFILE   
+   elif [[ $versions == "--version" ]]; then
+      VER="$($package --version)"
+      echo "BREW_INSTALL $VER" >>$LOGFILE
+   elif [[ $versions == "-v" ]]; then
+      VER="$($package -v)"
+      echo "BREW_INSTALL $VER" >>$LOGFILE
+   else
+      VER="$($versions)"
+      echo "BREW_INSTALL $VER" >>$LOGFILE   
    fi
 }
 
@@ -297,7 +304,7 @@ function GITHUB_UPDATE() {
          git commit -m"GITHUB_UPDATE in $THISPGM"
          git push
       else
-         echo "Plese resolved diverged repo."
+         echo "Plese resolve diverged repo."
          gitk master..upstream/master
          #p4merge
       fi
@@ -323,8 +330,7 @@ if [ ! -f "$SECRETSFILE" ]; then #  NOT found:
       rm secrets.sh  # so it's not edited by mistaks
    else
       cd $REPO_PATH
-      fancy_echo "Updating $REPO_PATH from $GIT" >>$LOGFILE
-      git pull
+      GITHUB_UPDATE
    fi
 fi
 fancy_echo "At $(pwd)" >>$LOGFILE
@@ -381,8 +387,8 @@ else
    echo "TEST_TOOLS=$TEST_TOOLS" >>$LOGFILE
 
    echo "CLOUD_TOOLS=$CLOUD_TOOLS" >>$LOGFILE
-   echo "IRON_TOKEN=$IRON_TOKEN" >>$LOGFILE 
-   echo "IRON_PROJECT_ID=$IRON_PROJECT_ID" >>$LOGFILE 
+   # echo "IRON_TOKEN=$IRON_TOKEN" >>$LOGFILE   # secret
+   # echo "IRON_PROJECT_ID=$IRON_PROJECT_ID" >>$LOGFILE  # secret
    # AWS_ACCESS_KEY_ID=""
    # AWS_SECRET_ACCESS_KEY=""
    # AWS_REGION="us-west-1"
@@ -1026,6 +1032,9 @@ if [[ "${TEST_TOOLS,,}" == *"pact-go"* ]]; then
    fi
    
    PACT_VERSION="v0.0.12" # TODO: Extract from webpage.
+   PACT_VERSION="pact-version.html"; \
+   wget -q "https://github.com/pact-foundation/pact-go/releases" -O $outputFile; \
+   cat "$outputFile" | sed -n -e '/<\/header>/,/<\/footer>/ p' | grep "Last stable release:" | sed 's/<\/\?[^>]\+>//g' | awk -F' ' '{ print $4 }'; rm -f $outputFile
 
    DOWNLOAD_URL="https://github.com/pact-foundation/pact-go/releases/download/$PACT_VERSION/pact-go_darwin_amd64.tar.gz"
    if [ ! -f "$PACT_HOME/pact-go_darwin_amd64.tar.gz" ]; then
@@ -2910,10 +2919,8 @@ if [[ "${NODE_TOOLS,,}" == *"sfdx"* ]]; then
       if [ ! -d "sfdx-simple" ]; then 
          git clone https://github.com/forcedotcom/sfdx-simple --depth=1
       else # already there, so update:
-         git fetch  # instead of git pull
-         git log ..@{u}
-         #git reset --hard HEAD@{1} to go back and discard result of git pull if you don't like it.
-         git merge  # Response: Already up to date.
+         cd sfdx-simple
+         GITHUB_UPDATE
       fi
       cd sfdx-simple
       echo "RUBY_TOOLS sfdx-simple at $(pwd) after clone" >>$LOGFILE
@@ -3935,14 +3942,12 @@ fi
 
 if [[ "${CLOUD_TOOLS,,}" == *"ironworker"* ]]; then
    # See http://dev.iron.io/worker/cli/ & https://github.com/iron-io/ironcli
-   DOCKER_INSTALL  # pre-requisite
    # Don't brew install ironcli for IronMQ http://dev.iron.io/mq/3/on-premise/installation/single.html
-   BREW_INSTALL "CLOUD_TOOLS" "iron-functions" ""
+   #BREW_INSTALL "CLOUD_TOOLS" "iron-functions" ""
       # /usr/local/Cellar/iron-functions/0.2.72: 4 files, 16.4MB from https://github.com/iron-io/functions
 
    curl -sSL https://cli.iron.io/install | sh
 
-   GITS_PATH_INIT "ironworker" # to store scripts
 
    if [[ "${TRYOUT,,}" == *"ironworker"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       echo "CLOUD_TOOLS ironworker $GITS_PATH/ironworker running ..." >>$LOGFILE
@@ -3950,15 +3955,56 @@ if [[ "${CLOUD_TOOLS,,}" == *"ironworker"* ]]; then
       # $IRON_TOKEN
       # $IRON_PROJECT_ID
       # worker-us-east.iron.io
+      DOCKER_INSTALL  # pre-requisite
       docker run --rm -it -v "$PWD":/worker -w /worker iron/ruby ruby tests/iron_hello.rb
       # docker run --rm -v "$(pwd)":/worker -w /worker IMAGE[:TAG] 'MY_COMMAND -payload MY_PAYLOAD.json'
    fi
-
-exit #debugging
-
 else
    fancy_echo "CLOUD_TOOLS ironworker not specified." >>$LOGFILE
 fi
+
+
+function LIQUIBASE_INSTALL() {
+   fancy_echo "LIQUIBASE_INSTALL starting ..." 
+   # https://www.liquibase.org/
+   BREW_INSTALL "LIQUIBASE_INSTALL" "liquibase" "--version"
+      # /usr/local/Cellar/liquibase/3.6.1: 2,043 files, 38.9MB, built in 2 seconds
+      # Starting Liquibase at Thu, 26 Apr 2018 13:12:01 MDT (version 3.6.1 built at 2018-04-11 08:41:04)
+
+                LIQUIBASE_HOME="/usr/local/opt/liquibase/libexec"
+   echo "export LIQUIBASE_HOME='/usr/local/opt/liquibase/libexec'" >>$BASHFILE
+   # Add changelog & changeset: https://www.liquibase.org/quickstart.html
+   echo "LIQUIBASE_INSTALL LIQUIBASE_HOME=$LIQUIBASE_HOME ..." 
+}
+if [[ "${CLOUD_TOOLS,,}" == *"rancher"* ]]; then
+   # See https://github.com/rancher/rancher/wiki/Cowpoke-1:-Getting-Started-with-Rancher
+   # https://rancher.com
+   LIQUIBASE_INSTALL
+   
+   BREW_INSTALL "CLOUD_TOOLS" "rancher-cli" "brew"
+   BREW_INSTALL "CLOUD_TOOLS" "rancher-compose" "brew"
+   DOCKER_INSTALL
+   PYTHON_INSTALL
+
+   GITS_PATH_INIT "rancher"
+   pushd "$GITS_PATH/rancher"
+      if [ ! -d "cattle" ]; then 
+         git clone https://github.com/rancher/cattle.git --depth=1
+         chmod +x scripts/*
+      else # already there, so update:
+         cd cattle
+         GITHUB_UPDATE
+      fi
+   popd
+   echo "back at $(PWD)"
+
+   if [[ "${TRYOUT,,}" == *"rancher"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      echo "CLOUD_TOOLS rancher $GITS_PATH/rancher running ..." >>$LOGFILE
+   fi
+else
+   fancy_echo "CLOUD_TOOLS rancher not specified." >>$LOGFILE
+fi
+
 
 # See https://wilsonmar.github.io/gcp
 if [[ "${CLOUD_TOOLS,,}" == *"gcp"* ]]; then
