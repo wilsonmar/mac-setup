@@ -891,7 +891,7 @@ function SCALA_INSTALL() {
          brew upgrade scala
       fi
    fi
-   fancy_echo -e "scala : $(scala -version)" >>$LOGFILE
+   fancy_echo "scala : $(scala -version)" >>$LOGFILE
        # 2.12.5
 
    BASHFILE_EXPORT "SCALA_HOME" "/usr/local/opt/scala/libexec"
@@ -3724,7 +3724,7 @@ if [[ "${LOCALHOSTS,,}" == *"nginx"* ]]; then
          brew upgrade nginx
       fi
    fi
-   fancy_echo -e "LOCALHOSTS=nginx :: $(nginx -v)" >>$LOGFILE
+   fancy_echo "LOCALHOSTS=nginx :: $(nginx -v)" >>$LOGFILE
    echo -e "openssl :: $(openssl version)" >>$LOGFILE
 
    # Docroot is:    /usr/local/var/www
@@ -3772,7 +3772,7 @@ if [[ "${LOCALHOSTS,,}" == *"tomcat"* ]]; then
          brew uninstall tomcat
       fi
    fi
-   fancy_echo -e "LOCALHOSTS=tomcat :: $(tomcat -v)" >>$LOGFILE
+   fancy_echo "LOCALHOSTS=tomcat :: $(tomcat -v)" >>$LOGFILE
    if [[ "${TRYOUT,,}" == *"tomcat"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       PS_OUTPUT=$(ps -ef | grep tomcat)
       if grep -q "/Library/java" "$PS_OUTFILE" ; then 
@@ -4808,7 +4808,7 @@ if [[ "${MON_TOOLS,,}" == *"prometheus"* ]]; then
          brew upgrade prometheus
       fi
    fi
-   fancy_echo -e "MON_TOOLS=prometheus :: $(prometheus --version)" >>$LOGFILE
+   fancy_echo "MON_TOOLS=prometheus :: $(prometheus --version)" >>$LOGFILE
    # promtool --version
 
     if [[ "$TRYOUT" != *"prometheus"* ]]; then

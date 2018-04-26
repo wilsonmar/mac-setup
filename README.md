@@ -1,42 +1,41 @@
----
-layout: post
-title: "Install, configure, and test all on a MacOS laptop"
-excerpt: "Everything you need to be a professional developer"
-tags: [API, devops, evaluation]
-Categories: Devops
-filename: README.md
-image:
-  feature: https://cloud.githubusercontent.com/assets/300046/14612210/373cb4e2-0553-11e6-8a1a-4b5e1dabe181.jpg
-  credit: And Beyond
-  creditlink: http://www.andbeyond.com/chile/places-to-go/easter-island.htm
-comments: true
----
-<i>{{ page.excerpt }}</i>
+The tagline of this repo is "Automatically install and configure the <strong>most popular programs</strong> developer need to work offline as a developer of several stacks on a Mac."
 
-The tagline of this repo is "Automatically install and configure the dozens of programs that a developer needs to work offline as a developer of several stacks on a Mac."
+Bash scripts in this repo install, configure, then start programs running to prove that installation was successful. The "stacks" installed include:
 
-This script was created to help you cope with the large number of apps needed to be a "full stack" developer today. This installs several stacks with sample repositories: 
- 
    * MEAN (MongoDB, Express, Angular, NodeJs) with the MeanJs sample app
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
    * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)
    * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io
-   * etc.
+   * DevSecOps "stack" of Git, Jenkins, Nexus, Vagrant, Docker, Terraform, etc.
+
+By enabling you to switch quickly among sets of programs, scripts in this repo <strong>you can quickly evaluate</strong> the technical aspects of each stack and individual program not just conceptually, but really working together at the same time. The script in this repo is thousands of lines long so that you can mix and match what you install.
+
+<a name="Homebrew"></a>
+
+### Homebrew
+
+Most of the apps installed make use of installation code defined in the Homebrew repository online. There is a file (of Ruby code) for each brew install formula at:<br />
+
+   <a target="_blank" href="
+   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb">
+   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb</a>
+
+   Homebrew currently has over 4,500 formulas.
+
+Various commands such as curl, sed, cut, etc. are used as well, especially to install and configure programs which don't have brew installation formulas.
 
 Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And don't get me started on webinars with demos that brags rather than teach.
-
-> This script cuts through all that by scripts running on your Mac and displaying on your screen.
+This script cuts through all that by scripts running on your Mac and displaying on your screen.
 
 You will benefit most from this if you configure a <strong>new</strong> laptop for yourself or for other developers joining your organization. You'll skip wasted days installing everything one at a time (and doing it differently than colleagues).
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.
 
-But this script helps with updates too. You can, but don't have to, start from scratch. 
-Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version, by running a single "upgrade" command. 
+But this script helps with <strong>updates too</strong>. You can, but don't have to, start from scratch. 
+Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version, by running a single "upgrade" command. Use this script to install and configure most programs most people use.
 
 This bash script enables you to <strong>work offline</strong> by installing several servers. 
-
-You manage allocation of port numbers in one place:
+You manage allocation of port numbers in <strong>one place</strong>:
 
    <pre>
    ELASTIC_PORT="9200"    # DATA_TOOLS from default 9200
@@ -57,17 +56,23 @@ You manage allocation of port numbers in one place:
    TOMCAT_PORT="8087"     # LOCALHOSTS from default 8080
    </pre>
 
-The above are fron the <strong>secrets.sh</strong> file in your $HOME folder, which
-you edit to specify which port numbers and the keywords for apps you want installed.
+Docker instances use the same ports, such as:
 
-   The file's name is suffixed with ".sh" because another script runs it to establish variables for the script to reference. 
+   <pre>
+   PROMETHEUS_PORT="9090" # MON_TOOLS default 9090
+   </pre>
 
-Each program belongs to a category.
+The above list is fron the <strong>secrets.sh</strong> file in your $HOME folder, which
+you edit to specify which port numbers and <strong>keywords to specify apps</strong> you want installed.
+
+   The file's name is suffixed with ".sh" because it is a runnable script that establishes memory variables for a <a href="#MainScript">Setup script</a> to reference.
+
+Programa organzied by categories:
 
 <a name="Categories"></a>
 
-* MAC_TOOLS mas, Ansible, 1Password, PowerShell, Kindle, etc.
-* DATA_TOOLS mongodb, postgresql, mysql, mariadb, graphql?
+* MAC_TOOLS <a href="#Homebrew">Homebrew</a>, <a href="#mas">mas</a>, Ansible, 1Password, PowerShell, etc.
+* DATA_TOOLS MongoDB, postgresql, mysql, mariadb, graphql?
 * EDITORS Atom, Code, Eclipse, Emacs, IntelliJ, Macvim, STS, Sublime, Textmate, vim
 * BROWSERS chrome, firefox, brave, phantomjs
 * GIT_CLIENTS git, cola, github, gitkraken, smartgit, sourcetree, tower, magit, gitup
@@ -78,7 +83,7 @@ Each program belongs to a category.
 * PYTHON_TOOLS Virtualenv, jupyter, anaconda, ipython, numpy, scipy, matplotlib, pytest, robotframework, etc.
 * NODE_TOOLS Bower, gulp, gulp-cli, npm-check, jscs, less, jshint, eslint, webpack, etc.
 
-* LOCALHOSTS Apache (httpd, apachectl)
+* LOCALHOSTS Apache (httpd, apachectl), iron
 * TEST_TOOLS selenium, sikulix, golum, dbunit?
 * CLOUDS icloud, aws, gcp, azure, cf, heroku, docker, vagrant, terraform, serverless
 
@@ -91,8 +96,8 @@ Each program belongs to a category.
 
 Links for individual apps above take you to technical descriptions about that technology.
 
-The categories are run in dependency sequence. MAC_TOOLS to provide underlying utilities.
-DATA_TOOLS to provide databases.
+The categories are run in dependency sequence. MAC_TOOLS to provide underlying utilities, then
+DATA_TOOLS to provide databases, etc.
 
 Yes, you can just run brew yourself, one at a time. But logic in the script goes beyond what Homebrew does, and <strong>configures</strong> the component just installed:
 
@@ -105,11 +110,6 @@ Yes, you can just run brew yourself, one at a time. But logic in the script goes
    * Run a demo using the component to ensure that what has been installed actually works. 
    <br /><br />
 
-We also have Docker instances:
-
-   <pre>
-     PROMETHEUS_PORT="9090"  # from default 9090
-   </pre>
 
 ## Make this work for you
 
@@ -172,14 +172,12 @@ There is NO WARRANTY, to the extent permitted by law.
 
    The script first makes use of the Ruby program to install Homebrew which, in turn, installs Bash v4 using the brew command to download and configure packages.
 
-   PROTIP: There is a (Ruby) web page for each brew install formula, such as:<br />
-   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb
-
 8. After it runs, verify the version again <a href="#VersionWithGap">as described above</a> to ensure it's version 4.
+
 
    ### secrets.sh at Home
 
-   The script also copies the <strong>secrets.sh</strong> file from the public on-line repository into your laptop so that you can add your secrets in the file but have no chance the file will be uploaded from the Git repository where it came from.
+   The first time the script runs, it also copies the <strong>secrets.sh</strong> file from the public on-line repository into your laptop so that you can add your secrets in the file but have no chance the file will be uploaded from the Git repository where it came from.
 
    The file is placed in your account Home folder.
 
@@ -196,7 +194,7 @@ There is NO WARRANTY, to the extent permitted by law.
 
    <pre>/Users/wilsonmar</pre>
 
-1. You can also use this variable to reach Home:
+1. You can also use this variable to reach your account's Home folder:
 
    <pre>cd $HOME</pre>
 
@@ -262,27 +260,21 @@ There is NO WARRANTY, to the extent permitted by law.
 
 1. Save the file and exit the text editor.
 
+   <a name="MainScript"></a>
+
    ### Setup all
 
 1. Now copy, switch, click and paste in a Terminal window to run this command: 
 
    <pre>sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup-all.sh)"</pre>
 
-   The script referenced in the command obtains more files needed by cloning from a public GitHub repository to a folder under your home folder.
-
-   A folder is necessary to hold additional folders such as "hooks" used by Git (if marked for install.)
-   File "mac-bash-profile.txt" contains starter entries to insert in ~/.bash_profile that is executed before MacOS opens a Terminal session. 
-   Ignore the other files.
-
-   On a 4mbps network the run takes less than 5 minutes for a minimal install.
-
-   PROTIP: A faster network or a proxy Nexus server providing installers within the firewall would speed things up and ensure that vetted installers are used.
+   The script referenced in the command obtains more files needed by cloning from a public GitHub repository (<a target="_blank" href="https://github.com/wilsonmar/mac-setup/">
+   https://github.com/wilsonmar/mac-setup</a>) to a folder under your home folder named "mac-setup".
 
 4. Wait for the script to finish.
 
    On a 4mbps network the run takes less than 5 minutes for a minimal install.
-
-   PROTIP: A faster network or a proxy nexus server providing installers within the firewall would speed things up a lot and ensure that vetted installers are used.
+   PROTIP: A faster network or a proxy Nexus server providing installers within the firewall would speed things up and ensure that vetted installers are used.
 
    When the script ends it pops up a log file in the TextEdit program that comes with MacOS.
 
@@ -291,11 +283,19 @@ There is NO WARRANTY, to the extent permitted by law.
 6. Close the log file by clicking the red button.
 7. Switch to a Finder window to your account's Home folder and delete log files.
 
-   <pre>mac-setup</pre>
+   <a name="MacSetupFiles"></a>
+
+   ### mac-setup files #
+
+   The folder contains these files and folders:
+
+   * Files within folder "hooks" are used by Git (if marked for install.)
+   * File "mac-bash-profile.txt" contains starter entries to insert in ~/.bash_profile that is executed before MacOS opens a Terminal session. 
+   <br /><br />
 
    ### Subsequent runs
 
-   To update what is installed on your Mac, re-run the bash script.
+   To update what is installed on your Mac, re-run the mac-setup.sh bash script.
 
 1. cd into your Home folder to find the <strong>secrets.sh</strong> file.
 1. Edit the file, then run again locally:
@@ -306,11 +306,13 @@ There is NO WARRANTY, to the extent permitted by law.
 
    The <tt>chmod</tt> (pronounced "che-mod") changes the permissions for executing the file.
 
-   Now let's look at the Bash coding in Bash script file from <a target="_blank" href="
-   https://github.com/wilsonmar/mac-setup/">
-   https://github.com/wilsonmar/mac-setup</a>
+   Now let's look at the Bash coding techniques used in the scripts mentioned above, at: <a target="_blank" href="
+   https://wilsonmar.github.io/bash-coding/">
+   https://wilsonmar.github.io/bash-coding</a>
 
 <hr />
+
+<a name="mas"></a>
 
 ## Mac apps
 
