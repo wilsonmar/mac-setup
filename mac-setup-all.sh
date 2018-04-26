@@ -4830,7 +4830,9 @@ else
    fancy_echo "MON_TOOLS wireshark not specified." >>$LOGFILE
 fi
 
+
 if [[ "${MON_TOOLS,,}" == *"prometheus"* ]]; then
+   DOCKER_INSTALL
    # See https://github.com/prometheus/prometheus/  cmd
    GO_INSTALL # pre-requsite
    if ! command -v prometheus >/dev/null; then  # in /usr/local/bin/prometheus
@@ -4878,7 +4880,7 @@ if [[ "${MON_TOOLS,,}" == *"prometheus"* ]]; then
       fi
    fi
 else
-      fancy_echo "MON_TOOLS prometheus not specified." >>$LOGFILE
+   fancy_echo "MON_TOOLS prometheus not specified." >>$LOGFILE
 fi
 
 
@@ -4900,7 +4902,7 @@ if [[ "${MON_TOOLS,,}" == *"others"* ]]; then
 # See https://alternativeto.net/software/grafana/
 # Comparison: https://blog.takipi.com/statsd-vs-collectd-vs-fluentd-and-other-daemons-you-should-know/
 else
-      fancy_echo "MON_TOOLS others not specified." >>$LOGFILE
+   fancy_echo "MON_TOOLS others not specified." >>$LOGFILE
 fi
 
 
