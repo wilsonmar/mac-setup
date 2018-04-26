@@ -41,12 +41,12 @@ You manage allocation of port numbers in one place:
    <pre>
    ELASTIC_PORT="9200"    # DATA_TOOLS from default 9200
    GRAFANA_PORT="8089"    # VIZ_TOOLS from default 8080
-   JEKYLL_PORT="4000"     # from default 4000
+   JEKYLL_PORT="4000"     # LOCAOHOSTS from default 4000
    JENKINS_PORT="8088"    # LOCALHOSTS from default 8080
    KIBANA_PORT="5601"     # DATA_TOOLS default 5601
    MYSQL_PORT="3060"      # DATA_TOOLS default 3060
-   MEANJS_PORT="3000"     # from default 3000
-   MINIKUBE_PORT="8083"   # from default 8080
+   MEANJS_PORT="3000"     # NODE_TOOLS from default 3000
+   MINIKUBE_PORT="8083"   # LOCAOHOSTS from default 8080
    NEO4J_PORT="7474"      # DATA_TOOL default 7474 HTTPS: 7473
    NGINX_PORT="8086"      # LOCALHOSTS from default 8080
    PACT_PORT="6666"       # TEST_TOOLS from default 6666
@@ -62,11 +62,12 @@ you edit to specify which port numbers and the keywords for apps you want instal
 
    The file's name is suffixed with ".sh" because another script runs it to establish variables for the script to reference. 
 
-Each app belongs to a category:
+Each program belongs to a category.
 
 <a name="Categories"></a>
 
 * MAC_TOOLS mas, Ansible, 1Password, PowerShell, Kindle, etc.
+* DATA_TOOLS mongodb, postgresql, mysql, mariadb, graphql?
 * EDITORS Atom, Code, Eclipse, Emacs, IntelliJ, Macvim, STS, Sublime, Textmate, vim
 * BROWSERS chrome, firefox, brave, phantomjs
 * GIT_CLIENTS git, cola, github, gitkraken, smartgit, sourcetree, tower, magit, gitup
@@ -77,15 +78,21 @@ Each app belongs to a category:
 * PYTHON_TOOLS Virtualenv, jupyter, anaconda, ipython, numpy, scipy, matplotlib, pytest, robotframework, etc.
 * NODE_TOOLS Bower, gulp, gulp-cli, npm-check, jscs, less, jshint, eslint, webpack, etc.
 
-* DATA_TOOLS mongodb, postgresql
-* TEST_TOOLS selenium, sikulix, golum, dbunit
+* LOCALHOSTS Apache (httpd, apachectl)
+* TEST_TOOLS selenium, sikulix, golum, dbunit?
 * CLOUDS icloud, aws, gcp, azure, cf, heroku, docker, vagrant, terraform, serverless
+
 * MON_TOOLS (for monitoring) WireShark, Prometheus, others
 * VIZ_TOOLS (for visualization) Grafana, others (Prometheus, Kibana, Graphite)
 
 * COLAB_TOOLS (for collaboration) google-hangouts, hipchat, joinme, keybase, microsoft-lync, skype, slack, teamviewer, whatsapp, sococo, zoom
-* MEDIA_TOOLS Audacity, Camtasia, Snagit, etc.
+* MEDIA_TOOLS Camtasia, Kindle (others: Snagit, etc.)
 <br /><br />
+
+Links for individual apps above take you to technical descriptions about that technology.
+
+The categories are run in dependency sequence. MAC_TOOLS to provide underlying utilities.
+DATA_TOOLS to provide databases.
 
 Yes, you can just run brew yourself, one at a time. But logic in the script goes beyond what Homebrew does, and <strong>configures</strong> the component just installed:
 
@@ -128,8 +135,8 @@ The section below explains to someone relatively new to Mac machines the steps t
    <pre><strong>bash --version | grep 'bash'
    </strong></pre>
 
-   PROTIP: The attribute "--version" to obtain the version can vary among different commands.
-   "-v" or "version" may be used instead.
+   PROTIP: The attribute to obtain the version can vary among different commands.
+   "--version" or "-v" or "version" may be used.
 
    Hold the Shift key to press the | (called pipe) key at the upper-right of the keyboard.
 
@@ -164,6 +171,9 @@ There is NO WARRANTY, to the extent permitted by law.
 7. Press Enter to run the command, which upgrades Bash to version 4 and copies a file to your Home folder.
 
    The script first makes use of the Ruby program to install Homebrew which, in turn, installs Bash v4 using the brew command to download and configure packages.
+
+   PROTIP: There is a (Ruby) web page for each brew install formula, such as:<br />
+   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb
 
 8. After it runs, verify the version again <a href="#VersionWithGap">as described above</a> to ensure it's version 4.
 
@@ -632,51 +642,6 @@ http://groovy-lang.org/install.html
 Dropbox, OneDrive, Google Drive, Amazon Drive
 
 
-<a name="EclipsePlugins"></a>
-
-## Eclips IDE plug-ins
-
-http://download.eclipse.org/releases/juno
-
-Within Eclipse IDE, get a list of plugins at Help -> Install New Software -> Select a repo -> select a plugin -> go to More -> General Information -> Identifier
-
-   <pre>eclipse -application org.eclipse.equinox.p2.director \
--destination d:/eclipse/ \
--profile SDKProfile  \
--clean -purgeHistory  \
--noSplash \
--repository http://download.eclipse.org/releases/juno/ \
--installIU org.eclipse.cdt.feature.group, \
-   org.eclipse.egit.feature.group
-   </pre>
-
-   "Equinox" is the runtime environment of Eclipse, which is the <a target="_blank" href="http://www.vogella.de/articles/OSGi/article.html">reference implementation of OSGI</a>.
-   Thus, Eclipse plugins are architectually the same as bundles in OSGI.
-
-   Notice that there are different versions of Eclipse repositories, such as "juno".
-
-   PROTIP: Although one can install several at once, do it one at a time to see if you can actually use each one.
-   Some of them:
-
-   <pre>
-   org.eclipse.cdt.feature.group, \
-   org.eclipse.egit.feature.group, \
-   org.eclipse.cdt.sdk.feature.group, \
-   org.eclipse.linuxtools.cdt.libhover.feature.group, \
-   org.eclipse.wst.xml_ui.feature.feature.group, \
-   org.eclipse.wst.web_ui.feature.feature.group, \
-   org.eclipse.wst.jsdt.feature.feature.group, \
-   org.eclipse.php.sdk.feature.group, \
-   org.eclipse.rap.tooling.feature.group, \
-   org.eclipse.linuxtools.cdt.libhover.devhelp.feature.feature.group, \
-   org.eclipse.linuxtools.valgrind.feature.group, \
-   </pre>
-
-   <a target="_blank" href="https://stackoverflow.com/questions/2692048/what-are-the-differences-between-plug-ins-features-and-products-in-eclipse-rcp">NOTE</a>:
-   A feature group is a list of plugins and other features which can be understood as a logical separate project unit
-   for the updates manager and for the build process.
-
-
 <a name="FONTS"></a>
 
 ## Scape for Fonts in GitHub
@@ -694,13 +659,6 @@ The files are downloaded into <a target="_blank" href="https://support.apple.com
 
 <a target="_blank" href="http://sourabhbajaj.com/mac-setup/iTerm/README.html">ITerm2 can make use of these font files</a>.
 
-<a name="SayText"></a>
-
-## Say text out loud
-
-At the bottom of the script is a MacOS command that translates text into voice through the spearker:
-
-say "script ended."  # through speaker
 
 <a name="More"></a>
 

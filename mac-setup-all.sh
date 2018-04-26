@@ -137,6 +137,7 @@ function BASHFILE_EXPORT() {
 ######### bash completion:
 
 
+# Because of the shebang, bash v4 is expected.
 fancy_echo "$(bash --version | grep 'bash')" >>$LOGFILE
 
 # See https://kubernetes.io/docs/tasks/tools/install-kubectl/#on-macos-using-bash
@@ -3712,13 +3713,13 @@ if [[ "${LOCALHOSTS,,}" == *"nginx"* ]]; then
    # See https://wilsonmar.github.io/nginx
    JAVA_INSTALL  # pre-requisite
    if ! command -v nginx >/dev/null; then  # in /usr/local/bin/nginx
-      fancy_echo "Installing LOCALHOSTS=nginx ..."
+      fancy_echo "LOCALHOSTS=nginx installing ..."
       brew install nginx
          brew info nginx >>$LOGFILE
          brew list nginx >>$LOGFILE
    else
       if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "Upgrading LOCALHOSTS=nginx ..."
+         fancy_echo "LOCALHOSTS=nginx upgrading ..."
          nginx -v  # nginx version: nginx/1.13.11
          brew upgrade nginx
       fi
@@ -3756,7 +3757,7 @@ if [[ "${LOCALHOSTS,,}" == *"tomcat"* ]]; then
    # See https://tomcat.apache.org/
    JAVA_INSTALL  # pre-requisite
    if ! command -v tomcat >/dev/null; then  # in /usr/local/bin/tomcat
-      fancy_echo "Installing LOCALHOSTS=tomcat ..."
+      fancy_echo "LOCALHOSTS=tomcat installing ..."
       brew install tomcat
          brew info tomcat >>$LOGFILE
          brew list tomcat >>$LOGFILE
