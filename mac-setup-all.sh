@@ -37,6 +37,10 @@ function echo_ok { echo -e '\033[1;32m'"$1"'\033[0m'; }
 function echo_warn { echo -e '\033[1;33m'"$1"'\033[0m'; }
 function echo_error  { echo -e '\033[1;31mERROR: '"$1"'\033[0m'; }
 
+command_exists() {
+  command -v "$@" > /dev/null 2>&1
+}
+
 
 ######### Starting time stamp, OS versions, command attributes:
 
@@ -85,7 +89,7 @@ sig_cleanup() {
 
 #Mandatory:
    # Ensure Apple's command line tools (such as cc) are installed by node:
-   if ! command -v cc >/dev/null; then
+   if ! command_exists cc ; then
       fancy_echo "Installing Apple's xcode command line tools (this takes a while) ..."
       xcode-select --install 
       # Xcode installs its git to /usr/bin/git; recent versions of OS X (Yosemite and later) ship with stubs in /usr/bin, which take precedence over this git. 
@@ -143,7 +147,7 @@ fancy_echo "$(bash --version | grep 'bash')" >>$LOGFILE
 # See https://kubernetes.io/docs/tasks/tools/install-kubectl/#on-macos-using-bash
 # Also see https://github.com/barryclark/bashstrap
 
-# TODO: Extract 4 from $BASH_VERSION xxx
+# TODO: Extract 4 from $BASH_VERSION
       # GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
 
 ## or, if running Bash 4.1+
@@ -165,7 +169,7 @@ ruby -v >>$LOGFILE  # ruby 2.5.0p0 (2017-12-25 revision 61468) [x86_64-darwin16]
 # sudo chflags norestricted /usr/local && sudo chown $(whoami):admin /usr/local && sudo chown -R $(whoami):admin /usr/local
 
 #Mandatory:
-if ! command -v brew >/dev/null; then
+if command_exists brew ; then
     fancy_echo "Installing homebrew using Ruby..."   >>$LOGFILE
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     brew tap caskroom/cask
@@ -202,7 +206,7 @@ function BREW_INSTALL() {
   local versions="$3"  # sample: "brew"
 
    fancy_echo "BREW_INSTALL $category $package ..." >>$LOGFILE
-   #if ! command -v "$package" >/dev/null; then xxx
+   #if ! command -v "$package" >/dev/null; then
    VER="$(brew info $package | grep "$package:")"
    if [[ "$VER" != *"$package"* ]]; then
       fancy_echo "$category $package installing ..." >>$LOGFILE
@@ -254,7 +258,7 @@ function BREW_CASK_INSTALL() {
       fi
    fi
 
-   if ! command -v $package >/dev/null; then # define an alias to invoke from command line:
+   if ! command_exists $package ; then # define an alias to invoke from command line:
       if grep -q "alias $package=" "$BASHFILE" ; then
          fancy_echo "$category $package alias to $appname.app already in $BASHFILE" >>$LOGFILE
       else
@@ -860,7 +864,7 @@ function GROOVY_INSTALL() {
 function JAVA_INSTALL() {
    # See https://wilsonmar.github.io/java-on-apple-mac-osx/
    # and http://sourabhbajaj.com/mac-setup/Java/
-   if ! command -v java >/dev/null; then
+   if ! command_exists java ; then
       # /usr/bin/java
       fancy_echo "Installing Java, a pre-requisite for Selenium, JMeter, etc. ..."
       # Don't rely on Oracle to install Java properly on your Mac.
@@ -902,20 +906,8 @@ function JAVA_INSTALL() {
 function SCALA_INSTALL() {
    # See http://scala-lang.org/install.html and http://sourabhbajaj.com/mac-setup/Scala/README.html
    # There's also brew scala@2.10      scala@2.11  
-   if ! command -v scala >/dev/null; then  # /usr/local/bin/scala
-      fancy_echo "Installing scala ..."
-      brew install scala  # --with-docs
-         brew info scala >>$LOGFILE
-         brew list scala >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "scala upgrading ..."
-         scala -version  # upgrading from.
-         brew upgrade scala
-      fi
-   fi
-   fancy_echo "scala : $(scala -version)" >>$LOGFILE
-       # 2.12.5
+   BREW_INSTALL "SCALA_INSTALL" "scala" "-version"
+       # Scala code runner version 2.12.5 -- Copyright 2002-2018, LAMP/EPFL and Lightbend, Inc.
 
    BASHFILE_EXPORT "SCALA_HOME" "/usr/local/opt/scala/libexec"
 
@@ -954,7 +946,7 @@ function NODE_INSTALL() {
          # 0.33.8 
    echo "npx -v : $(npx -v) "  # 9.7.1 https://medium.com/@maybekatz/introducing-npx-an-npm-package-runner-55f7d4bd282b
 
-   if ! command -v node >/dev/null; then  # /usr/local/bin/node
+   if ! command_exists node ; then
       fancy_echo "Installing node using nvm"
       nvm install node  # use nvm to install the latest version of node.
          # v9.10.1...
@@ -1272,7 +1264,7 @@ fi
 
 
 if [[ "${EDITORS,,}" == *"atom"* ]]; then
-   if ! command -v atom >/dev/null; then
+   if ! command_exists atom ; then
       fancy_echo "Installing EDITORS=\"atom\" text editor using Homebrew ..."
       brew cask install --appdir="/Applications" atom
                                        brew info atom >>$LOGFILE
@@ -1386,7 +1378,7 @@ fi
 
 
 if [[ "${EDITORS,,}" == *"emacs"* ]]; then
-    if ! command -v emacs >/dev/null; then
+    if ! command_exists emacs ; then
         fancy_echo "Installing emacs text editor using Homebrew ..."
         brew cask install --appdir="/Applications" emacs
     else
@@ -1694,7 +1686,7 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
       echo "The last one installed is set as the Git browser." >>$LOGFILE
 
 if [[ "${BROWSERS,,}" == *"safari"* ]]; then
-   if ! command -v safari >/dev/null; then
+   if ! command_exists safari ; then
       fancy_echo "No install needed on MacOS for BROWSERS=\"safari\"."
       # /usr/bin/safaridriver
    else
@@ -2288,7 +2280,8 @@ fi
 
 function REDIS_INSTALL() {
       # http://redis.io/
-   if ! command -v redis >/dev/null 2>/dev/null; then 
+   if ! command_exists redit ; then
+  #if ! command -v redis >/dev/null 2>/dev/null; then 
       fancy_echo "DATA_TOOLS redis installing ..."
       brew install redis
          brew info redis >>$LOGFILE 
@@ -2458,7 +2451,7 @@ function MONGODB_INSTALL() {
    # https://resources.mongodb.com/getting-started-with-mongodb?jmp=nav&_ga=2.127956172.1397263068.1523600765-730663662.1523600765
    # Based on https://treehouse.github.io/installation-guides/mac/mongo-mac.html
 
-   if ! command -v mongo >/dev/null; then  # not /usr/local/bin/mongo
+   if ! command_exists mongo ; then
       fancy_echo "MONGODB_INSTALL: Installing mongodb - ..."
       brew install mongodb  # mongodb@3.0, mongodb@3.2, mongodb@3.4
          # There is also mongodb@10.0, mongodb@10.1, mongodb-connector-odbc 
@@ -2646,7 +2639,8 @@ fi
 
 function NEO4J_INSTALL() {
    # Required: java >= 1.8
-   if ! command -v neo4j >/dev/null 2>/dev/null; then  # 2>neo4jx: command not found is expected
+   if ! command_exists neo4j ; then
+  #if ! command -v neo4j >/dev/null 2>/dev/null; then  # 2>neo4jx: command not found is expected
       fancy_echo "DATA_TOOLS neo4j installing ..."
       # Not in https://neo4j.com/docs/operations-manual/current/installation/osx/
       brew install neo4j
@@ -2708,7 +2702,7 @@ function RSTUDIO_INSTALL() {
       # 2.7.11
 
    # alternate name for r is r-app?
-   if ! command -v r >/dev/null; then
+   if ! command_exists r ; then
       fancy_echo "RSTUDIO_INSTALL r installing ..."
       brew install r --with-x11 --with-openblas  # Installs dependencies libmpc, isl, gcc
          brew info r >>$LOGFILE
@@ -2894,7 +2888,7 @@ if [[ "${NODE_TOOLS,,}" == *"sfdx"* ]]; then
    # Instead of npm install --global sfdx-cli
 
    # This is cask but no GUI
-   if ! command -v sfdx >/dev/null; then
+   if ! command_exists sfdx ; then
       brew cask install sfdx
    fi 
 
@@ -3158,7 +3152,7 @@ fi
 
 if [[ "$JAVA_TOOLS" == *"maven"* ]]; then
     # Associated: Maven (mvn) in /usr/local/opt/maven/bin/mvn
-   if ! command -v mvn >/dev/null; then
+   if ! command_exists mvn ; then
       fancy_echo "Installing Maven for Java ..."
       brew install maven
          brew info maven >>$LOGFILE
@@ -3278,7 +3272,7 @@ fi # See https://howtoprogram.xyz/2016/09/09/junit-5-maven-example/
 
 
 if [[ "$JAVA_TOOLS" == *"jmeter"* ]]; then
-   if ! command -v jmeter >/dev/null; then
+   if ! command_exists jmeter ; then
       fancy_echo "Installing latest version of JAVA_TOOLS=jmeter ..."
       # from https://jmeter.apache.org/download_jmeter.cgi
       brew install jmeter
@@ -3397,7 +3391,7 @@ fi
 
 
 if [[ "$MON_TOOLS" == *"gcviewer"* ]]; then
-   if ! command -v gcviewer >/dev/null; then
+   if ! command_exists gcviewer ; then
       fancy_echo "MON_TOOLS gcviewer installing ..."
       brew install gcviewer
          brew info gcviewer >>$LOGFILE
@@ -3547,7 +3541,7 @@ if [[ "${GIT_TOOLS,,}" == *"signing"* ]]; then
    BASHFILE_EXPORT "GPG_TTY" "$(tty)"
 
    # NOTE: gpg is the command even though the package is gpg2:
-   if ! command -v gpg >/dev/null; then
+   if ! command_exists gpg ; then
       # See https://www.gnupg.org/faq/whats-new-in-2.1.html
       fancy_echo "Installing GPG2 for commit signing..."
       brew install gpg2
@@ -3713,7 +3707,7 @@ fi
 if [[ "${LOCALHOSTS,,}" == *"nginx"* ]]; then
    # See https://wilsonmar.github.io/nginx
    JAVA_INSTALL  # pre-requisite
-   if ! command -v nginx >/dev/null; then  # in /usr/local/bin/nginx
+   if ! command_exists nginx ; then
       fancy_echo "LOCALHOSTS=nginx installing ..."
       brew install nginx
          brew info nginx >>$LOGFILE
@@ -3757,7 +3751,7 @@ fi
 if [[ "${LOCALHOSTS,,}" == *"tomcat"* ]]; then
    # See https://tomcat.apache.org/
    JAVA_INSTALL  # pre-requisite
-   if ! command -v tomcat >/dev/null; then  # in /usr/local/bin/tomcat
+   if ! command_exists tomcat ; then
       fancy_echo "LOCALHOSTS=tomcat installing ..."
       brew install tomcat
          brew info tomcat >>$LOGFILE
@@ -3809,7 +3803,7 @@ fi
 
 
 if [[ "${GIT_TOOLS,,}" == *"git-secrets"* ]]; then
-   if ! command -v git-secret >/dev/null; then
+   if ! command_exists git-secret ; then
       # See https://github.com/sobolevn/git-secret
       fancy_echo "GIT_TOOLS git-secret for managing secrets in a Git repo ..."
       brew install git-secret
@@ -3837,7 +3831,7 @@ fancy_echo "CLOUD_TOOLS=\"$CLOUD_TOOLS\"" >>$LOGFILE
 
 function DOCKER_INSTALL() {  # https://docs.docker.com/install/
    # First remove boot2docker and Kitematic https://github.com/boot2docker/boot2docker/issues/437
-   if ! command -v docker >/dev/null; then  # /usr/local/bin/docker
+   if ! command_exists docker ; then
       fancy_echo "Installing docker ..."
       brew install docker  docker-compose  docker-machine  xhyve  docker-machine-driver-xhyve
       # This creates folder ~/.docker
@@ -3939,29 +3933,24 @@ fi
 
 
 if [[ "${CLOUD_TOOLS,,}" == *"ironworker"* ]]; then
-   # See http://dev.iron.io/worker/cli/
+   # See http://dev.iron.io/worker/cli/ & https://github.com/iron-io/ironcli
    DOCKER_INSTALL  # pre-requisite
-   GO_INSTALL
-   # NOTE: brew ironcli installs IronMQ http://dev.iron.io/mq/3/on-premise/installation/single.html
+   # Don't brew install ironcli for IronMQ http://dev.iron.io/mq/3/on-premise/installation/single.html
    BREW_INSTALL "CLOUD_TOOLS" "iron-functions" ""
       # /usr/local/Cellar/iron-functions/0.2.72: 4 files, 16.4MB from https://github.com/iron-io/functions
 
-   GITS_PATH_INIT "ironworker"
-   fancy_echo "CLOUD_TOOLS $GITS_PATH/ironworker reseting ..." >>$LOGFILE
-   rm -rf "$GITS_PATH/ironworker"
-   mkdir "$GITS_PATH/ironworker"
-   pushd "$GITS_PATH/ironworker"
    curl -sSL https://cli.iron.io/install | sh
-   popd
 
-   if [[ "${TRYOUT,,}" == *"ironcli"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      echo "CLOUD_TOOLS ironworker $GITS_PATH/ironworker reseting ..." >>$LOGFILE
+   GITS_PATH_INIT "ironworker" # to store scripts
+
+   if [[ "${TRYOUT,,}" == *"ironworker"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+      echo "CLOUD_TOOLS ironworker $GITS_PATH/ironworker running ..." >>$LOGFILE
       # Per http://dev.iron.io/worker/getting_started/
       # $IRON_TOKEN
       # $IRON_PROJECT_ID
-      # docker run --rm -v "$(pwd)":/worker -w /worker IMAGE[:TAG] 'MY_COMMAND -payload MY_PAYLOAD.json'
-      # tests/iron_hello.rb
       # worker-us-east.iron.io
+      docker run --rm -it -v "$PWD":/worker -w /worker iron/ruby ruby tests/iron_hello.rb
+      # docker run --rm -v "$(pwd)":/worker -w /worker IMAGE[:TAG] 'MY_COMMAND -payload MY_PAYLOAD.json'
    fi
 
 exit #debugging
@@ -4015,7 +4004,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"awscli"* ]]; then  # contains aws.
    # :  # break out immediately. Not execute the rest of the if strucutre.
    # https://www.youtube.com/watch?v=zEQUuo5nWbo
 
-   if ! command -v aws >/dev/null; then
+   if ! command_exists aws ; then
       fancy_echo "Installing awscli using PIP ..."
       pip3 install awscli --upgrade --user
    else
@@ -4035,7 +4024,7 @@ fi
 
 
 if [[ "${CLOUD_TOOLS,,}" == *"terraform"* ]]; then  # contains aws.
-   if ! command -v terraform >/dev/null; then
+   if ! command_exists terraform ; then
       # see https://www.terraform.io/
       fancy_echo "Installing terraform ..."
       brew install terraform 
@@ -4073,7 +4062,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"azure"* ]]; then  # contains azure.
    NODE_INSTALL
    # Python location '/usr/local/opt/python/bin/python3.6'
 
-   if ! command -v az >/dev/null; then  # not installed.
+   if ! command_exists az ; then
       fancy_echo "Installing azure using Homebrew ..."
       brew install azure-cli
          brew info azure-cli >>$LOGFILE
@@ -4167,7 +4156,7 @@ fi
 
 if [[ "${CLOUD_TOOLS,,}" == *"serverless"* ]]; then
 
-      if ! command -v serverless >/dev/null; then  # not installed.
+      if ! command_exists serverless ; then
          NODE_INSTALL
          npm install serverless -g  # Install serverless globally
       fi
@@ -4224,7 +4213,7 @@ fi
 
 if [[ "${CLOUD_TOOLS,,}" == *"heroku"* ]]; then  # contains heroku.
    # https://cli.heroku.com
-   if ! command -v heroku >/dev/null; then  # not installed.
+   if ! command_exists heroku ; then
       # https://devcenter.heroku.com/articles/heroku-cli
       fancy_echo "Installing heroku using Homebrew ..."
       brew install heroku/brew/heroku
@@ -4248,7 +4237,7 @@ fi
 if [[ "${CLOUD_TOOLS,,}" == *"openstack"* ]]; then  # contains openstack.
    # See https://iujetstream.atlassian.net/wiki/spaces/JWT/pages/40796180/Installing+the+Openstack+clients+on+OS+X
    PYTHON_INSTALL  # function defined at top of this file.
-   if ! command -v openstack >/dev/null; then  # not installed.
+   if ! command_exists openstack ; then
       fancy_echo "Installing openstack using Homebrew ..."
       brew install openstack
          brew info openstack >>$LOGFILE
@@ -4295,7 +4284,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"minikube"* ]]; then
    PYTHON_INSTALL  # function defined at top of this file.
    VIRTUALBOX_INSTALL # pre-requisite
 
-   if ! command -v kubectl >/dev/null; then  # not in /usr/local/bin/minikube
+   if ! command_exists kubectl ; then
       fancy_echo "Installing kubectl using Homebrew ..."
       #  https://kubernetes.io/docs/tasks/tools/install-kubectl/
       brew install kubectl
@@ -4388,7 +4377,7 @@ fi
 
 if [[ "${CLOUD_TOOLS,,}" == *"cf"* ]]; then  # contains aws.
    # See https://docs.cloudfoundry.org/cf-cli/install-go-cli.html
-   if ! command -v cf >/dev/null; then
+   if ! command_exists cf ; then
       fancy_echo "Installing cf (Cloud Foundry CLI) ..."
       brew install cloudfoundry/tap/cf-cli
       # see https://github.com/cloudfoundry/cli
@@ -4429,7 +4418,7 @@ fi
    # virtualenv -p "$(command -v python3)" tests/basic-python3
    # virtualenv -p "c:\Python34\python.exe foo
 if [[ "${PYTHON_TOOLS,,}" == *"virtualenv"* ]]; then
-      if ! command -v virtualenv >/dev/null; then  # /usr/bin/virtualenvdriver
+      if ! command_exists virtualenv ; then
          fancy_echo "Installing PYTHON_TOOLS=\"virtualenv\" to manage multiple Python versions ..."
          pip3 install virtualenv
          pip3 install virtualenvwrapper
@@ -4555,7 +4544,7 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
 
    if [[ "${BROWSERS,,}" == *"chrome"* ]]; then  # contains azure.
       # Chrome:   https://sites.google.com/a/chromium.org/chromedriver/downloads
-      if ! command -v chromedriver >/dev/null; then  # not installed.
+      if ! command_exists chromedriver ; then
          brew install chromedriver  # to /usr/local/bin/chromedriver
             brew info chromedriver >>$LOGFILE
             brew list chromedriver >>$LOGFILE
@@ -4591,10 +4580,10 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
 
    if [[ "${BROWSERS,,}" == *"firefox"* ]]; then  # contains azure.
       # Firefox:  https://github.com/mozilla/geckodriver/releases
-      if ! command -v geckodriver >/dev/null; then  # not installed.
-         brew install geckodriver  # to /usr/local/bin/geckodriver
-            brew info geckodriver >>$LOGFILE
-            brew list geckodriver >>$LOGFILE
+      if ! command_exists geckodriver ; then
+             brew install geckodriver  # to /usr/local/bin/geckodriver
+                brew info geckodriver >>$LOGFILE
+                brew list geckodriver >>$LOGFILE
       fi
 
       if grep -q "/usr/local/bin/geckodriver" "$BASHFILE" ; then    
@@ -4624,7 +4613,7 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
 
    if [[ "${BROWSERS,,}" == *"phantomjs"* ]]; then  # contains azure.
       # NOTE: http://phantomjs.org/download.html is for direct download.
-      if ! command -v phantomjs >/dev/null; then  # not installed.
+      if ! command_exists phantomjs ; then
          brew install phantomjs  # to /usr/local/bin/phantomjs  # for each MacOS release
             brew info phantomjs >>$LOGFILE
             brew list phantomjs >>$LOGFILE
@@ -4707,7 +4696,7 @@ fi
 
 if [[ "${GIT_TOOLS,,}" == *"hub"* ]]; then
    GO_INSTALL  # prerequiste
-   if ! command -v hub >/dev/null; then  # in /usr/local/bin/hub
+   if ! command_exists hub ; then
       # See https://hub.github.com/
       fancy_echo "Installing hub for managing GitHub from a Git client ..."
       brew install hub
@@ -4831,7 +4820,7 @@ if [[ "${MON_TOOLS,,}" == *"prometheus"* ]]; then
    DOCKER_INSTALL
    # See https://github.com/prometheus/prometheus/  cmd
    GO_INSTALL # pre-requsite
-   if ! command -v prometheus >/dev/null; then  # in /usr/local/bin/prometheus
+   if ! command_exists prometheus ; then
       fancy_echo "Installing MON_TOOLS=prometheus ..."
       brew install prometheus
          brew info prometheus >>$LOGFILE
@@ -5141,7 +5130,7 @@ if [[ "${MEDIA_TOOLS,,}" == *"tesseract"* ]]; then
       brew install imagemagick --with-ghostscript
    # no --version /usr/local/opt/imagemagick/magick
    
-   if ! command -v cc >/dev/null; then
+   if ! command_exists cc ; then
       # at https://github.com/tesseract-ocr/
       fancy_echo "MEDIA_TOOLS tesseract installing ..."
       brew install tesseract --with-serial-num-pack --devel # --all-languages 
