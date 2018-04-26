@@ -21,11 +21,12 @@ This script was created to help you cope with the large number of apps needed to
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
    * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)
+   * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io
    * etc.
 
-Most tutorials on have you <strong>manually type</strong> or copy and paste commands (often with missing steps), which can take hours, and be error-prone. And don't get me started on webinars with demos that brags rather than teach.
+Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And don't get me started on webinars with demos that brags rather than teach.
 
-> This script cuts through all that b.s. by running on your Mac and displaying on your screen.
+> This script cuts through all that by scripts running on your Mac and displaying on your screen.
 
 You will benefit most from this if you configure a <strong>new</strong> laptop for yourself or for other developers joining your organization. You'll skip wasted days installing everything one at a time (and doing it differently than colleagues).
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.
@@ -33,7 +34,9 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
 But this script helps with updates too. You can, but don't have to, start from scratch. 
 Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version, by running a single "upgrade" command. 
 
-This bash script enables you to <strong>work offline</strong> by installing several servers. You manage allocation of port numbers in one place:
+This bash script enables you to <strong>work offline</strong> by installing several servers. 
+
+You manage allocation of port numbers in one place:
 
    <pre>
    ELASTIC_PORT="9200"    # DATA_TOOLS from default 9200
@@ -56,7 +59,12 @@ This bash script enables you to <strong>work offline</strong> by installing seve
 
 The above are fron the <strong>secrets.sh</strong> file in your $HOME folder, which
 you edit to specify which port numbers and the keywords for apps you want installed.
-Apps belong to a category:
+
+   The file's name is suffixed with ".sh" because another script runs it to establish variables for the script to reference. 
+
+Each app belongs to a category:
+
+<a name="Categories"></a>
 
 * MAC_TOOLS mas, Ansible, 1Password, PowerShell, Kindle, etc.
 * EDITORS Atom, Code, Eclipse, Emacs, IntelliJ, Macvim, STS, Sublime, Textmate, vim
@@ -79,7 +87,7 @@ Apps belong to a category:
 * MEDIA_TOOLS Audacity, Camtasia, Snagit, etc.
 <br /><br />
 
-Yes, you can just run brew yourself. But logic in the script goes beyond what Homebrew does, and <strong>configures</strong> the component just installed:
+Yes, you can just run brew yourself, one at a time. But logic in the script goes beyond what Homebrew does, and <strong>configures</strong> the component just installed:
 
    * Install dependent components where necessary
    * Display the version number installed (to a log)
@@ -98,39 +106,167 @@ We also have Docker instances:
 
 ## Make this work for you
 
-1. The starting point (generic version) of these files are in a public GitHub repository you're reading right now:
+The section below explains to someone relatively new to Mac machines the steps to automate installation of additional MacOS application programs. Along the way, we explore basic skills to use a command-line Terminal and common commands.
 
-   <a target="_blank" href="
-   https://github.com/wilsonmar/mac-setup">
-   https://github.com/wilsonmar/mac-setup</a>
+1. Obtain the Mac's Launch bar by positioning your mouse at the bottom edge of the screen until it appears.
 
-   If you know what I'm talking about and have a GitHub account, you may Fork the repo under your own account and, while in a Teminal window at your Home folder, git clone it locally under your Home folder.
-   This approach would enable you to save your changes back up to GitHub under your own account.
+2. If you don't see an icon for the Terminal program, click the magnifying glass icon always at the upper-right corner and type in Term until "Terminal app" is highlighted, then press Enter to accept it. 
 
-   Alternately, follow these steps to create an initial installation of what many developers use
-   (but you won't be able to upload changes back to GitHub):
+3. Click menu Shell then click New Window for a Terminal session.
 
-2. Triple-click this command and press command+C to copy to your invisible Clipboard:
+   PROTIP: More experienced people hover the mouse over New Window and click on one of the options.
 
-   <pre><strong>sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup-all.sh)"
+   The Terminal program is called a "Bash" shell, which is a contraction of the term "Bourne-agan shell", which is a play on words.
+
+
+   <a name="VersionWithGap"></a>
+
+   ### Version with Grep
+
+1. Test if you have Bash v4 installed by typing this:
+
+   <pre><strong>bash --version | grep 'bash'
    </strong></pre>
 
-   This is why mac-setup-all.sh is called a <strong>"bootstrapping"</strong> script.
+   PROTIP: The attribute "--version" to obtain the version can vary among different commands.
+   "-v" or "version" may be used instead.
 
-   This script references a folder in your Home folder named <strong>mac-setup</strong> (the name of this repo). The folder contains a configuration file named <strong>secrets.sh</strong> which you edit to specify what you want installed and run. The file's name is suffixed with ".sh" because it is run to establish variables for the script to reference. You don't run the file yourself.
+   Hold the Shift key to press the | (called pipe) key at the upper-right of the keyboard.
 
-   Technical techniques for the Bash shell scripting are described separtely at [Bash scripting page in this website](/bash-coding/).
+   The <tt>grep 'bash'</tt> is needed to filter out lines that do not contain the word "bash" in the response such as:
 
-2. Open a Terminal window.
-2. Press command+V (at the same time on your keyboard) to paste it from Clipboard.
-3. Press Enter to run it.
+   <pre>
+GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
+Copyright (C) 2016 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+&nbsp;
+This is free software; you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+   </pre>
 
-   If your home folder does not contain a folder named "mac-setup",
-   the script will create one by Git cloning, using a Git client it first installs if there isn't one already.
+   If you have bash v3 that comes with MacOS, the next few steps will update it to version 4.
+
+   <a target="_blank" href="https://www.admon.org/scripts/new-features-in-bash-4-0/">
+   This blog describes what is improved by version 4</a>.
+   Bash 4.0 was released in 2009, but Apple still ships version 3.x, which first released in 2007.
+
+   ### mac-bash4.sh initialization
+
+2. Switch to back to this web page by holding down the command key and pressing Tab repeatedly until it rests on the browser icon.
+
+3. Triple-click on the script line below to highlight it for copying:
+
+   <pre>sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-bash-up.sh)"</pre>
+
+4. Press Command+C to copy it to your invisible Clipboard.
+5. Switch to the Terminal by holding down command and pressing Tab repeatedly until it rests on the Termial icon.
+6. At the Terminal, click on a Terminal window and paste in the command by holding down command then V. It doesn't matter what folder you're on at this point.
+7. Press Enter to run the command, which upgrades Bash to version 4 and copies a file to your Home folder.
+
+   The script first makes use of the Ruby program to install Homebrew which, in turn, installs Bash v4 using the brew command to download and configure packages.
+
+8. After it runs, verify the version again <a href="#VersionWithGap">as described above</a> to ensure it's version 4.
+
+   ### secrets.sh at Home
+
+   The script also copies the <strong>secrets.sh</strong> file from the public on-line repository into your laptop so that you can add your secrets in the file but have no chance the file will be uploaded from the Git repository where it came from.
+
+   The file is placed in your account Home folder.
+
+   <a name="HomeFolder"></a>
+
+   ### Home folder
+
+9. The default location the Teminal command opens to by default is your "Home" folder, which you can reach anytime by:
+
+   <pre><strong>cd
+   </strong></pre>
+
+9. The "~" (tilde character) prompt represents the $HOME folder, which is equivalent to a path that contains your user account, such as (if you were me):
+
+   <pre>/Users/wilsonmar</pre>
+
+1. You can also use this variable to reach Home:
+
+   <pre>cd $HOME</pre>
+
+   In other words these commands all achieve the same result:
+
+   <tt>cd = cd ~ = cd $HOME</tt>
+
+   ### Text edit secrets.sh
+
+1. Use a text editor to edit the <tt>secrets.sh</tt> file using a text editor that comes pre-loaded on every Mac:
+
+   <pre><strong>textedit ~/secrets.sh</strong></pre>
+
+   The tilde character specifies that the file is in your Home folder.
+
+   <a name="Shebang"></a>
+
+   ### Top of file Shebang
+
+   Looking in the file, consider the first line in the secrets.sh file:
+
+   <pre>#!/bin/bash</pre>
+
+   That is the "Bourne-compliant" path for the Bash v3.2 shell installed by default on MacOS up to High Sierra. BTW, other Linux flavors may alternately use this for portability:
+
+   <pre>#!/usr/bin/env</pre>
+
+   BTW, unlike Windows, which determines the program to open files based on the suffix (or extension) of the file name, Linux shell programs such as Bash reference the "shebang" on the first line inside the file. 
+
+1. Open another Terminal window.
+1. View the above files to see that they are binary executable files, such as:
+
+   <pre><strong>textedit /usr/bin/bash</strong></pre>
+
+1. Exit the file.
+1. Press the command key with the back-tick (`) at the upper-left of the keyboard to switch among textedit windows.
+
+   ### Version 4 Shebang
+
+   If you instead see this on the first line:
+
+   <tt>#!/usr/local/bin/bash</tt>
+
+   that is the Bash program associated with <a href="#Bash4">Bash v4</a>.
+
+   Version 4 is needed for <a href="#BashArrays">"associative arrays" 
+   needed in the script</a>.
+
+   This is why we needed to first upgrade Bash before running other scripts.
+
+
+   ### App keywords
+
+   The initial secrets.sh file does not have keywords which specify additional apps to install.
+
+1. Scroll down or press command+F to type an app keyword to find its <a href="#Categories">category</a>.
+
+   ### Edit port numbers
+
+1. Scroll to the list of <a href="#Ports">ports (listed above)</a>.
+
+1. May sure that none of the ports are the same (conflicts).
+
+1. Save the file and exit the text editor.
+
+   ### Setup all
+
+1. Now copy, switch, click and paste in a Terminal window to run this command: 
+
+   <pre>sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup-all.sh)"</pre>
+
+   The script referenced in the command obtains more files needed by cloning from a public GitHub repository to a folder under your home folder.
 
    A folder is necessary to hold additional folders such as "hooks" used by Git (if marked for install.)
    File "mac-bash-profile.txt" contains starter entries to insert in ~/.bash_profile that is executed before MacOS opens a Terminal session. 
    Ignore the other files.
+
+   On a 4mbps network the run takes less than 5 minutes for a minimal install.
+
+   PROTIP: A faster network or a proxy Nexus server providing installers within the firewall would speed things up and ensure that vetted installers are used.
 
 4. Wait for the script to finish.
 
@@ -140,82 +276,31 @@ We also have Docker instances:
 
    When the script ends it pops up a log file in the TextEdit program that comes with MacOS.
 
-5. Within TextEdit, review the log file.
-6. Close the log file.
-7. click File and navigate to your Home folder then within <tt>mac-setup</tt> to 
-   open file <strong>secrets.sh</strong> in the repo so you can customize what you want installed. 
+5. Switch to the TextEdit window by clicking it. 
+6. Scroll to review the log file. Press command+F to input text to search.
+6. Close the log file by clicking the red button.
+7. Switch to a Finder window to your account's Home folder and delete log files.
 
-   <pre><strong>textedit secrets.sh
+   <pre>mac-setup</pre>
+
+   ### Subsequent runs
+
+   To update what is installed on your Mac, re-run the bash script.
+
+1. cd into your Home folder to find the <strong>secrets.sh</strong> file.
+1. Edit the file, then run again locally:
+
+   <pre><strong>chmod +x mac-setup-all.sh
+   ./mac-setup-all.sh
    </strong></pre>
 
-   PROTIP: The default specification in the file is for a "bare bones" minimal set of components.
-   If you run it again, it will not install it again.
+   The <tt>chmod</tt> (pronounced "che-mod") changes the permissions for executing the file.
 
-   There is a key (variable name) for each category (MAC_TOOLS, etc.).
+   Now let's look at the Bash coding in Bash script file from <a target="_blank" href="
+   https://github.com/wilsonmar/mac-setup/">
+   https://github.com/wilsonmar/mac-setup</a>
 
-8. Among the comments (which begin with a pound sige) look for keywords for programs you want.
-   
-   Keywords shown are for the most popular programs. The mac-setup-all.sh script contains logic go
-   get it setup fully <a href="#Extras">(as summarized above)</a>.
-
-
-   ### TRYOUT one at a time
-
-8. Scroll to the bottom of the secrets.sh file and click between the double-quotes of <tt><strong>TRYOUT=""</strong></tt>.
-
-   Paste or type the keyword of the components you want opened (invoked) by the script.
-
-   We don't want to automatically open every component installed because that would be overwhelming.
-
-   This way you have a choice.
-
-9. Save the file. You need not exit the text editor completely if you want to re-run.
-10. Run the script to carry out your changes:
-
-    <pre><strong>chmod +x mac-setup-all.sh
-    mac-setup-all.sh 
-    </strong></pre>
-
-    There are several variations possible:
-
-    ### Update All Calling Arguement 
-
-11. Upgrade to the latest versions of ALL components when "update" is added to the calling script:
-
-    <pre><strong>chmod +x mac-setup-all.sh
-    mac-setup-all.sh update
-    </strong></pre>
-
-    CAUTION: This often breaks things because some apps are not ready to use a newer dependency.
-
-    NOTE: This script does NOT automatically uninstall modules.
-    But if you're brave enough, invoke the script this way to remove components so you recover some disk space:
-
-    <pre><strong>
-    mac-setup-all.sh uninstall
-    </strong></pre>
-
-    This is not an option for components that add lines to ~/.bash_profile.
-    It's quite dangerous because the script cannot differentiate whether customizations occured to what it installed.
-
-    ### Edit mac-setup.sh for others
-
-    There are lists of additional programs (components) you may elect to install.
-
-12. At the Terminal, use TextEdit or a other text editor to view the script file:
-
-    <pre><strong>textedit mac-setup.sh
-    </strong></pre>
-
-13. Press command+F to search for "others" (including the double-quotes).
- 
-    PROTIP: Several categories have a list of brew commands to install additional components.
-    (MAC_TOOLS, PYTHON_TOOLS, NODE_TOOLS, etc.) 
-
-14. For each additional component you want, delete the # to un-comment it.
-
-    Remember that each component installed takes more disk space.
-
+<hr />
 
 ## Mac apps
 

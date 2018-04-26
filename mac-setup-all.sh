@@ -28,9 +28,9 @@ trap sig_cleanup INT QUIT TERM
 
 
 function fancy_echo() {
-  local fmt="$1"; shift
-  # shellcheck disable=SC2059
-  printf "\\n>>> $fmt\\n" "$@"
+   local fmt="$1"; shift
+   # shellcheck disable=SC2059
+   printf "\\n>>> $fmt\\n" "$@"
 }
 # From https://gist.github.com/somebox/6b00f47451956c1af6b4
 function echo_ok { echo -e '\033[1;32m'"$1"'\033[0m'; }
@@ -142,7 +142,7 @@ fancy_echo "$(bash --version | grep 'bash')" >>$LOGFILE
 # See https://kubernetes.io/docs/tasks/tools/install-kubectl/#on-macos-using-bash
 # Also see https://github.com/barryclark/bashstrap
 
-# TODO: Extract 4 from $BASH_VERSION
+# TODO: Extract 4 from $BASH_VERSION xxx
       # GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
 
 ## or, if running Bash 4.1+
@@ -212,7 +212,7 @@ function BREW_INSTALL() {
       if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
          # $package -v
          fancy_echo "$category $package upgrading ..." >>$LOGFILE
-         brew cask upgrade $package
+         brew upgrade $package
       elif [[ "${RUNTYPE,,}" == *"remove"* ]]; then
          fancy_echo "$category $package removing ..." >>$LOGFILE
          brew uninstall --force $package
@@ -2321,7 +2321,25 @@ else
       fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
 fi
 
+function MYSQL_INSTALL() {
 
+   # sudo launchctl unload -w /System/Library/LaunchDaemons/org.apache.httpd.plist 2>/dev/null
+
+   # /etc/init.d/mysql stop
+   # mysqld_safe –skip-grant-tables &
+      # –skip-grant-tables option so mysql will not prompt for password.
+   # mysql -u root -p'abc' -e 'show databases;'
+   # /usr/local/var/mysql
+
+   # https://www.cyberciti.biz/faq/mysql-change-root-password/
+   # Set root first time:
+   # mysqladmin -u root password "$MYSQL_PASSWORD"
+
+
+   # Change (or update) a root password abc to newpass:
+   # mysqladmin -u root -p'abc' password '123456'
+
+}
 
 
 function POSTGRESQL_INSTALL() {
@@ -2815,7 +2833,7 @@ if [[ "${DATA_TOOLS,,}" == *"elastic"* ]]; then
       brew services start kibana      
       open "http://localhost:$KIBANA_PORT/status" # Kibana 
       brew services list
-      
+
       #open "http://localhost:&ELASTIC_PORT/status#?_g=()"
       #open "http://localhost:&ELASTIC_PORT/_search?pretty"
       #open "http://localhost:&ELASTIC_PORT/_cat/indices?v"
