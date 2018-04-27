@@ -10,7 +10,7 @@ alias p="pwd"
 alias dir='ls -alr'
 alias ll='ls -FalhG'
 
-alias gss='git status -s -b'
+alias gst='git status -s -b'
 alias grm='git rm $(git ls-files --deleted)'
 alias gb='git branch -avv'
 function gd() { # get dirty
