@@ -21,11 +21,19 @@ Most of the apps installed make use of installation code defined in the Homebrew
    https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb">
    https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb</a>
 
-   PROTIP: Before downloads a brew formula, we recommend that you look at Ruby code to verify what really occurs and especially where files come from. In fact, we recommend that you install a binary repository proxy that supply you vetted files from a trusted server instead of retrieving whatever is the latest on the public Homebrew server.
+   PROTIP: Before downloads a brew formula, we recommend that you look at its Ruby code to verify what really occurs and especially where files come from. 
+
+   <pre><strong>brew edit wget</strong></pre>
+
+
+   In fact, we recommend that you install a binary repository proxy that supply you vetted files from a trusted server instead of retrieving whatever is the latest on the public Homebrew server.
 
    Homebrew currently has over 4,500 formulas.
 
-Various commands such as curl, sed, cut, etc. are used as well, especially to install and configure programs which don't have brew installation formulas.
+To install and configure programs which don't have brew installation formulas,
+various commands such as curl, sed, cut, etc. are used in the script.
+
+## Why a script?
 
 Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And don't get me started on webinars with demos that brags rather than teach.
 This script cuts through all that by scripts running on your Mac and displaying on your screen.
@@ -33,7 +41,8 @@ This script cuts through all that by scripts running on your Mac and displaying 
 You will benefit most from this if you configure a <strong>new</strong> laptop for yourself or for other developers joining your organization. You'll skip wasted days installing everything one at a time (and doing it differently than colleagues).
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.
 
-But this script helps with <strong>updates too</strong>. You can, but don't have to, start from scratch. 
+But this script helps with <strong>updates too</strong>. 
+You can, but don't have to, start from scratch. 
 Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version, by running a single "upgrade" command. Use this script to install and configure most programs most people use.
 
 This bash script enables you to <strong>work offline</strong> by installing several servers. 
@@ -103,6 +112,7 @@ DATA_TOOLS to provide databases, etc.
 
 Yes, you can just run brew yourself, one at a time. But logic in the script goes beyond what Homebrew does, and <strong>configures</strong> the component just installed:
 
+   * Undo a brew error (such as needing an unset)
    * Install dependent components where necessary
    * Display the version number installed (to a log)
    * Add alias and paths in <strong>.bash_profile</strong> (if needed)
@@ -111,7 +121,6 @@ Yes, you can just run brew yourself, one at a time. But logic in the script goes
    * Upgrade and uninstall if that is available
    * Run a demo using the component to ensure that what has been installed actually works. 
    <br /><br />
-
 
 ## Make this work for you
 
