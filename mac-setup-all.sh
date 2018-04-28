@@ -1024,7 +1024,7 @@ function GO_INSTALL() {
       fi 
          source "$BASHFILE"
 }
-if [[ "${TEST_TOOLS,,}" == *"pact-go"* ]]; then
+if [[ "${TEST_TOOLS,,}" == *"pact-go"* ]] || [[ "$TRYOUT_KEEP" == *"pact-go"* ]]; then
    GO_INSTALL
 
    # Pact contract testing https://docs.pact.io/ is available in several languages.
@@ -2270,7 +2270,7 @@ function REDIS_INSTALL() {
    fi
    #ULIMIT_SET
 }
-if [[ "${DATA_TOOLS,,}" == *"redis"* ]]; then
+if [[ "${DATA_TOOLS,,}" == *"redis"* ]] || [[ "$TRYOUT_KEEP" == *"redis"* ]]; then
    REDIS_INSTALL
    if [[ "${TRYOUT,,}" == *"redis"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       if grep -q "$(redis-cli ping)" "PONG" ; then    
@@ -2415,7 +2415,7 @@ function POSTGRESQL_INSTALL() {
 
       # createdb  # https://www.postgresql.org/docs/9.5/static/app-createdb.html
 }
-if [[ "${DATA_TOOLS,,}" == *"postgresql"* ]]; then
+if [[ "${DATA_TOOLS,,}" == *"postgresql"* ]] || [[ "$TRYOUT_KEEP" == *"postgresql"* ]]; then
    POSTGRESQL_INSTALL  # using POSTGRESQL_PORT from secrets.sh
    if [[ "${TRYOUT,,}" == *"postgresql"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
 
@@ -2621,7 +2621,7 @@ function SONAR_INSTALL(){
    BREW_INSTALL "DATA_TOOLS" "sonar-scanner" "sonar-scanner -v" # previously sonar-runner 
 
 }
-if [[ "${TEST_TOOLS,,}" == *"sonar"* ]]; then
+if [[ "${TEST_TOOLS,,}" == *"sonar"* ]] || [[ "$TRYOUT_KEEP" == *"sonar"* ]]; then
    SONAR_INSTALL
 
    # TODO: Create database in mysql per http://chapter31.com/2013/05/02/installing-sonar-source-on-mac-osx/
@@ -2692,7 +2692,7 @@ function NEO4J_INSTALL() {
    sed -i "s/#dbms.connector.http.listen_address=:7474/dbms.connector.http.listen_address=:$NEO4J_PORT/g" "$NEO4J_CONF/neo4j.conf"
    # textedit /usr/local/Cellar/neo4j/3.3.4/libexec/conf/neo4j.conf
 }
-if [[ "${DATA_TOOLS,,}" == *"neo4j"* ]]; then
+if [[ "${DATA_TOOLS,,}" == *"neo4j"* ]] || [[ "$TRYOUT_KEEP" == *"neo4j"* ]]; then
    NEO4J_INSTALL
    if [[ "${TRYOUT,,}" == *"neo4j"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       chmod +X "$NEO4J_HOME/bin/neo4j"
@@ -2817,7 +2817,7 @@ if [[ "${DATA_TOOLS,,}" == *"others"* ]]; then
 # See http://zmjones.com/mac-setup/
 fi
  
-if [[ "${DATA_TOOLS,,}" == *"elastic"* ]]; then
+if [[ "${DATA_TOOLS,,}" == *"elastic"* ]] || [[ "$TRYOUT_KEEP" == *"elastic"* ]]; then
    # https://logz.io/blog/elk-mac/?aliId=12015968
    # http://www.elasticsearchtutorial.com/elasticsearch-in-5-minutes.html
    JAVA_INSTALL
@@ -3103,7 +3103,7 @@ fi
 
 
 
-if [[ "${NODE_TOOLS,,}" == *"meanjs"* ]]; then
+if [[ "${NODE_TOOLS,,}" == *"meanjs"* ]] || [[ "$TRYOUT_KEEP" == *"meanjs"* ]]; then
    # meanjs is a boilerplate app from https://github.com/meanjs/mean
    # MEAN is an acronmym for MongoDB, Express.js, Angular.js, and Node.js
 
@@ -3772,7 +3772,7 @@ fi
 ######### LOCALHOSTS SERVERS ::
 
 
-if [[ "${LOCALHOSTS,,}" == *"nginx"* ]]; then
+if [[ "${LOCALHOSTS,,}" == *"nginx"* ]] || [[ "$TRYOUT_KEEP" == *"nginx"* ]]; then
    # See https://wilsonmar.github.io/nginx
    JAVA_INSTALL  # pre-requisite
    if ! command_exists nginx ; then
@@ -3816,7 +3816,7 @@ else
 fi
 
 
-if [[ "${LOCALHOSTS,,}" == *"tomcat"* ]]; then
+if [[ "${LOCALHOSTS,,}" == *"tomcat"* ]] || [[ "$TRYOUT_KEEP" == *"tomcat"* ]]; then
    # See https://tomcat.apache.org/
    JAVA_INSTALL  # pre-requisite
    if ! command_exists tomcat ; then
@@ -4385,7 +4385,7 @@ else
    fi
 fi
 
-if [[ "${CLOUD_TOOLS,,}" == *"minikube"* ]]; then 
+if [[ "${CLOUD_TOOLS,,}" == *"minikube"* ]] || [[ "$TRYOUT_KEEP" == *"minikube"* ]]; then 
    # See https://kubernetes.io/docs/tasks/tools/install-minikube/
    PYTHON_INSTALL  # function defined at top of this file.
    VIRTUALBOX_INSTALL # pre-requisite
@@ -4788,7 +4788,7 @@ else
 fi
 
 if [[ "${TEST_TOOLS,,}" == *"sonarqube"* ]]; then  # contains .
-   MYSQL_INSTALL  # pre-requsite
+   # MYSQL_INSTALL  # pre-requsite
    # https://neomatrix369.wordpress.com/2013/09/16/installing-sonarqube-formely-sonar-on-mac-os-x-mountain-lion-10-8-4/
 else
    fancy_echo "TEST_TOOLS sonarqube not specified." >>$LOGFILE
@@ -4922,7 +4922,7 @@ else
 fi
 
 
-if [[ "${MON_TOOLS,,}" == *"prometheus"* ]]; then
+if [[ "${MON_TOOLS,,}" == *"prometheus"* ]] || [[ "$TRYOUT_KEEP" == *"prometheus"* ]]; then
    DOCKER_INSTALL
    # See https://github.com/prometheus/prometheus/  cmd
    GO_INSTALL # pre-requsite
@@ -5001,7 +5001,7 @@ fi
 ######### VIZ_TOOLS ::
 
 
-if [[ "${VIZ_TOOLS,,}" == *"grafana"* ]]; then
+if [[ "${VIZ_TOOLS,,}" == *"grafana"* ]] || [[ "$TRYOUT_KEEP" == *"grafana"* ]]; then
       # http://docs.grafana.org/installation/mac/
    BREW_INSTALL "VIZ_TOOLS" "grafana" "brew"
 
@@ -5323,7 +5323,7 @@ fi
 ######### LOCALHOSTS ::
 
 
-if [[ "${LOCALHOSTS,,}" == *"jenkins"* ]]; then
+if [[ "${LOCALHOSTS,,}" == *"jenkins"* ]] || [[ "$TRYOUT_KEEP" == *"jenkins"* ]]; then
    # https://wilsonmar.github.io/jenkins-setup
    JAVA_INSTALL  # pre-requisite
    BREW_INSTALL "LOCALHOSTS" "jenkins" "--jenkins"
@@ -5484,7 +5484,7 @@ function GROOVY_INSTALL() {
 }
 
 
-if [[ "${GIT_TOOLS,,}" == *"jekyll"* ]]; then
+if [[ "${GIT_TOOLS,,}" == *"jekyll"* ]] || [[ "$TRYOUT_KEEP" == *"jekyll"* ]]; then
 
    if [[ "${TRYOUT,,}" == *"jekyll"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
    RUBY_INSTALL

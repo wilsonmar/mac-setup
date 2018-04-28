@@ -21,10 +21,13 @@ Being able to get started quickly means that you can switch quickly among sets o
 ### Limited Memory
 
 If you're now thinking "a Mac can't run every one of these programs" you'd be right.
-A Mac has at most 16 GB.
+A Mac has at most 16 GB of RAM.
 
-This repo isn't designed to run every service, but to enble you to pick a few at a time.
+This repo isn't designed to run every service, but to enable you to pick a few at a time,
+even on a MacBook Air with 4GB RAM and 128 GB hard disk.
+
 The advantage gained by this script is <strong>fast change</strong>.
+For example, setup to try the Atom editor, then remove it, and install something else.
 
 Scripts here are modular. Its default setting is to not install everything. It installs only what you tell it to by adding a keyword in the control file.
 
@@ -39,7 +42,10 @@ But you don't have to start from scratch.
 This script helps with <strong>updates too</strong>. 
 Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version. Remember the "openssl" update scare?
 
-This script upgrades all programs it knows about if you run the script with the RUNTYPE set to "upgrade". Use this script to install and configure the programs most people use.
+This script upgrades all programs it knows about if you run the script with the RUNTYPE set to "upgrade". Use this script to install and configure what you need at the moment.
+
+Change the RUNTYPE to "remove" and run the script to clear up disk space.
+
 
 ### Servers to work offline
 
@@ -71,7 +77,7 @@ you edit to specify which port numbers and <strong>keywords to specify apps</str
 
    The file's name is suffixed with ".sh" because it is a runnable script that establishes memory variables for a <a href="#MainScript">Setup script</a> to reference.
 
-Keywords to trigger install are organized by categories:
+Keywords to trigger install are specified in category variables:
 
 <a name="Categories"></a>
 
