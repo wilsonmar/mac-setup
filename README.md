@@ -13,10 +13,21 @@ Well, this repo cuts through all the b.s. by talking with code. This gives you a
    * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io
    * DevSecOps "stack" of Git, Jenkins, Nexus, Vagrant, Docker, Terraform, etc.
 
-With this repo, you can have all these running in a matter of minutes.
+With this repo, you can have any of these running in a matter of minutes.
 Being able to get started quickly means that you can switch quickly among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time. The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
 
-Scripts here is modular. Its default setting is not install anything. It installs only when you insert a keyword in the control file.
+<a name="LimitedMemory"></a>
+
+### Limited Memory
+
+If you're now thinking "a Mac can't run every one of these programs" you'd be right.
+A Mac has at most 16 GB.
+
+This repo isn't designed to run every service, but to enble you to pick a few at a time.
+The advantage gained by this script is <strong>fast change</strong>.
+
+Scripts here are modular. Its default setting is to not install everything. It installs only what you tell it to by adding a keyword in the control file.
+
 
 ### Run types
 
@@ -90,7 +101,6 @@ Keywords to trigger install are organized by categories:
 Links for individual apps above take you to technical descriptions about that technology.
 
 The categories are run in dependency sequence. MAC_TOOLS are installed to provide underlying utilities, then DATA_TOOLS provides databases, then servers are installed, etc.
-
 
 <a name="Homebrew"></a>
 
