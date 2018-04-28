@@ -385,7 +385,7 @@ else
    echo "EDITORS=$EDITORS" >>$LOGFILE
    echo "BROWSERS=$BROWSERS" >>$LOGFILE
 
-   echo "GIT_LANG=$GUI_LANG" >>$LOGFILE
+   echo "LANG_TOOLS=$GUI_LANG" >>$LOGFILE
    echo "JAVA_TOOLS=$JAVA_TOOLS" >>$LOGFILE
    echo "PYTHON_TOOLS=$PYTHON_TOOLS" >>$LOGFILE
    echo "NODE_TOOLS=$NODE_TOOLS" >>$LOGFILE
@@ -2225,7 +2225,7 @@ if [[ "${GIT_TOOLS,,}" == *"hooks"* ]]; then
    fi
 
    if [[ "${TRYOUT,,}" == *"hooks"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      if [[ "${GIT_LANG,,}" == *"python"* ]]; then  # contains azure.
+      if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then  # contains azure.
          PYTHON_PGM="hooks/basic-python2"
          if [[ "${TRYOUT,,}" == *"cleanup"* ]]; then
             fancy_echo "$PYTHON_PGM TRYOUT == cleanup ..."
@@ -2234,7 +2234,7 @@ if [[ "${GIT_TOOLS,,}" == *"hooks"* ]]; then
          fi
       fi
 
-      if [[ "${GIT_LANG,,}" == *"python3"* ]]; then  # contains azure.
+      if [[ "${LANG_TOOLS,,}" == *"python3"* ]]; then  # contains azure.
          PYTHON_PGM="hooks/basic-python3"
          if [[ "${TRYOUT,,}" == *"cleanup"* ]]; then
             fancy_echo "$PYTHON_PGM TRYOUT == cleanup ..."
@@ -2788,8 +2788,14 @@ function VAULT_INSTALL() {
 }
 if [[ "${DATA_TOOLS,,}" == *"vault"* ]]; then
    VAULT_INSTALL
+
+   # TODO: Configure
+
    if [[ "${TRYOUT,,}" == *"vault"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-         echo "DATA_TOOLS vault started ..."
+      fancy_echo "DATA_TOOLS vault started ..."
+   else
+      fancy_echo "DATA_TOOLS vault TRYOUT not specified." >>$LOGFILE
+   fi
 else
    fancy_echo "DATA_TOOLS vault not specified." >>$LOGFILE
 fi
@@ -2909,7 +2915,7 @@ function NPM_MODULE_INSTALL() {
    fancy_echo "NPM_MODULE_INSTALL $module version now ..." >>$LOGFILE
    npm list -g "$module" >>$LOGFILE
 }
-if [[ "${GIT_LANG,,}" == *"nodejs"* ]]; then
+if [[ "${LANG_TOOLS,,}" == *"nodejs"* ]]; then
    NODE_INSTALL  # pre-requisite function.
 fi
 
@@ -3478,6 +3484,36 @@ fi
 
 fancy_echo "PYTHON_TOOLS=$PYTHON_TOOLS" >>$LOGFILE
 
+DOTNET_CASK_INSTALL() {
+   # https://docs.microsoft.com/en-us/dotnet/core/macos-prerequisites?tabs=netcore2x
+   BREW_CASK_INSTALL "LANG_TOOLS" "dotnet" "brew" # even tho --version is stated.
+   # https://www.microsoft.com/net/download/macos
+   # https://docs.microsoft.com/en-us/dotnet/core/tutorials/using-on-macos   
+   # https://apple.stackexchange.com/questions/248997/how-do-i-install-net-core-on-osx
+   BREW_INSTALL "DOTNET_CASK_INSTALL" "openssl" "brew"
+   # Links:
+   ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
+   ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
+
+   # From https://www.microsoft.com/net/learn/get-started/macos#macos
+   URL="https://download.microsoft.com/download/2/E/C/2EC018A0-A0FC-40A2-849D-AA692F68349E/dotnet-sdk-2.1.105-osx-gs-x64.pkg"
+   fancy_echo "DOTNET_CASK_INSTALL $URL"
+
+   # TODO: Extract dotnet-sdk-2.1.105-osx-gs-x64.pkg"
+   PKG="dotnet-sdk-2.1.105-osx-gs-x64.pkg"
+
+   # TODO: Create dotnet_proj
+   DOTNET_PROJ="$GITS_PATH/dotnet_proj"
+   curl -L "$URL" -O   "$DOTNET_PROJ/$PKG" 2>/dev/null # 169.9 MB received.
+   sudo installer -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
+   sudo installer -pkg dotnet-sdk-2.1.105-osx-gs-x64.pkg dotnet_proj -target /
+# xxx
+}
+
+if [[ "${LANG_TOOLS,,}" == *"dotnet"* ]]; then
+   DOTNET_CASK_INSTALL
+fi
+
 if [[ "${PYTHON_TOOLS,,}" == *"anaconda"* ]]; then
    PYTHON_INSTALL
 
@@ -3936,7 +3972,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"vagrant"* ]]; then
    BREW_INSTALL "CLOUD_TOOLS" "vagrant" ""
 
    if [[ "${TRYOUT,,}" == *"hooks"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      if [[ "${GIT_LANG,,}" == *"python"* ]]; then  # contains azure.
+      if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then  # contains azure.
          PYTHON_PGM="hooks/basic-python2"
 
          if [[ "${TRYOUT,,}" == *"cleanup"* ]]; then
@@ -3944,7 +3980,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"vagrant"* ]]; then
             rm -rf $PYTHON_PGM
          fi
       fi
-      if [[ "${GIT_LANG,,}" == *"python3"* ]]; then  # contains azure.
+      if [[ "${LANG_TOOLS,,}" == *"python3"* ]]; then  # contains azure.
          PYTHON_PGM="hooks/basic-python3"
          if [[ "${TRYOUT,,}" == *"cleanup"* ]]; then
             fancy_echo "$PYTHON_PGM TRYOUT == cleanup ..."
@@ -4793,7 +4829,7 @@ fi
 ######### Python test coding languge:
 
 
-   if [[ "${GIT_LANG,,}" == *"python"* ]]; then  # contains azure.
+   if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then  # contains azure.
       # Python:
       # See https://saucelabs.com/resources/articles/getting-started-with-webdriver-in-python-on-osx
       # Get bindings: http://selenium-python.readthedocs.io/installation.html
@@ -4820,7 +4856,7 @@ fi
 
       # TODO: https://github.com/alexkaratarakis/gitattributes/blob/master/Python.gitattributes
    else
-      fancy_echo "GIT_LANG python not specified." >>$LOGFILE
+      fancy_echo "LANG_TOOLS python not specified." >>$LOGFILE
    fi
 
 # Now to add/commit - https://marklodato.github.io/visual-git-guide/index-en.html
@@ -5413,7 +5449,7 @@ function RUST_INSTALL() {
     # https://rustup.rs/
    # https://www.rust-lang.org/en-US/install.html
 
-   # xxxTODO: if not already installed: ./rustc --version $ rustc 1.25.0 (84203cac6 2018-03-25)
+   # TODO: if not already installed: ./rustc --version $ rustc 1.25.0 (84203cac6 2018-03-25)
       # Interactively, 1 for Proceed to install proxies in $HOME/.cargo/bin/rustc
    if ! command_exists redit ; then
       echo "1" | curl https://sh.rustup.rs -sSf | sh
