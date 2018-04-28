@@ -3506,7 +3506,6 @@ DOTNET_CASK_INSTALL() {
    DOTNET_PROJ="$GITS_PATH/dotnet_proj"
    curl -L "$URL" -O   "$DOTNET_PROJ/$PKG" 2>/dev/null # 169.9 MB received.
    sudo installer -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
-   sudo installer -pkg dotnet-sdk-2.1.105-osx-gs-x64.pkg dotnet_proj -target /
 # xxx
 }
 

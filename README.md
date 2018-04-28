@@ -1,6 +1,10 @@
-The tagline of this repo is "Automatically install and configure the <strong>most popular programs</strong> to work offline as a developer of several stacks on a Mac and in clouds."
+The tagline of this repo is "Automatically install and configure the <strong>most popular programs</strong> to work <strong>offline</strong> as a developer of several stacks on a Mac and in clouds."
 
-Bash scripts in this repo install, configure, then start programs running to prove that installation was successful. The "stacks" installed include:
+## Why this?
+
+Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And most webinars with demos are bragging sessions rather than teach skills.
+
+Well, this repo cuts through all the b.s. by talking with code. This gives you a way to install, configure, and start a large set of programs running for several "stacks":
 
    * MEAN (MongoDB, Express, Angular, NodeJs) with the MeanJs sample app
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
@@ -9,44 +13,26 @@ Bash scripts in this repo install, configure, then start programs running to pro
    * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io
    * DevSecOps "stack" of Git, Jenkins, Nexus, Vagrant, Docker, Terraform, etc.
 
-By enabling you to switch quickly among sets of programs, scripts in this repo <strong>you can quickly evaluate</strong> the technical aspects of each stack and individual program not just conceptually, but really working together at the same time. The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
+With this repo, you can have all these running in a matter of minutes.
+Being able to get started quickly means that you can switch quickly among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time. The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
 
-<a name="Homebrew"></a>
+Scripts here is modular. Its default setting is not install anything. It installs only when you insert a keyword in the control file.
 
-### Homebrew
+### Run types
 
-Most of the apps installed make use of installation code defined in the Homebrew repository online. There is a file (of Ruby code) for each brew install formula at:<br />
+"Genius bars" use this to quickly ready a <strong>new</strong> laptop for developers joining their organization. This helps developers skip wasted days installing (and doing it differently than colleagues).
 
-   <a target="_blank" href="
-   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb">
-   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb</a>
-
-   PROTIP: Before downloads a brew formula, we recommend that you look at its Ruby code to verify what really occurs and especially where files come from. 
-
-   <pre><strong>brew edit wget</strong></pre>
-
-
-   In fact, we recommend that you install a binary repository proxy that supply you vetted files from a trusted server instead of retrieving whatever is the latest on the public Homebrew server.
-
-   Homebrew currently has over 4,500 formulas.
-
-To install and configure programs which don't have brew installation formulas,
-various commands such as curl, sed, cut, etc. are used in the script.
-
-## Why a script?
-
-Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And don't get me started on webinars with demos that brags rather than teach.
-This script cuts through all that by scripts running on your Mac and displaying on your screen.
-
-You will benefit most from this if you configure a <strong>new</strong> laptop for yourself or for other developers joining your organization. You'll skip wasted days installing everything one at a time (and doing it differently than colleagues).
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.
 
-But this script helps with <strong>updates too</strong>. 
-You can, but don't have to, start from scratch. 
-Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version, by running a single "upgrade" command. Use this script to install and configure most programs most people use.
+But you don't have to start from scratch. 
+This script helps with <strong>updates too</strong>. 
+Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version. Remember the "openssl" update scare?
 
-This bash script enables you to <strong>work offline</strong> by installing several servers. 
-You manage allocation of port numbers in <strong>one place</strong>:
+This script upgrades all programs it knows about if you run the script with the RUNTYPE set to "upgrade". Use this script to install and configure the programs most people use.
+
+### Servers to work offline
+
+This bash script enables you to <strong>work offline</strong> because it installs several servers. You manage allocation of port numbers in <strong>one place</strong>:
 
    <pre>
    ELASTIC_PORT="9200"    # DATA_TOOLS from default 9200
@@ -67,11 +53,7 @@ You manage allocation of port numbers in <strong>one place</strong>:
    TOMCAT_PORT="8087"     # LOCALHOSTS from default 8080
    </pre>
 
-Docker instances use the same ports, such as:
-
-   <pre>
-   PROMETHEUS_PORT="9090" # MON_TOOLS default 9090
-   </pre>
+   Docker instances use the same ports.
 
 The above list is from the <strong>secrets.sh</strong> file in your $HOME folder, which
 you edit to specify which port numbers and <strong>keywords to specify apps</strong> you want installed.
@@ -107,8 +89,30 @@ Keywords to trigger install are organized by categories:
 
 Links for individual apps above take you to technical descriptions about that technology.
 
-The categories are run in dependency sequence. MAC_TOOLS to provide underlying utilities, then
-DATA_TOOLS to provide databases, etc.
+The categories are run in dependency sequence. MAC_TOOLS are installed to provide underlying utilities, then DATA_TOOLS provides databases, then servers are installed, etc.
+
+
+<a name="Homebrew"></a>
+
+### Homebrew
+
+Most of the apps installed make use of installation code defined in the Homebrew repository online. There is a file (of Ruby code) for each brew install formula at:<br />
+
+   <a target="_blank" href="
+   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb">
+   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb</a>
+
+   PROTIP: Before downloads a brew formula, we recommend that you look at its Ruby code to verify what really occurs and especially where files come from. 
+
+   <pre><strong>brew edit wget</strong></pre>
+
+
+   In fact, we recommend that you install a binary repository proxy that supply you vetted files from a trusted server instead of retrieving whatever is the latest on the public Homebrew server.
+
+   Homebrew currently has over 4,500 formulas.
+
+To install and configure programs which don't have brew installation formulas,
+various commands such as curl, sed, cut, etc. are used in the script.
 
 Yes, you can just run brew yourself, one at a time. But logic in the script goes beyond what Homebrew does, and <strong>configures</strong> the component just installed:
 
@@ -371,3 +375,5 @@ Lists of Mac programs:
    * https://github.com/jaywcjlove/awesome-mac/blob/master/README.md
    * https://medium.com/@ankushagarwal/maximize-developer-productivity-on-a-mac-a9ae6fbaedab
    * https://dotfiles.github.io/
+
+   * https://www.mugo.ca/Blog/Turbo-charge-your-Mac-development-environment describes use of Vagrant
