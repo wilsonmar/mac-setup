@@ -398,6 +398,8 @@ Dropbox, OneDrive, Google Drive, Amazon Drive
 ## Additional apps
 
 * <a target="_blank" href="https://answers.splunk.com/answers/223311/how-to-install-splunk-622-on-a-mac-os-x.html">Splunk</a> log analysis SPLUNK_PORT="8000"
+ http://docs.splunk.com/Documentation/SplunkLight
+ 
 * Kafka streams
 
 

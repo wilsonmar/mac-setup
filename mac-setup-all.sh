@@ -1132,7 +1132,7 @@ if [[ "${TEST_TOOLS,,}" == *"pact-go"* ]] || [[ "$TRYOUT_KEEP" == *"pact-go"* ]]
       fi
    fi
 else
-      fancy_echo "TEST_TOOLS pact-go not specified." >>$LOGFILE
+   fancy_echo "TEST_TOOLS pact-go not specified." >>$LOGFILE
 fi
 
 
@@ -1182,6 +1182,13 @@ if [[ "${TEST_TOOLS,,}" == *"gatling"* ]]; then
    fi
 else
       fancy_echo "TEST_TOOLS gatling not specified." >>$LOGFILE
+fi
+
+
+if [[ "${TEST_TOOLS,,}" == *"soapui"* ]]; then
+   BASH_CASK_INSTALL "TEST_TOOLS" "soapui" "SoapUI"
+else
+   fancy_echo "TEST_TOOLS soapui not specified." >>$LOGFILE
 fi
 
 
@@ -3201,23 +3208,11 @@ fi
 
 if [[ "$JAVA_TOOLS" == *"maven"* ]]; then
     # Associated: Maven (mvn) in /usr/local/opt/maven/bin/mvn
-   if ! command_exists mvn ; then
-      fancy_echo "Installing Maven for Java ..."
-      brew install maven
-         brew info maven >>$LOGFILE
-         brew list maven >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "JAVA_TOOLS maven dupgrading ..."
-         # mvn --version
-         brew upgrade maven
-      fi
-   fi
-   fancy_echo "$(mvn --version)" >>$LOGFILE  # Apache Maven 3.5.0 
+   BREW_INSTALL "JAVA_TOOLS" "maven" "brew"
+   # yarn is installed by adding it within Maven or Gradle pom.xml
 else
    fancy_echo "JAVA_TOOLS maven not specified." >>$LOGFILE
 fi
-
 
 if [[ "$JAVA_TOOLS" == *"gradle"* ]]; then
     # no xml angle brackets! Uses Groovy DSL
@@ -3230,9 +3225,8 @@ if [[ "$JAVA_TOOLS" == *"gradle"* ]]; then
    # gradle tasks
    # gradle test
 else
-      fancy_echo "JAVA_TOOLS gradle not specified." >>$LOGFILE
+   fancy_echo "JAVA_TOOLS gradle not specified." >>$LOGFILE
 fi
-
 
 if [[ "$JAVA_TOOLS" == *"ant"* ]]; then
    BREW_INSTALL "JAVA_TOOLS" "ant" ""
@@ -3250,13 +3244,6 @@ if [[ "$JAVA_TOOLS" == *"ant"* ]]; then
    fi
 else
    fancy_echo "JAVA_TOOLS ant not specified." >>$LOGFILE
-fi
-
-
-if [[ "$JAVA_TOOLS" == *"yarn"* ]]; then
-   # for code generation
-   fancy_echo "There is no brew install yarn because it is installed by adding it within Maven or Gradle." 
-   # 
 fi
 
 if [[ "$JAVA_TOOLS" == *"junit4"* ]]; then
@@ -5278,7 +5265,7 @@ if [[ "${MEDIA_TOOLS,,}" == *"tesseract"* ]]; then
       # Convert pdf to text by first splitting it into little graphics files to perform OCR on:
    fi
 else
-      fancy_echo "MEDIA_TOOLS tesseract not specified." >>$LOGFILE
+   fancy_echo "MEDIA_TOOLS tesseract not specified." >>$LOGFILE
 fi
 
 if [[ "${MEDIA_TOOLS,,}" == *"real-vnc"* ]]; then 
