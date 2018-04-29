@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+ #!/usr/local/bin/bash
 
 # mac-setup-all.sh in https://github.com/wilsonmar/mac-setup
 # This downloads and installs all the utilities related to use of Git,
@@ -99,6 +99,7 @@ if [[ "${MAC_TOOLS,,}" = *"nopassword"* ]]; then
    sudo visudo
    # TODO: $USERNAME ALL=(root) NOPASSWD: /usr/sbin/installer
 fi
+
 
 #Mandatory:
    # Ensure Apple's command line tools (such as cc) are installed by node:
@@ -275,41 +276,50 @@ function BREW_CASK_INSTALL() {
    brew cask info $package 1>response_file 2>response_file
    if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
       if grep -q "$package:" "response_file" ; then # already installed:
-         fancy_echo "$category $package was already removed ..." >>$LOGFILE
+         fancy_echo "$category $package already removed ..."
+#         grep -q "No previously deleted formula found." "response_file" ; then
+#      if grep -q "info: No menu item" "response_file" ; then
       else
          fancy_echo "$category $package removing ..."
          brew remove $package
          rm -rf "/Applications/$appname.app"  #needed with uninstall
       fi
    else # other RUNTYPEs:
-      if grep -q "Not installed" "response_file" ; then # for update too:
-         fancy_echo "$category $package installing ..."
-         brew cask install --appdir="/Applications" "$package_in"
-      else
+echo "other runtypes"
+exit
+      if ! grep -q "$package:" "response_file" ; then # already installed:
          if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-            # $package -v >>$LOGFILE
             fancy_echo "$category $package upgrading ..."
-            brew cask upgrade $package
-         fi
-         if command_exists $package ; then
-            fancy_echo "$category $package command available, so alias not needed."
+            fancy_echo "$category $package upgrading ..."
+          brew cask upgrade $package
+      fi
+      if grep -q "$package:" "response_file" ; then
+          fancy_echo "$category $package already installed ..."
+      else
+#      if grep -q "info: No menu item" "response_file" ; then
+#      if grep -q "No available formula" "response_file" ; then
+         # [[ $RESPONSE == *"Not installed"* ]]; then
+          fancy_echo "$category $package installing ..."
+          brew cask install --appdir="/Applications" "$package_in"
+      fi
+         RESPONSE="$(brew info $package)"
+         if [[ $RESPONSE == *"No available formula"* ]] || [[ $RESPONSE == *"Not installed"* ]]; then
+            echo "$package not installed. RUNTYPE=$RUNTYPE." 
          else
-         brew cask info $package 1>response_file 2>response_file
-         echo "BREW_CASK_INSTALL $(brew cask info $package)"
-            fancy_echo "$category $package alias to $appname ..."
-            # TODO: Remove previous version app if found.
             if grep -q "alias $package=" "$BASHFILE" ; then
                fancy_echo "$category $package alias to $appname.app already in $BASHFILE"
             else
-               fancy_echo "$category $package alias to $appname.app adding in $BASHFILE ..."
-                     alias "$package='open -a \"/Applications/$appname.app\"'"
+               fancy_echo "$category $package alias to $appname.app in $BASHFILE ..."
                echo "alias $package='open -a \"/Applications/$appname.app\"'" >>"$BASHFILE"
-               source $BASHFILE  # Activate
+               source $BASHFILE  # Activate by running
             fi
          fi
-      fi
+#       if [[ "${TRYOUT,,}" == *"soapui"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+#      fancy_echo "TEST_TOOLS soapui $VER opening ..."
+#      open -a "/Applications/$VER.app"
+#      fi
    fi
-   fancy_echo "$category $(brew cask info $package | grep "$package:") BREW_CASK_INSTALL" >>$LOGFILE
+   echo "BREW_CASK_INSTALL $RUNTYPE $(brew cask info $package | grep "$package:")" >>$LOGFILE
 }
 
 
@@ -1198,7 +1208,7 @@ if [[ "${TEST_TOOLS,,}" == *"gatling"* ]]; then
       #open /usr/local/opt/gatling/results/$GATLING_RUN/index.html
    fi
 else
-      fancy_echo "TEST_TOOLS gatling not specified." >>$LOGFILE
+   fancy_echo "TEST_TOOLS gatling not specified." >>$LOGFILE
 fi
 
 
@@ -2820,7 +2830,7 @@ if [[ "${DATA_TOOLS,,}" == *"rstudio"* ]]; then
       echo "DATA_TOOLS rstudio still running on PID=$PID." >>$LOGFILE
       # rstudio --help
       # sudo rstudio-server active-sessions
-   fi # xxx
+   fi
 else
    fancy_echo "DATA_TOOLS rstudio not specified." >>$LOGFILE
 fi
@@ -3532,8 +3542,8 @@ DOTNET_CASK_INSTALL() {
    # TODO: Create dotnet_proj
    DOTNET_PROJ="$GITS_PATH/dotnet_proj"
    curl -L "$URL" -O   "$DOTNET_PROJ/$PKG" 2>/dev/null # 169.9 MB received.
-   echo "$SUDO_PASS" | sudo installer -store -verbose -verboseR -allowUntrusted -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
-# xxx
+   echo "$SUDO_PASS" | sudo installer -store -verbose -verboseR -allowUntrusted \
+      -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
 }
 
 if [[ "${LANG_TOOLS,,}" == *"dotnet"* ]]; then
@@ -4815,13 +4825,14 @@ else
 fi
 
 if [[ "${TEST_TOOLS,,}" == *"sonarqube"* ]]; then  # contains .
+   fancy_echo "TEST_TOOLS sonarqube installing ..." >>$LOGFILE
    # MYSQL_INSTALL  # pre-requsite
    # https://neomatrix369.wordpress.com/2013/09/16/installing-sonarqube-formely-sonar-on-mac-os-x-mountain-lion-10-8-4/
 else
    fancy_echo "TEST_TOOLS sonarqube not specified." >>$LOGFILE
 fi
 
-# GreenMail is a email server used for testing  # http://www.javavillage.in/greenmail.php
+# TODO: GreenMail is a email server used for testing  # http://www.javavillage.in/greenmail.php
 
 
 ######### GitHub hub to manage GitHub functions:
