@@ -208,17 +208,11 @@ There is NO WARRANTY, to the extent permitted by law.
 8. After it runs, verify the version again <a href="#VersionWithGap">as described above</a> to ensure it's version 4.
 
 
-   ### secrets.sh at Home
-
-   The first time the script runs, it also copies the <strong>secrets.sh</strong> file from the public on-line repository into your laptop so that you can add your secrets in the file but have no chance the file will be uploaded from the Git repository where it came from.
-
-   The file is placed in your account Home folder.
-
    <a name="HomeFolder"></a>
 
    ### Home folder
 
-9. The default location the Teminal command opens to by default is your "Home" folder, which you can reach anytime by:
+9. The default location the Terminal command opens to by default is your "Home" folder, which you can reach anytime by:
 
    <pre><strong>cd
    </strong></pre>
@@ -234,6 +228,29 @@ There is NO WARRANTY, to the extent permitted by law.
    In other words these commands all achieve the same result:
 
    <tt>cd = cd ~ = cd $HOME</tt>
+
+   ### secrets.sh at Home
+
+   It's wise to avoid storing secrets in GitHub or other public repository. Files stored in
+   <strong>your user $HOME holder</strong> (outside a Git-managed folder) have no chance to be uploaded from the Git repository. The script references secrets there.
+
+   And if the script doesn't see a secrets file in your $HOME folder,
+   it copies one there from the repo's sample file.
+
+   NOTE the secrets.sh is a clear-text file.
+
+   ### Encrypting and Decrypting secrets
+
+   Optionally, you may store secrets and configurations in an encrypted file 
+   after some initial configuration.
+
+   Run script <tt>./secrets.edit.sh</tt> to decrypt the contents of <tt>secrets.sh</tt>
+   for the mac-setup-all.sh script to use.
+
+   Run script <tt>./secrets.lock.sh</tt> to encrypt the contents of <tt>secrets.sh</tt>.
+
+   Utilities "blackbox" or "git-secret" can be used to handle 
+
 
    ### Text edit secrets.sh
 
@@ -347,7 +364,9 @@ There is NO WARRANTY, to the extent permitted by law.
 
 <a name="mas"></a>
 
-## Mac apps
+## Mas Mac apps
+
+The brew formula "mas" manages Apple Store apps, but it only manages apps that have already been paid for.  mas does not install apps new to your Apple Store account.
 
 Apps on Apple's App Store for Mac need to be installed manually. <a target="_blank" href="https://www.reddit.com/r/osx/comments/4hmgeh/list_of_os_x_tools_everyone_needs_to_know_about/">
 Popular apps</a> include:
@@ -359,8 +378,12 @@ Popular apps</a> include:
    * <a target="_blank" href="https://wilsonmar.github.io/rdp/#microsoft-hockeyapp-remote-desktop-for-mac">HockeyApp RDP</a> (Remote Desktop Protocol client for controlling Microsoft Windows servers)
    * Colloquy IRC client (at https://github.com/colloquy/colloquy)
    * etc.
+   <br /><br />
 
-The brew "mas" manages Apple Store apps, but it only manages apps that have already been paid for. But mas does not install apps new to your Apple Store account.
+### .pkg and .dmg
+
+.pkg and .dmg files can be downloaded to install apps. 
+
 
 
 <a name="CloudSync"></a>
@@ -371,6 +394,11 @@ Apps for syncing to cloud providers are installed mostly for manual use:
 
 Dropbox, OneDrive, Google Drive, Amazon Drive
 
+
+## Additional apps
+
+* <a target="_blank" href="https://answers.splunk.com/answers/223311/how-to-install-splunk-622-on-a-mac-os-x.html">Splunk</a> log analysis SPLUNK_PORT="8000"
+* Kafka streams
 
 
 <a name="More"></a>

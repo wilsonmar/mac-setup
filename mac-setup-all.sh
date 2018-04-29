@@ -89,6 +89,13 @@ sig_cleanup() {
     cleanup
 }
 
+# Disable inputting password:
+
+sudo visudo
+MAC_USERID=$(id -un 2>/dev/null || true)  # example: wilsonmar
+"$USERNAME" ALL=(root) NOPASSWD: /usr/sbin/installer
+exit
+
 #Mandatory:
    # Ensure Apple's command line tools (such as cc) are installed by node:
    if ! command_exists cc ; then
@@ -257,21 +264,22 @@ function BREW_CASK_INSTALL() {
    # Example: BREW_CASK_INSTALL "EDITORS" "webstorm" "Webstorm"
 
    local category="$1"
-   local package="$2"
+   local package_in="$2"
    local appname="$3"
 
+   package=$(echo "$package_in" | head -n1 | awk '{print $1;}')
    if [ ! -d "/Applications/$appname.app" ]; then
       fancy_echo "$category $package installing ..."
-      brew cask install --appdir="/Applications" "$package"
+      brew cask install --appdir="/Applications" "$package_in"
    else
       if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         # $package -v
+         # $package -v >>$LOGFILE
          fancy_echo "$category $package upgrading ..."
          brew cask upgrade $package
       elif [[ "${RUNTYPE,,}" == *"remove"* ]]; then
          fancy_echo "$category $package removing ..." >>$LOGFILE
          brew remove $package
-         #rm -rf "/Applications/$appname.app"  #needed with uninstall
+         rm -rf "/Applications/$appname.app"  #needed with uninstall
       fi
    fi
 
@@ -284,7 +292,7 @@ function BREW_CASK_INSTALL() {
          source $BASHFILE  # Activate by running
       fi
    fi
-   echo "BREW_INSTALL $(brew cask info $package | grep "$package:")" >>$LOGFILE
+   echo "BREW_CASK_INSTALL $(brew cask info $package | grep "$package:")" >>$LOGFILE
 }
 
 
@@ -368,7 +376,6 @@ else
    #fancy_echo "git ls-files -v|grep '^h' ::" >>$LOGFILE
    #echo "$(git ls-files -v|grep '^S')" >>$LOGFILE
 
-   MAC_USERID=$(id -un 2>/dev/null || true)  # example: wilsonmar
    echo "SECRETSFILE=$SECRETSFILE ::" >>$LOGFILE
    echo "RUNTYPE=$RUNTYPE ::" >>$LOGFILE
    echo "GIT_NAME=$GIT_NAME">>$LOGFILE
@@ -1662,7 +1669,7 @@ if [[ "${GIT_CLIENTS,,}" == *"tower"* ]]; then
       open -a "/Applications/Tower.app"
    fi
 else
-  fancy_echo "GIT_CLIENTS tower not specified." >>$LOGFILE
+   fancy_echo "GIT_CLIENTS tower not specified." >>$LOGFILE
 fi
 
 
@@ -1678,7 +1685,7 @@ if [[ "${GIT_CLIENTS,,}" == *"magit"* ]]; then
       #emacs magit & 
    fi
 else
-      fancy_echo "GIT_CLIENTS magit not specified." >>$LOGFILE
+   fancy_echo "GIT_CLIENTS magit not specified." >>$LOGFILE
 fi
 
 
@@ -1695,7 +1702,7 @@ if [[ "${GIT_CLIENTS,,}" == *"gitup"* ]]; then
       gitup &
    fi
 else
-      fancy_echo "GIT_CLIENTS gitup not specified." >>$LOGFILE
+   fancy_echo "GIT_CLIENTS gitup not specified." >>$LOGFILE
 fi
 
 
@@ -1764,7 +1771,7 @@ if [[ "${BROWSERS,,}" == *"firefox"* ]]; then
       open -a "/Applications/Firefox.app" &
    fi
 else
-      fancy_echo "BROWSERS firefox not specified." >>$LOGFILE
+   fancy_echo "BROWSERS firefox not specified." >>$LOGFILE
 fi
 
 # Other alternatives listed at https://git-scm.com/docs/git-web--browse.html
@@ -1836,7 +1843,7 @@ if [[ "${GIT_TOOLS,,}" == *"git-gerrit"* ]]; then
       git-gerrit & 
    fi
 else
-    fancy_echo "GIT_TOOLS git-gerrit not specified." >>$LOGFILE
+   fancy_echo "GIT_TOOLS git-gerrit not specified." >>$LOGFILE
 fi
 
 
@@ -1919,7 +1926,7 @@ if [[ "${GIT_TOOLS,,}" == *"lfs"* ]]; then
    #git config --global alias.plfs "\!git -c filter.lfs.smudge= -c filter.lfs.required=false pull && git lfs pull"
    #$ git plfs
 else
-      fancy_echo "GIT_TOOLS lfs not specified." >>$LOGFILE
+   fancy_echo "GIT_TOOLS lfs not specified." >>$LOGFILE
 fi
 
 
@@ -2051,7 +2058,7 @@ if [[ "${GIT_TOOLS,,}" == *"diff-so-fancy"* ]]; then
    # To bypass diff-so-fancy. Use --no-pager for that:
    #git --no-pager diff
 else
-      fancy_echo "GIT_TOOLS diff-so-fancy not specified." >>$LOGFILE
+   fancy_echo "GIT_TOOLS diff-so-fancy not specified." >>$LOGFILE
 fi
 
 
@@ -2090,7 +2097,7 @@ if [[ "${GIT_TOOLS,,}" == *"bash-git-prompt"* ]]; then
       echo "fi" >>"$BASHFILE"
    fi
 else
-      fancy_echo "GIT_TOOLS bash-git-prompt not specified." >>$LOGFILE
+   fancy_echo "GIT_TOOLS bash-git-prompt not specified." >>$LOGFILE
 fi
 
 ######### bash colors:
@@ -2206,7 +2213,7 @@ if [[ "${GIT_TOOLS,,}" == *"git-flow"* ]]; then
    #git flow init -d
    #git flow feature start <your feature>
 else
-      fancy_echo "GIT_TOOLS git-flow not specified." >>$LOGFILE
+   fancy_echo "GIT_TOOLS git-flow not specified." >>$LOGFILE
 fi
 
 
@@ -2244,7 +2251,7 @@ if [[ "${GIT_TOOLS,,}" == *"hooks"* ]]; then
       fi
    fi
 else
-      fancy_echo "GIT_TOOLS hooks not specified." >>$LOGFILE
+   fancy_echo "GIT_TOOLS hooks not specified." >>$LOGFILE
 fi
 # Thanks to ShingLyu.github.io for support on Python Selenium scripting.
 
@@ -2295,7 +2302,7 @@ if [[ "${DATA_TOOLS,,}" == *"redis"* ]] || [[ "$TRYOUT_KEEP" == *"redis"* ]]; th
          # Usage: redis { console | start | stop | restart | status | version }
    fi
 else
-      fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
+   fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
 fi
 
 
@@ -2354,7 +2361,7 @@ if [[ "${DATA_TOOLS,,}" == *"redis"* ]]; then
          # Usage: redis { console | start | stop | restart | status | version }
    fi
 else
-      fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
+   fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
 fi
 
 
@@ -2463,7 +2470,7 @@ if [[ "${DATA_TOOLS,,}" == *"postgresql"* ]] || [[ "$TRYOUT_KEEP" == *"postgresq
       pg_ctl --help
    fi
 else
-      fancy_echo "DATA_TOOLS postgresql not specified." >>$LOGFILE
+   fancy_echo "DATA_TOOLS postgresql not specified." >>$LOGFILE
 fi
 
 
@@ -2597,7 +2604,7 @@ if [[ "${DATA_TOOLS,,}" == *"nexus"* ]]; then
          # Usage: nexus { console | start | stop | restart | status | version }
    fi
 else
-      fancy_echo "DATA_TOOLS nexus not specified." >>$LOGFILE
+   fancy_echo "DATA_TOOLS nexus not specified." >>$LOGFILE
 fi
 
 
@@ -2654,7 +2661,7 @@ if [[ "${TEST_TOOLS,,}" == *"sonar"* ]] || [[ "$TRYOUT_KEEP" == *"sonar"* ]]; th
       sonar status
    fi
 else
-      fancy_echo "TEST_TOOLS sonar not specified." >>$LOGFILE
+   fancy_echo "TEST_TOOLS sonar not specified." >>$LOGFILE
 fi
 
 
@@ -2713,7 +2720,7 @@ if [[ "${DATA_TOOLS,,}" == *"neo4j"* ]] || [[ "$TRYOUT_KEEP" == *"neo4j"* ]]; th
          # Usage: neo4j { console | start | stop | restart | status | version }
    fi
 else
-      fancy_echo "DATA_TOOLS neo4j not specified." >>$LOGFILE
+   fancy_echo "DATA_TOOLS neo4j not specified." >>$LOGFILE
 fi
 
 
@@ -2748,20 +2755,7 @@ function RSTUDIO_INSTALL() {
          source "$BASHFILE"
       fi 
 
-   if [ ! -d "/Applications/RStudio.app" ]; then
-      fancy_echo "RSTUDIO_INSTALL: Installing rstudio ..."
-      brew cask install rstudio --appdir=/Applications 
-         brew cask info rstudio >>$LOGFILE
-         #brew cask list rstudio >>$LOGFILE  # Missing App: ~/Applications/RStudio.app
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "RSTUDIO_INSTALL: Upgrading rstudio ..."
-         brew cask info rstudio | grep "rstudio:" # multi-line
-         brew cask upgrade rstudio
-      fi
-   fi
-   echo "RSTUDIO_INSTALL: $(brew cask info rstudio | grep "rstudio:")" >>$LOGFILE
-      # 2.7.11
+   BREW_CASK_INSTALL "RSTUDIO_INSTALL" "rstudio" "RStudio" 
 
       if grep -q "alias rstudio=" "$BASHFILE" ; then    
          echo "RSTUDIO_INSTALL rstudio alias already in $BASHFILE" >>$LOGFILE
@@ -2775,8 +2769,21 @@ if [[ "${DATA_TOOLS,,}" == *"rstudio"* ]]; then
 
    if [[ "${TRYOUT,,}" == *"rstudio"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       echo "DATA TOOLS: rstudio starting ..." >>$LOGFILE
-      rstudio
+      rstudio &
+
+      #TODO: sudo rstudio-server start
    fi
+
+   if [[ "${TRYOUT_KEEP,,}" == *"rstudio"* ]]; then
+      echo "DATA_TOOLS rstudio stopping ..." >>$LOGFILE
+      
+      # sudo rstudio-server stop
+   else
+      PID="$(ps x | grep -m1 '/rstudio' | grep -v "grep" | awk '{print $1}')"
+      echo "DATA_TOOLS rstudio still running on PID=$PID." >>$LOGFILE
+      # rstudio --help
+      # sudo rstudio-server active-sessions
+   fi # xxx
 else
    fancy_echo "DATA_TOOLS rstudio not specified." >>$LOGFILE
 fi
@@ -2785,11 +2792,11 @@ fi
 function VAULT_INSTALL() {
    BREW_INSTALL "DATA_TOOLS" "vault" ""
    fancy_echo "$(vault -)" >>$LOGFILE
+
+   # TODO: Configure per https://www.vaultproject.io/docs/configuration/index.html
 }
 if [[ "${DATA_TOOLS,,}" == *"vault"* ]]; then
    VAULT_INSTALL
-
-   # TODO: Configure
 
    if [[ "${TRYOUT,,}" == *"vault"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       fancy_echo "DATA_TOOLS vault started ..."
@@ -2803,15 +2810,18 @@ fi
 
 if [[ "${DATA_TOOLS,,}" == *"others"* ]]; then
    fancy_echo "DATA_TOOLS=others ..."
-#  brew install mysql       #  mysql@5.5, mysql@5.6
-#  brew install redis
-#  brew cask install --appdir="/Applications" evernote
 #  dbunit? # http://www.javavillage.in/dbunit-sample-example.php
-#  brew install influxdb   # 1.5.1, influxd -config /usr/local/etc/influxdb.conf
+#  brew install mysql       #  mysql@5.5, mysql@5.6
+#  BREW_INSTALL "DATA_TOOLS" "influxdb" "brew" # 1.5.1, influxd -config /usr/local/etc/influxdb.conf
 
-#  brew cask install --appdir="/Applications" google-drive
-#  brew cask install --appdir="/Applications" dropbox
-#  brew cask install --appdir="/Applications" amazon-drive
+#  BREW_CASK_INSTALL "DATA_TOOLS" "google-drive" "Google Drive"
+#  BREW_CASK_INSTALL "DATA_TOOLS" "dropbox" "Dropbox"
+#  BREW_CASK_INSTALL "DATA_TOOLS" "amazon-drive" "Amazon Drive"
+#  BREW_CASK_INSTALL "DATA_TOOLS" "evernote" "Evernote"
+
+#  BREW_CASK_INSTALL "DATA_TOOLS" "tableau" "Tableau"
+#  BREW_CASK_INSTALL "DATA_TOOLS" "tableau-public" "Tableau Public"
+#  BREW_CASK_INSTALL "DATA_TOOLS" "tableau-reader" "Tableau Reader"
 
 # http://ess.r-project.org/  Emacs Speaks Statistics (ESS) 
 # See http://zmjones.com/mac-setup/
@@ -2978,7 +2988,7 @@ if [[ "${NODE_TOOLS,,}" == *"sfdx"* ]]; then
       echo "RUBY_TOOLS sfdx-simple at $(pwd) after usage." >>$LOGFILE
    fi
 else
-      fancy_echo "NODE_TOOLS mavsfdxen not specified." >>$LOGFILE
+   fancy_echo "NODE_TOOLS mavsfdxen not specified." >>$LOGFILE
 fi
 
    # Task runners:
@@ -3163,7 +3173,7 @@ if [[ "${NODE_TOOLS,,}" == *"meanjs"* ]] || [[ "$TRYOUT_KEEP" == *"meanjs"* ]]; 
       kill $PID  # Response: [09:27:40] [nodemon] app crashed - waiting for file changes before starting...
    fi
 else
-      fancy_echo "NODE_TOOLS meanjs not specified." >>$LOGFILE
+   fancy_echo "NODE_TOOLS meanjs not specified." >>$LOGFILE
 fi
 
 
@@ -3182,7 +3192,7 @@ if [[ "${NODE_TOOLS,,}" == *"magicbook"* ]]; then
       magicbook build  # --config=myfolder/myconfig.json
    fi
 else
-      fancy_echo "NODE_TOOLS magicbook not specified." >>$LOGFILE
+   fancy_echo "NODE_TOOLS magicbook not specified." >>$LOGFILE
 fi
 
 
@@ -3205,7 +3215,7 @@ if [[ "$JAVA_TOOLS" == *"maven"* ]]; then
    fi
    fancy_echo "$(mvn --version)" >>$LOGFILE  # Apache Maven 3.5.0 
 else
-      fancy_echo "JAVA_TOOLS maven not specified." >>$LOGFILE
+   fancy_echo "JAVA_TOOLS maven not specified." >>$LOGFILE
 fi
 
 
@@ -3425,7 +3435,7 @@ if [[ "$JAVA_TOOLS" == *"jmeter"* ]]; then
       jmeter &  # GUI
    fi
 else
-      fancy_echo "JAVA_TOOLS jmeter not specified." >>$LOGFILE
+   fancy_echo "JAVA_TOOLS jmeter not specified." >>$LOGFILE
 fi
 
 
@@ -3495,9 +3505,9 @@ DOTNET_CASK_INSTALL() {
    ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
    ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
 
-   # From https://www.microsoft.com/net/learn/get-started/macos#macos
+   # TODO: Obtain from https://www.microsoft.com/net/learn/get-started/macos#macos
    URL="https://download.microsoft.com/download/2/E/C/2EC018A0-A0FC-40A2-849D-AA692F68349E/dotnet-sdk-2.1.105-osx-gs-x64.pkg"
-   fancy_echo "DOTNET_CASK_INSTALL $URL"
+   fancy_echo "DOTNET_CASK_INSTALL $URL ..."
 
    # TODO: Extract dotnet-sdk-2.1.105-osx-gs-x64.pkg"
    PKG="dotnet-sdk-2.1.105-osx-gs-x64.pkg"
@@ -3505,7 +3515,7 @@ DOTNET_CASK_INSTALL() {
    # TODO: Create dotnet_proj
    DOTNET_PROJ="$GITS_PATH/dotnet_proj"
    curl -L "$URL" -O   "$DOTNET_PROJ/$PKG" 2>/dev/null # 169.9 MB received.
-   sudo installer -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
+   echo "$SUDO_PASS" | sudo installer -store -verbose -verboseR -allowUntrusted -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
 # xxx
 }
 
@@ -3591,7 +3601,7 @@ if [[ "${PYTHON_TOOLS,,}" == *"others"* ]]; then
    fancy_echo "pip freeze list of all Python modules installed ::"  >>$LOGFILE
    echo "$(pip freeze)"  >>$LOGFILE
 else
-      fancy_echo "PYTHON_TOOLS others not specified." >>$LOGFILE
+   fancy_echo "PYTHON_TOOLS others not specified." >>$LOGFILE
 fi
 
 
@@ -3744,7 +3754,7 @@ EOF
       fancy_echo "To activate: git config --global commit.gpgsign true"
    fi
 else
-      fancy_echo "GIT_TOOLS signing not specified." >>$LOGFILE
+   fancy_echo "GIT_TOOLS signing not specified." >>$LOGFILE
 fi
 
 
@@ -3812,7 +3822,7 @@ if [[ "${LOCALHOSTS,,}" == *"nginx"* ]] || [[ "$TRYOUT_KEEP" == *"nginx"* ]]; th
       fi 
    fi
 else
-      fancy_echo "LOCALHOSTS nginx not specified." >>$LOGFILE
+   fancy_echo "LOCALHOSTS nginx not specified." >>$LOGFILE
 fi
 
 
