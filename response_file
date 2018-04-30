@@ -1,8 +1,0 @@
-soapui: 5.4.0
-https://www.soapui.org/
-/usr/local/Caskroom/soapui/5.4.0 (32 files, 136.4MB)
-From: https://github.com/caskroom/homebrew-cask/blob/master/Casks/soapui.rb
-==> Name
-SmartBear SoapUI
-==> Artifacts
-SoapUI 5.4.0 Installer.app/Contents/MacOS/JavaApplicationStub (Installer)
