@@ -2,49 +2,55 @@ The tagline of this repo is "Automatically install and configure the <strong>mos
 
 ## Why this?
 
-Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And most webinars with demos are bragging sessions rather than teach skills.
+Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And most webinars with demos just brag rather than teach skills. I wanted to be more helpful.
 
-Well, this repo cuts through all the b.s. by talking with code. This gives you a way to install, configure, and start a large set of programs running for several "stacks":
+This repo cuts through all the b.s. by <strong>talking with code</strong>. 
+This gives you a way to install, configure, and start a large set of programs running sample code for several "stacks":
 
-   * MEAN (MongoDB, Express, Angular, NodeJs) with the MeanJs sample app
+   * MEAN (MongoDB, Express, Angular, NodeJs) with the <a target="_blank" href="http://meanjs.org/">MeanJs sample app</a>
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
    * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)
    * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io
    * DevSecOps "stack" of Git, Jenkins, Nexus, Vagrant, Docker, Terraform, etc.
 
-With this repo, you can have any of these running in a matter of minutes.
-Being able to get started quickly means that you can switch quickly among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time. The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
+This repo enables you to get the above up and running in a matter of minutes.
+Being able to get started quickly means that you can get to the application.
+
+The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
 
 <a name="LimitedMemory"></a>
 
 ### Limited Memory
 
-If you're now thinking "a Mac can't run every one of these programs" you'd be right.
-A Mac has at most 16 GB of RAM.
+If you're now thinking "a Mac can't run every one of these programs" you're correct.
+A Mac has at most 16 GB of RAM. 
 
 This repo isn't designed to run every service, but to enable you to pick a few at a time,
 even on a MacBook Air with 4GB RAM and 128 GB hard disk.
 
 The advantage gained by this script is <strong>fast change</strong>.
 For example, setup to try the Atom editor, then remove it, and install something else.
+This script enables you to <strong>switch quickly</strong> among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time. 
 
-Scripts here are modular. Its default setting is to not install everything. It installs only what you tell it to by adding a keyword in the control file.
+Scripts here are <strong>modular</strong>. Its default setting is to not install everything. It installs only what you tell it to by adding a keyword in the control file.
 
 
 ### Run types
 
-"Genius bars" use this to quickly ready a <strong>new</strong> laptop for developers joining their organization. This helps developers skip wasted days installing (and doing it differently than colleagues).
+"Genius bars" providing support to laptop users make use of this to quickly ready a <strong>new</strong> laptop for developers joining their organization. This helps developers skip wasted days installing (and doing it differently than colleagues).
 
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.
 
 But you don't have to start from scratch. 
-This script helps with <strong>updates too</strong>. 
+
+This script also performs <strong>updates</strong> and <strong>uninstall</strong> too. 
 Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version. Remember the "openssl" update scare?
 
 This script upgrades all programs it knows about if you run the script with the RUNTYPE set to "upgrade". Use this script to install and configure what you need at the moment.
 
-Change the RUNTYPE to "remove" and run the script to clear up disk space.
+Change the RUNTYPE to "remove" and it clears up disk space.
+(But be careful that overuse can fragment your disk space)
 
 
 ### Servers to work offline
@@ -399,7 +405,7 @@ Dropbox, OneDrive, Google Drive, Amazon Drive
 
 * <a target="_blank" href="https://answers.splunk.com/answers/223311/how-to-install-splunk-622-on-a-mac-os-x.html">Splunk</a> log analysis SPLUNK_PORT="8000"
  http://docs.splunk.com/Documentation/SplunkLight
- 
+
 * Kafka streams
 
 

@@ -628,10 +628,11 @@ if [[ "${MAC_TOOLS,,}" == *"coreutils"* ]]; then
    ### GNU utilities for Mac:
    BREW_INSTALL "coreutils" "watch" "--version"  # /usr/local/Cellar/watch/3.3.14: 9 files, 80KB
    BREW_INSTALL "coreutils" "tree" "--version"
+   # BREW_INSTALL findutils
+   # BREW_INSTALL screen # for Terminal multiplexer with VT100/ANSI terminal emulation
 
    BREW_INSTALL "coreutils" "moreutils" "--version"
 
-   # BREW_INSTALL findutils
 else
       fancy_echo "MAC_TOOLS coreutils not specified." >>$LOGFILE
 fi
@@ -716,15 +717,29 @@ else
 fi
 
 
+if [[ "${MAC_TOOLS,,}" == *"bartender"* ]]; then
+   # manage icons at top launch bar
+   BREW_CASK_INSTALL "MAC_TOOLS" "bartender" "Bartender" "brew"
+else
+   fancy_echo "MAC_TOOLS bartender not specified." >>$LOGFILE
+fi
+
+
+if [[ "${MAC_TOOLS,,}" == *"charles"* ]]; then
+   # https://stackoverflow.com/questions/33322334/charles-proxy-response-unreadable
+   BREW_CASK_INSTALL "MAC_TOOLS" "charles" "Charles" "brew"
+else
+   fancy_echo "MAC_TOOLS charles not specified." >>$LOGFILE
+fi
+
+
 if [[ "${MAC_TOOLS,,}" == *"others"* ]]; then
       echo "Installing MAC_TOOLS=others ..."; 
 #   BREW_CASK_INSTALL monolingual # remove unneeded osx lang files https://ingmarstein.github.io/Monolingual/
 #   BREW_CASK_INSTALL vmware-fusion  # run Windows
 
-#   BREW_CASK_INSTALL charles  # proxy
 #   BREW_CASK_INSTALL xtrafinder
 #   BREW_CASK_INSTALL sizeup  # $12.99 resize windows http://www.irradiatedsoftware.com/sizeup/
-#   BREW_CASK_INSTALL bartender   # manage icons at top launch bar
 #   BREW_CASK_INSTALL duet
 #   BREW_CASK_INSTALL logitech-harmony  # multi-controller of TVs etc
 #   BREW_CASK_INSTALL cheatsheet  # hold ⌘ gives you all the shortcuts you can use with the active app.
