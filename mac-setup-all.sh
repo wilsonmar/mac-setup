@@ -202,7 +202,7 @@ brew analytics off  # see https://github.com/Homebrew/brew/blob/master/docs/Anal
 
 function BREW_INSTALL() {
 
-  # Example call:    BREW_INSTALL "GIT_CLIENTS" "git --something" "git --version"
+  # Example call:    BREW_INSTALL "GIT_CLIENTS" "git --something" "--version"
 
    local category="$1"    # sample: "DATA_TOOLS"
    local package_in="$2"  # sample: "moreutils --without-parallel"
@@ -217,7 +217,7 @@ function BREW_INSTALL() {
          fancy_echo "$category $package_info already removed ..."
       else
          fancy_echo "$category $package_info removing ..."
-         brew remove $package
+         brew uninstall --force $package
          rm -rf "/Applications/$appname.app"  #needed with uninstall
       fi
    else # other RUNTYPEs:
@@ -339,7 +339,7 @@ function BREW_CASK_INSTALL() {
 
 # TODO: Check for git command caz this is Mandatory:
 if [[ "${GIT_CLIENTS,,}" == *"git"* ]]; then
-   BREW_INSTALL "GIT_TOOLS" "git" "git --version"
+   BREW_INSTALL "GIT_TOOLS" "git" "--version"
     # git version 2.14.3 (Apple Git-98)
 fi
 
@@ -458,12 +458,14 @@ else
 
    echo "ELASTIC_PORT=$ELASTIC_PORT" >>$LOGFILE
    echo "GRAFANA_PORT=$GRAFANA_PORT" >>$LOGFILE
+   echo "HYGIEIA_PORT=$HYGIEIA_PORT" >>$LOGFILE
    echo "JEKYLL_PORT=$JEKYLL_PORT" >>$LOGFILE
    echo "JENKINS_PORT=$JENKINS_PORT" >>$LOGFILE
    echo "KIBANA_PORT=$KIBANA_PORT" >>$LOGFILE
    echo "MYSQL_PORT=$MYSQL_PORT" >>$LOGFILE
    echo "MEANJS_PORT=$MEANJS_PORT" >>$LOGFILE
    echo "MINIKUBE_PORT=$MINKUBE_PORT" >>$LOGFILE
+   echo "MONGODB_PORT=$MONGODB_PORT" >>$LOGFILE
    echo "NEO4J_PORT=$NEO4J_PORT" >>$LOGFILE
    echo "NEXUS_PORT=$NEXUS_PORT" >>$LOGFILE
    echo "NGINX_PORT=$NGINX_PORT" >>$LOGFILE
@@ -838,7 +840,7 @@ function PYTHON_INSTALL() {
      # See https://docs.brew.sh/Homebrew-and-Python
    # See https://docs.python-guide.org/en/latest/starting/install3/osx/
    
-   BREW_INSTALL "PYTHON_INSTALL" "python" "python --version"
+   BREW_INSTALL "PYTHON_INSTALL" "python" "--version"
       # Python 2.7.14
 
    if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
@@ -886,7 +888,7 @@ function PYTHON3_INSTALL() {
      # See https://docs.brew.sh/Homebrew-and-Python
    # See https://docs.python-guide.org/en/latest/starting/install3/osx/
    
-   BREW_INSTALL "PYTHON3_INSTALL" "python3" "python3 --version"
+   BREW_INSTALL "PYTHON3_INSTALL" "python3" "--version"
       # Python 3.6.4
    if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
       echo "$(pip3 --version)"            >>$LOGFILE
@@ -2334,7 +2336,7 @@ function MONGODB_INSTALL() {
    # https://resources.mongodb.com/getting-started-with-mongodb?jmp=nav&_ga=2.127956172.1397263068.1523600765-730663662.1523600765
    # Based on https://treehouse.github.io/installation-guides/mac/mongo-mac.html
 
-   BREW_INSTALL "MONGODB_INSTALL" "mongodb" "mongo --version"
+   BREW_INSTALL "MONGODB_INSTALL" "mongodb" "--version"
       # mongodb@3.0, mongodb@3.2, mongodb@3.4, mongodb@10.0, mongodb@10.1, mongodb-connector-odbc 
       # linked: /usr/local/Cellar/mongodb/3.6.3
    #fancy_echo "MONGODB_INSTALL: $(mongo --version | grep "MongoDB shell")" >>$LOGFILE 
@@ -2344,19 +2346,21 @@ function MONGODB_INSTALL() {
          fancy_echo "MONGODB_INSTALL: Post-install to $FILE ..."
          ln -sfv /usr/local/opt/mongodb/*.plist ~/Library/LaunchAgents
          # /Users/wilsonmar/Library/LaunchAgents/homebrew.mxcl.mongodb.plist -> /usr/local/opt/mongodb/homebrew.mxcl.mongodb.plist
-         launchctl load "$FILE"
       fi
+         launchctl load "$FILE"
 
       if [ ! -z "$MONGODB_DATA_PATH" ]; then  # default to ...
          MONGODB_DATA_PATH="/usr/local/var/mongodb" # where mysql & postgres db's are too.
       fi   
+
       if [ ! -d "$MONGODB_DATA_PATH" ]; then 
          fancy_echo "Creating MONGODB_DATA_PATH $MONGODB_DATA_PATH ..."
          mkdir -p "$MONGODB_DATA_PATH"  # not default ="/data/db"
       fi
+
       if [ ! -d "$MONGODB_DATA_PATH" ]; then 
          fancy_echo "Defining MongoDB permissions [Enter password] ..."
-         sudo chown -R `id -un` $MONGODB_DATA_PATH  # ls -l -R /media/craig/  
+         sudo chown -R $MAC_USERID $MONGODB_DATA_PATH  # ls -l -R /media/craig/  
       fi
 
    # http://groups.google.com/group/mongodb-user
@@ -3695,6 +3699,78 @@ else
 fi
 
 
+if [[ "${LOCALHOSTS,,}" == *"hygieia"* ]] || [[ "$TRYOUT_KEEP" == *"hygieia"* ]]; then
+   # https://wilsonmar.github.io/devops-dashboards/
+   # https://capitalone.github.io/Hygieia/setup.html
+   # NOTE: Hygieia was written in Java to store data in a MongoDB database.
+   # The Hygieia API server exposes REST APIs written in Spring Boot and mysema.querydsl.
+                  PROJ_PATH="$GITS_PATH/hygieia"
+   if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+      if [ ! -d "$PROJ_PATH" ]; then
+         echo "LOCALHOSTS $PROJ_PATH not there to remove ..."
+      else
+         echo "LOCALHOSTS removing $PROJ_PATH ..."
+         rm -rf "$PROJ_PATH"
+      fi
+   else
+      PID="$(ps x | grep -m1 '/mongodb' | grep -v "grep" | awk '{print $1}')"
+      if [ ! -z "$PID" ]; then
+         echo "LOCALHOSTS mongodb starting ..." >>$LOGFILE
+         TRYOUT_KEEP="mongodb"
+         mongod --dbpath $MONGODB_DATA_PATH --config /usr/local/etc/mongod.conf & 
+            # Start mongo shell on the same host machine as the mongod. 
+            # --host specifies the localhost address and port that the mongod listens on:
+         mongo --host 127.0.0.1:27017 &
+            # RESPONSE: configuration is unrestricted.
+      else
+         echo "LOCALHOSTS mongodb running on PID=$PID." >>$LOGFILE
+      fi
+
+echo "here at end $(pwd)"
+exit
+      if ! command_exists hygieia ; then # not downloaded:
+         pushd "$GITS_PATH"
+         if [ ! -d "hygieia" ]; then 
+            # Fork https://github.com/capitalone/Hygieia
+            echo "LOCALHOSTS hygieia cloning to $(pwd) ..." >>$LOGFILE
+            git clone https://github.com/capitalone/hygieia --depth=1
+            cd hygieia
+         else # already there, so update:
+            cd hygieia
+#            GITHUB_UPDATE
+         fi
+         echo "LOCALHOSTS mvn at $(pwd) ..." >>$LOGFILE
+         mvn clean install package -X -e
+            # RESPONSE: [INFO] Total time: 08:34 min
+         popd
+      fi
+      if [[ "${TRYOUT,,}" == *"hygieia"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+         echo "LOCALHOSTS hygieia mb starting on $MB_PORT in background ..."
+
+         # gulpfile.js
+         # pulling from SONAR_INSTALL ?
+
+         open "http://localhost:$HYGIEIA_PORT"
+            # https://capitalone.github.io/Hygieia/troubleshoot.html
+            # https://github.com/bbyars/hygieia/issues/167#issuecomment-385420564
+
+         if [[ "$TRYOUT_KEEP" != *"hygieia"* ]]; then
+            echo "LOCALHOSTS hygieia stopping ..." >>$LOGFILE
+            # ??? 
+         else
+            # pause 2 minutes to view app on browser
+            PID="$(ps x | grep -m1 '/mb' | grep -v "grep" | awk '{print $1}')"
+            echo "LOCALHOSTS hygieia running on PID=$PID." >>$LOGFILE
+         fi
+      fi
+   fi
+else
+   fancy_echo "LOCALHOSTS hygieia not specified." >>$LOGFILE
+fi
+
+exit #debugging
+
+
 ######### Use git-secret to manage secrets in a git repository:
 
 
@@ -4240,7 +4316,7 @@ fi
 
 if [[ "${CLOUD_TOOLS,,}" == *"cf"* ]]; then  # contains aws.
    # See https://docs.cloudfoundry.org/cf-cli/install-go-cli.html
-   # Tap so no BREW_INSTALL "CLOUD_TOOLS" "cf" "cf --version"
+   # Tap so no BREW_INSTALL "CLOUD_TOOLS" "cf" "--version"
    if ! command_exists cf ; then
       fancy_echo "Installing cf (Cloud Foundry CLI) ..."
       brew install cloudfoundry/tap/cf-cli
@@ -5208,7 +5284,7 @@ fi
 
 function GROOVY_INSTALL() {
     # See http://groovy-lang.org/install.html
-   BREW_INSTALL "GROOVY_INSTALL" "groovy" "groovy --version"
+   BREW_INSTALL "GROOVY_INSTALL" "groovy" "--version"
       # Groovy Version: 2.4.14 JVM: 1.8.0_162 Vendor: Oracle Corporation OS: Mac OS X
 
    BASHFILE_EXPORT "GROOVY_HOME" "/usr/local/opt/groovy/libexec"
