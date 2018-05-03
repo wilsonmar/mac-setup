@@ -1,11 +1,10 @@
 The tagline of this repo is "Automatically install and configure the <strong>most popular programs</strong> to work <strong>offline</strong> as a developer of several stacks on a Mac and in clouds."
 
-## Why this?
+## Why?
 
-Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And most webinars with demos just brag rather than teach skills. I wanted to be more helpful.
+Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And most webinar demos seem to brag rather than teach skills. To be more helpful, this repo <strong>talks with code</strong> by including manual documentation in the "configuration as code" movement for minimizing risk and ensuring consistency.
 
-This repo cuts through all the b.s. by <strong>talking with code</strong>. 
-This gives you a way to install, configure, and start a large set of programs running sample code for several "stacks":
+This repo gives you a way to install, configure, and start a large set of programs running sample code for several "stacks":
 
    * MEAN (MongoDB, Express, Angular, NodeJs) with the <a target="_blank" href="http://meanjs.org/">MeanJs sample app</a>
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
@@ -14,10 +13,14 @@ This gives you a way to install, configure, and start a large set of programs ru
    * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io
    * DevSecOps "stack" of Git, Jenkins, Nexus, Vagrant, Docker, Terraform, etc.
 
-This repo enables you to get the above up and running in a matter of minutes.
-Being able to get started quickly means that you can get to the application.
-
 The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
+
+This repo enables you to get the above up and running in a matter of minutes.
+Being able to get started quickly means that you can get working with the application rather than the ceremonies of installation.
+
+This repo brings to Mac users the "frequent, small, and reversible changes" for Agile.
+
+In this course, well-known DevOps practitioners Ernest Mueller and James Wickett provide an overview of the DevOps movement, focusing on the core value of CAMS (culture, automation, measurement, and sharing)
 
 <a name="LimitedMemory"></a>
 
@@ -35,6 +38,36 @@ This script enables you to <strong>switch quickly</strong> among sets of program
 
 Scripts here are <strong>modular</strong>. Its default setting is to not install everything. It installs only what you tell it to by adding a keyword in the control file.
 
+Keywords to trigger install are specified in category variables:
+
+<a name="Categories"></a>
+
+* MAC_TOOLS <a href="#Homebrew">Homebrew</a>, <a href="#mas">mas</a>, Ansible, 1Password, PowerShell, etc.
+* DATA_TOOLS MongoDB, postgresql, mysql, mariadb, graphql?
+* EDITORS Atom, Code, Eclipse, Emacs, IntelliJ, Macvim, STS, Sublime, Textmate, vim
+* BROWSERS chrome, firefox, brave, phantomjs
+* GIT_CLIENTS git, cola, github, gitkraken, smartgit, sourcetree, tower, magit, gitup
+* GIT_TOOLS hooks, tig, lfs, diff-so-fancy, grip, p4merge, git-flow, signing, hub
+
+* JAVA_TOOLS Maven, Ant, Gradle, TestNG, Cucumber, Junit4, Junit5, Yarn, dbunit, Mockito,
+          JMeter, GCViewer, JProfiler, etc.
+* PYTHON_TOOLS Virtualenv, jupyter, anaconda, ipython, numpy, scipy, matplotlib, pytest, robotframework, etc.
+* NODE_TOOLS Bower, gulp, gulp-cli, npm-check, jscs, less, jshint, eslint, webpack, etc.
+
+* LOCALHOSTS Apache (httpd, apachectl), iron
+* TEST_TOOLS selenium, sikulix, golum, dbunit?
+* CLOUD_TOOLS aws, gcp, azure, cf, heroku, docker, vagrant, terraform, serverless
+
+* MON_TOOLS (for monitoring) WireShark, Prometheus, others
+* VIZ_TOOLS (for visualization) Grafana, others (Prometheus, Kibana, Graphite)
+
+* COLAB_TOOLS (for collaboration) google-hangouts, hipchat, joinme, keybase, microsoft-lync, skype, slack, teamviewer, whatsapp, sococo, zoom
+* MEDIA_TOOLS Camtasia, Kindle (others: Snagit, etc.)
+<br /><br />
+
+Links for individual apps above take you to technical descriptions about that technology.
+
+The categories are run in dependency sequence. MAC_TOOLS are installed to provide underlying utilities, then DATA_TOOLS provides databases, then servers are installed, etc.
 
 ### Run types
 
@@ -83,36 +116,6 @@ you edit to specify which port numbers and <strong>keywords to specify apps</str
 
    The file's name is suffixed with ".sh" because it is a runnable script that establishes memory variables for a <a href="#MainScript">Setup script</a> to reference.
 
-Keywords to trigger install are specified in category variables:
-
-<a name="Categories"></a>
-
-* MAC_TOOLS <a href="#Homebrew">Homebrew</a>, <a href="#mas">mas</a>, Ansible, 1Password, PowerShell, etc.
-* DATA_TOOLS MongoDB, postgresql, mysql, mariadb, graphql?
-* EDITORS Atom, Code, Eclipse, Emacs, IntelliJ, Macvim, STS, Sublime, Textmate, vim
-* BROWSERS chrome, firefox, brave, phantomjs
-* GIT_CLIENTS git, cola, github, gitkraken, smartgit, sourcetree, tower, magit, gitup
-* GIT_TOOLS hooks, tig, lfs, diff-so-fancy, grip, p4merge, git-flow, signing, hub
-
-* JAVA_TOOLS Maven, Ant, Gradle, TestNG, Cucumber, Junit4, Junit5, Yarn, dbunit, Mockito,
-          JMeter, GCViewer, JProfiler, etc.
-* PYTHON_TOOLS Virtualenv, jupyter, anaconda, ipython, numpy, scipy, matplotlib, pytest, robotframework, etc.
-* NODE_TOOLS Bower, gulp, gulp-cli, npm-check, jscs, less, jshint, eslint, webpack, etc.
-
-* LOCALHOSTS Apache (httpd, apachectl), iron
-* TEST_TOOLS selenium, sikulix, golum, dbunit?
-* CLOUD_TOOLS aws, gcp, azure, cf, heroku, docker, vagrant, terraform, serverless
-
-* MON_TOOLS (for monitoring) WireShark, Prometheus, others
-* VIZ_TOOLS (for visualization) Grafana, others (Prometheus, Kibana, Graphite)
-
-* COLAB_TOOLS (for collaboration) google-hangouts, hipchat, joinme, keybase, microsoft-lync, skype, slack, teamviewer, whatsapp, sococo, zoom
-* MEDIA_TOOLS Camtasia, Kindle (others: Snagit, etc.)
-<br /><br />
-
-Links for individual apps above take you to technical descriptions about that technology.
-
-The categories are run in dependency sequence. MAC_TOOLS are installed to provide underlying utilities, then DATA_TOOLS provides databases, then servers are installed, etc.
 
 <a name="Homebrew"></a>
 

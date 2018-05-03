@@ -211,22 +211,23 @@ function BREW_INSTALL() {
    prefix="$category BREW_INSTALL"
    package="$(echo $package_in | head -n1 | awk '{print $1;}')"
    RESPONSE=$(brew info $package)
+   package_info="$(brew cask info $package | grep "$package:")"
    if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
       if [[ "$RESPONSE" == *"No available formula"* ]] || [[ $RESPONSE == *"Not installed"* ]]; then
-         fancy_echo "$category $package already removed ..."
+         fancy_echo "$category $package_info already removed ..."
       else
-         fancy_echo "$category $package removing ..."
+         fancy_echo "$category $package_info removing ..."
          brew remove $package
          rm -rf "/Applications/$appname.app"  #needed with uninstall
       fi
    else # other RUNTYPEs:
       fancy_echo "$prefix brew info $RESPONSE"
       if [[ $RESPONSE == *"No available formula"* ]] || [[ $RESPONSE == *"Not installed"* ]]; then
-         fancy_echo "$category $package installing ..."
+         fancy_echo "$category $package_info installing ..."
          brew install "$package_in"
       else
          if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-            fancy_echo "$category $package upgrading ..."
+            fancy_echo "$category $package_info upgrading ..."
             brew upgrade $package
          fi
       fi
@@ -256,7 +257,7 @@ function BREW_INSTALL() {
          fi
 
          if [[ "$category" == "LOCALHOSTS" ]] ||  [[ "$category" == "CLOUD_TOOLS" ]]; then
-            echo "$prefix $package ..."
+            echo "$prefix $package_info ..."
          elif [[ "${TRYOUT,,}" == *"$package"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
             echo "$prefix $package opening ..."
             "$package" &
@@ -276,12 +277,13 @@ function BREW_CASK_INSTALL() {
    prefix="$category BREW_INSTALL $RUNTYPE"
    package=$(echo "$package_in" | head -n1 | awk '{print $1;}')
    RESPONSE=$(brew cask info $package)
+   package_info="$(brew cask info $package | grep "$package:")"
    if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
       # TODO: Confirm response_file contents if removed:
       if [[ "$RESPONSE" == *"Not installed"* ]] || [[ "$RESPONSE" == *"No available formula"* ]]; then
-         fancy_echo "$prefix $package was already removed ..."
+         fancy_echo "$prefix $package_info already removed ..."
       else
-         fancy_echo "$category $package being removed ..."
+         fancy_echo "$category $package_info being removed ..."
          brew remove "$package"
             # Error: No such keg
       fi
@@ -296,12 +298,12 @@ function BREW_CASK_INSTALL() {
    else # other RUNTYPEs:
       if [[ "$RESPONSE" == *"No available formula"* ]] || [[ "$RESPONSE" == *"Not installed"* ]]; then
       #if grep -q "Not installed" "response_file" ; then # for update too:
-         fancy_echo "$category $package installing ..."
+         fancy_echo "$category $package_info installing ..."
          brew cask install --appdir="/Applications" "$package_in"
       else # installed already:
          if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
             # $package -v >>$LOGFILE
-            fancy_echo "$category $package upgrading ..."
+            fancy_echo "$category $package_info upgrading ..."
             brew cask upgrade $package
          fi
       fi
@@ -321,11 +323,14 @@ function BREW_CASK_INSTALL() {
       fi
    
       if [[ "${TRYOUT,,}" == *"$package"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-         echo "$prefix $package opening ..."
-         open -a "/Applications/$appname.app" &
+         if command -v $prefix >/dev/null 2>/dev/null; then
+            echo "$prefix $package opening ..."
+            open -a "/Applications/$appname.app" &
+         else
+            echo "$prefix $package not available!"
+         fi
       fi
    fi
-   fancy_echo "$prefix $(brew cask info $package | grep "$package:")" >>$LOGFILE
 }
 
 
@@ -949,6 +954,7 @@ function JAVA_INSTALL() {
       source $BASHFILE
    fi
    # TODO: https://github.com/alexkaratarakis/gitattributes/blob/master/Java.gitattributes
+   # TODO: More plugins from https://jmeter-plugins.org/wiki/Start/
 }
 
 
@@ -3306,7 +3312,7 @@ DOTNET_CASK_INSTALL() {
       # TODO: Create dotnet_proj
       DOTNET_PROJ="$GITS_PATH/dotnet_proj"
       curl -L "$URL" -O   "$DOTNET_PROJ/$PKG" 2>/dev/null # 169.9 MB received.
-      echo "$SUDO_PASS" | sudo installer -store -verbose -verboseR -allowUntrusted -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
+      echo "y" | sudo installer -store -verbose -verboseR -allowUntrusted -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
    fi
 }
 
@@ -3631,6 +3637,52 @@ if [[ "${LOCALHOSTS,,}" == *"tomcat"* ]] || [[ "$TRYOUT_KEEP" == *"tomcat"* ]]; 
    fi
 else
    fancy_echo "LOCALHOSTS tomcat not specified." >>$LOGFILE
+fi
+
+
+if [[ "${LOCALHOSTS,,}" == *"mountebank"* ]]; then  # contains mountebank.
+                  PROJ_PATH="$GITS_PATH/mountebank"
+   if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+      if [ ! -d "$PROJ_PATH" ]; then
+         echo "LOCALHOSTS already removed ..."
+      else
+         echo "LOCALHOSTS removing $PROJ_PATH ..."
+         rm -rf "$PROJ_PATH"
+      fi
+   else    
+      if ! command_exists mb ; then # not downloaded:
+         if [ ! -d "$PROJ_PATH" ]; then # not downloaded:
+            echo "LOCALHOSTS mountebank PROJ_PATH=$PROJ_PATH ..."
+            mkdir   $PROJ_PATH
+         fi
+
+         # TODO: Obtain pkg URL from http://www.mbtest.org/docs/install
+         URL="https://s3.amazonaws.com/mountebank/v1.14/mountebank-v1.14.0.pkg"
+         PKG="mountebank-v1.14.0.pkg"
+
+         if [ ! -f"$PROJ_PATH/$PKG" ]; then # not downloaded:
+            echo "LOCALHOSTS mountebank downloading $URL ..."
+            # curl -L "$URL" -O "$PROJ_PATH/$PKG" 1>/dev/null 2>/dev/null
+         fi
+
+         fancy_echo "LOCALHOSTS mountebank installing/upgrading ..." >>$LOGFILE
+         sudo installer -allowUntrusted -pkg "$PROJ_PATH/$PKG" -target /
+            # -store # -verboseR # target is a device, not a path.
+      else
+         echo "LOCALHOSTS mountebank mb starting on $MB_PORT in background ..."
+         # http://www.mbtest.org/docs/commandLine
+         mb --port "$MB_PORT" --nologfile &
+         # RESPONSE: info: [mb:2525] mountebank v1.14.0 now taking orders - point your browser to http://localhost:2525 for help
+         open "http://localhost:$MB_PORT"
+         # https://github.com/bbyars/mountebank/issues/167#issuecomment-385420564
+         PID="$(ps x | grep -m1 '/mb' | grep -v "grep" | awk '{print $1}')"
+            # 72655 ttys000    0:00.01 sh /usr/local/bin/mb --port 2525 --nologfile
+            # 72659 ttys000    0:00.44 /usr/local/mountebank-v1.14.0-darwin-x64/node-v8.9.4-darwin-x64/bin/node /usr/local/mountebank-v1.14.0-darwin-x64/mountebank/bin/mb --port 2525 --nologfile
+         echo "LOCALHOSTS mountebank running on PID=$PID." >>$LOGFILE
+      fi
+   fi
+else
+   fancy_echo "LOCALHOSTS mountebank not specified." >>$LOGFILE
 fi
 
 
@@ -4715,6 +4767,7 @@ fi
 
 ######### VIZ_TOOLS ::
 
+fancy_echo "VIZ_TOOLS=$VIZ_TOOLS" >>$LOGFILE
 
 if [[ "${VIZ_TOOLS,,}" == *"grafana"* ]] || [[ "$TRYOUT_KEEP" == *"grafana"* ]]; then
       # http://docs.grafana.org/installation/mac/
@@ -4761,6 +4814,25 @@ else
 fi
 
 
+if [[ "${VIZ_TOOLS,,}" == *"tableau"* ]]; then 
+   BREW_CASK_INSTALL "VIZ_TOOLS" "tableau" "Tableau" "brew"
+else
+   fancy_echo "VIZ_TOOLS tableau not specified." >>$LOGFILE
+fi
+
+if [[ "${VIZ_TOOLS,,}" == *"tableau-public"* ]]; then 
+   BREW_CASK_INSTALL "VIZ_TOOLS" "tableau-public" "Tableau-public" "brew"
+else
+   fancy_echo "VIZ_TOOLS tableau-public not specified." >>$LOGFILE
+fi
+
+if [[ "${VIZ_TOOLS,,}" == *"tableau-viewer"* ]]; then 
+   BREW_CASK_INSTALL "VIZ_TOOLS" "tableau-viewer" "Tableau-viewer" "brew"
+else
+   fancy_echo "VIZ_TOOLS tableau-viewer not specified." >>$LOGFILE
+fi
+
+
 if [[ "${VIZ_TOOLS,,}" == *"others"* ]]; then
    fancy_echo "VIZ_TOOLS=$VIZ_TOOLS" >>$LOGFILE
 fi
@@ -4783,10 +4855,10 @@ else
    fancy_echo "COLAB_TOOLS discord not specified." >>$LOGFILE
 fi
 
-if [[ "${COLAB_TOOLS,,}" == *"hangouts"* ]]; then
+if [[ "${COLAB_TOOLS,,}" == *"google-hangouts"* ]]; then
    BREW_CASK_INSTALL "COLAB_TOOLS" "google-hangouts" "Google Hangouts" "brew"
 else
-   fancy_echo "COLAB_TOOLS hangouts not specified." >>$LOGFILE
+   fancy_echo "COLAB_TOOLS google-hangouts not specified." >>$LOGFILE
 fi
 
 if [[ "${COLAB_TOOLS,,}" == *"hipchat"* ]]; then 
@@ -4844,6 +4916,12 @@ else
    fancy_echo "COLAB_TOOLS teamviewer not specified." >>$LOGFILE
 fi
 
+if [[ "${COLAB_TOOLS,,}" == *"telegram"* ]]; then 
+   BREW_CASK_INSTALL "COLAB_TOOLS" "telegram" "Telegram" "brew"
+else
+   fancy_echo "COLAB_TOOLS telegram not specified." >>$LOGFILE
+fi
+
 if [[ "${COLAB_TOOLS,,}" == *"whatsapp"* ]]; then 
    BREW_CASK_INSTALL "COLAB_TOOLS" "whatsapp" "Whatsapp" "brew"
 else
@@ -4856,7 +4934,8 @@ if [[ "${COLAB_TOOLS,,}" == *"zoom"* ]]; then
 else
    fancy_echo "COLAB_TOOLS zoom not specified." >>$LOGFILE
 fi
-    #https://zapier.com/blog/disable-mic-webcam-notifications/
+
+#TODO: https://zapier.com/blog/disable-mic-webcam-notifications/
 
 
 ######### MEDIA TOOLS:
