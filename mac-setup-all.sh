@@ -2936,7 +2936,6 @@ fi
 #   npm install -g tsd
 #   npm install -g typescript
 #   npm install -g jira-client  # https://www.npmjs.com/package/jira-client
-   # montebank security sample app
    # Also: Ember.js, Marionette.js
    fi
 
@@ -3640,11 +3639,12 @@ else
 fi
 
 
-if [[ "${LOCALHOSTS,,}" == *"mountebank"* ]]; then  # contains mountebank.
-                  PROJ_PATH="$GITS_PATH/mountebank"
+if [[ "${LOCALHOSTS,,}" == *"mountebank"* ]] || [[ "$TRYOUT_KEEP" == *"mountebank"* ]]; then
+   # https://github.com/bbyars/mountebank/
+                  PROJ_PATH="/usr/local/bin/mountebank"
    if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
       if [ ! -d "$PROJ_PATH" ]; then
-         echo "LOCALHOSTS already removed ..."
+         echo "LOCALHOSTS $PROJ_PATH not there to remove ..."
       else
          echo "LOCALHOSTS removing $PROJ_PATH ..."
          rm -rf "$PROJ_PATH"
@@ -3668,17 +3668,26 @@ if [[ "${LOCALHOSTS,,}" == *"mountebank"* ]]; then  # contains mountebank.
          fancy_echo "LOCALHOSTS mountebank installing/upgrading ..." >>$LOGFILE
          sudo installer -allowUntrusted -pkg "$PROJ_PATH/$PKG" -target /
             # -store # -verboseR # target is a device, not a path.
-      else
+      fi
+      if [[ "${TRYOUT,,}" == *"mountebank"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
          echo "LOCALHOSTS mountebank mb starting on $MB_PORT in background ..."
          # http://www.mbtest.org/docs/commandLine
          mb --port "$MB_PORT" --nologfile &
          # RESPONSE: info: [mb:2525] mountebank v1.14.0 now taking orders - point your browser to http://localhost:2525 for help
          open "http://localhost:$MB_PORT"
          # https://github.com/bbyars/mountebank/issues/167#issuecomment-385420564
-         PID="$(ps x | grep -m1 '/mb' | grep -v "grep" | awk '{print $1}')"
+
+         if [[ "$TRYOUT_KEEP" != *"mountebank"* ]]; then
+            echo "LOCALHOSTS mountebank stopping ..." >>$LOGFILE
+            mb stop # --pidfile ~/test/mb.pid
+               # RESPONSE: info: [mb:2525] Adios - see you soon?
+         else
+            # pause 2 minutes to view app on browser
+            PID="$(ps x | grep -m1 '/mb' | grep -v "grep" | awk '{print $1}')"
             # 72655 ttys000    0:00.01 sh /usr/local/bin/mb --port 2525 --nologfile
             # 72659 ttys000    0:00.44 /usr/local/mountebank-v1.14.0-darwin-x64/node-v8.9.4-darwin-x64/bin/node /usr/local/mountebank-v1.14.0-darwin-x64/mountebank/bin/mb --port 2525 --nologfile
-         echo "LOCALHOSTS mountebank running on PID=$PID." >>$LOGFILE
+            echo "LOCALHOSTS mountebank running on PID=$PID." >>$LOGFILE
+         fi
       fi
    fi
 else
