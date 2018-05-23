@@ -161,11 +161,6 @@ fancy_echo "$(bash --version | grep 'bash')" >>$LOGFILE
 # TODO: Extract 4 from $BASH_VERSION
       # GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
 
-## or, if running Bash 4.1+
-#BREW_INSTALL bash-completion@2
-## If running Bash 3.2 included with macOS
-#BREW_INSTALL bash-completion
-
 
 ###### Install homebrew using whatever Ruby is installed:
 
@@ -198,7 +193,7 @@ fi
       # Homebrew 1.5.12
       # Homebrew/homebrew-core (git revision 9a81e; last commit 2018-03-22)
 
-brew analytics off  # see https://github.com/Homebrew/brew/blob/master/docs/Analytics.md
+   brew analytics off  # see https://github.com/Homebrew/brew/blob/master/docs/Analytics.md
 
 function BREW_INSTALL() {
 
@@ -265,6 +260,12 @@ function BREW_INSTALL() {
       fi
    fi
 }
+
+## or, if running Bash 4.1+
+#BREW_INSTALL bash-completion@2
+## If running Bash 3.2 included with macOS
+#BREW_INSTALL bash-completion
+
 
 function BREW_CASK_INSTALL() {
 
@@ -456,6 +457,7 @@ else
    echo "VIZ_TOOLS=$VIZ_TOOLS" >>$LOGFILE
    echo "LOCALHOSTS=$LOCALHOSTS" >>$LOGFILE
 
+   echo "CUCUMBER_PORT=$CUCUMBER_PORT" >>$LOGFILE
    echo "ELASTIC_PORT=$ELASTIC_PORT" >>$LOGFILE
    echo "GRAFANA_PORT=$GRAFANA_PORT" >>$LOGFILE
    echo "HYGIEIA_PORT=$HYGIEIA_PORT" >>$LOGFILE
@@ -641,7 +643,7 @@ if [[ "${MAC_TOOLS,,}" == *"coreutils"* ]]; then
    BREW_INSTALL "coreutils" "moreutils" "--version"
 
 else
-      fancy_echo "MAC_TOOLS coreutils not specified." >>$LOGFILE
+   fancy_echo "MAC_TOOLS coreutils not specified." >>$LOGFILE
 fi
 
 
@@ -652,7 +654,7 @@ if [[ "${MAC_TOOLS,,}" == *"iterm2"* ]]; then
    # http://sourabhbajaj.com/mac-setup/iTerm/README.html
    # TODO: https://github.com/mbadolato/iTerm2-Color-Schemes/tree/master/schemes
 else
-      fancy_echo "MAC_TOOLS iterm2 not specified." >>$LOGFILE
+   fancy_echo "MAC_TOOLS iterm2 not specified." >>$LOGFILE
 fi
 
 
@@ -667,9 +669,18 @@ if [[ "${MAC_TOOLS,,}" == *"mas"* ]]; then
       fi
    fi
 else
-      fancy_echo "MAC_TOOLS mas not specified." >>$LOGFILE
+   fancy_echo "MAC_TOOLS mas not specified." >>$LOGFILE
 fi
 
+
+if [[ "${MAC_TOOLS,,}" == *"paragon-ntfs"* ]]; then
+   # https://www.paragon-software.com/home/ntfs-mac/#
+   # See http://wilsonmar.github.io/mac-diskspace/
+   BREW_CASK_INSTALL "MAC_TOOLS" "paragon-ntfs" "Paragon" "-v"
+   # Restart is necessary.
+else
+   fancy_echo "MAC_TOOLS paragon-ntfs not specified." >>$LOGFILE
+fi
 
 if [[ "${MAC_TOOLS,,}" == *"ansible"* ]]; then
    # To install programs. See http://wilsonmar.github.io/ansible/
@@ -677,7 +688,6 @@ if [[ "${MAC_TOOLS,,}" == *"ansible"* ]]; then
 else
    fancy_echo "MAC_TOOLS ansible not specified." >>$LOGFILE
 fi
-
 
 if [[ "${MAC_TOOLS,,}" == *"1Password"* ]]; then
    # See https://1password.com/ to store secrets on laptops securely.
@@ -709,6 +719,7 @@ fi
 
 if [[ "${MAC_TOOLS,,}" == *"alfred"* ]]; then
    # https://www.alfredapp.com/ multi-function utility
+   # https://github.com/nikitavoloboev/my-mac-os for Alfred workflows
    # TODO: Get version 3  $(ls -dt /Applications/Alfred*|head -1)
    BREW_CASK_INSTALL "MAC_TOOLS" "alfred" "Alfred 3" "brew"
    # Buy the $19 https://www.alfredapp.com/powerpack/
@@ -734,9 +745,18 @@ fi
 
 if [[ "${MAC_TOOLS,,}" == *"charles"* ]]; then
    # https://stackoverflow.com/questions/33322334/charles-proxy-response-unreadable
+   # https://www.bonusbits.com/wiki/HowTo:Setup_Charles_Proxy_on_Mac
    BREW_CASK_INSTALL "MAC_TOOLS" "charles" "Charles" "brew"
 else
    fancy_echo "MAC_TOOLS charles not specified." >>$LOGFILE
+fi
+
+
+if [[ "${MAC_TOOLS,,}" == *"carthage"* ]]; then
+   # Package manager for Apple Mac Coacoa
+   BREW_INSTALL "MAC_TOOLS" "carthage" "brew"
+else
+   fancy_echo "MAC_TOOLS carthage not specified." >>$LOGFILE
 fi
 
 
@@ -872,11 +892,12 @@ function PYTHON_INSTALL() {
       #BREW_INSTALLfreeimage
       #BREW_INSTALLgmp
       #fancy_echo "Installing other popular Python helper modules ..."
+      #pip install ipython[all]
       #pip install jupyter
+      # https://zeppelin.apache.org/ notebooks
       #pip install numpy
       #pip install scipy
       #pip install matplotlib
-      #pip install ipython[all]	  
   fi
    # There is also a Enthought Python Distribution -- www.enthought.com
 }
@@ -996,7 +1017,7 @@ function NODE_INSTALL() {
    BASHFILE_EXPORT "NVM_DIR" "$HOME/.nvm"
    if [ ! -d "$HOME/.nvm" ]; then
       fancy_echo "Making $HOME/.nvm folder ..."
-      mkdir $HOME/.nvm
+      mkdir "$HOME/.nvm"
    fi
 
    BREW_INSTALL "NODE_INSTALL" "nvm" ""  # node version manager
@@ -1082,7 +1103,7 @@ if [[ "${TEST_TOOLS,,}" == *"pact-go"* ]] || [[ "$TRYOUT_KEEP" == *"pact-go"* ]]
       echo "TEST_TOOLS pact-go $PACT_HOME re-created."
    fi
    
-   PACT_VERSION="v0.0.12" # TODO: Extract from webpage.
+   PACT_VERSION="v0.0.12" # Extract from webpage:
    PACT_VERSION="pact-version.html"; \
    wget -q "https://github.com/pact-foundation/pact-go/releases" -O $outputFile; \
    cat "$outputFile" | sed -n -e '/<\/header>/,/<\/footer>/ p' | grep "Last stable release:" | sed 's/<\/\?[^>]\+>//g' | awk -F' ' '{ print $4 }'; rm -f $outputFile
@@ -1230,6 +1251,10 @@ else
 fi
 
 
+# https://www.protractortest.org/#/
+
+
+
 ######### Text editors:
 
 
@@ -1296,19 +1321,38 @@ if [[ "${EDITORS,,}" == *"sublime"* ]]; then
    BREW_CASK_INSTALL "EDITORS" "sublime-text" "Sublime Text" "brew"
       # Sublime Text Build 3143
 
+   # one time:
+   #sudo ln -s /Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl /usr/local/bin/subl
+
          fancy_echo "Adding PATH to SublimeText in $BASHFILE..."
+         # Per https://www.sublimetext.com/docs/3/osx_command_line.html
+         # ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ~/bin/subl
          echo "" >>"$BASHFILE"
          echo "export PATH=\"\$PATH:/usr/local/bin/subl\"" >>"$BASHFILE"
+
+      if ! grep -q "export EDITOR=" "$BASHFILE" ; then    
+         fancy_echo "Adding EDITOR to SublimeText in $BASHFILE..."
+         echo "export EDITOR='subl -w'" >>"$BASHFILE"
+      fi
          source "$BASHFILE"
- 
+
       # Only install the following during initial install:
       # TODO: Configure Sublime for spell checker, etc. https://github.com/SublimeLinter/SublimeLinter-shellcheck
       # install Package Control see https://gist.github.com/patriciogonzalezvivo/77da993b14a48753efda
 
+      # per https://www.sublimetext.com/docs/3/settings.html
+      # sed "Packages/User/Preferences.sublime-settings"
+
+      # TODO: Install https://github.com/jisaacks/GitGutter
+      # to show 
+
    if [[ "${TRYOUT,,}" == *"sublime"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       fancy_echo "EDITORS sublime-text starting ..."
-      open -a "/Applications/Sublime Text.app" &
-      # subl &
+      if ! command_exists subl ; then
+         subl &
+      else
+         open -a "/Applications/Sublime Text.app" &
+      fi
    fi
 else
    fancy_echo "EDITORS sublime not specified." >>$LOGFILE
@@ -1331,6 +1375,8 @@ if [[ "${EDITORS,,}" == *"code"* ]]; then
       #open "/Applications/Visual Studio Code.app"
       #fancy_echo "Starting code in background ..."
       #code &
+
+      echo "export EDITOR='code -w'" >>"$BASHFILE"
 
       # $HOME/Library/Application Support/Code
       if [[ "${TRYOUT,,}" == *"code"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
@@ -1991,7 +2037,7 @@ BASHFILE_EXPORT "CLICOLOR" "1"
 # See video on this: https://www.youtube.com/watch?v=VI07ouVS5FE
 # If git-completion.bash file is already in home folder, download it:
 FILE=.git-completion.bash
-FILEPATH=~/.git-completion.bash
+FILEPATH="$HOME/.git-completion.bash"
 # If git-completion.bash file is mentioned in  ~/.bash_profile, add it:
 if [ -f $FILEPATH ]; then 
    fancy_echo "List file to confirm size:" >>$LOGFILE
@@ -2238,45 +2284,46 @@ function POSTGRESQL_INSTALL() {
    # https://www.postgresql.org/download/macosx/  from EnterpriseDB
    # http://formulae.brew.sh/formula/postgresql
    BREW_INSTALL "POSTGRESQL_INSTALL" "postgresql" "pg-ctl --version"
-      if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
-         rm -rf /usr/local/var/postgres
-         rm -rf /usr/local/share/postgresql
-         exit
-      fi
-   # fancy_echo "$(brew info postgresql | grep "postgresql:")" >>$LOGFILE 
+   if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+      rm -rf /usr/local/var/postgres
+      rm -rf /usr/local/share/postgresql
+   else
+      # fancy_echo "$(brew info postgresql | grep "postgresql:")" >>$LOGFILE 
       # postgresql: stable 10.3 (bottled), HEAD
-   fancy_echo "DATA_TOOLS postgresql $(pg_ctl --version)" >>$LOGFILE  # pg_ctl (PostgreSQL) 10.3
-   # psql --version  # psql (PostgreSQL) 10.3
+      fancy_echo "DATA_TOOLS postgresql $(pg_ctl --version)" >>$LOGFILE  # pg_ctl (PostgreSQL) 10.3
+      # psql --version  # psql (PostgreSQL) 10.3
 
-   # symlinked from /usr/local/Cellar/postgresql/10.3/share/postgresql/postgresql.conf.sample
-   FOLDER="/usr/local/var/postgres/" # (/etc/postgresql/9.3/main on Linux)
+      # symlinked from /usr/local/Cellar/postgresql/10.3/share/postgresql/postgresql.conf.sample
+      FOLDER="/usr/local/var/postgres/" # (/etc/postgresql/9.3/main on Linux)
          # /usr/local/share/postgresql/
          # /var/lib/postgresql/data/postgresql.conf within Docker
 
-   if [ ! -d "$FOLDER" ]; then
-      fancy_echo "POSTGRESQL_INSTALL: initdb (directory structure) ..."
-      initdb $FOLDER
-   fi
+      if [ ! -d "$FOLDER" ]; then
+         fancy_echo "POSTGRESQL_INSTALL: initdb (directory structure) ..."
+         initdb $FOLDER
+      fi
 
-   # Do this to avoid server reboot:
-   # See https://stackoverflow.com/questions/38466190/cant-connect-to-postgresql-on-port-5432
+      # Do this to avoid server reboot:
+      # See https://stackoverflow.com/questions/38466190/cant-connect-to-postgresql-on-port-5432
       if [ ! -z "$POSTGRESQL_PORT" ]; then # fall-back if not set in secrets.sh:
          POSTGRESQL_PORT="5432"  # default
       fi
-   if [ ! -f "$FOLDER/postgresql.conf" ]; then
-      fancy_echo "POSTGRESQL_INSTALL: postgresql.conf in $FOLDER ..."
-      # cp "$FOLDER/postgresql.conf.sample"  "$FOLDER/postgresql.conf"
-      sed -i "s/#listen_addresses = 'localhost'/listen_addresses = 'localhost'/" "$FOLDER/postgresql.conf"
-      sed -i "s/#port = 5432/port = $POSTGRESQL_PORT/g" "$FOLDER/postgresql.conf"
-   fi
 
-#   if [ ! -f "$FOLDER/pg_hba.conf" ]; then
-#      fancy_echo "POSTGRESQL_INSTALL: pg_hba.conf ..." # Client Authentication Configuration
-      # cp "$FOLDER/pg_hba.conf.sample"  "$FOLDER/pg_hba.conf"
-      # TODO: edit pg_hba.conf from port 32
-#   fi
+      if [ ! -f "$FOLDER/postgresql.conf" ]; then
+         fancy_echo "POSTGRESQL_INSTALL: postgresql.conf in $FOLDER ..."
+         # cp "$FOLDER/postgresql.conf.sample"  "$FOLDER/postgresql.conf"
+         sed -i "s/#listen_addresses = 'localhost'/listen_addresses = 'localhost'/" "$FOLDER/postgresql.conf"
+         sed -i "s/#port = 5432/port = $POSTGRESQL_PORT/g" "$FOLDER/postgresql.conf"
+      fi
+   
+      #   if [ ! -f "$FOLDER/pg_hba.conf" ]; then
+      #      fancy_echo "POSTGRESQL_INSTALL: pg_hba.conf ..." # Client Authentication Configuration
+            # cp "$FOLDER/pg_hba.conf.sample"  "$FOLDER/pg_hba.conf"
+           # TODO: edit pg_hba.conf from port 32
+      #   fi
 
       # createdb  # https://www.postgresql.org/docs/9.5/static/app-createdb.html
+   fi
 }
 if [[ "${DATA_TOOLS,,}" == *"postgresql"* ]] || [[ "$TRYOUT_KEEP" == *"postgresql"* ]]; then
    POSTGRESQL_INSTALL  # using POSTGRESQL_PORT from secrets.sh
@@ -2381,8 +2428,9 @@ if [[ "${DATA_TOOLS,,}" == *"mongodb"* ]]; then
          fancy_echo "DATA_TOOLS: mongodb starting in background ..."
          mongod --dbpath $MONGODB_DATA_PATH --config /usr/local/etc/mongod.conf & 
             # response: pid=6295 port=27017 dbpath=/data/db 
-      fi
-         #echo "DATA_TOOLS: mongodb mongo interactive  ..." >>$LOGFILE
+            # --dbpath NOT /usr/local/opt/mongodb/bin/mongod 
+       fi
+         echo "DATA_TOOLS: mongodb mongo interactive  ..." >>$LOGFILE
          mongo >>$LOGFILE <<ANSWERS
           show dbs
           quit()
@@ -2651,8 +2699,10 @@ if [[ "${DATA_TOOLS,,}" == *"others"* ]]; then
 #  BREW_INSTALL "DATA_TOOLS" "influxdb" "brew" # 1.5.1, influxd -config /usr/local/etc/influxdb.conf
 
 #  BREW_CASK_INSTALL "DATA_TOOLS" "google-drive" "Google Drive" "brew"
+          # https://drive.google.com/drive/u/0/folders/
 #  BREW_CASK_INSTALL "DATA_TOOLS" "dropbox" "Dropbox" "brew"
 #  BREW_CASK_INSTALL "DATA_TOOLS" "amazon-drive" "Amazon Drive" "brew"
+          # https://www.amazon.com/clouddrive/all
 #  BREW_CASK_INSTALL "DATA_TOOLS" "evernote" "Evernote" "brew"
 
 #  BREW_CASK_INSTALL "DATA_TOOLS" "tableau" "Tableau" "brew"
@@ -2769,6 +2819,21 @@ fi
    # NOTE: NODE_TOOLS = npm (node package manager) installed within node.
    # https://colorlib.com/wp/npm-packages-node-js/
 
+if [[ "${NODE_TOOLS,,}" == *"appium"* ]]; then
+   NODE_INSTALL
+   
+   npm install -g appium
+
+   # Initialize WebDriverAgent project:
+   pushd /usr/local/lib/node_modules/appium/node_modules/appium-xcuitest-driver/WebDriverAgent
+   mkdir -p Resources/WebDriverAgent.bundle
+   sh ./Scripts/bootstrap.sh -d
+   popd
+
+   # TODO: Finish this per http://docs.katalon.com/display/KD/Mobile+on+macOS
+else
+   fancy_echo "NODE_TOOLS appium not specified." >>$LOGFILE
+fi
 
 if [[ "${NODE_TOOLS,,}" == *"sfdx"* ]]; then
    NODE_INSTALL
@@ -2794,11 +2859,11 @@ if [[ "${NODE_TOOLS,,}" == *"sfdx"* ]]; then
          pushd "$GITS_PATH"
          if [ ! -d "sfdx-simple" ]; then 
             git clone https://github.com/forcedotcom/sfdx-simple --depth=1
+            cd sfdx-simple
          else # already there, so update:
             cd sfdx-simple
             GITHUB_UPDATE
          fi
-         cd sfdx-simple
          echo "RUBY_TOOLS sfdx-simple at $(pwd) after clone" >>$LOGFILE
       
          #If you already have an authorized Dev Hub, set it as the default:
@@ -3033,19 +3098,24 @@ fi
 
 ######### JAVA_TOOLS:
 
-
+function MAVEN_INSTALL() {
+   BREW_INSTALL "JAVA_TOOLS" "maven" "brew"  
+}
 if [[ "$JAVA_TOOLS" == *"maven"* ]]; then
+   MAVEN_INSTALL
     # Associated: Maven (mvn) in /usr/local/opt/maven/bin/mvn
-   BREW_INSTALL "JAVA_TOOLS" "maven" "brew"
    # yarn is installed by adding it within Maven or Gradle pom.xml
 else
    fancy_echo "JAVA_TOOLS maven not specified." >>$LOGFILE
 fi
 
+function GRADLE_INSTALL() {
+   BREW_INSTALL "JAVA_TOOLS" "gradle" "brew"
+}
 if [[ "$JAVA_TOOLS" == *"gradle"* ]]; then
+   GRADLE_INSTALL
     # no xml angle brackets! Uses Groovy DSL
     # See http://www.gradle.org/docs/1.6/userguide/userguide.html
-   BREW_INSTALL "JAVA_TOOLS" "gradle" ""
       # 4.7
    # http://www.gradle.org/docs/1.6/userguide/plugins.html
    # http://www.gradle.org/docs/1.6/userguide/gradle_command_line.html
@@ -3056,8 +3126,11 @@ else
    fancy_echo "JAVA_TOOLS gradle not specified." >>$LOGFILE
 fi
 
+function ANT_INSTALL() {
+   BREW_INSTALL "JAVA_TOOLS" "ant" "brew"
+}
 if [[ "$JAVA_TOOLS" == *"ant"* ]]; then
-   BREW_INSTALL "JAVA_TOOLS" "ant" ""
+   ANT_INSTALL
       # /usr/local/Cellar/ant/1.10.3/bin/ant
    ant --execdebug
    unset ANT_HOME  # https://github.com/Homebrew/legacy-homebrew/issues/32851
@@ -3213,7 +3286,7 @@ if [[ "$JAVA_TOOLS" == *"jmeter"* ]]; then
          git clone https://github.com/makotogo/HelloJUnit5.git --depth=1
          pushd HelloJUnit5
          chmod +x run-console-launcher.sh
-         # doesn't matter if [[ "${JAVA_TOOLS,,}" == *"maven"* ]]; then
+         echo "TRYOUT HelloJUnit5 run-console-launcher.sh"
          ./run-console-launcher.sh
          if [[ "${JAVA_TOOLS,,}" == *"gradle"* ]]; then
             gradle test
@@ -3236,6 +3309,10 @@ if [[ "$JAVA_TOOLS" == *"jmeter"* ]]; then
 
       if [[ "${TRYOUT,,}" == *"jmeter"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
          jmeter &  # GUI
+      fi
+
+      if [[ "${RUNTYPE,,}" == *"cleanup"* ]]; then
+         rm jmeter.log
       fi
    fi
 else
@@ -3281,9 +3358,69 @@ fi
 if [[ "$MON_TOOLS" == *"others"* ]]; then
    fancy_echo "MON_TOOLS others ..." >>$LOGFILE
   # Others: Jprobe, Jconsole, VisualVM,
-# https://www.bonusbits.com/wiki/HowTo:Setup_Charles_Proxy_on_Mac
 # brew install nmap
 fi
+
+
+
+if [[ "${CLOUD_TOOLS,,}" == *"terraform"* ]]; then
+   # See https://wilsonmar.github.io/terraform/
+   PREFIX="CLOUD_TOOLS terraform"
+   if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
+      if ! command_exists tfenv ; then
+         # Instead of BREW_INSTALL "CLOUD_TOOLS" "terraform" "--version"
+         BREW_INSTALL "CLOUD_TOOLS" "tfenv" "--version"  # https://github.com/kamatama41/tfenv
+         brew unlink terraform
+         tfenv install latest  # instead of pip3 upgrade terraform 
+      fi
+
+      if grep -q "=\"terraform" "$BASHFILE" ; then    
+         fancy_echo "$PREFIX alias already in $BASHFILE" >>$LOGFILE
+      else
+         fancy_echo "$PREFIX adding aliases in $BASHFILE ..."
+         echo "alias tf=\"terraform \$1\"" >>"$BASHFILE"
+         echo "alias tfa=\"terraform apply\"" >>"$BASHFILE"
+         echo "alias tfd=\"terraform destroy\"" >>"$BASHFILE"
+         echo "alias tfs=\"terraform show\"" >>"$BASHFILE"
+         source "$BASHFILE"
+      fi
+
+      if [[ "${RUNTYPE,,}" != *"fromscratch"* ]]; then
+         if [ -d "$GITS_PATH/terraform/tf-sample" ]; then
+            fancy_echo "CLOUD_TOOLS terraform $RUNTYPE removing..." >>$LOGFILE
+            rm -rf "$GITS_PATH/terraform/tf-sample"
+         fi
+      fi
+      GITS_PATH_INIT "terraform" 
+      pushd "$GITS_PATH/terraform"
+      if [ ! -d "$GITS_PATH/terraform/tf-sample" ]; then # https://www.terraform.io/intro/examples/
+            # git clone https://github.com/gruntwork-io/intro-to-terraform.git \
+            git clone https://github.com/terraform-providers/terraform-provider-aws.git \
+               tf-sample --depth=1
+            chmod +x scripts/*
+            cd tf-sample
+      else 
+            cd tf-sample
+#           TODO: GITHUB_UPDATE
+      fi
+      cd examples/two-tier
+      terraform init
+echo "terraform before at $(PWD) "
+exit #debugging
+      terraform plan
+      terraform apply
+      popd
+      echo "back at $(PWD)"
+      GO_INSTALL
+   else # remove
+      rm -rf "$GITS_PATH/terraform/tf-sample"
+      terraform destroy
+   fi
+else
+   fancy_echo "CLOUD_TOOLS terraform not specified." >>$LOGFILE
+fi
+echo "exiting on terraform "
+exit #debugging
 
 
 ######### Python modules:
@@ -3291,37 +3428,64 @@ fi
 
 # These may be inside virtualenv:
 
+if [[ -z "${PYTHON_TOOLS// }"  ]]; then  #it's blank
+
 fancy_echo "PYTHON_TOOLS=$PYTHON_TOOLS" >>$LOGFILE
 
 DOTNET_CASK_INSTALL() {
    # https://docs.microsoft.com/en-us/dotnet/core/macos-prerequisites?tabs=netcore2x
    BREW_CASK_INSTALL "LANG_TOOLS" "dotnet" "brew" # even tho --version is stated.
-   # https://www.microsoft.com/net/download/macos
    # https://docs.microsoft.com/en-us/dotnet/core/tutorials/using-on-macos   
    # https://apple.stackexchange.com/questions/248997/how-do-i-install-net-core-on-osx
    BREW_INSTALL "DOTNET_CASK_INSTALL" "openssl" "brew"
    if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
-      # TODO: Verify these links:
-      ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
-      ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
+      # TODO: Verify these links exists before linking:
+      if [ ! -f "/usr/local/lib/libcrypto.1.0.0.dylib" ]; then
+         ln -s /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib /usr/local/lib/
+      fi
+      if [ ! -f "/usr/local/lib/libssl.1.0.0.dylib" ]; then
+         ln -s /usr/local/opt/openssl/lib/libssl.1.0.0.dylib /usr/local/lib/
+      fi
 
-      # TODO: Obtain from https://www.microsoft.com/net/learn/get-started/macos#macos
-      URL="https://download.microsoft.com/download/2/E/C/2EC018A0-A0FC-40A2-849D-AA692F68349E/dotnet-sdk-2.1.105-osx-gs-x64.pkg"
-      fancy_echo "DOTNET_CASK_INSTALL $URL ..."
+      # See https://wilsonmar.github.io/bash-coding/#ExtractWeb
+      # Extract SDK URL from https://www.microsoft.com/net/learn/get-started/macos#install
+      PKG_LINK=$(curl -s https://www.microsoft.com/net/learn/get-started/macos#macos | \
+         grep -B1 "Download .NET SDK" | grep "href" | \
+         grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | grep -E ".pkg"); 
+      #PKG_LINK="https://download.microsoft.com/download/2/E/C/2EC018A0-A0FC-40A2-849D-AA692F68349E/dotnet-sdk-2.1.105-osx-gs-x64.pkg"
+      fancy_echo "DOTNET_CASK_INSTALL $PKG_LINK ..."
 
-      # TODO: Extract dotnet-sdk-2.1.105-osx-gs-x64.pkg"
-      PKG="dotnet-sdk-2.1.105-osx-gs-x64.pkg"
+      PKG_NAME=$(basename $PKG_LINK); #PKG_NAME="dotnet-sdk-2.1.105-osx-gs-x64.pkg"
+      echo "PKG_NAME=$PKG_NAME"
 
-      # TODO: Create dotnet_proj
-      DOTNET_PROJ="$GITS_PATH/dotnet_proj"
-      curl -L "$URL" -O   "$DOTNET_PROJ/$PKG" 2>/dev/null # 169.9 MB received.
-      echo "y" | sudo installer -store -verbose -verboseR -allowUntrusted -pkg "$DOTNET_PROJ/$PKG" -target /  # target is a device, not a path.
+         if [ ! -d "$GITS_PATH" ]; then 
+            mkdir  "$GITS_PATH"
+         fi
+       DOTNET_PROJ="$GITS_PATH/dotnet_proj"
+         if [ ! -d "$DOTNET_PROJ" ]; then 
+            mkdir  "$DOTNET_PROJ"
+         fi
+         echo "$PREFIX at $DOTNET_PROJ/$PKG_NAME ..."
+      pushd "$DOTNET_PROJ"
+      curl -L -O "$PKG_LINK" # -o "$DOTNET_PROJ/$PKG_NAME"
+      popd
+
+      if [ ! -f "$DOTNET_PROJ/$PKG_NAME" ]; then
+         echo "ERROR: File not in $DOTNET_PROJ/$PKG_NAME"
+      else
+         echo "$DOTNET_PROJ/$PKG_NAME installing ..."
+         #echo "y" | 
+         sudo installer -store -verbose -allowUntrusted \
+            -pkg "$DOTNET_PROJ/$PKG_NAME" -target / # target is a device, not a path.
+      fi
    fi
 }
 
 if [[ "${LANG_TOOLS,,}" == *"dotnet"* ]]; then
    DOTNET_CASK_INSTALL
+ exit #debugging
 fi
+
 
 if [[ "${PYTHON_TOOLS,,}" == *"anaconda"* ]]; then
    PYTHON_INSTALL
@@ -3371,7 +3535,7 @@ else
 fi
 
 if [[ "${PYTHON_TOOLS,,}" == *"robotframework"* ]]; then
-   PYTHON_INSTALL  # Exit if Python install not successful.
+   PYTHON_INSTALL 
    if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
       if ! python -c "import robotframework">/dev/null 2>&1 ; then   
          echo "Installing PYTHON_TOOLS=robotframework ..."; 
@@ -3401,6 +3565,7 @@ if [[ "${PYTHON_TOOLS,,}" == *"others"* ]]; then
    PYTHON_INSTALL  # Exit if Python install not successful.
 
    echo "Installing PYTHON_TOOLS=others ..."; 
+# TODO:
 #      pip install git-review
 #      pip install scikit-learn
 
@@ -3410,146 +3575,8 @@ else
    fancy_echo "PYTHON_TOOLS others not specified." >>$LOGFILE
 fi
 
+fi # PYTHON_TOOLS
 
-######### Git Signing:
-
-
-if [[ "${GIT_TOOLS,,}" == *"signing"* ]]; then
-
-   # About http://notes.jerzygangi.com/the-best-pgp-tutorial-for-mac-os-x-ever/
-   # See http://blog.ghostinthemachines.com/2015/03/01/how-to-use-gpg-command-line/
-      # from 2015 recommends gnupg instead
-   # Cheat sheet of commands at http://irtfweb.ifa.hawaii.edu/~lockhart/gpg/
-
-   # If GPG suite is used, add the GPG key to ~/.bash_profile:
-   BASHFILE_EXPORT "GPG_TTY" "$(tty)"
-
-   # NOTE: gpg is the command even though the package is gpg2:
-   if ! command_exists gpg ; then
-      # See https://www.gnupg.org/faq/whats-new-in-2.1.html
-      fancy_echo "Installing GPG2 for commit signing..."
-      brew install gpg2
-         brew info gpg2 >>$LOGFILE
-         brew list gpg2 >>$LOGFILE
-   else
-      if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
-         fancy_echo "GPG2 upgrading ..."
-         gpg --version  # outputs many lines!
-         # To avoid response "Error: git not installed" to brew upgrade git
-         brew uninstall GPG2 
-         # NOTE: This does not remove .gitconfig file.
-         brew install GPG2 
-      fi
-   fi
-   echo -e "\n$(gpg --version | grep gpg)" >>$LOGFILE
-   #gpg --version | grep gpg
-      # gpg (GnuPG) 2.2.5 and many lines!
-   # NOTE: This creates folder ~/.gnupg
-
-   # Mac users can store GPG key passphrase in the Mac OS Keychain using the GPG Suite:
-   # https://gpgtools.org/
-   # See https://spin.atomicobject.com/2013/11/24/secure-gpg-keys-guide/
-
-   # Like https://gpgtools.tenderapp.com/kb/how-to/first-steps-where-do-i-start-where-do-i-begin-setup-gpgtools-create-a-new-key-your-first-encrypted-mail
-   BREW_CASK_INSTALL "GIT_TOOLS" "gpg-suite" "GPG Keychain" "brew"
-   # See http://macappstore.org/gpgtools/
-      # Renamed from gpgtools https://github.com/caskroom/homebrew-cask/issues/39862
-      # See https://gpgtools.org/
-
-   # Per https://gist.github.com/danieleggert/b029d44d4a54b328c0bac65d46ba4c65
-   # git config --global gpg.program /usr/local/MacGPG2/bin/gpg2
-
-   fancy_echo "Looking in ${#str} byte key chain for GIT_ID=$GIT_ID ..."
-   str="$(gpg --list-secret-keys --keyid-format LONG )"
-   # RESPONSE FIRST TIME: gpg: /Users/wilsonmar/.gnupg/trustdb.gpg: trustdb created
-   echo "$str"
-   # Using regex per http://tldp.org/LDP/abs/html/bashver3.html#REGEXMATCHREF
-   if [[ "$str" =~ "$GIT_ID" ]]; then 
-      fancy_echo "A GPG key for $GIT_ID already generated." >>$LOGFILE
-   else  # generate:
-      # See https://help.github.com/articles/generating-a-new-gpg-key/
-      fancy_echo "Generate a GPG2 pair for $GIT_ID in batch mode ..."
-      # Instead of manual: gpg --gen-key  or --full-generate-key
-      # See https://superuser.com/questions/1003403/how-to-use-gpg-gen-key-in-a-script
-      # And https://gist.github.com/woods/8970150
-      # And http://www.gnupg.org/documentation/manuals/gnupg-devel/Unattended-GPG-key-generation.html
-      cat >foo <<EOF
-      %echo Generating a default key
-      Key-Type: default
-      Subkey-Type: default
-      Name-Real: $GIT_NAME
-      Name-Comment: 2 long enough passphrase
-      Name-Email: $GIT_ID
-      Expire-Date: 0
-      Passphrase: $GPG_PASSPHRASE
-      # Do a commit here, so that we can later print "done" :-)
-      %commit
-      %echo done
-EOF
-    gpg --batch --gen-key foo
-    rm foo  # temp intermediate work file.
-    # Sample output from above command:
-    #gpg: Generating a default key
-   #gpg: key AC3D4CED03B81E02 marked as ultimately trusted
-   #gpg: revocation certificate stored as '/Users/wilsonmar/.gnupg/openpgp-revocs.d/B66D9BD36CC672341E419283AC3D4CED03B81E02.rev'
-   #gpg: done
-
-   fancy_echo "List GPG2 pairs just generated ..."
-   str="$(gpg --list-secret-keys --keyid-format LONG )"
-   # IF BLANK: gpg: checking the trustdb & gpg: no ultimately trusted keys found
-   echo "$str"
-   # RESPONSE AFTER a key is created:
-   # Sample output:
-   #sec   rsa2048/7FA75CBDD0C5721D 2018-03-22 [SC]
-   #      B66D9BD36CC672341E419283AC3D4CED03B81E02
-   #uid                 [ultimate] Wilson Mar (2 long enough passphrase) <WilsonMar+GitHub@gmail.com>
-   #ssb   rsa2048/31653F7418AEA6DD 2018-03-22 [E]
-
-   # To delete a key pair:
-   #gpg --delete-secret-key 7FA75CBDD0C5721D
-       # Delete this key from the keyring? (y/N) y
-       # This is a secret key! - really delete? (y/N) y
-       # Click <delete key> in the GUI. Twice.
-   #gpg --delete-key 7FA75CBDD0C5721D
-       # Delete this key from the keyring? (y/N) y
-
-   fi
-
-   fancy_echo "Retrieve from response Key for $GIT_ID ..."
-   # Thanks to Wisdom Hambolu (wisyhambolu@gmail.com) for this:
-   KEY=$(GPG_MAP_MAIL2KEY "$GIT_ID")  # 16 chars. 
-
-   # PROTIP: Store your GPG key passphrase so you don't have to enter it every time you 
-   #       sign a commit by using https://gpgtools.org/
-
-   # If key is not already set in .gitconfig, add it:
-   if grep -q "$KEY" "$GITCONFIG" ; then    
-      fancy_echo "Signing Key \"$KEY\" already in $GITCONFIG" >>$LOGFILE
-   else
-      fancy_echo "Adding SigningKey=$KEY in $GITCONFIG..."
-      git config --global user.signingkey "$KEY"
-
-      # Auto-type in "adduid":
-      # gpg --edit-key "$KEY" <"adduid"
-      # NOTE: By using git config command, repeated invocation would not duplicate lines.
-   fi 
-
-   # See https://help.github.com/articles/signing-commits-using-gpg/
-   # Configure Git client to sign commits by default for a local repository,
-   # in ANY/ALL repositories on your computer, run:
-      # NOTE: This updates the "[commit]" section within ~/.gitconfig
-   git config commit.gpgsign | grep 'true' &> /dev/null
-   # if coding suggested by https://github.com/koalaman/shellcheck/wiki/SC2181
-   if [ $? == 0 ]; then
-      fancy_echo "git config commit.gpgsign already true (on)." >>$LOGFILE
-   else # false or blank response:
-      fancy_echo "Setting git config commit.gpgsign false (off)..."
-      git config --global commit.gpgsign false
-      fancy_echo "To activate: git config --global commit.gpgsign true"
-   fi
-else
-   fancy_echo "GIT_TOOLS signing not specified." >>$LOGFILE
-fi
 
 
 ######### TODO: Insert GPG in GitHub:
@@ -3566,11 +3593,28 @@ fi
 
 ######### TODO: FONTS="opensans, sourcecode" (for editors and web tools)
 
-# For text editors: sourcecode
-# SourceCodeVariable-Roman.ttf
-# SourceCodeVariable-Italic.ttf
 
-# For web pages: opensans
+if [[ -z "${FONTS// }"  ]]; then  #it's blank
+
+if [[ "${FONTS,,}" == *"ubuntu"* ]]; then
+   # Download from https://design.ubuntu.com/font/
+      # https://assets.ubuntu.com/v1/fad7939b-ubuntu-font-family-0.83.zip
+   # In SublimeText user settings file, 
+   # For Terminal use: "font face": "Ubunto mono",
+   # For writing code, "Luxi mono"
+fi
+
+if [[ "${FONTS,,}" == *"sourcecode"* ]]; then
+   # https://github.com/adobe-fonts/source-code-pro/releases
+   # For text editors: sourcecode (Source Code Pro by Adobe) is clear and thin
+   # SourceCodeVariable-Roman.ttf
+   # SourceCodeVariable-Italic.ttf
+   BREW_CASK_INSTALL "FONTS" "sourcecode" "brew"
+fi
+
+   # For web pages: opensans
+
+fi #FONTS
 
 
 ######### LOCALHOSTS SERVERS ::
@@ -3644,7 +3688,8 @@ fi
 
 
 if [[ "${LOCALHOSTS,,}" == *"mountebank"* ]] || [[ "$TRYOUT_KEEP" == *"mountebank"* ]]; then
-   # https://github.com/bbyars/mountebank/
+   # https://github.com/bbyars/mountebank/ for use with SonarQube and other security scanners.
+   # http://travelsalmon.com/ is publicly accessible
                   PROJ_PATH="/usr/local/bin/mountebank"
    if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
       if [ ! -d "$PROJ_PATH" ]; then
@@ -3692,6 +3737,9 @@ if [[ "${LOCALHOSTS,,}" == *"mountebank"* ]] || [[ "$TRYOUT_KEEP" == *"mounteban
             # 72659 ttys000    0:00.44 /usr/local/mountebank-v1.14.0-darwin-x64/node-v8.9.4-darwin-x64/bin/node /usr/local/mountebank-v1.14.0-darwin-x64/mountebank/bin/mb --port 2525 --nologfile
             echo "LOCALHOSTS mountebank running on PID=$PID." >>$LOGFILE
          fi
+      fi
+      if [[ "${RUNTYPE,,}" == *"cleanup"* ]]; then
+         rm mb.log
       fi
    fi
 else
@@ -3743,7 +3791,18 @@ exit
          mvn clean install package -X -e
             # RESPONSE: [INFO] Total time: 08:34 min
          popd
+
+         echo "LOCALHOSTS config ..." >>$LOGFILE
+         FILE_PATH="$GITS_PATH/hygieia/UI/gulfile.js"
+         if grep -q "browserSync.init({\n          server: {" "$FILE_PATH" ; then
+            fancy_echo "adding in file. " >>$LOGFILE
+         else
+            fancy_echo "Adding port: $HYGIEIA_PORT $FILE_PATH ..."
+            # HYGIEIA_PORT="9100" defined earlier
+            sed -i "1n; /^server: {/i \\\tport: $HYGIEIA_PORT\," "$FILE_PATH"
+         fi
       fi
+
       if [[ "${TRYOUT,,}" == *"hygieia"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
          echo "LOCALHOSTS hygieia mb starting on $MB_PORT in background ..."
 
@@ -3768,7 +3827,6 @@ else
    fancy_echo "LOCALHOSTS hygieia not specified." >>$LOGFILE
 fi
 
-exit #debugging
 
 
 ######### Use git-secret to manage secrets in a git repository:
@@ -3791,6 +3849,7 @@ fancy_echo "CLOUD_TOOLS=\"$CLOUD_TOOLS\"" >>$LOGFILE
 
 function DOCKER_INSTALL() {  # https://docs.docker.com/install/
    # First remove boot2docker and Kitematic https://github.com/boot2docker/boot2docker/issues/437
+   # https://store.docker.com/editions/community/docker-ce-desktop-mac
    if ! command_exists docker ; then
       fancy_echo "Installing docker ..."
       brew install docker  docker-compose  docker-machine  xhyve  docker-machine-driver-xhyve
@@ -3893,8 +3952,8 @@ fi
 
 
 if [[ "${CLOUD_TOOLS,,}" == *"ironworker"* ]]; then
-   # See http://dev.iron.io/worker/cli/ & https://github.com/iron-io/ironcli
-   # Don't brew install ironcli for IronMQ http://dev.iron.io/mq/3/on-premise/installation/single.html
+   # See http://dev.iron.io/worker/cli/ and https://github.com/iron-io/ironcli
+   # Dont brew install ironcli for IronMQ http://dev.iron.io/mq/3/on-premise/installation/single.html
    # BREW_INSTALL "CLOUD_TOOLS" "iron-functions" "brew"
       # /usr/local/Cellar/iron-functions/0.2.72: 4 files, 16.4MB from https://github.com/iron-io/functions
    if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
@@ -4020,22 +4079,6 @@ else
 fi
 
 
-if [[ "${CLOUD_TOOLS,,}" == *"terraform"* ]]; then  # contains aws.
-   # see https://www.terraform.io/
-      if grep -q "=\"terraform" "$BASHFILE" ; then    
-         fancy_echo "Terraform already in $BASHFILE" >>$LOGFILE
-      else
-         fancy_echo "Adding Terraform aliases in $BASHFILE ..."
-         echo "alias tf=\"terraform \$1\"" >>"$BASHFILE"
-         echo "alias tfa=\"terraform apply\"" >>"$BASHFILE"
-         echo "alias tfd=\"terraform destroy\"" >>"$BASHFILE"
-         echo "alias tfs=\"terraform show\"" >>"$BASHFILE"
-      fi
-   BREW_INSTALL "CLOUD_TOOLS" "terraform" "--version"
-   # TODO: pip3 upgrade terraform 
-else
-   fancy_echo "CLOUD_TOOLS terraform not specified." >>$LOGFILE
-fi
 
 
 if [[ "${CLOUD_TOOLS,,}" == *"azure"* ]]; then  # contains azure.
@@ -4591,23 +4634,104 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
    fi
 
 
-# TODO: http://www.agiletrailblazers.com/blog/the-5-step-guide-for-selenium-cucumber-and-gherkin
-   # BREW_INSTALL ruby
+######### Cucumber with Gherkin RSpec ::
 
-   # gem install bundler
-   # sudo gem install selenium-webdriver -v 3.2.1
-   # gem install cucumber  #  business language
-   # gem install rspec  # BDD mocking and performance assertions
-   # if [[ "${TRYOUT,,}" == *"bdd"* ]]; then 
-   #   fancy_echo "TRYOUT run bdd ..."
-    #       ruby test.rb
-    # fi
+
+MODULE="cucumber" # https://docs.cucumber.io/
+   # TODO: http://www.agiletrailblazers.com/blog/the-5-step-guide-for-selenium-cucumber-and-gherkin
+CATEGORY="{$TEST_TOOLS,,}"
+PREFIX="TEST_TOOLS $MODULE"
+if [[ "$CATEGORY" == *"$MODULE"* ]] || [[ "$TRYOUT_KEEP" == *"$MODULE"* ]]; then
+   
+                  PROJ_PATH="$GITS_PATH/$MODULE"
+   if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+      if [ ! -d "$PROJ_PATH" ]; then
+         echo "$PREFIX $PROJ_PATH not there to remove."
+      else
+         echo "$PREFIX removing $PROJ_PATH ..."
+         rm -rf "$PROJ_PATH"
+      fi
+   else
+      if ! command_exists "$MODULE" ; then # install:
+         if [[ "${RUNTYPE,,}" == *"fromscratch"* ]]; then
+            echo "$PREFIX cleanup $PROJ_PATH ..."
+            rm -rf "$PROJ_PATH"
+         fi
+
+         pushd "$GITS_PATH"
+         if [ ! -d "$MODULE" ]; then 
+            # Fork https://github.com/ below to your own account.
+            echo "$PREFIX cloning ..."
+            git clone https://github.com/cucumber/cucumber-java-skeleton "$MODULE" --depth=1
+            # git clone https://github.com/tourdedave/the-internet "$MODULE" --depth=1
+#               # TODO: Add pom.xml
+            # https://wiki.saucelabs.com/display/DOCS/Example+Selenium+Scripts+for+Automated+Website+Tests
+            cd "$MODULE"
+         else # already there, so update:
+            cd "$MODULE"
+            echo "$PREFIX TODO: updating $(pwd) ..."
+#           GITHUB_UPDATE 
+         fi
+         echo "$PREFIX at $(pwd) ..." >>$LOGFILE
+         # bundle install
+#         RUBY_INSTALL #Ruby (2.3.3 or higher)
+         MAVEN_INSTALL # pre-requsite
+         mvn test # runs Cucumber features using Cucumber's JUnit runner. 
+            # RESPONSE: [INFO] Total time: 08:34 min
+        # mvn clean install package -X -e
+         # or
+         #GRADLE_INSTALL
+         #gradlew test --info &
+         # The @RunWith(Cucumber.class) annotation on the RunCukesTest class tells JUnit to kick off Cucumber.
+exit #debugging
+
+         #gem install bundler
+         #sudo gem install selenium-webdriver -v 3.2.1 #Selenium Webdriver (3.2.1) 
+         #gem install cucumber #Cucumber (2.4.0)
+         #gem install rspec    #Gherkin (4.1.1)
+         #gem install cucumber # (2.4.0) business language
+         #gem install rspec    # Gherkin (4.1.1) BDD mocking and performance assertions
+         #TODO: cucumber command
+         popd
+      fi # command_exists
+
+      if [[ "${TRYOUT,,}" == *"$MODULE"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+         echo "$PREFIX starting on $MODULE_PORT in background ..."
+         # TODO: rackup
+         # bundle install
+         #rake db:migrate
+         #rake db:test:prepare
+         #rake cucumber "$@"
+
+         #open "http://localhost:$MODULE_PORT"
+ 
+         if [[ "$TRYOUT_KEEP" != *"$MODULE"* ]]; then
+            echo "$PREFIX stopping ..." >>$LOGFILE
+            ruby gherkin_basic_firefox.rb
+         else
+#            # pause 2 minutes? to view app on browser
+            PID="$(ps x | grep -m1 '/$MODULE' | grep -v "grep" | awk '{print $1}')"
+            echo "$PREFIX running on PID=$PID." >>$LOGFILE
+         fi
+      fi # TRYOUT
+   fi # remove
+else
+   fancy_echo "$PREFIX not specified." >>$LOGFILE
+fi
+exit #debugging
 
 
 ######### TEST_TOOLS :: 
 
 
-if [[ "${TEST_TOOLS,,}" == *"protractor"* ]]; then  # contains .
+if [[ "${TEST_TOOLS,,}" == *"testng"* ]]; then
+   fancy_echo "TEST_TOOLS testng specified." >>$LOGFILE
+else
+   fancy_echo "TEST_TOOLS testng not specified." >>$LOGFILE
+fi
+
+
+if [[ "${TEST_TOOLS,,}" == *"protractor"* ]]; then
    # protractor for testing AngularJS versions greater than 1.0.6/1.1.4, 
    # See http://www.protractortest.org/#/ and https://www.npmjs.com/package/protractor
    NODE_INSTALL  # pre-requsite nodejs v6 and newer.
@@ -4840,7 +4964,7 @@ if [[ "${MON_TOOLS,,}" == *"others"* ]]; then
 # fluentd has no brew only dmg for clouds https://docs.fluentd.org/v0.12/articles/install-by-dmg
 # StatsD # Node-based. from 2016
 # collectd  # portable C. needs plugins
-# Datadog commercial service
+# BREW_CASK_INSTALL "MON_TOOLS" "Datadog-agent" "Datadog" "brew" # commercial service
 
 # See https://alternativeto.net/software/grafana/
 # Comparison: https://blog.takipi.com/statsd-vs-collectd-vs-fluentd-and-other-daemons-you-should-know/
@@ -4933,6 +5057,13 @@ fi
    # GONE? BREW_CASK_INSTALL "Colloquy" ## IRC http://colloquy.info/downloads.html
    # GONE: BREW_CASK_INSTALL "gotomeeting"   # 32-bit
 
+if [[ "${COLAB_TOOLS,,}" == *"asciinema"* ]]; then
+   # https://asciinema.org/
+   BREW_INSTALL "COLAB_TOOLS" "asciinema" "brew"
+else
+   fancy_echo "COLAB_TOOLS asciinema not specified." >>$LOGFILE
+fi
+
 if [[ "${COLAB_TOOLS,,}" == *"discord"* ]]; then
    # https://discordapp.com/
    BREW_CASK_INSTALL "COLAB_TOOLS" "discord" "Discord" "brew"
@@ -4962,6 +5093,15 @@ if [[ "${COLAB_TOOLS,,}" == *"keybase"* ]]; then
    BREW_CASK_INSTALL "COLAB_TOOLS" "keybase" "Keybase" "brew"
 else
    fancy_echo "COLAB_TOOLS keybase not specified." >>$LOGFILE
+fi
+
+   # for encrypted non-SMS messaging:
+   # See http://osxdaily.com/2018/05/12/how-setup-use-signal-mac/
+if [[ "${COLAB_TOOLS,,}" == *"signal"* ]]; then 
+   BREW_CASK_INSTALL "COLAB_TOOLS" "signal" "Signal" "brew"
+   # Also link to the companion app on iPhones or Android
+else
+   fancy_echo "COLAB_TOOLS signal not specified." >>$LOGFILE
 fi
 
 if [[ "${COLAB_TOOLS,,}" == *"skype"* ]]; then 

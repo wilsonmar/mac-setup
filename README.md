@@ -7,6 +7,7 @@ Most tutorials ask you to <strong>manually type</strong> or copy and paste strin
 This repo gives you a way to install, configure, and start a large set of programs running sample code for several "stacks":
 
    * MEAN (MongoDB, Express, Angular, NodeJs) with the <a target="_blank" href="http://meanjs.org/">MeanJs sample app</a>
+   * <a target="_blank" href="http://mern.io/">MERN</a> (MongoDB, Express, React/Redux, NodeJs, WebPack) for "Universal" apps
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
    * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)
@@ -432,3 +433,9 @@ Lists of Mac programs:
    * https://dotfiles.github.io/
 
    * https://www.mugo.ca/Blog/Turbo-charge-your-Mac-development-environment describes use of Vagrant
+
+## Others like this
+
+Here are other scripts to install on Mac:
+
+* https://github.com/monfresh/laptop 
