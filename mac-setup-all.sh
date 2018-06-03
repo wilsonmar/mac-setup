@@ -2156,7 +2156,7 @@ if [[ "${GIT_TOOLS,,}" == *"hooks"* ]]; then
    fi
 
    if [[ "${TRYOUT,,}" == *"hooks"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then  # contains azure.
+      if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then
          PYTHON_PGM="hooks/basic-python2"
          if [[ "${TRYOUT,,}" == *"cleanup"* ]]; then
             fancy_echo "$PYTHON_PGM TRYOUT == cleanup ..."
@@ -2165,7 +2165,7 @@ if [[ "${GIT_TOOLS,,}" == *"hooks"* ]]; then
          fi
       fi
 
-      if [[ "${LANG_TOOLS,,}" == *"python3"* ]]; then  # contains azure.
+      if [[ "${LANG_TOOLS,,}" == *"python3"* ]]; then
          PYTHON_PGM="hooks/basic-python3"
          if [[ "${TRYOUT,,}" == *"cleanup"* ]]; then
             fancy_echo "$PYTHON_PGM TRYOUT == cleanup ..."
@@ -2186,6 +2186,7 @@ fi
 function REDIS_INSTALL() {
       # http://redis.io/
    BREW_INSTALL "GIT_TOOLS" "redis" "brew"
+   # https://github.com/jamesls/fakeredis for unit testing Redis calls?
    if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
       fancy_echo "$(redis-cli --version)" >>$LOGFILE  # redis-cli 4.0.9
 
@@ -3596,6 +3597,8 @@ fi # PYTHON_TOOLS
 
 if [[ -z "${FONTS// }"  ]]; then  #it's blank
 
+# TODO: Download http://nerdfonts.com/ instead to include icons in font files
+# See https://medium.com/@caulfieldOwen/youre-missing-out-on-a-better-mac-terminal-experience-d73647abf6d7
 if [[ "${FONTS,,}" == *"ubuntu"* ]]; then
    # Download from https://design.ubuntu.com/font/
       # https://assets.ubuntu.com/v1/fad7939b-ubuntu-font-family-0.83.zip
@@ -3922,7 +3925,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"vagrant"* ]]; then
    BREW_INSTALL "CLOUD_TOOLS" "vagrant" "brew"
 
    if [[ "${TRYOUT,,}" == *"vagrant"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then  # contains azure.
+      if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then
          PYTHON_PGM="hooks/basic-python2"
 
          if [[ "${TRYOUT,,}" == *"cleanup"* ]]; then
@@ -3930,7 +3933,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"vagrant"* ]]; then
             rm -rf $PYTHON_PGM
          fi
       fi
-      if [[ "${LANG_TOOLS,,}" == *"python3"* ]]; then  # contains azure.
+      if [[ "${LANG_TOOLS,,}" == *"python3"* ]]; then
          PYTHON_PGM="hooks/basic-python3"
          if [[ "${TRYOUT,,}" == *"cleanup"* ]]; then
             fancy_echo "$PYTHON_PGM TRYOUT == cleanup ..."
@@ -4081,12 +4084,12 @@ fi
 
 
 
-if [[ "${CLOUD_TOOLS,,}" == *"azure"* ]]; then  # contains azure.
+if [[ "${CLOUD_TOOLS,,}" == *"azure"* ]]; then
    # See https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-macos?view=azure-cli-latest
    # Issues at https://github.com/Azure/azure-cli/issues
 
    # NOTE: The az CLI does not use a Python virtual environment. So ...
-   PYTHON3_INSTALL  # function defined at top of this file.
+   # PYTHON3_INSTALL  # function defined at top of this file.
    NODE_INSTALL
    # Python location '/usr/local/opt/python/bin/python3.6'
 
@@ -4112,6 +4115,31 @@ if [[ "${CLOUD_TOOLS,,}" == *"azure"* ]]; then  # contains azure.
          func extensions install --package Microsoft.Azure.WebJobs.Extensions.CosmosDB --version "$LATEST_VERSION"
          # BLAH: No such file or directory
          # https://docs.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings#register-binding-extensions
+      fi
+
+      if [[ "${TRYOUT,,}" == *"az-ml"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+         # Install Azure ML Workbench.app (no brew)
+         if ! command_exists mb ; then # not downloaded:
+            if [ ! -d "$PROJ_PATH" ]; then # not downloaded:
+               echo "LOCALHOSTS mountebank PROJ_PATH=$PROJ_PATH ..."
+               mkdir   $PROJ_PATH
+            fi
+            # Per https://docs.microsoft.com/en-us/azure/machine-learning/service/quickstart-installation
+            URL="https://aka.ms/azureml-wb-dmg"
+            PKG="mountebank-v1.14.0.pkg"
+
+            if [ ! -f"$PROJ_PATH/$PKG" ]; then # not downloaded:
+               echo "LOCALHOSTS mountebank downloading $URL ..."
+               curl -L "$URL" -O "$PROJ_PATH/$PKG" 1>/dev/null 2>/dev/null
+            fi
+  
+            fancy_echo "LOCALHOSTS mountebank installing/upgrading ..." >>$LOGFILE
+            sudo installer -allowUntrusted -dmg "$PROJ_PATH/$PKG" -target /
+               # -store # -verboseR # target is a device, not a path.
+         fi
+
+         # Install
+         pip 
       fi
 
       if [[ "${TRYOUT,,}" == *"az-vm"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
@@ -4526,7 +4554,7 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
    # Brave: https://github.com/brave/muon/blob/master/docs/tutorial/using-selenium-and-webdriver.md
       # Much more complicated!
 
-   if [[ "${BROWSERS,,}" == *"chrome"* ]]; then  # contains azure.
+   if [[ "${BROWSERS,,}" == *"chrome"* ]]; then
       # Chrome:   https://sites.google.com/a/chromium.org/chromedriver/downloads
       if ! command_exists chromedriver ; then
          brew install chromedriver  # to /usr/local/bin/chromedriver
@@ -4562,7 +4590,7 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
    fi
 
 
-   if [[ "${BROWSERS,,}" == *"firefox"* ]]; then  # contains azure.
+   if [[ "${BROWSERS,,}" == *"firefox"* ]]; then
       # Firefox:  https://github.com/mozilla/geckodriver/releases
       if ! command_exists geckodriver ; then
              brew install geckodriver  # to /usr/local/bin/geckodriver
@@ -4595,7 +4623,7 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
       fancy_echo "BROWSERS firefox not specified." >>$LOGFILE
    fi
 
-   if [[ "${BROWSERS,,}" == *"phantomjs"* ]]; then  # contains azure.
+   if [[ "${BROWSERS,,}" == *"phantomjs"* ]]; then
       # NOTE: http://phantomjs.org/download.html is for direct download.
       if ! command_exists phantomjs ; then
          brew install phantomjs  # to /usr/local/bin/phantomjs  # for each MacOS release
@@ -4621,7 +4649,7 @@ fancy_echo "BROWSERS=$BROWSERS" >>$LOGFILE
       fancy_echo "BROWSERS phantomjs not specified." >>$LOGFILE
    fi
 
-   if [[ "${BROWSERS,,}" == *"others"* ]]; then  # contains azure.
+   if [[ "${BROWSERS,,}" == *"others"* ]]; then
       fancy_echo "Browser add-ons: "
       #BREW_CASK_INSTALL "BROWSERS" "flash-player" "" "brew"  # https://github.com/caskroom/homebrew-cask/blob/master/Casks/flash-player.rb
       #BREW_CASK_INSTALL "BROWSERS" "adobe-acrobat-reader" "" "brew"
@@ -4823,7 +4851,7 @@ fi
 ######### Python test coding languge:
 
 
-   if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then  # contains azure.
+   if [[ "${LANG_TOOLS,,}" == *"python"* ]]; then
       # Python:
       # See https://saucelabs.com/resources/articles/getting-started-with-webdriver-in-python-on-osx
       # Get bindings: http://selenium-python.readthedocs.io/installation.html
@@ -4835,16 +4863,16 @@ fi
       # TODO: If webdrive is installed:
          pip install webdriver
 
-      if [[ "${BROWSERS,,}" == *"chrome"* ]]; then  # contains azure.
+      if [[ "${BROWSERS,,}" == *"chrome"* ]]; then
          python tests/chrome_pycon_search.py chrome
          # python tests/chrome-google-search-quit.py
       fi
-      if [[ "${BROWSERS,,}" == *"firefox"* ]]; then  # contains azure.
+      if [[ "${BROWSERS,,}" == *"firefox"* ]]; then
          python tests/firefox_github_ssh_add.py
          # python tests/firefox_unittest.py  # not working due to indents
          # python tests/firefox-test-chromedriver.py
       fi
-      if [[ "${BROWSERS,,}" == *"safari"* ]]; then  # contains azure.
+      if [[ "${BROWSERS,,}" == *"safari"* ]]; then
          fancy_echo "Need python tests/safari_github_ssh_add.py"
       fi
 
