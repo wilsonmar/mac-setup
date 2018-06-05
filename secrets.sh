@@ -45,7 +45,7 @@ DATA_TOOLS=""
    MONGODB_DATA_PATH="/usr/local/var/mongodb" 
    MYSQL_PASSWORD="Pa$$w0rd"
 LANG_TOOLS=""
-          # python, python3, java, nodejs, go, dotnet
+          # python, python3, java, nodejs, go, dotnet, exercism
 JAVA_TOOLS=""
           # maven, gradle, ant, TestNG, jmeter # REST-Assured, Spock
           # (Via maven, ant, or gradle: junit4, junit5, yarn, dbunit, mockito)
