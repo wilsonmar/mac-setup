@@ -185,8 +185,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    The <tt>grep 'bash'</tt> is needed to filter out lines that do not contain the word "bash" in the response such as:
 
-   <pre>
-GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
+   <pre>GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
 Copyright (C) 2016 Free Software Foundation, Inc.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 &nbsp;
