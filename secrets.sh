@@ -61,7 +61,7 @@ NODE_TOOLS=""
           # magicbook, others( , etc.)
 RUBY_TOOLS=""
         # travis, rails, rust
-CLOUD_TOOLS="terraform"
+CLOUD_TOOLS=""
            # icloud, ironworker, docker, vagrant, rancher, 
            # awscli, gcp, azure, cf, heroku, terraform, serverless, (NOT: openstack)
            # others (google-drive-file-stream, dropbox, box, amazon-drive )
@@ -96,7 +96,7 @@ TEST_TOOLS=""
    KIBANA_PORT="5601"     # DATA_TOOLS default 5601
    MB_PORT="2525"         # LOCALHOSTS from default 2525
    MYSQL_PORT="3060"      # DATA_TOOLS default 3060
-   MEANJS_PORT="3000"     # NODE_TOOLS from default 3000
+   MEANJS_PORT="3001"     # NODE_TOOLS from default 3000
    MINIKUBE_PORT="8083"   # LOCAOHOSTS from default 8080
    MONGODB_PORT="27017"   # LOCALHOSTS default 27017
    NEO4J_PORT="7474"      # DATA_TOOL default 7474 HTTPS: 7473
