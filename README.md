@@ -178,6 +178,11 @@ The section below explains to someone relatively new to Mac machines the steps t
    <pre><strong>bash --version | grep 'bash'
    </strong></pre>
 
+   You have a recent version of Bash if you see:
+
+   <pre>GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
+   </pre>
+
    PROTIP: The attribute to obtain the version can vary among different commands.
    "--version" or "-v" or "version" may be used.
 
@@ -187,7 +192,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    <pre>GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
 Copyright (C) 2016 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+License GPLv3+: GNU GPL version 3 or later &LT;http://gnu.org/licenses/gpl.html>
 &nbsp;
 This is free software; you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
