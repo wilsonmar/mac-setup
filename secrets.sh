@@ -61,7 +61,7 @@ NODE_TOOLS=""
           # magicbook, others( , etc.)
 RUBY_TOOLS=""
         # travis, rails, rust
-CLOUD_TOOLS="terraform"
+CLOUD_TOOLS=""
            # icloud, ironworker, docker, vagrant, rancher, 
            # awscli, gcp, azure, cf, heroku, terraform, serverless, (NOT: openstack)
            # others (google-drive-file-stream, dropbox, box, amazon-drive )
