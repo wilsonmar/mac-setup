@@ -178,6 +178,8 @@ The section below explains to someone relatively new to Mac machines the steps t
    <pre><strong>bash --version | grep 'bash'
    </strong></pre>
 
+   Bash 4.0 was released in 2009, but Apple still ships version 3.x, which first released in 2007.
+
    You have a recent version of Bash if you see:
 
    <pre>GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
@@ -191,18 +193,13 @@ The section below explains to someone relatively new to Mac machines the steps t
    The <tt>grep 'bash'</tt> is needed to filter out lines that do not contain the word "bash" in the response such as:
 
    <pre>GNU bash, version 4.4.19(1)-release (x86_64-apple-darwin17.3.0)
-Copyright (C) 2016 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later &LT;http://gnu.org/licenses/gpl.html>
-&nbsp;
-This is free software; you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-   </pre>
+   Copyright (C) 2016 Free Software Foundation, Inc.
+   License GPLv3+: GNU GPL version 3 or later &LT;http://gnu.org/licenses/gpl.html>
+   &nbsp;
+   This is free software; you are free to change and redistribute it.
+   There is NO WARRANTY, to the extent permitted by law.</pre>
 
-   If you have bash v3 that comes with MacOS, the next few steps will update it to version 4.
-
-   <a target="_blank" href="https://www.admon.org/scripts/new-features-in-bash-4-0/">
-   This blog describes what is improved by version 4</a>.
-   Bash 4.0 was released in 2009, but Apple still ships version 3.x, which first released in 2007.
+   If you have bash v3 that comes with MacOS, <a target="_blank" href="https://www.admon.org/scripts/new-features-in-bash-4-0/">this blog describes what is improved by version 4</a>.
 
    ### mac-bash4.sh initialization
 
