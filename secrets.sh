@@ -73,7 +73,7 @@ CLOUD_TOOLS=""
 #   SAUCE_ACCESS_KEY=""
 
 COLAB_TOOLS=""
-          # discord, google-hangouts, gotomeeting (32-bit), hipchat, joinme, keybase, microsoft-lync, 
+          # blue-jeans, discord, google-hangouts, gotomeeting (32-bit), hipchat, joinme, keybase, microsoft-lync, 
           # signal, skype, slack, sococo, teamviewer, telegram, whatsapp, zoom
 MEDIA_TOOLS=""
            # camtasia, kindle, tesseract, real-vnc, others (snagit?)
@@ -84,7 +84,8 @@ VIZ_TOOLS=""
 TRYOUT="all"  # smoke tests.
       # all, HelloJUnit5, TODO: `virtuaenv, phantomjs, docker, hooks, jmeter, minikube, cleanup, editor
 TEST_TOOLS=""
-        # selenium, sikulix, golum, opencv, sonar, soapui, gatling?, Tsung?, Locust?
+        # bats, selenium, sikulix, golum, opencv, sonar, soapui, 
+        # gatling?, Tsung?, Locust?
         # Drivers for scripting language depend on what is defined in $GIT_LANG.
   # Listed alphabetically:
    CUCUMBER_PORT="9201"   # DATA_TOOLS from default ????
