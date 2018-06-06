@@ -950,19 +950,18 @@ function JAVA_INSTALL() {
       # CAUTION: A specific version of JVM needs to be specified because code that use it need to be upgraded.
    fi
 
-   # TODO: Fix 
-   TEMP=$(java -version | grep "java version") #| cut -d'=' -f 2 ) # | awk -F= '{ print $2 }'
-   JAVA_VERSION=${TEMP#*=};
+   # PROTIP: Output going to stderr
+   JAVA_VERSION=$(java -version 2>&1 | awk '/version/{print $NF}' | tr -d \")
    echo "JAVA_VERSION=$JAVA_VERSION"
-   export JAVA_VERSION=$(java -version)
+   export "JAVA_VERSION=$JAVA_VERSION" # FIX: not working
    echo "JAVA_VERSION=$JAVA_VERSION" >>$LOGFILE
-      # java version "1.8.0_144"
+      # Example: java version "1.8.0_144"
       # Java(TM) SE Runtime Environment (build 1.8.0_144-b01)
       # Java HotSpot(TM) 64-Bit Server VM (build 25.144-b01, mixed mode)
    if [ ! -z ${JAVA_HOME+x} ]; then  # variable has NOT been defined already.
       JAVA_HOME="$(/usr/libexec/java_home -v 1.8)"
-      #echo "export JAVA_HOME=$(/usr/libexec/java_home -v 9)" >>$BASHFILE
          # /Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home is a directory
+      #echo "export JAVA_HOME=$(/usr/libexec/java_home -v 9)" >>$BASHFILE
    fi
       echo "JAVA_INSTALL JAVA_HOME=$JAVA_HOME" >>$LOGFILE
 
@@ -3012,6 +3011,10 @@ fi
    #fancy_echo "npm list -g --depth=1 --long" >>$LOGFILE
    #echo -e "$(npm list -g --depth=1)" >>$LOGFILE
 
+if [[ "${LANG_TOOLS,,}" == *"exercism"* ]]; then
+   # http://exercism.io/clients/cli/mac
+   BREW_INSTALL "LANG_TOOLS" "exercism" "brew"  
+fi
 
 
 if [[ "${NODE_TOOLS,,}" == *"meanjs"* ]] || [[ "$TRYOUT_KEEP" == *"meanjs"* ]]; then
@@ -5373,7 +5376,7 @@ function RUBY_INSTALL() {
       # ruby 2.0.0p648 (2015-12-16 revision 53162) [universal.x86_64-darwin15]. 
    # TODO: if ruby is not version 2:
       # Install Ruby version management tool such as rvm, rbenv or chruby to run multiple versions of Ruby.
-      \curl -L https://get.rvm.io | bash -s stable
+      curl -L https://get.rvm.io | bash -s stable
       rvm | head -n 1  # response "= rvm" verifies install.
 
       brew upgrade ruby 2>/dev/null
