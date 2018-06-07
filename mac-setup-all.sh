@@ -5095,6 +5095,13 @@ else
    fancy_echo "COLAB_TOOLS asciinema not specified." >>$LOGFILE
 fi
 
+if [[ "${COLAB_TOOLS,,}" == *"blue-jeans"* ]]; then
+   # https://www.bluejeans.com/downloads
+   BREW_CASK_INSTALL "COLAB_TOOLS" "blue-jeans" "Blue Jeans" "brew"
+else
+   fancy_echo "COLAB_TOOLS blue-jeans not specified." >>$LOGFILE
+fi
+
 if [[ "${COLAB_TOOLS,,}" == *"discord"* ]]; then
    # https://discordapp.com/
    BREW_CASK_INSTALL "COLAB_TOOLS" "discord" "Discord" "brew"
