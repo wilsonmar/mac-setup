@@ -72,6 +72,22 @@ function cleanup() {
     #open -a "Atom" $LOGFILE
     open -e $LOGFILE  # open for edit using TextEdit
     #rm $LOGFILE
+
+FREE_DISKBLOCKS_END=$(df | sed -n -e '2{p;q}' | cut -d' ' -f 6) 
+DIFF=$(((FREE_DISKBLOCKS_START-FREE_DISKBLOCKS_END)/2048))
+fancy_echo "$DIFF MB of disk space consumed during this script run." >>$LOGFILE
+# 380691344 / 182G = 2091710.681318681318681 blocks per GB
+# 182*1024=186368 MB
+# 380691344 / 186368 G = 2042 blocks per MB
+
+TIME_END=$(date -u +%s);
+DIFF=$((TIME_END-TIME_START))
+MSG="End of script $THISPGM after $((DIFF/60))m $((DIFF%60))s seconds elapsed."
+fancy_echo "$MSG"
+echo -e "\n$MSG" >>$LOGFILE
+
+say "script ended."  # through speaker on Mac.
+
     trap '' EXIT INT TERM
     exit $err 
 }
@@ -3409,8 +3425,8 @@ if [[ "${CLOUD_TOOLS,,}" == *"terraform"* ]]; then
       fi
       cd examples/two-tier
       terraform init
-echo "terraform before at $(PWD) "
-exit #debugging
+#echo "terraform before at $(PWD) "
+#exit #debugging
       terraform plan
       terraform apply
       popd
@@ -3423,16 +3439,14 @@ exit #debugging
 else
    fancy_echo "CLOUD_TOOLS terraform not specified." >>$LOGFILE
 fi
-echo "exiting on terraform "
-exit #debugging
+#echo "exiting on terraform "
+#exit #debugging
 
 
 ######### Python modules:
 
 
 # These may be inside virtualenv:
-
-if [[ -z "${PYTHON_TOOLS// }"  ]]; then  #it's blank
 
 fancy_echo "PYTHON_TOOLS=$PYTHON_TOOLS" >>$LOGFILE
 
@@ -3487,7 +3501,7 @@ DOTNET_CASK_INSTALL() {
 
 if [[ "${LANG_TOOLS,,}" == *"dotnet"* ]]; then
    DOTNET_CASK_INSTALL
- exit #debugging
+exit #debugging
 fi
 
 
@@ -3579,9 +3593,6 @@ else
    fancy_echo "PYTHON_TOOLS others not specified." >>$LOGFILE
 fi
 
-fi # PYTHON_TOOLS
-
-
 
 ######### TODO: Insert GPG in GitHub:
 
@@ -3596,9 +3607,7 @@ fi # PYTHON_TOOLS
 
 
 ######### TODO: FONTS="opensans, sourcecode" (for editors and web tools)
-
-
-if [[ -z "${FONTS// }"  ]]; then  #it's blank
+#exit #Debugging
 
 # TODO: Download http://nerdfonts.com/ instead to include icons in font files
 # See https://medium.com/@caulfieldOwen/youre-missing-out-on-a-better-mac-terminal-experience-d73647abf6d7
@@ -3619,8 +3628,6 @@ if [[ "${FONTS,,}" == *"sourcecode"* ]]; then
 fi
 
    # For web pages: opensans
-
-fi #FONTS
 
 
 ######### LOCALHOSTS SERVERS ::
@@ -5645,22 +5652,4 @@ fi
 #echo -e "\n   git config --list ::" >>$LOGFILE
 #echo -e "$(git config --list)" >>$LOGFILE
 
-
-######### Disk space consumed:
-
-
-FREE_DISKBLOCKS_END=$(df | sed -n -e '2{p;q}' | cut -d' ' -f 6) 
-DIFF=$(((FREE_DISKBLOCKS_START-FREE_DISKBLOCKS_END)/2048))
-fancy_echo "$DIFF MB of disk space consumed during this script run." >>$LOGFILE
-# 380691344 / 182G = 2091710.681318681318681 blocks per GB
-# 182*1024=186368 MB
-# 380691344 / 186368 G = 2042 blocks per MB
-
-TIME_END=$(date -u +%s);
-DIFF=$((TIME_END-TIME_START))
-MSG="End of script $THISPGM after $((DIFF/60))m $((DIFF%60))s seconds elapsed."
-fancy_echo "$MSG"
-echo -e "\n$MSG" >>$LOGFILE
-
-say "script ended."  # through speaker on Mac.
 #END
