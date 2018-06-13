@@ -29,7 +29,8 @@ FONTS=""
      # mono (ubuntu), 
 EDITORS=""
        # textedit, pico, nano, and vim are built into MacOS, but can be updated.
-       # atom, brackets, code, eclipse, emacs, intellij, macvim, sts, sublime, textmate, webstorm
+       # atom, brackets, code, eclipse, emacs, intellij, macvim, sts, sublime, 
+       # textmate, visual-studio, webstorm
        # NOTE: Text Wrangler is a Mac app manually installed from the Apple Store.
 GIT_CLIENTS=""
           # git, cola, github, gitkraken, smartgit, sourcetree, tower, magit, gitup, 
