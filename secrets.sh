@@ -85,7 +85,7 @@ VIZ_TOOLS=""
 TRYOUT="all"  # smoke tests.
       # all, HelloJUnit5, TODO: `virtuaenv, phantomjs, docker, hooks, jmeter, minikube, cleanup, editor
 TEST_TOOLS=""
-        # bats, selenium, sikulix, golum, opencv, sonar, soapui, 
+        # bats, selenium, sikulix, golum, ruby-jmeter, opencv, sonar, soapui, 
         # gatling?, Tsung?, Locust?
         # Drivers for scripting language depend on what is defined in $GIT_LANG.
   # Listed alphabetically:
