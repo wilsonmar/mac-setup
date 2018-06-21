@@ -114,6 +114,8 @@ if [[ "${MAC_TOOLS,,}" = *"nopassword"* ]]; then
    fancy_echo "MAC_TOOLS nopassword sudo visudo using MAC_USERID=$MAC_USERID ..."
    sudo visudo
    # TODO: $USERNAME ALL=(root) NOPASSWD: /usr/sbin/installer
+else
+   fancy_echo "MAC_TOOLS nopassword not specified." >>$LOGFILE
 fi
 
 #Mandatory:
@@ -358,6 +360,8 @@ function BREW_CASK_INSTALL() {
 if [[ "${GIT_CLIENTS,,}" == *"git"* ]]; then
    BREW_INSTALL "GIT_TOOLS" "git" "--version"
     # git version 2.14.3 (Apple Git-98)
+else
+   fancy_echo "GIT_TOOLS git not specified." >>$LOGFILE
 fi
 
 function GITHUB_UPDATE() {
@@ -405,9 +409,10 @@ if [ ! -f "$SECRETSFILE" ]; then #  NOT found:
       cd $REPO_PATH
       GITHUB_UPDATE
    fi
+else
+   fancy_echo "$SECRETSFILE in $REPO_PATH not updated." >>$LOGFILE
 fi
 fancy_echo "At $(pwd)" >>$LOGFILE
-pwd
 
 
 ######### Read and use secrets.sh file:
@@ -530,20 +535,23 @@ if [[ "${MAC_TOOLS,,}" == *"unhide"* ]]; then
    fancy_echo "Configure OSX Finder to show hidden files too:" >>$LOGFILE
    defaults write com.apple.finder AppleShowAllFiles YES
    # also see dotfiles.
+else
+   fancy_echo "MAC_TOOLS unhide not specified." >>$LOGFILE
 fi
 
 
-######### MacOS maxfiles config:
+######### MacOS maxlimits config:
 
 
 echo "MAC_TOOLS=$MAC_TOOLS" >>$LOGFILE
 
-if [[ "${MAC_TOOLS,,}" == *"maxfiles"* ]]; then
+if [[ "${MAC_TOOLS,,}" == *"maxlimits"* ]]; then
    # CAUTION: This is not working yet.
 
    FILE="/Library/LaunchDaemons/limit.maxfiles.plist"
    if [ ! -f "$FILE" ]; then #  NOT found, so add it
-      fancy_echo "Copying configs/ to $FILE ..."
+      fancy_echo "Copying from configs/ to $FILE ..."
+      # https://github.com/wilsonmar/mac-setup/blob/master/configs/limit.maxfiles.plist at 524288
       sudo cp configs/limit.maxfiles.plist $FILE
       #see http://bencane.com/2013/09/16/understanding-a-little-more-about-etcprofile-and-etcbashrc/
       sudo chmod 644 $FILE
@@ -551,10 +559,11 @@ if [[ "${MAC_TOOLS,,}" == *"maxfiles"* ]]; then
 
    FILE="/Library/LaunchDaemons/limit.maxproc.plist"
    if [ ! -f "$FILE" ]; then #  NOT found, so add it
-      fancy_echo "Copying configs/ to $FILE ..."
+      # https://github.com/wilsonmar/mac-setup/blob/master/configs/limit.maxproc.plist at 2048
+      fancy_echo "Copying from configs/ to $FILE ..."
       sudo cp configs/limit.maxproc.plist $FILE
       sudo chmod 644 $FILE
-      # https://apple.stackexchange.com/questions/168495/why-wont-kern-maxfiles-setting-in-etc-sysctl-conf-stick
+      # See https://apple.stackexchange.com/questions/168495/why-wont-kern-maxfiles-setting-in-etc-sysctl-conf-stick
    fi
 
    if grep -q "ulimit -n " "/etc/profile" ; then    
@@ -568,24 +577,34 @@ if [[ "${MAC_TOOLS,,}" == *"maxfiles"* ]]; then
    fi 
 
    # Based on https://docs.microsoft.com/en-us/dotnet/core/macos-prerequisites?tabs=netcore2x
-   fancy_echo "launchctl limit ::" >>$LOGFILE
-   launchctl limit >>$LOGFILE  # no sudo needed
+   fancy_echo "$(launchctl limit | grep max) ::" >>$LOGFILE   # no sudo needed
+      # maxproc     1418           2128           
+      # maxfiles    65536          200000 
 
    OPEN_FILES=$(ulimit -n)  # 256 default
    fancy_echo "ulimit -a = $OPEN_FILES" >>$LOGFILE
 
    # https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man3/sysctl.3.html
-   /usr/sbin/sysctl -a | grep files >>$LOGFILE
+   fancy_echo "$(/usr/sbin/sysctl -a | grep files )" >>$LOGFILE
       #kern.maxfiles: 49152
       #kern.maxfilesperproc: 24576
       #kern.num_files: 4692s
 
    FILE="/etc/sysctl.conf"
    if [ ! -f "$FILE" ]; then #  NOT found, so add it
-      fancy_echo "Copying kern to $FILE ..."
+      fancy_echo "Copying kernal settings to $FILE ..."
       echo "kern.maxfiles=49152" | sudo tee -a $FILE
       echo "kern.maxfilesperproc=24576" | sudo tee -a $FILE
    fi
+
+   # Based on https://blog.dekstroza.io/ulimit-shenanigans-on-osx-el-capitan/
+   echo ">>> First, do a full backup so you have a fall-back to prior system settings."
+   echo ">>> Manually click the Apple icon to Shut Down."
+   echo ">>> Reboot in Recovery Mode by holding command + R "
+   echo ">>> While in Recovery mode, open Terminal and issue command: csrutil disable"
+
+else
+   fancy_echo "MAC_TOOLS maxlimits not specified." >>$LOGFILE
 fi
 
 
@@ -619,6 +638,8 @@ if [[ "${MAC_TOOLS,,}" == *"locale"* ]]; then
       # LC_ALL=
 
    BASHFILE_EXPORT "ARCHFLAGS" "-arch x86_64"
+else
+   fancy_echo "MAC_TOOLS locale not specified." >>$LOGFILE
 fi
 
 
