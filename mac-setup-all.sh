@@ -3384,6 +3384,25 @@ else
 fi
 
 
+if [[ "$MON_TOOLS" == *"geekbench"* ]]; then
+   # See https://www.geekbench.com/ and https://en.wikipedia.org/wiki/Geekbench
+   # $9.99 from https://www.primatelabs.com/store/
+   BREW_CASK_INSTALL "MON_TOOLS" "geekbench" "Geekbench 4" "brew"
+      # WARNING: Version number in app name.
+   if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
+      if [[ "${TRYOUT,,}" == *"geekbench"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+         "$HOME/Applications/Geekbench 4.app/Contents/Resources/geekbench4"
+            # -r <email address> <license key>
+         # FIX: geekbench command errors out: FSPathMakeRef(/Applications/Geekbench 4.app) failed with error -43.
+         # Results from "geekbench 4.app" sent for sharing at http://browser.geekbench.com/mac-benchmarks/
+            # MacBook Pro (15-inch Mid 2017) Single-Core Score 4118, Multi-Core Score 13294
+      fi
+   fi
+else
+   fancy_echo "MON_TOOLS geekbench not specified." >>$LOGFILE
+fi
+
+
 if [[ "$MON_TOOLS" == *"gcviewer"* ]]; then
    if ! command_exists gcviewer ; then
       fancy_echo "MON_TOOLS gcviewer installing ..."
@@ -3425,6 +3444,12 @@ if [[ "$MON_TOOLS" == *"others"* ]]; then
 # brew install nmap
 fi
 
+
+if [[ "$DEV_TOOLS" == *"expo-xde"* ]]; then
+   BREW_CASK_INSTALL "DEV_TOOLS" "expo-xde" "Expo XDE" "brew"
+else
+   fancy_echo "DEV_TOOLS expo-xde not specified." >>$LOGFILE
+fi
 
 
 if [[ "${CLOUD_TOOLS,,}" == *"terraform"* ]]; then
@@ -3653,15 +3678,7 @@ fi
 ######### TODO: FONTS="opensans, sourcecode" (for editors and web tools)
 #exit #Debugging
 
-# TODO: Download http://nerdfonts.com/ instead to include icons in font files
-# See https://medium.com/@caulfieldOwen/youre-missing-out-on-a-better-mac-terminal-experience-d73647abf6d7
-if [[ "${FONTS,,}" == *"ubuntu"* ]]; then
-   # Download from https://design.ubuntu.com/font/
-      # https://assets.ubuntu.com/v1/fad7939b-ubuntu-font-family-0.83.zip
-   # In SublimeText user settings file, 
-   # For Terminal use: "font face": "Ubunto mono",
-   # For writing code, "Luxi mono"
-fi
+# TODO: Download http://nerdfonts.com/ instead to include icons in font files.
 
 if [[ "${FONTS,,}" == *"sourcecode"* ]]; then
    # https://github.com/adobe-fonts/source-code-pro/releases
@@ -3670,6 +3687,15 @@ if [[ "${FONTS,,}" == *"sourcecode"* ]]; then
    # SourceCodeVariable-Italic.ttf
    BREW_CASK_INSTALL "FONTS" "sourcecode" "brew"
 fi
+
+# See https://medium.com/@caulfieldOwen/youre-missing-out-on-a-better-mac-terminal-experience-d73647abf6d7
+#if [[ "${FONTS,,}" == *"ubuntu"* ]]; then
+#   echo "TODO: Download from https://design.ubuntu.com/font/"
+      # https://assets.ubuntu.com/v1/fad7939b-ubuntu-font-family-0.83.zip
+   # In SublimeText user settings file, 
+   # For Terminal use: "font face": "Ubunto mono",
+   # For writing code, "Luxi mono"
+#fi
 
    # For web pages: opensans
 

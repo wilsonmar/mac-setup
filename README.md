@@ -12,7 +12,7 @@ This repo gives you a way to install, configure, and start a large set of progra
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
    * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)
    * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io, etc.
-   * <a target="_blank" href="https://www.cncf.io/">CNCF (Cloud Native Computing Foundation)</a> stack of Kubernetes, Prometheus, and other projects
+   * <a target="_blank" href="https://www.cncf.io/">CNCF (Cloud Native Computing Foundation)</a> stack of Kubernetes, Prometheus monitoring, OpenTracing, JeagerTracing, FluentD log collector, and other projects
    * DevSecOps "stack" of Git, Nexus/Artifactory, Jenkins, MVN, Vagrant, Docker, etc.
    * Cloud management tools Terraform, AWS Cloud Formation, etc.
 
