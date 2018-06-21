@@ -21,7 +21,7 @@ GITHUB_PASSWORD="change this to your GitHub account password"
 
 # Lists can be specified below. The last one in a list is the Git default:
 MAC_TOOLS=""
-         # coreutils, unhide, maxfiles, locale, iterm2, mas, 
+         # coreutils, unhide, locale, iterm2, mas, maxlimits, 
          # ansible, 1password, powershell, alfred, vmware-fusion, 
          # bartender, charles, carthage, 
          # others( paragon-extfs, paragon-ntfs, paragon-vmdk-mounter, )
