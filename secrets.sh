@@ -44,7 +44,7 @@ DATA_TOOLS=""
           # mysql, neo4j, postgresql, mongodb, redis, rstudio, nexus, elastic, memcached?
           # vault, liquibase, others (dbunit?, mysql?, evernote?, influxdb?, Zeppelin, Nifi, Streamsets)
    MONGODB_DATA_PATH="/usr/local/var/mongodb" 
-   MYSQL_PASSWORD="Pa$$w0rd"
+   MYSQL_PASSWORD="Pa$$w0rd"  # not secure
 LANG_TOOLS=""
           # python, python3, java, nodejs, go, dotnet, exercism
 JAVA_TOOLS=""
@@ -62,6 +62,8 @@ NODE_TOOLS=""
           # magicbook, others( , etc.)
 RUBY_TOOLS=""
         # travis, rails, rust
+DEV_TOOLS=""
+        # expo-xde
 CLOUD_TOOLS=""
            # icloud, ironworker, docker, vagrant, rancher, 
            # awscli, gcp, azure, cf, heroku, terraform, serverless, (NOT: openstack)
@@ -79,7 +81,7 @@ COLAB_TOOLS=""
 MEDIA_TOOLS=""
            # camtasia, kindle, tesseract, real-vnc, others (snagit?)
 MON_TOOLS=""
-         # wireshark, gcviewer, jprofiler, prometheus
+         # geekbench, gcviewer, jprofiler, prometheus, wireshark
 VIZ_TOOLS=""
          # grafana, tableau, tableau-public, tableau-viewer
 TRYOUT="all"  # smoke tests.
