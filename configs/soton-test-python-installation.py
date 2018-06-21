@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # Python program that can be executed to report whether particular
 # python packages are available on the system.
 

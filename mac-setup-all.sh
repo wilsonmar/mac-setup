@@ -1518,6 +1518,26 @@ else
 fi
 
 
+if [[ "${EDITORS,,}" == *"visual-studio"* ]]; then
+    # Instead of https://www.visualstudio.com/thank-you-downloading-visual-studio-mac/?sku=communitymac&rel=15#
+   BREW_CASK_INSTALL "EDITORS" "visual-studio" "Visual Studio" "brew"
+   if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
+      if grep -q "alias vs=" "$BASHFILE" ; then    
+         fancy_echo "EDITOR vs alias already in $BASHFILE" >>$LOGFILE
+      else
+         fancy_echo "EDITOR vs alias in $BASHFILE..."
+         # From https://placona.co.uk/osx-pro-tip-for-environment-variables/
+         echo "alias vs='/Applications/Visual\ Studio.app/Contents/MacOS/VisualStudio &'" >>"$BASHFILE"
+
+         git config --global core.editor vs
+      fi 
+   fi
+   # Tour Xamarin Unity games: https://docs.microsoft.com/en-us/visualstudio/mac/ide-tour
+else
+   fancy_echo "EDITORS visual-studio not specified." >>$LOGFILE
+fi
+
+
 if [[ "${EDITORS,,}" == *"webstorm"* ]]; then
    # See http://www.jetbrains.com/webstorm/
    BREW_CASK_INSTALL "EDITORS" "webstorm" "Webstorm" "brew"
@@ -3319,8 +3339,8 @@ if [[ "$JAVA_TOOLS" == *"jmeter"* ]]; then
             echo "osx-init/HelloJUnit5/" >../.gitignore
             echo "osx-init/.gradle/"    >>../.gitignore
          else 
-         	 if ! grep -q "HelloJUnit5" "../.gitignore"; then    
-              echo "Adding osx-init/HelloJUnit5/ in ../.gitignore"
+         	  if ! grep -q "HelloJUnit5" "../.gitignore"; then    
+               echo "Adding osx-init/HelloJUnit5/ in ../.gitignore"
                echo "osx-init/HelloJUnit5/" >>../.gitignore
                echo "osx-init/.gradle/"     >>../.gitignore
             fi
@@ -3337,6 +3357,30 @@ if [[ "$JAVA_TOOLS" == *"jmeter"* ]]; then
    fi
 else
    fancy_echo "JAVA_TOOLS jmeter not specified." >>$LOGFILE
+fi
+
+
+if [[ "${TEST_TOOLS,,}" == *"ruby-jmeter"* ]]; then
+   if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
+         pushd "$GITS_PATH"
+         if [ ! -d "ruby-jmeter" ]; then 
+            echo "TEST_TOOLS ruby-jmeter cloning to $(pwd) ..." >>$LOGFILE
+            # Fork ?
+            git clone https://github.com/flood-io/ruby-jmeter
+            cd ruby-jmeter
+         else # already there, so update:
+            # TODO: GITHUB_UPDATE
+            cd ruby-jmeter
+         fi
+         gem install ruby-jmeter  # process Gemfile.
+     
+         # Create testplan.rb
+         
+         ruby testplan.rb  # Generate JMX
+         popd
+   fi
+else
+   fancy_echo "TEST_TOOLS ruby-jmeter not specified." >>$LOGFILE
 fi
 
 

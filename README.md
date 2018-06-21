@@ -11,8 +11,10 @@ This repo gives you a way to install, configure, and start a large set of progra
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
    * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)
-   * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io
-   * DevSecOps "stack" of Git, Jenkins, Nexus, Vagrant, Docker, Terraform, etc.
+   * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io, etc.
+   * <a target="_blank" href="https://www.cncf.io/">CNCF (Cloud Native Computing Foundation)</a> stack of Kubernetes, Prometheus, and other projects
+   * DevSecOps "stack" of Git, Nexus/Artifactory, Jenkins, MVN, Vagrant, Docker, etc.
+   * Cloud management tools Terraform, AWS Cloud Formation, etc.
 
 The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
 
@@ -440,3 +442,4 @@ Lists of Mac programs:
 Here are other scripts to install on Mac:
 
 * https://github.com/monfresh/laptop 
+* https://dzone.com/articles/local-continuous-delivery-environment-with-docker
