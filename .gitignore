@@ -8,6 +8,8 @@ tempfile
 temp.sh
 foo
 mac-git-install.log
+rvm-installer
+rvm-installer.asc
 
 sisters
 git-sample-repo
