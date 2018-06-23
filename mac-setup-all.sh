@@ -68,7 +68,7 @@ fancy_echo "sw_vers ::"     >>$LOGFILE
 
 function cleanup() {
     err=$?
-    echo "At cleanup() LOGFILE=$LOGFILE"
+    fancy_echo "At cleanup() LOGFILE=$LOGFILE"
     #open -a "Atom" $LOGFILE
     open -e $LOGFILE  # open for edit using TextEdit
     #rm $LOGFILE
@@ -548,13 +548,19 @@ echo "MAC_TOOLS=$MAC_TOOLS" >>$LOGFILE
 if [[ "${MAC_TOOLS,,}" == *"maxlimits"* ]]; then
    # CAUTION: This is not working yet.
 
+   # if version = Sierra or High Sierra:
    FILE="/Library/LaunchDaemons/limit.maxfiles.plist"
    if [ ! -f "$FILE" ]; then #  NOT found, so add it
       fancy_echo "Copying from configs/ to $FILE ..."
       # https://github.com/wilsonmar/mac-setup/blob/master/configs/limit.maxfiles.plist at 524288
       sudo cp configs/limit.maxfiles.plist $FILE
-      #see http://bencane.com/2013/09/16/understanding-a-little-more-about-etcprofile-and-etcbashrc/
+      # see http://bencane.com/2013/09/16/understanding-a-little-more-about-etcprofile-and-etcbashrc/
       sudo chmod 644 $FILE
+
+      # Both plist files must be owned by root:wheel 
+      # See https://docs.basho.com/riak/kv/2.1.4/using/performance/open-files-limit/#mac-os-x
+      sudo chown root:wheel $FILE
+      echo ">>> $(ls -al $FILE)" # Should be -rw-r--r--@ 1 root  wheel  536 Jun 21 10:33 /Library/LaunchDaemons/limit.maxfiles.plist
    fi
 
    FILE="/Library/LaunchDaemons/limit.maxproc.plist"
@@ -563,17 +569,21 @@ if [[ "${MAC_TOOLS,,}" == *"maxlimits"* ]]; then
       fancy_echo "Copying from configs/ to $FILE ..."
       sudo cp configs/limit.maxproc.plist $FILE
       sudo chmod 644 $FILE
+
+      # Both plist files must be owned by root:wheel 
+      # See https://docs.basho.com/riak/kv/2.1.4/using/performance/open-files-limit/#mac-os-x
+      sudo chown root:wheel $FILE
+      echo ">>> $(ls -al $FILE)" # Should be -rw-r--r--
+
       # See https://apple.stackexchange.com/questions/168495/why-wont-kern-maxfiles-setting-in-etc-sysctl-conf-stick
    fi
 
-   if grep -q "ulimit -n " "/etc/profile" ; then    
+   if grep -q "ulimit -n" "/etc/profile" ; then    
       fancy_echo "ulimit -n already in /etc/profile" >>$LOGFILE
    else
       fancy_echo "Concatenating ulimit 2048 to /etc/profile ..."
       echo 'ulimit -n 2048' | sudo tee -a /etc/profile
-      fancy_echo "Now please reboot so the settings take. Exiting ..."
-      exit
-   #see http://bencane.com/2013/09/16/understanding-a-little-more-about-etcprofile-and-etcbashrc/
+      # see http://bencane.com/2013/09/16/understanding-a-little-more-about-etcprofile-and-etcbashrc/
    fi 
 
    # Based on https://docs.microsoft.com/en-us/dotnet/core/macos-prerequisites?tabs=netcore2x
@@ -598,7 +608,7 @@ if [[ "${MAC_TOOLS,,}" == *"maxlimits"* ]]; then
    fi
 
    # Based on https://blog.dekstroza.io/ulimit-shenanigans-on-osx-el-capitan/
-   echo ">>> First, do a full backup so you have a fall-back to prior system settings."
+   echo ">>> First, do a full backup so you can fall-back to prior system settings."
    echo ">>> Manually click the Apple icon to Shut Down."
    echo ">>> Reboot in Recovery Mode by holding command + R "
    echo ">>> While in Recovery mode, open Terminal and issue command: csrutil disable"
@@ -4170,19 +4180,19 @@ if [[ "${CLOUD_TOOLS,,}" == *"awscli"* ]]; then  # contains aws.
    else
       if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
          fancy_echo "awscli upgrading ..."
-         aws --version  # aws-cli/1.11.160 Python/2.7.10 Darwin/17.4.0 botocore/1.7.18
+         aws --version  # aws-cli/1.15.45 Python/2.7.15 Darwin/17.5.0 botocore/1.10.45
          pip3 upgrade awscli --upgrade --user
       fi
    fi
    echo "$(aws --version)" >>$LOGFILE  # aws-cli/1.11.160 Python/2.7.10 Darwin/17.4.0 botocore/1.7.18
+
+   BREW_INSTALL "CLOUD_TOOLS" "jq" "brew"  # jq is a lightweight and flexible command-line JSON processor.
 
    # TODO: https://github.com/bonusbits/devops_bash_config_examples/blob/master/shared/.bash_aws
    # For aws-cli commands, see http://docs.aws.amazon.com/cli/latest/userguide/ 
 else
    fancy_echo "CLOUD_TOOLS awscli not specified." >>$LOGFILE
 fi
-
-
 
 
 if [[ "${CLOUD_TOOLS,,}" == *"azure"* ]]; then
