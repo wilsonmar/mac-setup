@@ -694,7 +694,7 @@ fi
 if [[ "${MAC_TOOLS,,}" == *"iterm2"* ]]; then
    # https://www.iterm2.com/documentation.html
    BREW_CASK_INSTALL "MAC_TOOLS" "iterm2" "iTerm" ""
-   BASHFILE_EXPORT "CLICOLOR" "1"
+   # BASHFILE_EXPORT "CLICOLOR" "1"
    # http://sourabhbajaj.com/mac-setup/iTerm/README.html
    # TODO: https://github.com/mbadolato/iTerm2-Color-Schemes/tree/master/schemes
 else
@@ -869,11 +869,13 @@ function git_parse_hash() {
 
 # Added 21 Jun 2018:
    if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
-      if grep -q "PS1=" "$BASHFILE" ; then    
-         fancy_echo "PS1 is alias already in $BASHFILE" >>$LOGFILE
-      else
          BASHFILE_EXPORT "PS1" "\n  \w\[\033[33m\] \$(parse_git_branch)\[\033[00m\]\n$ "
-      fi 
+
+      # See http://osxdaily.com/2012/02/21/add-color-to-the-terminal-in-mac-os-x/
+         BASHFILE_EXPORT "CLICOLOR" "1"
+         BASHFILE_EXPORT "LSCOLORS" "GxFxCxDxBxegedabagaced" #  for Dark Terminal themes
+      #  BASHFILE_EXPORT "LSCOLORS" "eafxcxdxbxegedabagacad" #  for White Terminal themes
+      # See it work with ls -GFh
    fi
 
 
@@ -2095,11 +2097,6 @@ if [[ "${GIT_TOOLS,,}" == *"bash-git-prompt"* ]]; then
 else
    fancy_echo "GIT_TOOLS bash-git-prompt not specified." >>$LOGFILE
 fi
-
-######### bash colors:
-
-
-BASHFILE_EXPORT "CLICOLOR" "1"
 
 
 ######### Git command completion in ~/.bash_profile:
