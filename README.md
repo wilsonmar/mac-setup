@@ -441,5 +441,14 @@ Lists of Mac programs:
 
 Here are other scripts to install on Mac:
 
+* https://github.com/wilsonmar/git-utilities/blob/master/README.md was an early example just the bare basics,
+   such as https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
+   and https://git-scm.com/docs/git-config
 * https://github.com/monfresh/laptop 
+* https://github.com/18F/laptop
 * https://dzone.com/articles/local-continuous-delivery-environment-with-docker
+* https://medium.com/my-name-is-midori/how-to-prepare-your-fresh-mac-for-software-development-b841c05db18
+* https://github.com/swoodford/osx/blob/master/setup-developer-environment.sh
+* https://www.bonusbits.com/wiki/Reference:Mac_OS_DevOps_Workstation_Setup_Check_List
+* More at https://github.com/thoughtbot/laptop/blob/master/mac
+

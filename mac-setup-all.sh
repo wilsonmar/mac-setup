@@ -5,13 +5,7 @@
 # customized based on specification in file secrets.sh within the same repo.
 # sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup-all.sh)"
 
-# See https://github.com/wilsonmar/git-utilities/blob/master/README.md
-# Based on https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
-# and https://git-scm.com/docs/git-config
-# and https://medium.com/my-name-is-midori/how-to-prepare-your-fresh-mac-for-software-development-b841c05db18
-# https://www.bonusbits.com/wiki/Reference:Mac_OS_DevOps_Workstation_Setup_Check_List
-# More at https://github.com/thoughtbot/laptop/blob/master/mac
-# This is free software; see the source for copying conditions.  There is NO
+# This is free software; see the source for copying conditions. There is NO
 # warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 # TOC: Functions (GPG_MAP_MAIL2KEY, Python, Python3, Java, Node, Go, Docker) > 
@@ -66,6 +60,10 @@ fancy_echo "sw_vers ::"     >>$LOGFILE
  echo "$(sw_vers)"       >>$LOGFILE
  echo "uname -a : $(uname -a)"      >>$LOGFILE
 
+function pause(){
+  read -p "Press any key to continue..."
+}
+
 function cleanup() {
     err=$?
     fancy_echo "At cleanup() LOGFILE=$LOGFILE"
@@ -118,17 +116,43 @@ else
    fancy_echo "MAC_TOOLS nopassword not specified." >>$LOGFILE
 fi
 
-#Mandatory:
+
+if [[ "${MAC_TOOLS,,}" = *"xcode"* ]]; then
+   fancy_echo "MAC_TOOLS xcode is a pre-requisite for many ..."
    # Ensure Apple's command line tools (such as cc) are installed by node:
+   # from open "https://developer.apple.com/downloads/index.action"
+   # Based on http://www.mokacoding.com/blog/how-to-install-xcode-cli-tools-without-gui/
+   XCODE="$(xcode-select -p)"  # =/Library/Developer/CommandLineTools
+   if [ $? -ne 0 ]; then
+      echo "Xcode $XCODE not found. Installing them ..."
+      touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress; 
+      PROD=$(softwareupdate -l |
+         grep "\*.*Command Line" |
+         head -n 1 | awk -F"*" '{print $2}' |
+         sed -e 's/^ *//' |
+         tr -d '\n') # PROD=Command Line Tools (macOS High Sierra version 10.13) for Xcode-9.4
+      softwareupdate -i "$PROD" -v;
+   fi
+
    if ! command_exists cc ; then
-      fancy_echo "Accept Apple's license ..."
+      fancy_echo "cc not found. Accept Apple's license ..."
       xcodebuild -license
+
       fancy_echo "Installing Apple's command line tools (this takes a while) ..."
       xcode-select --install  # /Library/Developer/CommandLineTools
       # Xcode installs its git to /usr/bin/git; recent versions of OS X (Yosemite and later) ship with stubs in /usr/bin, which take precedence over this git. 
    fi
-   xcode-select --version  >>$LOGFILE  # xcode-select version 2349.
-   # See https://wilsonmar.github.io/mac-utilities/#XCodeTools
+
+   if [[ $XCODE =~ ^([yY][eE][sS]|[yY])$ ]]; then
+      fancy_echo "XCode is installed."
+      xcode-select --version  >>$LOGFILE  # xcode-select version 2349.
+   else
+      fancy_echo "XCode is not installed. Exiting ..."
+      exit
+   fi    
+else
+   fancy_echo "MAC_TOOLS nopassword not specified." >>$LOGFILE
+fi
 
 
 ######### bash.profile configuration:
@@ -589,7 +613,8 @@ if [[ "${MAC_TOOLS,,}" == *"maxlimits"* ]]; then
       # maxfiles    65536          200000 
 
    OPEN_FILES=$(ulimit -n)  # 256 default
-   fancy_echo "ulimit -a = $OPEN_FILES" >>$LOGFILE
+   fancy_echo "ulimit -n = $OPEN_FILES" >>$LOGFILE
+      # 10032
 
    # https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man3/sysctl.3.html
    fancy_echo "$(/usr/sbin/sysctl -a | grep files )" >>$LOGFILE
@@ -608,7 +633,8 @@ if [[ "${MAC_TOOLS,,}" == *"maxlimits"* ]]; then
    echo ">>> First, do a full backup so you can fall-back to prior system settings."
    echo ">>> Manually click the Apple icon to Shut Down."
    echo ">>> Reboot in Recovery Mode by holding command + R "
-   echo ">>> While in Recovery mode, open Terminal and issue command: csrutil disable"
+   echo ">>> While in Recovery mode, open Utility > Terminal and run: csrutil disable Sys Integrity Protection"
+   echo ">>> Rerun this, the get into Recovery mode mode > Terminal and run: csrutil enable"
 
 else
    fancy_echo "MAC_TOOLS maxlimits not specified." >>$LOGFILE
@@ -876,6 +902,9 @@ function git_parse_hash() {
          BASHFILE_EXPORT "LSCOLORS" "GxFxCxDxBxegedabagaced" #  for Dark Terminal themes
       #  BASHFILE_EXPORT "LSCOLORS" "eafxcxdxbxegedabagacad" #  for White Terminal themes
       # See it work with ls -GFh
+
+      
+         BASHFILE_EXPORT "GREP_OPTIONS" "--color=auto"  # Tell grep to highlight matches.
    fi
 
 
@@ -2254,7 +2283,7 @@ fi
 
 function REDIS_INSTALL() {
       # http://redis.io/
-   BREW_INSTALL "GIT_TOOLS" "redis" "brew"
+   BREW_INSTALL "DATA_TOOLS" "redis" "brew"
    # https://github.com/jamesls/fakeredis for unit testing Redis calls?
    if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
       fancy_echo "$(redis-cli --version)" >>$LOGFILE  # redis-cli 4.0.9
@@ -2301,53 +2330,15 @@ else
    fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
 fi
 
-
-function REDIS_INSTALL() {
-      # http://redis.io/
-   BREW_INSTALL "REDIS_INSTALL" "redis" "redis-cli --version"
-   if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
-      rm ~/Library/LaunchAgents/homebrew.mxcl.redis.
-   else
-      echo "DATA_TOOLS redis config ..."
-
-      if [ ! -z "$REDIS_PORT" ]; then # fall-back if not set in secrets.sh:
-         REDIS_PORT="6379"  # default
-      fi
-      if grep -q "port 6379" "/usr/local/etc/redis.conf" ; then    
-         sed -i "s/port 6379/port $REDIS_PORT/g" /usr/local/etc/redis.conf
-      fi
-      #ULIMIT_SET
-   fi
-}
-if [[ "${DATA_TOOLS,,}" == *"redis"* ]]; then
-   REDIS_INSTALL
-   # TODO: If successful
-   if [[ "${TRYOUT,,}" == *"redis"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
-      if grep -q "$(redis-cli ping)" "PONG" ; then    
-         echo "DATA_TOOLS redis started ..."
-         # but connection may be terminated.
-      else
-         echo "DATA_TOOLS redis starting in background ..."
-         /usr/local/opt/redis/bin/redis-server /usr/local/etc/redis.conf &
-         open "http://localhost:$REDIS_PORT/"
-      fi
-   else
-      fancy_echo "DATA_TOOLS redis TRYOUT not specified." >>$LOGFILE
-   fi
-
-   if [[ "$TRYOUT_KEEP" != *"redis"* ]]; then # not specified, so it's gone:
-      echo "DATA_TOOLS redis stopping ..." >>$LOGFILE
-      redis-cli shutdown
-   else
-      PID="$(ps x | grep -m1 '/redis-server' | grep -v "grep" | awk '{print $1}')"
-      echo "DATA_TOOLS redis still running on PID=$PID." >>$LOGFILE
-      # redis-cli --help
-         # Usage: redis { console | start | stop | restart | status | version }
-   fi
-else
-   fancy_echo "DATA_TOOLS redis not specified." >>$LOGFILE
-fi
-
+# function MYSQL_INSTALL() {
+  # Make mysql usable
+#    unset TMPDIR
+#    mysql_install_db --verbose --user=`whoami` \
+#       --basedir="$(brew --prefix mysql)" \
+#       --datadir=/usr/local/var/mysql \
+#       --tmpdir=/tmp
+    # mysql.server start
+#}
 
 function POSTGRESQL_INSTALL() {
 
@@ -5502,14 +5493,18 @@ function RUBY_INSTALL() {
       fancy_echo "RUBY_INSTALL now at $(ruby -v) ..." >>$LOGFILE
       # ruby 2.5.1p57 (2018-03-29 revision 63029) [x86_64-darwin17]
 
-   # Pull the PGP key:
-   #gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
-   # install:
+   # TODO: Pull the PGP key: See https://rvm.io/rvm/security
+   # gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+      # install:
    #curl -sSL https://get.rvm.io | bash -s stable
+   # source $HOME/.rvm/scripts/rvm
+   # rvm --version
+        # rvm 1.29.3 (latest) by Michal Papis, Piotr Kuczynski, Wayne E. Seguin [https://rvm.io]
    # install what you want to use:
    #rvm install 2.1.1
    # use that version of Ruby system wide:
    #rvm use 2.1.1
+
 }
 
 fancy_echo "RUBY_TOOLS=$RUBY_TOOLS" >>$LOGFILE
