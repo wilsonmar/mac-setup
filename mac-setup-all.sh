@@ -149,9 +149,7 @@ else
 fi
 
 function BASHFILE_EXPORT() {
-
    # example: BASHFILE_EXPORT "gitup" "open -a /Applications/GitUp.app"
-
    name=$1
    value=$2
 
@@ -168,7 +166,6 @@ function BASHFILE_EXPORT() {
 
 
 ######### bash completion:
-
 
 # Because of the shebang, bash v4 is expected.
 fancy_echo "$(bash --version | grep 'bash')" >>$LOGFILE
@@ -869,6 +866,15 @@ function git_parse_branch() {
 function git_parse_hash() {
    git rev-parse --short HEAD 2> /dev/null | sed "s/\(.*\)/@\1/"
 }
+
+# Added 21 Jun 2018:
+   if [[ "${RUNTYPE,,}" != *"remove"* ]]; then
+      if grep -q "PS1=" "$BASHFILE" ; then    
+         fancy_echo "PS1 is alias already in $BASHFILE" >>$LOGFILE
+      else
+         BASHFILE_EXPORT "PS1" "\n  \w\[\033[33m\] \$(parse_git_branch)\[\033[00m\]\n$ "
+      fi 
+   fi
 
 
 ######### Language function definitions:
