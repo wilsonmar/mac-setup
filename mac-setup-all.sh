@@ -122,6 +122,7 @@ if [[ "${MAC_TOOLS,,}" = *"xcode"* ]]; then
    # Ensure Apple's command line tools (such as cc) are installed by node:
    # from open "https://developer.apple.com/downloads/index.action"
    # Based on http://www.mokacoding.com/blog/how-to-install-xcode-cli-tools-without-gui/
+   # and https://github.com/why-jay/osx-init/blob/master/install.sh
    XCODE="$(xcode-select -p)"  # =/Library/Developer/CommandLineTools
    if [ $? -ne 0 ]; then
       echo "Xcode $XCODE not found. Installing them ..."
@@ -139,6 +140,7 @@ if [[ "${MAC_TOOLS,,}" = *"xcode"* ]]; then
       xcodebuild -license
 
       fancy_echo "Installing Apple's command line tools (this takes a while) ..."
+      # using /System/Library/CoreServices/Install Command Line Developer Tools.app
       xcode-select --install  # /Library/Developer/CommandLineTools
       # Xcode installs its git to /usr/bin/git; recent versions of OS X (Yosemite and later) ship with stubs in /usr/bin, which take precedence over this git. 
    fi
@@ -553,13 +555,22 @@ GITS_PATH_INIT() {
 
 
 if [[ "${MAC_TOOLS,,}" == *"unhide"* ]]; then
-   fancy_echo "Configure OSX Finder to show hidden files too:" >>$LOGFILE
+   fancy_echo "MAC_TOOLS: unhide hidden files in OSX Finder." >>$LOGFILE
    defaults write com.apple.finder AppleShowAllFiles YES
    # also see dotfiles.
+   defaults write NSGlobalDomain AppleShowAllExtensions -bool true; # show all file extensions
 else
    fancy_echo "MAC_TOOLS unhide not specified." >>$LOGFILE
 fi
 
+if [[ "${MAC_TOOLS,,}" == *"autohide"* ]]; then
+   fancy_echo "MAC_TOOLS: Auto-hide Dock items." >>$LOGFILE
+   defaults write com.apple.dock autohide -bool true; # turn Dock auto-hidng on
+   defaults write com.apple.dock autohide-delay -float 0; # remove Dock show delay
+   defaults write com.apple.dock autohide-time-modifier -float 0; # remove Dock show delay
+else
+   fancy_echo "MAC_TOOLS autohide not specified." >>$LOGFILE
+fi
 
 ######### MacOS maxlimits config:
 
@@ -607,6 +618,7 @@ if [[ "${MAC_TOOLS,,}" == *"maxlimits"* ]]; then
       # see http://bencane.com/2013/09/16/understanding-a-little-more-about-etcprofile-and-etcbashrc/
    fi 
 
+   # Apply limits manually:
    # Based on https://docs.microsoft.com/en-us/dotnet/core/macos-prerequisites?tabs=netcore2x
    fancy_echo "$(launchctl limit | grep max) ::" >>$LOGFILE   # no sudo needed
       # maxproc     1418           2128           
