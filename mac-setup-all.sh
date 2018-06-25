@@ -3056,6 +3056,7 @@ fi
       yo angular:controller MyNewController
       yo doctor
    fi
+   
    if [[ "${NODE_TOOLS,,}" == *"graphicmagick"* ]]; then
       npm install -g graphicmagick
    fi
