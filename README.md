@@ -451,4 +451,4 @@ Here are other scripts to install on Mac:
 * https://github.com/swoodford/osx/blob/master/setup-developer-environment.sh
 * https://www.bonusbits.com/wiki/Reference:Mac_OS_DevOps_Workstation_Setup_Check_List
 * More at https://github.com/thoughtbot/laptop/blob/master/mac
-
+* https://github.com/ghaiklor/iterm-fish-fisherman-osx described at https://blog.ghaiklor.com/bootstrap-your-terminal-environment-in-macos-with-a-single-bash-script-ea1ca445f0a5

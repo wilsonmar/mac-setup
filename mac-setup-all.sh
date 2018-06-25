@@ -3043,7 +3043,18 @@ fi
    
    # moment.js
    if [[ "${NODE_TOOLS,,}" == *"yeoman-generator"* ]]; then
-      npm install -g yeoman-generator
+      # See http://yeoman.io/learning/index.html
+      npm install -g yo  # not yeoman-generator
+      # First time yo
+      yes | yo
+      # Select "Get me out of here!"
+
+      npm install -g generator-webapp  # To install the webapp generator
+      yo --generators
+      yo webapp  # To scaffold a new project with HTML5 Boilerplate, jQuery, Gulpfile:
+         # Choices: SaaS/, Bootstrap 3/4, Style BDD/TDD,
+      yo angular:controller MyNewController
+      yo doctor
    fi
    if [[ "${NODE_TOOLS,,}" == *"graphicmagick"* ]]; then
       npm install -g graphicmagick
