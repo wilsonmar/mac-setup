@@ -112,8 +112,9 @@ TEST_TOOLS=""
    SONAR_PORT="9000"      # DATA_TOOLS default 9000
    TOMCAT_PORT="8087"     # LOCALHOSTS from default 8080
      # FDM 4001
-LOCALHOSTS=""
-          # apache, hygieia, minikube, mountebank, nginx, tomcat, jenkins, grafana, prometheus, wikimedia?
+LOCALHOSTS="jpetstore6"
+          # apache, hygieia, jenkins, jpetstore6
+          # minikube, mountebank, nginx, tomcat, grafana, prometheus, wikimedia?
 DOCKERHOSTS=""  # prometheus
 TRYOUT_KEEP="" # add to keep active after script.
            # grafana, ironworker, jekyll, jenkins, meanjs, mongodb, prometheus, sonar
