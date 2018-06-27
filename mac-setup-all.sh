@@ -153,7 +153,7 @@ if [[ "${MAC_TOOLS,,}" = *"xcode"* ]]; then
       exit
    fi    
 else
-   fancy_echo "MAC_TOOLS nopassword not specified." >>$LOGFILE
+   fancy_echo "MAC_TOOLS xcode not specified." >>$LOGFILE
 fi
 
 
@@ -207,7 +207,7 @@ fancy_echo "$(bash --version | grep 'bash')" >>$LOGFILE
 
 
 # Ruby comes with MacOS:
-fancy_echo "Using Ruby that comes with MacOS:" >>$LOGFILE
+fancy_echo "About Ruby ..." >>$LOGFILE
 ruby -v >>$LOGFILE  # ruby 2.5.0p0 (2017-12-25 revision 61468) [x86_64-darwin16]
 if [[ "${RUNTYPE,,}" == *"upgrade"* ]]; then
    sudo gem update --system
@@ -507,6 +507,7 @@ else
    echo "HYGIEIA_PORT=$HYGIEIA_PORT" >>$LOGFILE
    echo "JEKYLL_PORT=$JEKYLL_PORT" >>$LOGFILE
    echo "JENKINS_PORT=$JENKINS_PORT" >>$LOGFILE
+   echo "JPETSTORE_PORT=$JPETSTORE_PORT" >>$LOGFILE
    echo "KIBANA_PORT=$KIBANA_PORT" >>$LOGFILE
    echo "MYSQL_PORT=$MYSQL_PORT" >>$LOGFILE
    echo "MEANJS_PORT=$MEANJS_PORT" >>$LOGFILE
@@ -4798,7 +4799,7 @@ MODULE="cucumber" # https://docs.cucumber.io/
    # TODO: http://www.agiletrailblazers.com/blog/the-5-step-guide-for-selenium-cucumber-and-gherkin
 CATEGORY="{$TEST_TOOLS,,}"
 PREFIX="TEST_TOOLS $MODULE"
-if [[ "$CATEGORY" == *"$MODULE"* ]] || [[ "$TRYOUT_KEEP" == *"$MODULE"* ]]; then
+if [[ "{$TEST_TOOLS,,}" == *"$MODULE"* ]] || [[ "$TRYOUT_KEEP" == *"$MODULE"* ]]; then
    
                   PROJ_PATH="$GITS_PATH/$MODULE"
    if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
@@ -4840,7 +4841,7 @@ if [[ "$CATEGORY" == *"$MODULE"* ]] || [[ "$TRYOUT_KEEP" == *"$MODULE"* ]]; then
          #GRADLE_INSTALL
          #gradlew test --info &
          # The @RunWith(Cucumber.class) annotation on the RunCukesTest class tells JUnit to kick off Cucumber.
-exit #debugging
+#exit #debugging
 
          #gem install bundler
          #sudo gem install selenium-webdriver -v 3.2.1 #Selenium Webdriver (3.2.1) 
@@ -4875,7 +4876,6 @@ exit #debugging
 else
    fancy_echo "$PREFIX not specified." >>$LOGFILE
 fi
-exit #debugging
 
 
 ######### TEST_TOOLS :: 
@@ -5438,6 +5438,54 @@ fi
 
 
 ######### LOCALHOSTS ::
+
+package="jpetstore-6"
+if [[ "${LOCALHOSTS,,}" == *"jpetstore-6"* ]] || [[ "$TRYOUT_KEEP" == *"jpetstore-6"* ]]; then
+   # https://wilsonmar.github.io/jpetstore/
+   JAVA_INSTALL  # pre-requisite
+                  PROJ_PATH="/usr/local/bin/jpetstore-6" # ~/gits/jpetstore/jpetstore-6
+   if [[ "${RUNTYPE,,}" == *"remove"* ]]; then
+      if [ ! -d "$PROJ_PATH" ]; then
+         echo "LOCALHOSTS $PROJ_PATH not there to remove ..."
+      else
+         echo "LOCALHOSTS removing $PROJ_PATH ..."
+         rm -rf "$PROJ_PATH"
+      fi
+   else
+      GITS_PATH_INIT "jpetstore-6"
+      pushd "$GITS_PATH/jpetstore-6"
+         if [ ! -d "jpetstore-6" ]; then 
+            echo "cloning..."
+            git clone https://github.com/wilsonmar/jpetstore-6.git --depth=1
+            cd jpetstore-6
+            git remote add upstream https://github.com/mybatis/jpetstore-6.git
+         else # already there, so update:
+            cd jpetstore-6
+            GITHUB_UPDATE
+         fi
+         fancy_echo "clean package..."
+            # [INFO] Total time: 01:55 min
+         ./mvnw clean package
+
+         fancy_echo "Configuring LOCALHOSTS JPETSTORE_PORT=$JPETSTORE_PORT ..."
+            JPETSTORE_CONF="$GITS_PATH/jpetstore-6/target/cargo/configurations/tomcat9x/conf/server.xml"
+            sed -i "s/ port=\"8080\"/ port=\"$JPETSTORE_PORT\"/g" $JPETSTORE_CONF
+               # port="8080" is default.
+
+         fancy_echo "cargo:run tomcat90..."
+         ./mvnw cargo:run -P tomcat90
+            # [INFO] Press Ctrl-C to stop the container...
+      popd
+      echo "back at $(PWD)"
+
+      if [[ "${TRYOUT,,}" == *"$package"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
+         fancy_echo "Opening in default browser http://localhost:$JPETSTORE_PORT/jpetstore/ ..."
+         open "http://localhost:$JPETSTORE_PORT/jpetstore/" &
+      fi
+   fi
+else
+   fancy_echo "LOCALHOSTS jpetstore-6 not specified." >>$LOGFILE
+fi
 
 
 if [[ "${LOCALHOSTS,,}" == *"jenkins"* ]] || [[ "$TRYOUT_KEEP" == *"jenkins"* ]]; then
