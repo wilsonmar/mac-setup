@@ -97,6 +97,7 @@ TEST_TOOLS=""
    HYGIEIA_PORT="3000"    # LOCALHOSTS default 3000
    JEKYLL_PORT="4000"     # LOCAOHOSTS from default 4000
    JENKINS_PORT="8088"    # LOCALHOSTS from default 8080
+   JPETSTORE_PORT="8082"  # LOCALHOSTS from default 8080
    KIBANA_PORT="5601"     # DATA_TOOLS default 5601
    MB_PORT="2525"         # LOCALHOSTS from default 2525
    MYSQL_PORT="3060"      # DATA_TOOLS default 3060
@@ -112,8 +113,8 @@ TEST_TOOLS=""
    SONAR_PORT="9000"      # DATA_TOOLS default 9000
    TOMCAT_PORT="8087"     # LOCALHOSTS from default 8080
      # FDM 4001
-LOCALHOSTS="jpetstore6"
-          # apache, hygieia, jenkins, jpetstore6
+LOCALHOSTS=""
+          # apache, hygieia, jenkins, jpetstore-6
           # minikube, mountebank, nginx, tomcat, grafana, prometheus, wikimedia?
 DOCKERHOSTS=""  # prometheus
 TRYOUT_KEEP="" # add to keep active after script.
