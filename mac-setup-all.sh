@@ -1,4 +1,5 @@
-#!/usr/local/bin/bash
+#!/bin/bash
+#!/usr/local/bin/bash for bash v4
 
 # mac-setup-all.sh in https://github.com/wilsonmar/mac-setup
 # This downloads and installs all the utilities related to use of Git,
@@ -56,9 +57,17 @@ echo $LOGFILE  # to screen
 RUNTYPE=""  # value to be replaced with definition in secrets.sh.
 #bar=${RUNTYPE:-none} # :- sets undefine value. See http://redsymbol.net/articles/unofficial-bash-strict-mode/
 
-fancy_echo "sw_vers ::"     >>$LOGFILE
- echo "$(sw_vers)"       >>$LOGFILE
- echo "uname -a : $(uname -a)"      >>$LOGFILE
+macos_ver=$(sw_vers -productVersion | cut -d. -f2)
+case "$macos_ver" in # See https://wilsonmar.github.io/apple-mac-osx-versions
+   14) macos_ver_name="Majove" ;;
+   13) macos_ver_name="High Sierra" ;;
+   12) macos_ver_name="Sierra" ;;
+   11) macos_ver_name="El Capitan" ;;
+   10) macos_ver_name="Yosemite" ;;
+esac
+fancy_echo "sw_vers :: $macos_ver = $macos_ver_name" 
+   echo "$(sw_vers)"                  >>$LOGFILE
+   echo "uname -a : $(uname -a)"      >>$LOGFILE
 
 function pause(){
   read -p "Press any key to continue..."
@@ -102,6 +111,30 @@ sig_cleanup() {
     false # sets $?
     cleanup
 }
+
+# On macOS only:
+
+if [[ "${MAC_TOOLS,,}" = *"ntpdate"* ]]; then
+   # Using Bash compare (( in arithmetic context )):
+   # See https://apple.stackexchange.com/questions/117864/how-can-i-tell-if-my-mac-is-keeping-the-clock-updated-properly
+   if (( "$macos_ver" >= "13" )); then
+      if [[ $string = *"My long"* ]]; then
+         fancy_echo "MAC_TOOLS ntpdate to check clock offset on High Sierra or later ..."
+         ntpdate -d pool.ntp.org | grep "step time server"
+         # host found : clocka.ntpjs.org
+         # 29 Jun 04:47:46 ntpdate[77897]: step time server 74.117.214.3 offset -15.533466 sec
+      fi
+   else
+      fancy_echo "MAC_TOOLS ntpdate to check clock offset on Sierra or older ..."
+      ntpq -p
+         #     remote           refid      st t when poll reach   delay   offset  jitter
+         #*uslax1-ntp-001. .GPSs.           1 u   54  128   17   26.492   18.039   7.154
+      echo "(delay/offset/jitter less than 100 are acceptable)"
+   fi
+else
+   fancy_echo "MAC_TOOLS ntpdate not specified." >>$LOGFILE
+fi
+
 
 # Disable inputting password:
 
@@ -995,6 +1028,10 @@ function PYTHON_INSTALL() {
       #pip install numpy
       #pip install scipy
       #pip install matplotlib
+
+      # On previous than High Sierra 10.13.xmind:
+      #ssh -H pip install --user ipython
+      # on high Sierra: pip install ipython
   fi
    # There is also a Enthought Python Distribution -- www.enthought.com
 }
