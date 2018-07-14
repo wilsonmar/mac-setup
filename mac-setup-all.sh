@@ -1,5 +1,6 @@
+#!/usr/local/bin/bash 
 #!/bin/bash
-#!/usr/local/bin/bash for bash v4
+#for bash v4
 
 # mac-setup-all.sh in https://github.com/wilsonmar/mac-setup
 # This downloads and installs all the utilities related to use of Git,
@@ -57,18 +58,6 @@ echo $LOGFILE  # to screen
 RUNTYPE=""  # value to be replaced with definition in secrets.sh.
 #bar=${RUNTYPE:-none} # :- sets undefine value. See http://redsymbol.net/articles/unofficial-bash-strict-mode/
 
-macos_ver=$(sw_vers -productVersion | cut -d. -f2)
-case "$macos_ver" in # See https://wilsonmar.github.io/apple-mac-osx-versions
-   14) macos_ver_name="Majove" ;;
-   13) macos_ver_name="High Sierra" ;;
-   12) macos_ver_name="Sierra" ;;
-   11) macos_ver_name="El Capitan" ;;
-   10) macos_ver_name="Yosemite" ;;
-esac
-fancy_echo "sw_vers :: $macos_ver = $macos_ver_name" 
-   echo "$(sw_vers)"                  >>$LOGFILE
-   echo "uname -a : $(uname -a)"      >>$LOGFILE
-
 function pause(){
   read -p "Press any key to continue..."
 }
@@ -79,7 +68,6 @@ function cleanup() {
     #open -a "Atom" $LOGFILE
     open -e $LOGFILE  # open for edit using TextEdit
     #rm $LOGFILE
-
 FREE_DISKBLOCKS_END=$(df | sed -n -e '2{p;q}' | cut -d' ' -f 6) 
 DIFF=$(((FREE_DISKBLOCKS_START-FREE_DISKBLOCKS_END)/2048))
 fancy_echo "$DIFF MB of disk space consumed during this script run." >>$LOGFILE
@@ -93,7 +81,7 @@ MSG="End of script $THISPGM after $((DIFF/60))m $((DIFF%60))s seconds elapsed."
 fancy_echo "$MSG"
 echo -e "\n$MSG" >>$LOGFILE
 
-say "script ended."  # through speaker on Mac.
+#say "script ended."  # through speaker on Mac.
 
     trap '' EXIT INT TERM
     exit $err 
@@ -114,7 +102,20 @@ sig_cleanup() {
 
 # On macOS only:
 
-if [[ "${MAC_TOOLS,,}" = *"ntpdate"* ]]; then
+macos_ver=$(sw_vers -productVersion | cut -d. -f2)
+case "$macos_ver" in # See https://wilsonmar.github.io/apple-mac-osx-versions
+   14) macos_ver_name="Mojave" ;;
+   13) macos_ver_name="High Sierra" ;;
+   12) macos_ver_name="Sierra" ;;
+   11) macos_ver_name="El Capitan" ;;
+   10) macos_ver_name="Yosemite" ;;
+esac
+fancy_echo "sw_vers :: $macos_ver = $macos_ver_name" >>$LOGFILE
+   echo "$(sw_vers)"                  >>$LOGFILE
+   echo "uname -a : $(uname -a)"      >>$LOGFILE
+
+
+if echo "$MAC_TOOLS" | grep -iq "ntpdate"; then
    # Using Bash compare (( in arithmetic context )):
    # See https://apple.stackexchange.com/questions/117864/how-can-i-tell-if-my-mac-is-keeping-the-clock-updated-properly
    if (( "$macos_ver" >= "13" )); then
@@ -134,7 +135,7 @@ if [[ "${MAC_TOOLS,,}" = *"ntpdate"* ]]; then
 else
    fancy_echo "MAC_TOOLS ntpdate not specified." >>$LOGFILE
 fi
-
+exit
 
 # Disable inputting password:
 
@@ -848,6 +849,20 @@ if [[ "${MAC_TOOLS,,}" == *"vmware-fusion"* ]]; then
    BREW_CASK_INSTALL "MAC_TOOLS" "vmware-fusion" "VMware Fusion" "brew"
 else
    fancy_echo "MAC_TOOLS vmware-fusion not specified." >>$LOGFILE
+fi
+
+
+if echo "$TRYOUT" | grep -iq "istats"; then
+   # command-line tool to display CPU temperature, fan speeds and battery info
+   # See http://chris911.github.io/iStats/
+   gem install iStats  # uses whatever Ruby is installed.
+   #istats enable key  # to run SMC (System Management Controller) sensors
+      # See https://support.apple.com/en-us/ht201295
+   if echo "$TRYOUT" | grep -iq "istats" || echo "$TRYOUT" | grep -iq "all"; then
+      istats
+   fi
+else
+   fancy_echo "MAC_TOOLS istats not specified." >>$LOGFILE
 fi
 
 
@@ -1666,6 +1681,7 @@ fi
 if [[ "${EDITORS,,}" == *"android-studio-preview"* ]]; then
    # See https://developer.android.com/studio/preview/index.html
    BREW_CASK_INSTALL "EDITORS" "android-studio-preview" "Android Studio Preview" "brew"
+   # Remove from /Applications - "Android Studio.app"
 else
    fancy_echo "EDITORS android not specified." >>$LOGFILE
 fi
@@ -1732,6 +1748,7 @@ fi
 if [[ "${GIT_CLIENTS,,}" == *"sourcetree"* ]]; then
     # See https://www.sourcetreeapp.com/
    BREW_CASK_INSTALL "EDITORS" "sourcetree" "Sourcetree" "brew"
+   # Remove: in /Applications Sourcetree.app
 else
    fancy_echo "GIT_CLIENTS sourcetree not specified." >>$LOGFILE
 fi
@@ -4374,14 +4391,14 @@ if [[ "${CLOUD_TOOLS,,}" == *"serverless"* ]]; then
       fi
       echo "npm install serverless :: $(serverless --version)" >>$LOGFILE
 
-
    if [[ "${TRYOUT,,}" == *"serverless-aws"* ]] || [[ "${TRYOUT,,}" == *"all"* ]]; then
       # See https://serverless.com/getting-started/, docs.serverless.com, forum.serverless.com, gitter.im/serverless/serverless
 
-      SERVERLESS_FOLDER="~/serverless"  # TODO: user define in secrets.sh
-      if [ ! -d "$SERVERLESS_FOLDER" ]; then # found dir:
+      if [ ! -d "$SERVERLESS_FOLDER" ]; then
+         SERVERLESS_FOLDER="~/serverless"  # TODO: user define in secrets.sh
          fancy_echo "Making folder $SERVERLESS_FOLDER ..."
          mkdir $SERVERLESS_FOLDER
+      else
          cd $SERVERLESS_FOLDER
       fi
 
@@ -4390,10 +4407,12 @@ if [[ "${CLOUD_TOOLS,,}" == *"serverless"* ]]; then
          # See https://www.youtube.com/watch?v=HSd9uYj2LJA
          exit
       fi
+
       if [ ! -z "$AWS_SECRET_ACCESS_KEY" ]; then
          fancy_echo "AWS_SECRET_ACCESS_KEY not defined. ..."
          exit
       fi
+
       if [ ! -z "$AWS_REGION" ]; then
          fancy_echo "AWS_REGION not defined. us-west-1 assumed ..."
          AWS_REGION="us-west-1"
@@ -4408,6 +4427,7 @@ if [[ "${CLOUD_TOOLS,,}" == *"serverless"* ]]; then
          # NOTE in file runtime:nodejs6.10 for http://bit.ly/aws-creds-setup
       serverless deploy -r "$AWS_REGION" -s dev -v
          # RESPONSE: enpoints: GET - https://ojbr.execute-api.us-east-1...
+
       # TODO: replace xyz ???
       open "http://xyz.amazonaws.com/hello-world"
    fi
