@@ -63,7 +63,7 @@ NODE_TOOLS=""
 RUBY_TOOLS=""
         # travis, rails, rust
 DEV_TOOLS=""
-        # expo-xde
+        # expo-xde, raspian
 CLOUD_TOOLS=""
            # icloud, ironworker, docker, vagrant, rancher, 
            # awscli, gcp, azure, cf, heroku, terraform, serverless, (NOT: openstack)
