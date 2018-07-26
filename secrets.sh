@@ -78,6 +78,8 @@ CLOUD_TOOLS=""
 COLAB_TOOLS=""
           # blue-jeans, discord, google-hangouts, gotomeeting (32-bit), hipchat, joinme, keybase, microsoft-lync, 
           # signal, skype, slack, sococo, teamviewer, telegram, whatsapp, zoom
+DESIGN_TOOLS=""
+           # sketch, sketchrunner, paddy
 MEDIA_TOOLS=""
            # camtasia, kindle, tesseract, real-vnc, others (snagit?)
 MON_TOOLS=""
