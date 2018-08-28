@@ -62,8 +62,8 @@ NODE_TOOLS=""
           # magicbook, others( , etc.)
 RUBY_TOOLS=""
         # travis, rails, rust
-DEV_TOOLS=""
-        # expo-xde, raspbian
+DEV_TOOLS="gitlab-runner"
+        # gitlab-runner, expo-xde, raspbian
 CLOUD_TOOLS=""
            # icloud, ironworker, docker, vagrant, rancher, 
            # awscli, gcp, azure, cf, heroku, terraform, serverless, (NOT: openstack)
@@ -78,8 +78,6 @@ CLOUD_TOOLS=""
 COLAB_TOOLS=""
           # blue-jeans, discord, google-hangouts, gotomeeting (32-bit), hipchat, joinme, keybase, microsoft-lync, 
           # signal, skype, slack, sococo, teamviewer, telegram, whatsapp, zoom
-DESIGN_TOOLS=""
-           # sketch, sketchrunner, paddy
 MEDIA_TOOLS=""
            # camtasia, kindle, tesseract, real-vnc, others (snagit?)
 MON_TOOLS=""
