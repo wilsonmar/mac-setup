@@ -9,14 +9,15 @@
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
 # it installs utilities:
-# bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/DevSecOps/master/bash/mac-setup.sh)" -v -I
+# bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/bash/mac-setup.sh)" -v -I
+# -I above specifies Installation of everything.
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
 
 ### 1. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.73"
+SCRIPT_VERSION="v0.74"
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)

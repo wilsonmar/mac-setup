@@ -1,5 +1,23 @@
 The tagline of this repo is "Automatically install and configure the <strong>most popular programs</strong> to work <strong>offline</strong> as a developer of several stacks on a Mac and in clouds."
 
+The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
+
+## TL;DR: Run!
+
+To install:
+
+1. Highlight and copy this to your machine's invisible Clipboard, to display the parameters:
+
+   <tt>bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/bash/mac-setup.sh)" -v</tt>
+
+2. To Install stuff, highlight and copy this to your machine's invisible Clipboard this command, containing <tt>-I</tt> Installs:
+
+      <tt>bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/bash/mac-setup.sh)" -v -I</tt>
+
+2. Open a Terminal window.
+3. Click on it and press Command+V to paste.
+4. The script should run.
+
 ## Why?
 
 Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And most webinar demos seem to brag rather than teach skills. To be more helpful, this repo <strong>talks with code</strong> by including manual documentation in the "configuration as code" movement for minimizing risk and ensuring consistency.
@@ -16,8 +34,6 @@ This repo gives you a way to install, configure, and start a large set of progra
    * DevSecOps "stack" of Git, Nexus/Artifactory, Jenkins, MVN, Vagrant, Docker, etc.
    * Cloud management tools Terraform, AWS Cloud Formation, etc.
 
-The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
-
 This repo enables you to get the above up and running in a matter of minutes.
 Being able to get started quickly means that you can get working with the application rather than the ceremonies of installation.
 
@@ -30,14 +46,14 @@ In this course, well-known DevOps practitioners Ernest Mueller and James Wickett
 ### Limited Memory
 
 If you're now thinking "a Mac can't run every one of these programs" you're correct.
-A Mac has at most 16 GB of RAM. 
+A Mac has at most 16 GB of RAM.
 
 This repo isn't designed to run every service, but to enable you to pick a few at a time,
 even on a MacBook Air with 4GB RAM and 128 GB hard disk.
 
 The advantage gained by this script is <strong>fast change</strong>.
 For example, setup to try the Atom editor, then remove it, and install something else.
-This script enables you to <strong>switch quickly</strong> among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time. 
+This script enables you to <strong>switch quickly</strong> among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time.
 
 Scripts here are <strong>modular</strong>. Its default setting is to not install everything. It installs only what you tell it to by adding a keyword in the control file.
 
@@ -78,9 +94,9 @@ The categories are run in dependency sequence. MAC_TOOLS are installed to provid
 
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.
 
-But you don't have to start from scratch. 
+But you don't have to start from scratch.
 
-This script also performs <strong>updates</strong> and <strong>uninstall</strong> too. 
+This script also performs <strong>updates</strong> and <strong>uninstall</strong> too.
 Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version. Remember the "openssl" update scare?
 
 This script upgrades all programs it knows about if you run the script with the RUNTYPE set to "upgrade". Use this script to install and configure what you need at the moment.
@@ -130,7 +146,7 @@ Most of the apps installed make use of installation code defined in the Homebrew
    https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb">
    https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb</a>
 
-   PROTIP: Before downloads a brew formula, we recommend that you look at its Ruby code to verify what really occurs and especially where files come from. 
+   PROTIP: Before downloads a brew formula, we recommend that you look at its Ruby code to verify what really occurs and especially where files come from.
 
    <pre><strong>brew edit wget</strong></pre>
 
@@ -151,7 +167,7 @@ Yes, you can just run brew yourself, one at a time. But logic in the script goes
    * Perform configuration (such as adding a missing file needed for mariadb to start)
    * Edit configuration settings (such as changing default port within Nginx within config.conf file)
    * Upgrade and uninstall if that is available
-   * Run a demo using the component to ensure that what has been installed actually works. 
+   * Run a demo using the component to ensure that what has been installed actually works.
    <br /><br />
 
 ## Make this work for you
@@ -162,7 +178,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
 1. Obtain the Mac's Launch bar by positioning your mouse at the bottom edge of the screen until it appears.
 
-2. If you don't see an icon for the <a target="_blank" href="https://wilsonmar.github.io/mac-osx-terminal/">Terminal program</a>, click the magnifying glass icon always at the upper-right corner and type in Term until "Terminal app" is highlighted, then press Enter to accept it. 
+2. If you don't see an icon for the <a target="_blank" href="https://wilsonmar.github.io/mac-osx-terminal/">Terminal program</a>, click the magnifying glass icon always at the upper-right corner and type in Term until "Terminal app" is highlighted, then press Enter to accept it.
 
 3. Click menu Shell then click New Window for a Terminal session.
 
@@ -254,7 +270,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    ### Encrypting and Decrypting secrets
 
-   Optionally, you may store secrets and configurations in an encrypted file 
+   Optionally, you may store secrets and configurations in an encrypted file
    after some initial configuration.
 
    Run script <tt>./secrets.edit.sh</tt> to decrypt the contents of <tt>secrets.sh</tt>
@@ -262,7 +278,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    Run script <tt>./secrets.lock.sh</tt> to encrypt the contents of <tt>secrets.sh</tt>.
 
-   Utilities "blackbox" or "git-secret" can be used to handle 
+   Utilities "blackbox" or "git-secret" can be used to handle
 
 
    ### Text edit secrets.sh
@@ -285,7 +301,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    <pre>#!/usr/bin/env</pre>
 
-   BTW, unlike Windows, which determines the program to open files based on the suffix (or extension) of the file name, Linux shell programs such as Bash reference the "shebang" on the first line inside the file. 
+   BTW, unlike Windows, which determines the program to open files based on the suffix (or extension) of the file name, Linux shell programs such as Bash reference the "shebang" on the first line inside the file.
 
 1. Open another Terminal window.
 1. View the above files to see that they are binary executable files, such as:
@@ -303,7 +319,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    that is the Bash program associated with <a href="#Bash4">Bash v4</a>.
 
-   Version 4 is needed for <a href="#BashArrays">"associative arrays" 
+   Version 4 is needed for <a href="#BashArrays">"associative arrays"
    needed in the script</a>.
 
    This is why we needed to first upgrade Bash before running other scripts.
@@ -327,7 +343,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    ### Setup all
 
-1. Now copy, switch, click and paste in a Terminal window to run this command: 
+1. Now copy, switch, click and paste in a Terminal window to run this command:
 
    <pre>sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup-all.sh)"</pre>
 
@@ -341,7 +357,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    When the script ends it pops up a log file in the TextEdit program that comes with MacOS.
 
-5. Switch to the TextEdit window by clicking it. 
+5. Switch to the TextEdit window by clicking it.
 6. Scroll to review the log file. Press command+F to input text to search.
 6. Close the log file by clicking the red button.
 7. Switch to a Finder window to your account's Home folder and delete log files.
@@ -353,7 +369,7 @@ The section below explains to someone relatively new to Mac machines the steps t
    The folder contains these files and folders:
 
    * Files within folder "hooks" are used by Git (if marked for install.)
-   * File "mac-bash-profile.txt" contains starter entries to insert in ~/.bash_profile that is executed before MacOS opens a Terminal session. 
+   * File "mac-bash-profile.txt" contains starter entries to insert in ~/.bash_profile that is executed before MacOS opens a Terminal session.
    <br /><br />
 
    ### Subsequent runs
@@ -395,7 +411,7 @@ Popular apps</a> include:
 
 ### .pkg and .dmg
 
-.pkg and .dmg files can be downloaded to install apps. 
+.pkg and .dmg files can be downloaded to install apps.
 
 
 
@@ -444,7 +460,7 @@ Here are other scripts to install on Mac:
 * https://github.com/wilsonmar/git-utilities/blob/master/README.md was an early example just the bare basics,
    such as https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
    and https://git-scm.com/docs/git-config
-* https://github.com/monfresh/laptop 
+* https://github.com/monfresh/laptop
 * https://github.com/18F/laptop
 * https://dzone.com/articles/local-continuous-delivery-environment-with-docker
 * https://medium.com/my-name-is-midori/how-to-prepare-your-fresh-mac-for-software-development-b841c05db18
