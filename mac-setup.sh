@@ -964,6 +964,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       brew install xz
      #brew install --cask the-unarchiver
 
+     ### Browsers: see https://wilsonmar.github.io/browser-extensions
       if [ ! -d "/Applications/Google Chrome.app" ]; then   # file NOT found:
          brew install --cask google-chrome
       else
@@ -974,8 +975,10 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             note "Google Chrome.app already installed."
          fi
       fi
+     #brew install --cask brave
       brew install --cask firefox
-     #brew install --cask tor-browser
+      brew install --cask microsoft-edge
+      brew install --cask tor-browser
      #brew install --cask opera
 
      #See https://wilsonmar.github.io/text-editors
