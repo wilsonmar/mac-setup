@@ -1,46 +1,50 @@
-The tagline of this repo is "Automatically install and configure the <strong>most popular programs</strong> to work <strong>offline</strong> as a developer of several stacks on a Mac and in clouds."
-
-The script in this repo is thousands of lines long so that you can mix and match what you install. No hidden code here.
+Here is the quickest way to get started with a macOS laptop (new or old) to work as a developer of several popular stacks and in several clouds."
 
 ## TL;DR: Run!
 
-This repo is referenced by <a target="_blank" href="https://wilsonmar.github.io/mac-setup">my step-by-step instructions for setting up a macOS laptop for use by developers</a>.
+This approach is faster and repeatable than manually clicking through everything.
+It's less error-prone because we've worked out the dependency clashes for you.
+We created the script to automatically take care of workarounds to known issues. 
 
-1. Click on this link to review the script code:
-
-   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.sh</a>
-
-   Sections in the script are sequentially numbered. Run-time flags specify actions the script takes.
+1. All that you need to do is <a target="_blank" href="https://wilsonmar.github.io/mac-setup">explained in my step-by-step instructions</a>.
 
 1. Open a Terminal by pressing command+spacebar, then type enough of <strong>Terminal.app</strong> to select it.
 
 1. Drag the right-edge of the Terminal window to expand its width to accomodate longer lines displayed.
 
-1. Do a dry run of the script with <strong>no parameters</strong> so it only displays a list of parameters, use your mouse to triple-click the command below to highlight it, then press command+C to copy it to your Clipboard:
+1. Do a dry run of the script with <strong>no parameters</strong> so it only displays a (long) list of parameters, use your mouse to triple-click the command below to highlight it, then press command+C to copy it to your Clipboard:
 
-   <pre><strong>bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.sh)"
+   <pre><strong>zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)"
    </strong></pre>
 
-   Note the script is multi-purpose. The idea here is to have one script that installs everythnig needed: from XCode to Brew to Python.
+   (The script previously invoked bash, but it now invokes zsh because Apple switched to that as the default)
 
-   We created the script to automatically take care of workarounds to issues. 
+1. Click on this link to read the script code so you can be assured that it is not purposely injecting malware.
+
+   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.zsh">https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.zsh</a>
+
+   Unlike all other "dotfiles" on the internet, the script in this repo is thousands of lines long so that you copy and paste <strong>one</strong> script that installs everything needed: from XCode to Brew to Python to cloud CLI.
    
-   This approach is faster and less error-prone than manually clicking through everything.
+   I've tried to use the easiest to understand shell scripting techniques rather than esoteric one that other "experts" use to prove how superior they are. But if you disagree with something, please let me know. I welcome your suggestions.
 
-1. If you want to run the script to configure your laptop with what many macOS developers use, use your mouse to triple-click the command below to highlight it, then press command+C to copy it to your Clipboard:
+   You don't need to comment out the ones you don't want. Just don't provide the parameter.
 
-   <pre><strong>bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.sh)" -v -I
+   The exception to that are brew commands in the script.
+
+1. If you want to run the script to configure your laptop the <strong>most popular and trusted</strong> components macOS developers use, use your mouse to triple-click the command below to highlight it, then press command+C to copy it to your Clipboard:
+
+   <pre><strong>zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)" -v -I
    </strong></pre>
 
-   <tt>-I</tt> specifies install of utilities and programs most popular among developers using macOS.
+   <tt>-I</tt> specifies <strong>Install</strong> of utilities.
    
 1. Press command+V to paste the command from your Clipboard. It starts running.
 
-   The script creates a <tt>~/Projects/mac-setup</tt> folder on your machine and downloads the <tt>mac-setup.sh</tt> script file into it.
+   The script creates a <tt>~/Projects/mac-setup</tt> folder on your machine and downloads files into it, such as the <tt>mac-setup.zsh</tt> script. 
 
    If a utility program is not installed, the script installs it.
 
-1. If you and your team may want a different set of utilities and apps to install, edit the mac-setup.sh script and put it in your own repo on GitHub.
+1. If you and your team may want a different set of utilities and apps to install, edit the mac-setup.zsh script and put it in your own repo on GitHub. Then run the mac-setup.zsh command from your own repo. You'll miss out on frequent updates of my repo, though.
 
 1. Alternately, you can edit the configuration file and run Ansible.
 
@@ -405,7 +409,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    ### Subsequent runs
 
-   To update what is installed on your Mac, re-run the mac-setup.sh bash script.
+   To update what is installed on your Mac, re-run the mac-setup.zsh bash script.
 
 1. cd into your Home folder to find the <strong>secrets.sh</strong> file.
 1. Edit the file, then run again locally:
