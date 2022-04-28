@@ -4,19 +4,48 @@ The script in this repo is thousands of lines long so that you can mix and match
 
 ## TL;DR: Run!
 
-To install:
+This repo is referenced by <a target="_blank" href="https://wilsonmar.github.io/mac-setup">my step-by-step instructions for setting up a macOS laptop for use by developers</a>.
 
-1. Highlight and copy this to your machine's invisible Clipboard, to display the parameters:
+1. Click on this link to review the script code:
 
-   <tt>bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/bash/mac-setup.sh)" -v</tt>
+   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.sh</a>
 
-2. To Install stuff, highlight and copy this to your machine's invisible Clipboard this command, containing <tt>-I</tt> Installs:
+   Sections in the script are sequentially numbered. Run-time flags specify actions the script takes.
 
-      <tt>bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/bash/mac-setup.sh)" -v -I</tt>
+1. Open a Terminal by pressing command+spacebar, then type enough of <strong>Terminal.app</strong> to select it.
 
-2. Open a Terminal window.
-3. Click on it and press Command+V to paste.
-4. The script should run.
+1. Drag the right-edge of the Terminal window to expand its width to accomodate longer lines displayed.
+
+1. Do a dry run of the script with <strong>no parameters</strong> so it only displays a list of parameters, use your mouse to triple-click the command below to highlight it, then press command+C to copy it to your Clipboard:
+
+   <pre><strong>bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.sh)"
+   </strong></pre>
+
+   Note the script is multi-purpose. The idea here is to have one script that installs everythnig needed: from XCode to Brew to Python.
+
+   We created the script to automatically take care of workarounds to issues. 
+   
+   This approach is faster and less error-prone than manually clicking through everything.
+
+1. If you want to run the script to configure your laptop with what many macOS developers use, use your mouse to triple-click the command below to highlight it, then press command+C to copy it to your Clipboard:
+
+   <pre><strong>bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.sh)" -v -I
+   </strong></pre>
+
+   <tt>-I</tt> specifies install of utilities and programs most popular among developers using macOS.
+   
+1. Press command+V to paste the command from your Clipboard. It starts running.
+
+   The script creates a <tt>~/Projects/mac-setup</tt> folder on your machine and downloads the <tt>mac-setup.sh</tt> script file into it.
+
+   If a utility program is not installed, the script installs it.
+
+1. If you and your team may want a different set of utilities and apps to install, edit the mac-setup.sh script and put it in your own repo on GitHub.
+
+1. Alternately, you can edit the configuration file and run Ansible.
+
+
+<a name="Why"></a>
 
 ## Why?
 
@@ -25,7 +54,9 @@ Most tutorials ask you to <strong>manually type</strong> or copy and paste strin
 This repo gives you a way to install, configure, and start a large set of programs running sample code for several "stacks":
 
    * MEAN (MongoDB, Express, Angular, NodeJs) with the <a target="_blank" href="http://meanjs.org/">MeanJs sample app</a>
-   * <a target="_blank" href="http://mern.io/">MERN</a> (MongoDB, Express, React/Redux, NodeJs, WebPack) for "Universal" apps
+   * <a target="_blank" href="http://mern.io/">MERN</a> (MongoDB, Express, React/Redux, NodeJs) for "Universal" apps, including WebPack
+   * PERN (PostgreSQL, Express, React, Node-postgres) with utilities <a target="_blank" href="https://www.pgadmin.org/">PGAdmin</a>, <a target="_blank" href="https://postgresapp.com/">Postgresapp</a>, <a target="_blank" href="https://react-bootstrap.github.io/">react-bootstrap</a>, <a target="_blank" href="https://www.npmjs.com/package/pg">nodemon</a>, (<a target="_blank" href="https://medium.com/bb-tutorials-and-thoughts/how-to-dockerize-pern-stack-afcd824a785f">Dockerized</a>)
+
    * JAM (Jekyll, APIs, Markup) with a sample Github.io website
    * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
    * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)

@@ -57,10 +57,17 @@ alias sysinfo='open -a "/Applications/Utilities/System Information.app"'
 ### To access Apple apps:
 alias appstore='open -a "/Applications/App Store.app"'
 alias calc='open -a "/Applications/Calculator.app"'
+alias disk='open -a "/Applications/Utilities/Disk Utility.app"'
 alias facetime='open -a "/Applications/FaceTime.app"'
 alias messages='open -a "/Applications/Messages.app"'
 alias safari='open -a "$HOME/Applications/Safari.app"'
 alias xcode='open -a /Applications/xcode.app'
+
+### Microsoft Office 365:
+alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
+alias excel='open -a "/Applications/Microsoft Excel.app"'
+# https://expo.dev/tools
+alias edge='open -a "/Applications/Microsoft Edge.app"'
 
 ### To access custom-installed GUI apps from command line:
 alias 1pass='open -a "/Applications/1Password 7.app"'      # Secret
@@ -72,18 +79,15 @@ alias audacity='open -a "/Applications/Audacity.app"'      # Audio engineering
 alias chime='open -a "/Applications/Amazon Chime.app"'
 alias chrome='open -a "/Applications/Google Chrome.app"'
 alias collo='open -a "/Applications/Colloquy.app"'         # 
-# alias discord='open -a "/Applications/Discord.app"'
-alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
-alias excel='open -a "/Applications/Microsoft Excel.app"'
-# https://expo.dev/tools
-alias edge='open -a "/Applications/Microsoft Edge.app"'
+# alias discord='open -a "/Applications/Discord.app"'  # inssecure!
+
 alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'  #
 alias ghd='open -a "/Applications/GitHub Desktop.app"'
 alias iterm='open -a "$HOME/Applications/iTerm.app"'
 # alias jprofiler='open -a "/Applications/JProfiler.app"'
 alias keybase='open -a "$HOME/Applications/Keybase.app"'                  # Secrets
 alias kindle='open -a "$HOME/Applications/Kindle.app"'
-# obs
+alias obs='open -a "$HOME/Applications/OBS.app"'
 alias postman='open -a "/Applications/Postman.app"'
 #alias pycharm='open -a "$HOME/Applications/Pycharm.app"'
 alias reader='open -a "/Applications/Adobe Acrobat Reader DC.app"'

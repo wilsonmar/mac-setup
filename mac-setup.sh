@@ -9,22 +9,21 @@
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
 # it installs utilities:
-# bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/bash/mac-setup.sh)" -v -I
-# -I above specifies Installation of everything.
+# bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/DevSecOps/master/bash/mac-setup.sh)" -v -I
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
 
-### 1. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
+### 01. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.74"
+SCRIPT_VERSION="v0.75"
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
 echo "=========================== $LOG_DATETIME $THIS_PROGRAM $SCRIPT_VERSION"
 
 
-### 2. Display a menu if no parameter is specified in the command line
+### 02. Display a menu if no parameter is specified in the command line
 args_prompt() {
    echo "OPTIONS:"
    echo "   -E            continue (NOT stop) on error"
@@ -34,8 +33,9 @@ args_prompt() {
    echo "   -x            set -x to trace command lines"
 #   echo "   -x           set sudoers -e to stop on error"
    echo " "
-   echo "   -I           -Install jq, brew, docker, docker-compose, etc."
+   echo "   -I           -Install brew utilities, apps"
    echo "   -U           -Upgrade installed packages"
+   echo "   -sd          -sd card initialize"
    echo " "
    echo "   -s           -secrets retrieve"
    echo "   -S \"~/.alt.secrets.sh\"  -Secrets full file path"
@@ -114,7 +114,7 @@ exit_abnormal() {            # Function: Exit with error.
   exit 1
 }
 
-### 3. Define variables for use as "feature flags"
+### 03. Define variables for use as "feature flags"
    RUN_ACTUAL=false             # -a  (dry run is default)
    CONTINUE_ON_ERR=false        # -E
    SET_TRACE=false              # -x
@@ -128,6 +128,7 @@ exit_abnormal() {            # Function: Exit with error.
    RUN_PARMS=""                 # -P
    USE_CIRCLECI=false           # -L
    USE_DOCKER=false             # -k
+   SET_MACOS_SYSPREFS=false     # -macos
 
    USE_AWS_CLOUD=false          # -aws
    RUN_EKS=false                # -eks
@@ -190,20 +191,22 @@ exit_abnormal() {            # Function: Exit with error.
    OPEN_APP=false               # -o
    APP1_PORT="8000"
 
+   IMAGE_SD_CARD=false          # -sd
    CLONE_GITHUB=false           # -c
 
    REMOVE_DOCKER_IMAGES=false   # -M
    REMOVE_GITHUB_AFTER=false    # -R
    KEEP_PROCESSES=false         # -K
 
-PROJECT_FOLDER_PATH="$HOME/projects"  # -P
+PROJECT_FOLDER_PATH="$HOME/Projects"  # -P
 PROJECT_FOLDER_NAME=""
 GITHUB_ACCOUNT=""
 GitHub_USER_NAME="Wilson Mar"             # -n
 GitHub_USER_EMAIL="wilson_mar@gmail.com"  # -e
 GitHub_BRANCH=""
 
-### 4. Set variables associated with each parameter flag
+
+### 04. Set variables associated with each parameter flag
 while test $# -gt 0; do
   case "$1" in
     -a)
@@ -346,6 +349,10 @@ while test $# -gt 0; do
       PROJECT_FOLDER_NAME="circleci_demo"
       shift
       ;;
+    -macos)
+      export SET_MACOS_SYSPREFS=true
+      shift
+      ;;
     -m)
       export MOVE_SECURELY=true
       export LOCAL_SSH_KEYFILE="id_rsa"
@@ -395,6 +402,10 @@ while test $# -gt 0; do
       ;;
     -r)
       export RESTART_DOCKER=true
+      shift
+      ;;
+    -sd)
+      export IMAGE_SD_CARD=true
       shift
       ;;
     -s)
@@ -496,7 +507,7 @@ while test $# -gt 0; do
 done
 
 
-### 5. Custom functions to echo text to screen
+### 05. Custom functions to echo text to screen
 # \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
 h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
    printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
@@ -533,7 +544,7 @@ if [ "${RUN_DEBUG}" = true ]; then  # -vv
    fatal "fatal (warnError)"
 fi
 
-### 6. Obtain information about the operating system in use to define which package manager to use
+### 06. Obtain information about the operating system in use to define which package manager to use
    OS_TYPE="$( uname )"
    export OS_DETAILS=""  # default blank.
    export PACKAGE_MANAGER=""
@@ -584,7 +595,7 @@ fi
 # note "OS_DETAILS=$OS_DETAILS"
 
 
-### 7. Upgrade to the latest version of bash 
+### 07. Upgrade to the latest version of bash 
 BASH_VERSION=$( bash --version | grep bash | cut -d' ' -f4 | head -c 1 )
    if [ "${BASH_VERSION}" -ge "4" ]; then  # use array feature in BASH v4+ :
       DISK_PCT_FREE=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[11]}" )
@@ -611,7 +622,7 @@ BASH_VERSION=$( bash --version | grep bash | cut -d' ' -f4 | head -c 1 )
    fi
 
 
-### 8. Set traps to display information if script is interrupted.
+### 08. Set traps to display information if script is interrupted.
 # See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.sh
 trap this_ending EXIT
 trap this_ending INT QUIT TERM
@@ -638,7 +649,7 @@ sig_cleanup() {
 }
 
 
-### 9. Print run Operating environment information
+### 09. Print run Operating environment information
 HOSTNAME=$( hostname )
 PUBLIC_IP=$( curl -s ifconfig.me )
 INTERNAL_IP=$( ipconfig getifaddr en0 )
@@ -676,10 +687,14 @@ fi
 # set -o nounset
 
 
-IFS=$'\n\t'  # Bashism Internal Field Separator used by echo, read for word splitting to lines newline or tab (not spaces).
+### Keep-alive: update existing `sudo` time stamp until `.osx` has finished
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
 ### 10. Install installers (brew, apt-get), depending on operating system
+
+# Bashism Internal Field Separator used by echo, read for word splitting to lines newline or tab (not spaces).
+IFS=$'\n\t'  
 
 BASHFILE="$HOME/.bash_profile"  # on Macs
 # if ~/.bash_profile has not been defined, create it:
@@ -842,7 +857,6 @@ fi # if [ "${DOWNLOAD_INSTALL}"
 
 
 ### 11. Define utility functions, such ShellCheck and the function to kill process by name, etc.
-
 ps_kill(){  # $1=process name
       PSID=$( pgrap -l "$1" )
       if [ -z "$PSID" ]; then
@@ -879,48 +893,348 @@ fi  # DOWNLOAD_INSTALL
 
 ### 12. Install basic utilities (git, jq)
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+   # CAUTION: Install only packages that you actually use and trust!
+
+      h2 "Removing apps pre-installed by Apple, taking up space if they are not used:"
+
+      if [ -d "/Applications/iMovie.app" ]; then   # file NOT found:
+         rm -rf "/Applications/iMovie.app"
+      fi
+
+      if [ -d "/Applications/Keynote.app" ]; then   # file NOT found:
+         rm -rf "/Applications/Keynote.app"
+      fi
+
+      if [ -d "/Applications/Numbers.app" ]; then   # file NOT found:
+         rm -rf "/Applications/Numbers.app"
+      fi
+
+      if [ -d "/Applications/Pages.app" ]; then   # file NOT found:
+         rm -rf "/Applications/Pages.app"
+      fi
+
+      if [ -d "/Applications/GarageBand.app" ]; then   # file NOT found:
+         rm -rf "/Applications/Garage Band.app"
+      fi
+
+      h2 "Remaining apps installed by Apple App Store:"
+      find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
+
+      # Response: The Unarchiver.app, Pixelmator.app, 
+      # TextWrangler.app, WriteRoom.app,
+      # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
 
    if [ "${PACKAGE_MANAGER}" == "brew" ]; then
-         if ! command -v git >/dev/null; then  # command not found, so:
-            h2 "Brew installing git ..."
-            brew install git
-         else  # installed already:
-            if [ "${UPDATE_PKGS}" = true ]; then
-               h2 "Brew upgrading git ..."
-               brew upgrade git
-            fi
+ 
+      h2 "brew install CLI utilities:"
+
+     #Security:
+      brew install --cask 1password
+      if [ ! -d "/Applications/Keybase.app" ]; then   # file NOT found:
+         brew install --cask keybase
+      else
+         rm -rf "/Applications/Keybase.app"
+         brew upgrade --cask keybase
+      fi
+
+     # Terminal replacement:
+      brew install iterm2
+      brew install --cask hyper
+
+      brew install curl
+      brew install git
+      note "$( git --version )"
+         # git, version 2018.11.26
+
+      # For htop -t  (tree of processes):
+      #brew install htop
+
+      brew install jq
+      note "$( jq --version )"  # jq-1.6
+
+      #brew install hub
+      #note "$( hub --version )"
+         # git version 2.27.0
+         # hub version 2.14.2
+
+      brew install tree
+
+     ### Unzip:
+     #brew install --cask keka
+      brew install xz
+     #brew install --cask the-unarchiver
+
+      if [ ! -d "/Applications/Google Chrome.app" ]; then   # file NOT found:
+         brew install --cask google-chrome
+      else
+         if [ "${UPDATE_PKGS}" = true ]; then
+            rm -rf "/Applications/Google Chrome.app"
+            brew upgrade --cask google-chrome
+         else
+            note "Google Chrome.app already installed."
          fi
-         note "$( git --version )"
-            # git, version 2018.11.26
+      fi
+      brew install --cask firefox
+     #brew install --cask tor-browser
+     #brew install --cask opera
 
+     #See https://wilsonmar.github.io/text-editors
+      brew install --cask atom
+      brew install --cask visual-studio-code
+     #brew install --cask sublime-text
+     # Licensed Python IDE from ___:
+     #brew install --cask pycharm
+     #brew install --cask macvim
 
-         if ! command -v jq >/dev/null; then  # command not found, so:
-            h2 "Brew installing jq ..."
-            brew install jq
-         else  # installed already:
-            if [ "${UPDATE_PKGS}" = true ]; then
-               h2 "Brew upgrading jq ..."
-               brew upgrade jq
-            fi
-         fi
-         note "$( jq --version )"  # jq-1.6
+     #brew install --cask anki
+     #brew install --cask diffmerge  ???
+      brew install --cask docker
+     #brew install --cask geekbench
 
+     #Media editing:
+      brew install --cask sketch
+     #Open Broadcaster Software (for recording sound & video)
+      brew install --cask obs
+     #brew install --cask micro-video-converter
+     #brew install --cask vlc
+     #brew install --cash imageoptim
 
-         if ! command -v hub >/dev/null; then  # command not found, so:
-            h2 "Brew installing hub ..."
-            brew install hub
-         else  # installed already:
-            if [ "${UPDATE_PKGS}" = true ]; then
-               h2 "Brew upgrading hub ..."
-               brew upgrade hub
-            fi
-         fi
-         note "$( hub --version )"
-            # git version 2.27.0
-            # hub version 2.14.2
+     #Installs as zoom.us.app
+      brew install --cask zoom
+     #Can't if [ ! -d "/Applications/Slack.app" ]; then   # file NOT found:
+      brew install --cask skype
+
+      brew install --cask kindle
+
+     # REST API editor (like Postman):
+     #brew install --cask postman
+     #brew install --cask insomnia
+
+     # GUI Unicode .keylayout file editor for macOS at https://software.sil.org/ukelele/
+     # Precursor to https://keyman.com/
+     #brew install --cask ukelele     
 
    fi  # PACKAGE_MANAGER
+
+   if [ "${RUN_DEBUG}" = true ]; then  # -vv
+
+      h2 "Brew list ..."
+      brew list 
+      
+      h2 "brew list --cask"
+      brew list --cask
+
+      h2 "List /Applications"
+      ls /Applications
+   fi
+
 fi  # DOWNLOAD_INSTALL
+
+
+if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
+   h2 "13. Override defaults in Apple macOS System Preferences:"
+   # https://www.youtube.com/watch?v=r_MpUP6aKiQ = "~/.dotfiles in 100 seconds"
+   # Patrick McDonald's $12,99 Udemy course "Dotfiles from Start to Finish" at https://bit.ly/3anaaFh
+
+   if [ "${RUN_DEBUG}" = true ]; then  # -vv
+      note "NSGlobalDomain NSGlobalDomain before update ..."
+      defaults read NSGlobalDomain # > DefaultsGlobal.txt
+   fi
+
+   # Explained in https://wilsonmar.github.io/dotfiles/#general-uiux
+         # General Appearance: Dark
+         defaults write AppleInterfaceStyle –string "Dark";
+
+         # ========== Sidebar icon size ==========
+         # - Small
+         defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 1
+         # - Medium (the default)
+         # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 2
+         # - Large
+         # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 3
+
+         # ========== Allow Handoff between this Mac and your iCloud devices ==========
+         # - Checked
+         defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityReceivingAllowed -bool true
+         defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityAdvertisingAllowed -bool true
+         # - Unchecked (default)
+         #defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityReceivingAllowed -bool false
+         #defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityAdvertisingAllowed -bool false
+
+         # ========== Default web browser ==========
+         # - Safari (default)
+         # - Google Chrome
+         # https://github.com/ulwlu/dotfiles/blob/master/system/macos.sh has grep error.
+      
+      # Explained in https://wilsonmar.github.io/dotfiles/#Dock
+         # Dock (icon) Size: "smallish"
+         defaults write com.apple.dock tilesize -int 36;
+
+         # Position (Dock) on screen: Right
+         defaults write com.apple.dock orientation right; 
+
+         # Automatically hide and show the Dock:
+         defaults write com.apple.dock autohide-delay -float 0; 
+
+         # remove Dock show delay:
+         defaults write com.apple.dock autohide -bool true; 
+         defaults write com.apple.dock autohide-time-modifier -float 0;
+
+         # remove icons in Dock
+         defaults write com.apple.dock persistent-apps -array; 
+
+      # Explained in https://wilsonmar.github.io/dotfiles/#Wi-Fi
+      # Explained in https://wilsonmar.github.io/dotfiles/#Bluetooth
+      # Explained in https://wilsonmar.github.io/dotfiles/#AirDrop
+      # Explained in https://wilsonmar.github.io/dotfiles/#Focus
+      # Explained in https://wilsonmar.github.io/dotfiles/#KeyboardBrightness
+      # Explained in https://wilsonmar.github.io/dotfiles/#ScreenMirroring
+
+      # Explained in https://wilsonmar.github.io/dotfiles/#Display
+      # Explained in https://wilsonmar.github.io/dotfiles/#Sound
+      # Explained in https://wilsonmar.github.io/dotfiles/#NowPlaying
+      # Explained in https://wilsonmar.github.io/dotfiles/#Accessibility
+
+      # Explained in https://wilsonmar.github.io/dotfiles/#Battery
+      # Show remaining battery time; hide percentage
+      defaults write com.apple.menuextra.battery ShowPercent -string "NO"
+      defaults write com.apple.menuextra.battery ShowTime -string "YES"
+
+      # Explained in https://wilsonmar.github.io/dotfiles/#FastUserSwitching
+
+      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBar
+      # defaults write NSGlobalDomain AppleEnableMenuBarTransparency -bool false
+      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBarClock
+      # Display the time in seconds (default unchecked) ???
+      # When clicking clock in login window, reveal IP address, hostname, OS version, etc. 
+      # sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
+
+      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBarSpotlight
+      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBarSiri
+      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBarTimeMachine
+
+   # Explained in https://wilsonmar.github.io/dotfiles/#Desktop
+   # Explained in https://wilsonmar.github.io/dotfiles/#MenuBar
+   # Explained in https://wilsonmar.github.io/dotfiles/#Siri
+   # Explained in https://wilsonmar.github.io/dotfiles/#Spotlight
+   # Explained in https://wilsonmar.github.io/dotfiles/#Notifications
+   # Notifications: One-time passwords
+   #defaults write com.agilebits.onepassword7 OPPreferencesNotifyOfTOTPCopy -bool true
+   # Notifications: Vault access
+   #defaults write com.agilebits.onepassword7 OPPreferencesNotifyVaultAddedRemoved -bool true
+   # Notifications: Watchdog alerts
+   #defaults write com.agilebits.onepassword7 OPPreferencesNotifyCompromisedWebsites -bool true
+
+   # Explained in https://wilsonmar.github.io/dotfiles/#InternetAccounts
+   # Explained in https://wilsonmar.github.io/dotfiles/#Passwords
+   # Explained in https://wilsonmar.github.io/dotfiles/#Wallet
+   # Explained in https://wilsonmar.github.io/dotfiles/#UsersGroups
+   # Explained in https://wilsonmar.github.io/dotfiles/#Accessibility
+   # Explained in https://wilsonmar.github.io/dotfiles/#ScreenTime
+   # Explained in https://wilsonmar.github.io/dotfiles/#Extensions
+      # Show all filename extensions:
+      defaults write NSGlobalDomain AppleShowAllExtensions -bool true; 
+      defaults write -g AppleShowAllExtensions -bool true
+      # Show hidden files:
+      defaults write com.apple.finder AppleShowAllFiles YES;
+      # Show ~/Library hidden by default:
+      chflags hidden ~/Library
+
+   # Explained in https://wilsonmar.github.io/dotfiles/#SecurityPrivacy
+
+   # Explained in https://wilsonmar.github.io/dotfiles/#SoftwareUpdate
+   # Explained in https://wilsonmar.github.io/dotfiles/#Network
+   # Explained in https://wilsonmar.github.io/dotfiles/#Bluetooth
+   # Explained in https://wilsonmar.github.io/dotfiles/#Sound
+
+   # Explained in https://wilsonmar.github.io/dotfiles/#TouchID
+   # Explained in https://wilsonmar.github.io/dotfiles/#Keyboard
+   # Explained in https://wilsonmar.github.io/dotfiles/#Trackpad
+      # Tracking speed: (default is 1.5 in GUI)
+      defaults read -g com.apple.trackpad.scaling
+      # Tracking speed: maximum 5.0
+      defaults write -g com.apple.trackpad.scaling 5.0
+      # FIX: Output: 5.0\013
+
+   # Explained in https://wilsonmar.github.io/dotfiles/#Mouse
+      # Tracking speed: (default is 3 in GUI)
+      defaults read -g com.apple.mouse.scaling
+      # Tracking speed: maximum 5.0
+      defaults write -g com.apple.mouse.scaling 5.0
+
+   # Explained in https://wilsonmar.github.io/dotfiles/#Displays
+   # Explained in https://wilsonmar.github.io/dotfiles/#PrintersScanners
+   # Explained in https://wilsonmar.github.io/dotfiles/#Battery
+      # Turn display off after 15 minutes (default 17)
+      # Low Power Mode (default off)
+   # Explained in https://wilsonmar.github.io/dotfiles/#DateTime
+   # Explained in https://wilsonmar.github.io/dotfiles/#Sharing
+   # Explained in https://wilsonmar.github.io/dotfiles/#TimeMachine
+   # Explained in https://wilsonmar.github.io/dotfiles/#StartupDisk
+   # Explained in https://wilsonmar.github.io/dotfiles/#Profiles
+
+fi  # SET_MACOS_SYSPREFS
+
+
+### 12b. Image SD card
+# See https://wilsonmar.github.io/iot-raspberry-install/
+# To avoid selecting a hard drive and wiping it out,
+# it's best to manually use https://www.sdcard.org/downloads/formatter/
+# But this automation is meant for use in a production line creating many copies.
+# Download image, format new SD chip, and flash the image, all in a single command.
+if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
+   # Figure out device for 128GB sd card:
+   diskutil list
+   # TODO: Use a utility to sepect the disk
+   IMAGE_DISK="/dev/disk4"  # or "/dev/disk4"
+   # TODO: Pause to confirm.
+
+   # TODO: Get the latest?
+   IMAGE_XZ_FILENAME="metal-rpi_4-arm64.img.xz"
+   IMAGE_FILENAME="metal-rpi_4-arm64.img"
+
+   h2 "Image $IMAGE_XZ_FILENAME to $IMAGE_FILENAME on ${IMAGE_DISK} ,,,"
+
+   # Prepare Pi - Download the proper Pi image ("1.0.1 released 2022-04-04.img")
+   if [ ! -f "$IMAGE_XZ_FILENAME" ]; then   # file NOT found, so download from github:
+      curl -LO "https://github.com/siderolabs/talos/releases/download/v1.0.0/${IMAGE_XZ_FILENAME}"
+   fi
+
+   if [ ! -f "$IMAGE_XZ_FILENAME" ]; then   # file NOT found, so download from github:
+      error "Download of $IMAGE_XZ_FILENAME failed!"
+   else
+      ls -al "${IMAGE_XZ_FILENAME}"
+      if [ ! -f "$IMAGE_FILENAME" ]; then   # file NOT found, so download from github:
+         note "Decompressing ${IMAGE_XZ_FILENAME} using xz ..."
+         xz "${IMAGE_XZ_FILENAME}"  # to "$IMAGE_FILENAME"
+      fi
+   fi
+
+   if [ ! -f "$IMAGE_FILENAME" ]; then   # file NOT found, so download from github:
+      error "xz de-compress of $IMAGE_XZ_FILENAME to $IMAGE_FILENAME failed!"
+   else
+      note "Verify ${IMAGE_FILENAME} ..."
+      ls -al "${IMAGE_FILENAME}"
+      # TODO: Verify MD5?
+   fi 
+
+   sudo -v   # get password
+
+   h2 "Instead of using SD Association's SD Formatter or macOS Disk Utility "
+   # TODO: See if on SD already:"
+   # TODO: fdisk: /dev/disk2: Operation not permitted
+   # Initialize sd card: "OK" to "Terminal" would like to access files on a removeable volume.
+   # Response: fdisk: could not open MBR file /usr/standalone/i386/boot0: No such file or directory
+   # Automatically answer yes to "Do you wish to write new MBR and partition table? [n] "
+   yes | sudo fdisk -i "${IMAGE_DISK}"
+
+   # Write image to card:
+   sudo dd if=metal-rpi_4-arm64.img of="${IMAGE_DISK}"
+
+   # TODO: Confirm on mac
+   # Next, Put sd in Pi and reboot it (Talos needs to be on ethernet network, not wi-fi):
+
+fi  # IMAGE_SD_CARD
 
 
 ### 13. Get secrets from a clear-text file in $HOME folder
@@ -933,7 +1247,7 @@ Input_GitHub_User_Info(){
       read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GitHub_USER_EMAIL
       GitHub_USER_EMAIL=${GitHub_USER_EMAIL:-"johb_doe@gmail.com"}
 }
-if [ "${USE_SECRETS_FILE}" = false ]; then  # -s
+if [ "${USE_SECRETS_FILE}" == false ]; then  # -s
    warning "Using default values hard-coded in this bash script ..."
    # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
    # PIPENV_DOTENV_LOCATION=/path/to/.env or =1 to not load.
@@ -991,13 +1305,14 @@ fi  # if [ "${USE_SECRETS_FILE}" = false ]; then  # -s
       note "cd into path $PWD ..."
    fi
 
-   if [ "${RUN_DEBUG}" = true ]; then  # -vv
+   if [ "${RUN_DEBUG}" == true ]; then  # -vv
       note "$( ls "${PROJECT_FOLDER_PATH}" )"
    fi
 
 
 ### 15. Obtain repository from GitHub
 
+echo "*** GitHub_REPO_URL=${GitHub_REPO_URL}"
 if [ -n "${GitHub_REPO_URL}" ]; then   # variable is NOT blank
 
 Delete_GitHub_clone(){
