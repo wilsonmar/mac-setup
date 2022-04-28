@@ -25,88 +25,137 @@ alias k9='kill -9'
 alias ka="killall"
 alias kp="ps auxwww | more"  # "que pasa" processes running
 
-#### See https://wilsonmar.github.io/text-editor
-export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
-# export EDITOR="/usr/local/bin/mate -w" 
-alias edit="$EDITOR"   # change this, not your habitual editor name
-alias ebp="$EDITOR ~/.bash_profile && source ~/.bash_profile"
-alias sbp='source ~/.bash_profile'
-alias atom='open -a "/Applications/Atom.app"'
-alias textedit='open -a "/Applications/TextEdit.app"'
-alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
-# alias sourcetree='open -a SourceTree'
-# alias sts='open -a "/Applications/STS.app"'
-# alias eclipse='open "/Applications/Eclipse.app"'
-alias vi="nvim"
-alias vim="nvim"
-# alias macvim='open -a "/Applications/MacVim.app"'
-# alias vs='$HOME/Applications/Visual\ Studio.app/Contents/MacOS/VisualStudio &'
-# alias idea='open -a "/Applications/IntelliJ IDEA CE.app"'
-# alias brackets='open -a "/Applications/Brackets.app"'
-
-# For Zsh only:
-# alias szs="$EDITOR ~/.zshrc"
-
-alias rs='exec -l $SHELL'
-
-### To access MacOS system GUI apps from command line:
+#### built-in macOS system GUI apps invoke from command line:
 alias aam='open -a "/Applications/Utilities/Activity Monitor.app"'  # See CPU usage by app
 alias prefs='open -a "/Applications/System\Preferences.app"'
 alias sysinfo='open -a "/Applications/Utilities/System Information.app"'
 
-### To access Apple apps:
+#### System utilities added:
+#alias alfred='open -a "/Applications/Alfred 3.app"'
+
+# VIDEO: https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
+# https://macosxautomation.com/automator/
+alias automator='open -a "/Applications/Automator.app"'    # https://support.apple.com/guide/automator/welcome/mac
+
+#alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'   # performance benchmarking
+#alias vfusion='open -a "/Applications/VMware Fusion.app"'      # VMware Fusion (licensed)
+
+
+##### Terminal 
+# terminal.app
+#alias hyper='open -a "$HOME/Applications/Hyper.app"'
+alias iterm='open -a "$HOME/Applications/iTerm.app"'
+# alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
+
+##### See https://wilsonmar.github.io/text-editor
+export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
+   # export EDITOR="/usr/local/bin/mate -w" 
+alias edit="$EDITOR"   # make a habit of using this instead program name (such as code), so you can switch default editor easier 
+alias ezs="$EDITOR ~/.zshrc"   # for Zsh
+alias szs='source ~/.zshrc'
+alias rs='exec -l $SHELL'    # reset shell
+
+alias ebp="$EDITOR ~/.bash_profile && source ~/.bash_profile"
+alias sbp='source ~/.bash_profile'
+# alias eclipse='open "/Applications/Eclipse.app"'
+
+alias atom='open -a "/Applications/Atom.app"'
+# alias brackets='open -a "/Applications/Brackets.app"'
+alias code='open -a "$HOME/Applications/Visual Studio Code.app"'
+# alias vs='$HOME/Applications/Visual\ Studio.app/Contents/MacOS/VisualStudio &'
+
+#alias pycharm='open -a "$HOME/Applications/Pycharm.app"'
+# alias sts='open -a "/Applications/STS.app"'
+alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
+# alias sourcetree='open -a SourceTree'
+
+# See https://wilsonmar.github.io/dotfiles/#SublimeText.app
+alias subl='open -a "/Applications/Sublime Text.app"'
+
+alias textedit='open -a "/Applications/TextEdit.app"'
+alias xcode='open -a /Applications/xcode.app'
+alias vi="nvim"
+alias vim="nvim"
+# alias macvim='open -a "/Applications/MacVim.app"'
+# alias idea='open -a "/Applications/IntelliJ IDEA CE.app"'
+
+# https://www.jetbrains.com/webstorm/
+# alias webstorm='open -a "/Applications/Webstorm.app"'
+
+alias word='open -a "/Applications/Microsoft Word.app"'
+
+# Diff:
+alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
+
+
+##### Internet Browsers:
+# alias brave='open -a "/Applications/Brave.app"'
+
+# See https://wilsonmar.github.io/dotfiles/#GoogleChrome.app
+alias chrome='open -a "/Applications/Google Chrome.app"'
+
+alias edge='open -a "/Applications/Microsoft Edge.app"'
+alias firefox='open -a "/Applications/Firefox.app"'
+# alias opera='open -a "/Applications/Opera.app"'
+alias safari='open -a "/Applications/Safari.app"'
+# alias tor='open -a "/Applications/Tor Browser.app"'
+
+
+### built-in Apple apps:
 alias appstore='open -a "/Applications/App Store.app"'
 alias calc='open -a "/Applications/Calculator.app"'
-alias disk='open -a "/Applications/Utilities/Disk Utility.app"'
-alias facetime='open -a "/Applications/FaceTime.app"'
-alias messages='open -a "/Applications/Messages.app"'
-alias safari='open -a "$HOME/Applications/Safari.app"'
-alias xcode='open -a /Applications/xcode.app'
 
-### Microsoft Office 365:
-alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
-alias excel='open -a "/Applications/Microsoft Excel.app"'
-# https://expo.dev/tools
-alias edge='open -a "/Applications/Microsoft Edge.app"'
 
-### To access custom-installed GUI apps from command line:
+##### See https://wilsonmar.github.io/zero-trust ???
 alias 1pass='open -a "/Applications/1Password 7.app"'      # Secret
-alias alfred='open -a "/Applications/Alfred 3.app"'
-alias anki='open -a "$HOME/Applications/Anki.app"'         # Flash cards https://apps.ankiweb.net/
-alias automator='open -a "/Applications/Automator.app"'    # https://automator.app/
-alias audacity='open -a "/Applications/Audacity.app"'      # Audio engineering
-# alias brave='open -a "/Applications/Brave.app"'
-alias chime='open -a "/Applications/Amazon Chime.app"'
-alias chrome='open -a "/Applications/Google Chrome.app"'
-alias collo='open -a "/Applications/Colloquy.app"'         # 
-# alias discord='open -a "/Applications/Discord.app"'  # inssecure!
-
-alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'  #
-alias ghd='open -a "/Applications/GitHub Desktop.app"'
-alias iterm='open -a "$HOME/Applications/iTerm.app"'
-# alias jprofiler='open -a "/Applications/JProfiler.app"'
 alias keybase='open -a "$HOME/Applications/Keybase.app"'                  # Secrets
-alias kindle='open -a "$HOME/Applications/Kindle.app"'
-alias obs='open -a "$HOME/Applications/OBS.app"'
-alias postman='open -a "/Applications/Postman.app"'
-#alias pycharm='open -a "$HOME/Applications/Pycharm.app"'
-alias reader='open -a "/Applications/Adobe Acrobat Reader DC.app"'
-# alias rstudio='open -a "/Applications/RStudio.app"'
 alias sentinel='open -a "/Applications/Sentinel.app"'  # Hashicorp
-alias signal='open -a "/Applications/Signal.app"'
-alias sketch='open -a "$HOME/Applications/Sketch.app"'
+# terraform
+# terragoat
+
+
+#### Meetings (Communications):
+alias facetime='open -a "/Applications/FaceTime.app"'       # built-in from Apple
+alias messages='open -a "/Applications/Messages.app"'       # built-in from Apple
+
+alias chime='open -a "/Applications/Amazon Chime.app"'
+#alias collo='open -a "/Applications/Colloquy.app"'         # Installed from Apple store 
+#alias discord='open -a "/Applications/Discord.app"'       # Has security issue. Don't use.
+alias gotomeeting='open -a "/Applications/GoToMeeting.app"'
 alias skype='open -a "$HOME/Applications/Skype.app"'
+alias signal='open -a "/Applications/Signal.app"'
 alias slack='open -a "$HOME/Applications/Slack.app"'
-#alias soapui='open -a "/Applications/SoapUI-5.4.0.app"'
-alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
+alias teams='open -a "$HOME/Applications/Microsoft Teams.app"'
 alias telegram='open -a "$HOME/Applications/Telegram.app"'
-#alias unity='open -a "$HOME/Applications/Unity.app"'
+# https://wilsonmar.github.io/dotfiles/#Transmission.app
 alias teams='open -a "/Applications/Microsoft Teams.app"'
-alias vfusion='open -a "/Applications/VMware Fusion.app"'
-# alias webstorm='open -a "/Applications/Webstorm.app"'
 alias whatsapp='open -a "/Applications/Telegram.app"'
-alias word='open -a "/Applications/Microsoft Word.app"'
-alias zoom='open -a "/Applications/Zoom.app"'
+alias zoom='open -a "/Applications/zoom.us.app"'
+
+
+##### Reading/Learning:
+#alias anki='open -a "$HOME/Applications/Anki.app"'         # Flash cards https://apps.ankiweb.net/
+alias kindle='open -a "$HOME/Applications/Kindle.app"'
+alias reader='open -a "/Applications/Adobe Acrobat Reader DC.app"'
+
+
+##### Media creation:
+alias audacity='open -a "/Applications/Audacity.app"'      # Audio engineering
+alias excel='open -a "/Applications/Microsoft Excel.app"'
+alias obs='open -a "/Applications/OBS.app"'
+alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
+alias sketch='open -a "$HOME/Applications/Sketch.app"'
+#alias unity='open -a "$HOME/Applications/Unity.app"'
+
+
+##### Software development:
+# https://expo.dev/tools
+alias ghd='open -a "/Applications/GitHub Desktop.app"'
+# alias jprofiler='open -a "/Applications/JProfiler.app"'
+#alias soapui='open -a "/Applications/SoapUI-5.4.0.app"'
+alias postman='open -a "$HOME/Applications/Postman.app"'
+# alias insomnia='open -a "/Applications/Insomnia.app"'
+# alias rstudio='open -a "/Applications/RStudio.app"'
 
 # Only on MacOS, not git bash on Windows MINGW64:
 #if [ "$(uname)" == "Darwin" ]; then  # it's on a Mac:
@@ -219,11 +268,12 @@ alias wmp='cd $HOME/gmail_acct/python-samples'
 alias wmgo='cd $HOME/gmail_acct/golang-samples'
 #alias wmr='cd $HOME/gmail_acct/rustlang-samples'
 
-#### Custom Jekyll build locally:
+#### Jekyll build locally:
 alias wmo='cd $HOME/gmail_acct/wilsonmar.github.io/_posts'
 alias wm='cd $HOME/gmail_acct/wilsonmar.github.io/_posts;git status -s -b'
 alias wf='cd $HOME/gmail_acct/futures;git status -s -b'
 alias js='cd $HOME/gmail_acct/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental'
 #alias bs='wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml'
 
+##### Leave this at bottom of file:
 alias keys="catn $HOME/aliases.sh"

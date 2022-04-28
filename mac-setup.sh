@@ -1083,54 +1083,11 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
          # remove icons in Dock
          defaults write com.apple.dock persistent-apps -array; 
 
-      # Explained in https://wilsonmar.github.io/dotfiles/#Wi-Fi
-      # Explained in https://wilsonmar.github.io/dotfiles/#Bluetooth
-      # Explained in https://wilsonmar.github.io/dotfiles/#AirDrop
-      # Explained in https://wilsonmar.github.io/dotfiles/#Focus
-      # Explained in https://wilsonmar.github.io/dotfiles/#KeyboardBrightness
-      # Explained in https://wilsonmar.github.io/dotfiles/#ScreenMirroring
-
-      # Explained in https://wilsonmar.github.io/dotfiles/#Display
-      # Explained in https://wilsonmar.github.io/dotfiles/#Sound
-      # Explained in https://wilsonmar.github.io/dotfiles/#NowPlaying
-      # Explained in https://wilsonmar.github.io/dotfiles/#Accessibility
-
       # Explained in https://wilsonmar.github.io/dotfiles/#Battery
       # Show remaining battery time; hide percentage
       defaults write com.apple.menuextra.battery ShowPercent -string "NO"
       defaults write com.apple.menuextra.battery ShowTime -string "YES"
 
-      # Explained in https://wilsonmar.github.io/dotfiles/#FastUserSwitching
-
-      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBar
-      # defaults write NSGlobalDomain AppleEnableMenuBarTransparency -bool false
-      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBarClock
-      # Display the time in seconds (default unchecked) ???
-      # When clicking clock in login window, reveal IP address, hostname, OS version, etc. 
-      # sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
-
-      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBarSpotlight
-      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBarSiri
-      # Explained in https://wilsonmar.github.io/dotfiles/#MenuBarTimeMachine
-
-   # Explained in https://wilsonmar.github.io/dotfiles/#Desktop
-   # Explained in https://wilsonmar.github.io/dotfiles/#MenuBar
-   # Explained in https://wilsonmar.github.io/dotfiles/#Siri
-   # Explained in https://wilsonmar.github.io/dotfiles/#Spotlight
-   # Explained in https://wilsonmar.github.io/dotfiles/#Notifications
-   # Notifications: One-time passwords
-   #defaults write com.agilebits.onepassword7 OPPreferencesNotifyOfTOTPCopy -bool true
-   # Notifications: Vault access
-   #defaults write com.agilebits.onepassword7 OPPreferencesNotifyVaultAddedRemoved -bool true
-   # Notifications: Watchdog alerts
-   #defaults write com.agilebits.onepassword7 OPPreferencesNotifyCompromisedWebsites -bool true
-
-   # Explained in https://wilsonmar.github.io/dotfiles/#InternetAccounts
-   # Explained in https://wilsonmar.github.io/dotfiles/#Passwords
-   # Explained in https://wilsonmar.github.io/dotfiles/#Wallet
-   # Explained in https://wilsonmar.github.io/dotfiles/#UsersGroups
-   # Explained in https://wilsonmar.github.io/dotfiles/#Accessibility
-   # Explained in https://wilsonmar.github.io/dotfiles/#ScreenTime
    # Explained in https://wilsonmar.github.io/dotfiles/#Extensions
       # Show all filename extensions:
       defaults write NSGlobalDomain AppleShowAllExtensions -bool true; 
@@ -1140,15 +1097,6 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       # Show ~/Library hidden by default:
       chflags hidden ~/Library
 
-   # Explained in https://wilsonmar.github.io/dotfiles/#SecurityPrivacy
-
-   # Explained in https://wilsonmar.github.io/dotfiles/#SoftwareUpdate
-   # Explained in https://wilsonmar.github.io/dotfiles/#Network
-   # Explained in https://wilsonmar.github.io/dotfiles/#Bluetooth
-   # Explained in https://wilsonmar.github.io/dotfiles/#Sound
-
-   # Explained in https://wilsonmar.github.io/dotfiles/#TouchID
-   # Explained in https://wilsonmar.github.io/dotfiles/#Keyboard
    # Explained in https://wilsonmar.github.io/dotfiles/#Trackpad
       # Tracking speed: (default is 1.5 in GUI)
       defaults read -g com.apple.trackpad.scaling
@@ -1161,17 +1109,6 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       defaults read -g com.apple.mouse.scaling
       # Tracking speed: maximum 5.0
       defaults write -g com.apple.mouse.scaling 5.0
-
-   # Explained in https://wilsonmar.github.io/dotfiles/#Displays
-   # Explained in https://wilsonmar.github.io/dotfiles/#PrintersScanners
-   # Explained in https://wilsonmar.github.io/dotfiles/#Battery
-      # Turn display off after 15 minutes (default 17)
-      # Low Power Mode (default off)
-   # Explained in https://wilsonmar.github.io/dotfiles/#DateTime
-   # Explained in https://wilsonmar.github.io/dotfiles/#Sharing
-   # Explained in https://wilsonmar.github.io/dotfiles/#TimeMachine
-   # Explained in https://wilsonmar.github.io/dotfiles/#StartupDisk
-   # Explained in https://wilsonmar.github.io/dotfiles/#Profiles
 
 fi  # SET_MACOS_SYSPREFS
 
