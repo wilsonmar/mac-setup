@@ -16,7 +16,7 @@
 
 ### 01. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.78"  # Fix invocation cmd to zsh
+SCRIPT_VERSION="v0.79"  # Fix invocation cmd to zsh
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
@@ -1151,6 +1151,9 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       defaults read -g com.apple.mouse.scaling
       # Tracking speed: maximum 5.0
       defaults write -g com.apple.mouse.scaling 5.0
+
+   # https://www.youtube.com/watch?v=8fFNVlpM-Tw
+   # Changing the login screen image on Monterey.
 
 fi  # SET_MACOS_SYSPREFS
 
