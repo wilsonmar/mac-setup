@@ -4,40 +4,62 @@
 # This was migrated from ~/.bash_profile
 
 # Colons separate items in $PATH:
-export PATH=/usr/local/bin:$HOME/bin:/opt/homebrew/bin:/bin/zsh:/Applications:$HOME/Applications:$PATH
-   # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks for brew (instead of /usr/local/bin):
-   # By default, macOs ships with zsh located in/bin/zsh.
-   # For homebrew: # $(brew --prefix)/sbin
+export PATH=/usr/local/bin:/bin:$PATH
+   # By default, macOs ships with zsh located in/bin/zsh:
+   # /bin contains bash, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, zsh, ...
+export PATH=/Applications:$HOME/Applications:$HOME/Applications/Utilities:$PATH
+
+#### Configurations for macOS Operating System :
+sudo launchctl limit maxfiles 65536 200000
+export GREP_OPTIONS='--color=auto'
+#source ~/sf-secrets.sh  # Created by git-flow.sh
+#export PATH="/usr/local/opt/postgresql@9.6/bin:$PATH"
+
+# Add `killall` tab completion for common apps:
+complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;
+
+
+#### Homebrew (brew command): See https://wilsonmar.github.io/homebrew
+# On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
+BREW_PATH="$(brew --prefix)"   # /opt/homebrew or /usr/local/bin
+export PATH="$BREW_PATH/bin:$PATH"  
 
 # This in .zshrc fixes the "brew not found" error on a machine with Apple M1 CPU under Monterey:
 # See https://apple.stackexchange.com/questions/148901/why-does-my-brew-installation-not-work
-eval $(/opt/homebrew/bin/brew shellenv)
-   
-# To activate zsh-completions:
-  if type brew &>/dev/null; then
-    FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
-    autoload -Uz compinit
-    compinit
-  fi
-
-# Path to your oh-my-zsh installation:
-export ZSH="$HOME/.oh-my-zsh"
-if [ ! -f "$ZSH" ]; then # install:
-  echo "Please install based on https://ohmyz.sh/ (NO brew install)"
+eval $( "${BREW_PATH}/bin/brew" shellenv)
+# To activate zsh-completions: https://github.com/zsh-users/zsh/blob/master/Completion/compinit
+if type brew &>/dev/null; then
+  FPATH="$BREW_PATH/share/zsh-completions:$FPATH"
+  # echo "FPATH=$FPATH"
+  autoload -Uz compinit
+#  compinit << 'EOF'
+#y
+#EOF
 fi
 
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in ~/.oh-my-zsh/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
+export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
+#export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
 
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
-ZSH_THEME="robbyrussell"
-source $ZSH/oh-my-zsh.sh
+
+#### See https://wilsonmar.github.io/zsh
+export ZSH="$HOME/.oh-my-zsh"
+if [ -d "$ZSH" ]; then  # is installed:
+    # Set list of themes to pick from when loading at random
+    # Setting this variable when ZSH_THEME=random will cause zsh to load
+    # a theme from this variable instead of looking in ~/.oh-my-zsh/themes/
+    # If set to an empty array, this variable will have no effect.
+    # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
+
+    # Set name of the theme to load --- if set to "random", it will
+    # load a random theme each time oh-my-zsh is loaded, in which case,
+    # to know which specific one was loaded, run: echo $RANDOM_THEME
+    # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
+    ZSH_THEME="robbyrussell"
+    source $ZSH/oh-my-zsh.sh
+fi
+
+# Set Terminal prompt that shows the Zsh % prompt rather than $ bash prompt:
+export PS1="%10F%m%f:%11F%1~%f % "
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -102,12 +124,6 @@ plugins=(git)
 #   export EDITOR='mvim'
 # fi
 
-#### See https://wilsonmar.github.io/homebrew
-# For use in brew cask install 
-export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
-#export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
-sudo launchctl limit maxfiles 65536 200000
-
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
 # * ~/.extra can be used for other settings you don’t want to commit.
@@ -116,21 +132,9 @@ for file in ~/.{path,bash_prompt,exports,aliases,functions,extra}; do
 done;
 unset file;
 
-# shopt builtin command of the Bash shell that enables or disables options for the current shell session:
-# See https://www.computerhope.com/unix/bash/shopt.htm
-# Case-insensitive globbing (used in pathname expansion)
-shopt -s nocaseglob;
-# Append to the Bash history file, rather than overwriting it:
-shopt -s histappend;
-# Autocorrect typos in path names when using `cd`:
-shopt -s cdspell;
 
-export GREP_OPTIONS='--color=auto'
-#source ~/sf-secrets.sh  # Created by git-flow.sh
-#export PATH="/usr/local/opt/postgresql@9.6/bin:$PATH"
-
-# For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63 
-#export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
+#### For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63 
+export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
 export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib"
 export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
 # See https://eclecticlight.co/2020/08/13/macos-version-numbering-isnt-so-simple/
@@ -145,37 +149,8 @@ export LSCOLORS="GxFxCxDxBxegedabagaced" #
 export LANG=en_US.UTF-8
 # Compilation flags: "x86_64" or "arm64" on Apple M1: https://gitlab.kitware.com/cmake/cmake/-/issues/20989
 export ARCHFLAGS="-arch $(uname -m)"
-note "ARCHFLAGS=$ARCHFLAGS"
+   # echo "ARCHFLAGS=$ARCHFLAGS"
 
-autoload -U +X bashcompinit && bashcompinit
-complete -o nospace -C /usr/local/bin/vault vault
-
-# Enable some Bash 4 features when possible:
-# * `autocd`, e.g. `**/qux` will enter `./foo/bar/baz/qux`
-# * Recursive globbing, e.g. `echo **/*.txt`
-for option in autocd globstar; do
-  shopt -s "$option" 2> /dev/null;
-done;
-
-# Copied from https://github.com/wilsonmar/git-utilities:
-#export PATH="$HOME/gits:$PATH"
-#export PATH="$HOME/gits/wilsonmar/git-utilities/git-custom-commands:$PATH"
-#export WM="$HOME/gits/wilsonmar/wilsonmar.github.io"
-# Add tab completion for many Bash commands
-if which brew &> /dev/null && [ -f "$(brew --prefix)/share/bash-completion/bash_completion" ]; then
-  source "$(brew --prefix)/share/bash-completion/bash_completion";
-elif [ -f /etc/bash_completion ]; then
-  source /etc/bash_completion;
-fi;
-# Enable tab completion for `g` by marking it as an alias for `git`
-if type _git &> /dev/null && [ -f /usr/local/etc/bash_completion.d/git-completion.bash ]; then
-  complete -o default -o nospace -F _git g;
-fi;
-
-# Added by ./mac-setup-all.sh ::
-if [ -f $HOME/.git-completion.bash ]; then
-      . $HOME/.git-completion.bash
-fi
 
 # https://gist.github.com/sindresorhus/98add7be608fad6b5376a895e5a59972
 # Add tab completion for SSH hostnames based on ~/.ssh/config, ignoring wildcards
@@ -185,8 +160,17 @@ fi
 # You could just use `-g` instead, but I like being explicit
 complete -W "NSGlobalDomain" defaults;
 
-# Add `killall` tab completion for common apps:
-complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;
+
+#### See https://wilsonmar.github.io/hashicorp-vault
+if command -v vault >/dev/null; then
+   VAULT_VERSION="$(ls $BREW_PATH/Cellar/vault/)"
+   echo "VAULT_VERSION=$VAULT_VERSION"  # Example: "1.10.1"
+   complete -C /usr/local/bin/vault vault
+   complete -o nospace -C /usr/local/bin/vault vault
+   export VAULT_ADDR=https://vault.???.com:8200
+   # autoload -U +X bashcompinit && bashcompinit
+fi
+
 
 #### For Ruby:
 #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin"
@@ -195,11 +179,15 @@ export LC_ALL=en_US.utf-8
 #export PATH="$HOME/.rbenv/bin:$PATH"
 #eval "$(rbenv init -)"   # at the end of the file
 
+
 #### See https://wilsonmar.github.io/node-install
 export NVM_DIR="$HOME/.nvm"
-source "$HOME/.nvm/nvm.sh"  # instead of "/usr/local/opt/nvm/nvm.sh"
-#export PATH=$PATH:$HOME/.nvm/versions/node/v9.11.1/lib/node_modules
+if [ -d "$NVM_DIR" ]; then  # folder was created for NodeJs, so:
+   source "$HOME/.nvm/nvm.sh"  # instead of "/usr/local/opt/nvm/nvm.sh"
+   #export PATH=$PATH:$HOME/.nvm/versions/node/v9.11.1/lib/node_modules
+fi
 
+#### Task Runners:
 #export GRADLE_HOME=/usr/local/opt/gradle
 #export PATH=$GRADLE_HOME/bin:$PATH
 
@@ -210,20 +198,29 @@ source "$HOME/.nvm/nvm.sh"  # instead of "/usr/local/opt/nvm/nvm.sh"
 #export MAVEN_HOME=/usr/local/opt/maven
 #export PATH=$MAVEN_HOME/bin:$PATH
 
-#### See https://wilsonmar.github.io/aws-onboarding/
-complete -C aws_completer aws
-export AWS_DEFAULT_REGION="us-west-2"
-export EC2_URL="https://${AWS_DEFAULT_REGION}.console.aws.amazon.com/ec2/v2/home?region=${AWS_DEFAULT_REGION}#Instances:sort=instanceId"
-alias ec2="open ${EC2_URL}"
 
-### See https://wilsonmar.github.io/sonar
-export PATH="$PATH:$HOME/onpath/sonar-scanner/bin"
+#### See https://wilsonmar.github.io/aws-onboarding/
+if [ -d "$HOME/aws" ]; then  # folder was created for AWS cloud, so:
+   complete -C aws_completer aws
+   export AWS_DEFAULT_REGION="us-west-2"
+   export EC2_URL="https://${AWS_DEFAULT_REGION}.console.aws.amazon.com/ec2/v2/home?region=${AWS_DEFAULT_REGION}#Instances:sort=instanceId"
+   alias ec2="open ${EC2_URL}"
+fi
 
 #### See https://wilsonmar.github.io/gcp
-export PATH="$PATH:$HOME/.google-cloud-sdk/bin"
+GOOGLE_BIN_PATH="$HOME/.google-cloud-sdk/bin"
+if [ -d "$GOOGLE_BIN_PATH" ]; then  # folder was created for GCP cloud, so:
+   export PATH="$PATH:$GOOGLE_BIN_PATH"
+fi
 
 #### See https://wilsonmar.github.io/azure
-# source '/Users/mac/lib/azure-cli/az.completion'
+# TODO:
+if [ -d "$HOME/azure" ]; then  # folder was created for Microsoft Azure cloud, so:
+   source '$HOME/lib/azure-cli/az.completion'
+fi
+
+### See https://wilsonmar.github.io/sonar
+#export PATH="$PATH:$HOME/onpath/sonar-scanner/bin"
 
 #### See https://wilsonmar.github.io/android-install/
 #export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"      
@@ -248,14 +245,6 @@ export PATH="$PATH:$HOME/.google-cloud-sdk/bin"
 # export NEO4J_HOME=/usr/local/opt/neo4j
 # export NEO4J_CONF=/usr/local/opt/neo4j/libexec/conf/
 
-#### See https://wilsonmar.github.io/scala
-# export SCALA_HOME=/usr/local/opt/scala/libexec
-# export JAVA_HOME generated by jenv, =/Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home
-#export JENV_ROOT="$(which jenv)" # /usr/local/var/jenv
-#if command -v jyenv 1>/dev/null 2>&1; then
-#  eval "$(jenv init -)"
-#fi
-#export PATH="$HOME/jmeter:$PATH" 
 
 #### R language:
 # export PATH="$PATH:/usr/local/Cellar/r/3.4.4/lib/R/bin"
@@ -269,60 +258,88 @@ fi
 #### See https://wilsonmar.github.io/rustlang
 export PATH="$HOME/.cargo/bin:$PATH"
 
-#### See https://wilsonmar.github.io/airflow
-# PATH=$PATH:~/.local/bin
-# export AIRFLOW_HOME="$HOME/airflow-tutorial"  
 
 #### See https://wilsonmar.github.io/python-install
-export PYTHON_CONFIGURE_OPTS=--enable-unicode=ucs2
-# export PYTHONPATH="/usr/local/Cellar/python/3.6.5/bin/python3:$PYTHONPATH"
-# python=/usr/local/bin/python3
-#alias python=python3
-# export PATH="$PATH:$HOME/Library/Caches/AmlWorkbench/Python/bin"
-# export PATH="$PATH:/usr/local/anaconda3/bin"  # for conda
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-if command -v pyenv 1>/dev/null 2>&1; then
-  eval "$(pyenv init -)"
+if [ -d "$PYENV_ROOT" ]; then  # folder was created for Python3, so:
+   export PATH="$PYENV_ROOT/bin:$PATH"
+   export PYTHON_CONFIGURE_OPTS="--enable-unicode=ucs2"
+   # export PYTHONPATH="/usr/local/Cellar/python/3.6.5/bin/python3:$PYTHONPATH"
+   # python=/usr/local/bin/python3
+   #alias python=python3
+   # export PATH="$PATH:$HOME/Library/Caches/AmlWorkbench/Python/bin"
+   # export PATH="$PATH:/usr/local/anaconda3/bin"  # for conda
+   if command -v pyenv 1>/dev/null 2>&1; then
+     eval "$(pyenv init -)"
+   fi
 fi
 
 # >>> Python conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('$HOME/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "$HOME/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="$HOME/miniconda3/bin:$PATH"
-    fi
+if [ -d "$HOME/miniconda3" ]; then  # folder was created for Python3, so:
+   # !! Contents within this block are managed by 'conda init' !!
+   __conda_setup="$('$HOME/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+   if [ $? -eq 0 ]; then
+      eval "$__conda_setup"
+   else
+      if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+         . "$HOME/miniconda3/etc/profile.d/conda.sh"
+       else
+          export PATH="$HOME/miniconda3/bin:$PATH"
+      fi
+   fi
+   unset __conda_setup
+   # <<< conda initialize venv <<<
+   conda activate py3k
 fi
-unset __conda_setup
-# <<< conda initialize venv <<<
-conda activate py3k
+
 
 #### See https://wilsonmar.github.io/golang
-export PATH="$PATH:/usr/local/opt/go/libexec/bin"
-#export GOROOT='/usr/local/opt/go/libexec/bin'
-export GOPATH='$HOME/go'
-export GOHOME='$HOME/golang1'
+if command -v go >/dev/null; then
+    export GOPATH='$HOME/go'   #### Folders created in mac-setup.zsh
+    if [ -d "$GOPATH" ]; then  # folder was created for Golang, so:
+      export GOHOME='$HOME/golang1'   # this path highly customized!
+      export PATH="$PATH:${GOPATH}/bin"
+    fi
+
+    export GOROOT="$(brew --prefix golang)/libexec"  # /usr/local/opt/go/libexec/bin"
+    if [ -d "$GOROOT" ]; then
+      export PATH="$PATH:${GOROOT}"
+    fi
+
+    note "Start Golang projects by making a new folder within GOPATH ~/go/src"
+    ls "${GOPATH}/src"
+fi
+
 
 #### See https://wilsonmar.github.io/elixir-lang
-# source $HOME/.asdf/asdf.sh
+if [ -d "$HOME/.asdf" ]; then
+    source $HOME/.asdf/asdf.sh
+fi
 
-#### See https://wilsonmar.github.io/hashicorp-vault
-# export VAULT_VERSION="1.9.2"  # TODO: extract this from --version
-# complete -C /usr/local/bin/vault vault
-# export VAULT_ADDR=https://vault.enbala-engine.com:8200
 
+#### See https://wilsonmar.github.io/airflow  # ETL
+# PATH=$PATH:~/.local/bin
+# export AIRFLOW_HOME="$HOME/airflow-tutorial"  
+
+# Liquibase is a SQL database testing utility:
 #export LIQUIBASE_HOME='/usr/local/opt/liquibase/libexec'
 
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-#### See https://wilsonmar.github.io/macos-install
+#### See https://wilsonmar.github.io/scala
+# export SCALA_HOME=/usr/local/opt/scala/libexec
+# export JAVA_HOME generated by jenv, =/Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home
+#export JENV_ROOT="$(which jenv)" # /usr/local/var/jenv
+#if command -v jyenv 1>/dev/null 2>&1; then
+#  eval "$(jenv init -)"
+#fi
+#export PATH="$HOME/jmeter:$PATH" 
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+#export SDKMAN_DIR="$HOME/.sdkman"
+#[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+
+#### See https://wilsonmar.github.io/mac-setup
 # Show aliases keys as reminder:
 source ~/aliases.sh
 #     catn filename to show text file without comment (#) lines:
