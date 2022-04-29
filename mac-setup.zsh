@@ -4,19 +4,19 @@
 # shellcheck disable=SC1090 # Can't follow non-constant source. Use a directive to specify location.
 # shellcheck disable=SC2129  # Consider using { cmd1; cmd2; } >> file instead of individual redirects.
 
-# Coding of this Bash script is explained in https://wilsonmar.github.io/bash-scripts
+# Coding of this shell script is explained in https://wilsonmar.github.io/shell-scripts
 
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
 # it installs utilities:
-# bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/DevSecOps/master/bash/mac-setup.zsh)" -v -I
+# zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)" -v
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
 
 ### 01. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.76"  # Change .sh to .zsh (under protest)
+SCRIPT_VERSION="v0.78"  # Fix invocation cmd to zsh
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
@@ -30,7 +30,7 @@ args_prompt() {
    echo "   -v            run -verbose (list space use and each image to console)"
    echo "   -vv           run -very verbose diagnostics"
    echo "   -x            set -x to trace command lines"
-#   echo "   -x           set sudoers -e to stop on error"
+#  echo "   -x            set sudoers -e to stop on error"
    echo "   -q           -quiet headings for each step"
    echo " "
    echo "   -I           -Install brew utilities, apps"
@@ -75,6 +75,7 @@ args_prompt() {
    echo "   -A           run with Python -Anaconda "
    echo "   -y            install Python Flask"
    echo " "
+   echo "   -go          -install Go language"
    echo "   -i           -install Ruby and Refinery"
    echo "   -j            install -JavaScript (NodeJs) app with MongoDB"
    echo " "
@@ -126,6 +127,7 @@ exit_abnormal() {            # Function: Exit with error.
    RUN_VIRTUALENV=false         # -V
    RUN_ANACONDA=false           # -A
    RUN_PYTHON=false             # -G
+   RUN_GOLANG=false             # -go
    RUN_PARMS=""                 # -P
    USE_CIRCLECI=false           # -L
    USE_DOCKER=false             # -k
@@ -287,6 +289,10 @@ while test $# -gt 0; do
     -ga*)
       shift
       GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -go)
+      export RUN_GOLANG=true
       shift
       ;;
     -g*)
@@ -549,13 +555,13 @@ fi
    OS_TYPE="$( uname )"
    export OS_DETAILS=""  # default blank.
    export PACKAGE_MANAGER=""
-if [ "${OS_TYPE}" == "Darwin" ]; then  # it's on a Mac:
+if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
       OS_TYPE="macOS"
       PACKAGE_MANAGER="brew"
-elif [ "${OS_TYPE}" == "Windows" ]; then
+elif [ "${OS_TYPE}" = "Windows" ]; then
       OS_TYPE="Windows"   # replace value!
       PACKAGE_MANAGER="choco"  # TODO: Chocolatey or https://github.com/lukesampson/scoop
-elif [ "${OS_TYPE}" == "Linux" ]; then  # it's NOT on a Mac:
+elif [ "${OS_TYPE}" = "Linux" ]; then  # it's NOT on a Mac:
    if command -v lsb_release ; then
       lsb_release -a
       OS_TYPE="Ubuntu"
@@ -604,13 +610,13 @@ BASH_VERSION=$( bash --version | grep bash | cut -d' ' -f4 | head -c 1 )
    else
       if [ "${UPDATE_PKGS}" = true ]; then
          h2 "Bash version ${BASH_VERSION} too old. Upgrading to latest ..."
-         if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+         if [ "${PACKAGE_MANAGER}" = "brew" ]; then
             brew install bash
-         elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+         elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
             silent-apt-get-install "bash"
-         elif [ "${PACKAGE_MANAGER}" == "yum" ]; then    # For Redhat distro:
+         elif [ "${PACKAGE_MANAGER}" = "yum" ]; then    # For Redhat distro:
             sudo yum install bash      # please test
-         elif [ "${PACKAGE_MANAGER}" == "zypper" ]; then   # for [open]SuSE:
+         elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then   # for [open]SuSE:
             sudo zypper install bash   # please test
          fi
          info "Now at $( bash --version  | grep 'bash' )"
@@ -655,7 +661,7 @@ HOSTNAME=$( hostname )
 PUBLIC_IP=$( curl -s ifconfig.me )
 INTERNAL_IP=$( ipconfig getifaddr en0 )
 
-if [ "$OS_TYPE" == "macOS" ]; then  # it's on a Mac:
+if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    note "BASHFILE=~/.bash_profile ..."
    BASHFILE="$HOME/.bash_profile"  # on Macs
 else  # Linux:
@@ -731,7 +737,7 @@ function BASHFILE_EXPORT() {
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
    h2 "-Install package managers ..."
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then # -U
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
 
       # See https://stackoverflow.com/questions/20559255/error-while-installing-json-gem-mkmf-rb-cant-find-header-files-for-ruby/20561594
       # Ensure Apple's command line tools (such as cc) are installed by node:
@@ -771,13 +777,13 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # TODO: https://gist.github.com/tylergets/90f7e61314821864951e58d57dfc9acd
 
       if ! command -v brew ; then   # brew not recognized:
-         if [ "$OS_TYPE" == "macOS" ]; then  # it's on a Mac:
+         if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
             h2 "Installing brew package manager on macOS using Ruby ..."
             mkdir homebrew && curl -L https://GitHub.com/Homebrew/brew/tarball/master \
                | tar xz --strip 1 -C homebrew
             # if PATH for brew available:
 
-         elif [ "$OS_TYPE" == "WSL" ]; then
+         elif [ "$OS_TYPE" = "WSL" ]; then
             h2 "Installing brew package manager on WSL ..." # A fork of Homebrew known as Linuxbrew.
             sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.zsh)"
             # https://medium.com/@edwardbaeg9/using-homebrew-on-windows-10-with-windows-subsystem-for-linux-wsl-c7f1792f88b3
@@ -802,7 +808,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
                echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>"${BASHFILE}"
                source "${BASHFILE}"
             fi
-         fi  # "$OS_TYPE" == "WSL"
+         fi  # "$OS_TYPE" = "WSL"
       else  # brew found:
          if [ "${UPDATE_PKGS}" = true ]; then
             h2 "Updating brew itself ..."
@@ -816,7 +822,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # Homebrew/homebrew-core (git revision e103; last commit 2020-01-07)
          # Homebrew/homebrew-cask (git revision bbf0e; last commit 2020-01-07)
 
-   elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then  # (Advanced Packaging Tool) for Debian/Ubuntu
+   elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then  # (Advanced Packaging Tool) for Debian/Ubuntu
 
       if ! command -v apt-get ; then
          h2 "Installing apt-get package manager ..."
@@ -834,7 +840,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       fi
       note "$( apt-get --version )"
 
-   elif [ "${PACKAGE_MANAGER}" == "yum" ]; then  #  (Yellow dog Updater Modified) for Red Hat, CentOS
+   elif [ "${PACKAGE_MANAGER}" = "yum" ]; then  #  (Yellow dog Updater Modified) for Red Hat, CentOS
       if ! command -v yum ; then
          h2 "Installing yum rpm package manager ..."
          # https://www.unix.com/man-page/linux/8/rpm/
@@ -850,7 +856,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       fi
       note "$( yum --version )"
 
-   #  TODO: elif for Suse Linux "${PACKAGE_MANAGER}" == "zypper" ?
+   #  TODO: elif for Suse Linux "${PACKAGE_MANAGER}" = "zypper" ?
 
    fi # PACKAGE_MANAGER
 
@@ -868,7 +874,7 @@ ps_kill(){  # $1=process name
 }
 
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v shellcheck >/dev/null; then  # command not found, so:
             h2 "Brew installing shellcheck ..."
             brew install shellcheck
@@ -918,6 +924,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          rm -rf "/Applications/Garage Band.app"
       fi
 
+      # If you have Microsoft O365, download from https://www.office.com/?auth=2&home=1
+
       h2 "Remaining apps installed by Apple App Store:"
       find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
 
@@ -925,7 +933,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # TextWrangler.app, WriteRoom.app,
       # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
 
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
  
       h2 "brew install CLI utilities:"
 
@@ -962,7 +970,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
      #brew install hashicorp/tap/packer
       brew install hashicorp/tap/terraform
       brew install hashicorp/tap/sentinel
-      brew install hashicorp/tap/hcloud
+     #brew install hashicorp/tap/hcloud
 
      # Terminal enhancements:
       brew install --cask hyper
@@ -975,7 +983,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
       else
          if [ "${UPDATE_PKGS}" = true ]; then
-            upgrade_oh_my_zsh
+            upgrade_oh_my_zsh   # function.
          fi
       fi
       zsh --version  # Check the installed version
@@ -1218,7 +1226,7 @@ Input_GitHub_User_Info(){
       read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GitHub_USER_EMAIL
       GitHub_USER_EMAIL=${GitHub_USER_EMAIL:-"johb_doe@gmail.com"}
 }
-if [ "${USE_SECRETS_FILE}" == false ]; then  # -s
+if [ "${USE_SECRETS_FILE}" = false ]; then  # -s
    warning "Using default values hard-coded in this bash script ..."
    # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
    # PIPENV_DOTENV_LOCATION=/path/to/.env or =1 to not load.
@@ -1239,7 +1247,7 @@ else
       note "$(ls -al "${SECRETS_FILEPATH}" )"
       chmod +x "${SECRETS_FILEPATH}"
       source   "${SECRETS_FILEPATH}"  # run file containing variable definitions.
-      if [ "${CIRCLECI_API_TOKEN}" == "xxx" ]; then 
+      if [ "${CIRCLECI_API_TOKEN}" = "xxx" ]; then 
          fatal "Please edit CIRCLECI_API_TOKEN in file \$HOME/.secrets.zsh and run again ..."
          exit 9
       fi
@@ -1276,7 +1284,7 @@ fi  # if [ "${USE_SECRETS_FILE}" = false ]; then  # -s
       note "cd into path $PWD ..."
    fi
 
-   if [ "${RUN_DEBUG}" == true ]; then  # -vv
+   if [ "${RUN_DEBUG}" = true ]; then  # -vv
       note "$( ls "${PROJECT_FOLDER_PATH}" )"
    fi
 
@@ -1365,7 +1373,6 @@ fi  # CLONE_GITHUB
    else
       note "Using master branch ..."
    fi
-
 fi   # GitHub_REPO_URL
 
 
@@ -1385,7 +1392,7 @@ if [ -d ".gitsecret" ]; then   # found
    # When someone is out - delete their public key, re-encrypt the files, and they won’t be able to decrypt secrets anymore.
         h2 ".gitsecret folder found ..."
       # Files in there were encrypted using "git-secret" commands referencing gpg gen'd key pairs based on an email address.
-      if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v gpg >/dev/null; then  # command not found, so:
             h2 "Brew installing gnupg ..."
             brew install gnupg  
@@ -1409,11 +1416,11 @@ if [ -d ".gitsecret" ]; then   # found
          fi
          note "$( git-secret --version )"  # 0.3.2
 
-      elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+      elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
          silent-apt-get-install "gnupg"
-      elif [ "${PACKAGE_MANAGER}" == "yum" ]; then    # For Redhat distro:
+      elif [ "${PACKAGE_MANAGER}" = "yum" ]; then    # For Redhat distro:
          sudo yum install gnupg      # please test
-      elif [ "${PACKAGE_MANAGER}" == "zypper" ]; then   # for [open]SuSE:
+      elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then   # for [open]SuSE:
          sudo zypper install gnupg   # please test
       else
          git clone https://github.com/sobolevn/git-secret.git
@@ -1441,7 +1448,7 @@ pipenv_install() {
    # See https://realpython.com/pipenv-guide/
    # Pipenv combines pip & virtualenv in a single interface.
 
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          # https://pipenv.readthedocs.io/en/latest/
          if ! command -v pipenv >/dev/null; then  # command not found, so:
             h2 "Brew installing pipenv ..."
@@ -1457,11 +1464,11 @@ pipenv_install() {
             # pipenv, version 2018.11.26
 
       #elif for Alpine? 
-      elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+      elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
          silent-apt-get-install "pipenv"  # please test
-      elif [ "${PACKAGE_MANAGER}" == "yum" ]; then    # For Redhat distro:
+      elif [ "${PACKAGE_MANAGER}" = "yum" ]; then    # For Redhat distro:
          sudo yum install pipenv      # please test
-      elif [ "${PACKAGE_MANAGER}" == "zypper" ]; then   # for [open]SuSE:
+      elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then   # for [open]SuSE:
          sudo zypper install pipenv   # please test
       else
          fatal "Package Manager not recognized installing pipenv."
@@ -1681,7 +1688,7 @@ fi  # USE_GOOGLE_CLOUD
 ### 19. Connect to AWS
 if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
       #fancy_echo "awscli requires Python3."
       # See https://docs.aws.amazon.com/cli/latest/userguide/cli-install-macos.html#awscli-install-osx-pip
       # PYTHON3_INSTALL  # function defined at top of this file.
@@ -1711,7 +1718,7 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
       fi
       note "$( aws --version )"  # aws-cli/2.0.9 Python/3.8.2 Darwin/19.5.0 botocore/2.0.0dev13
 
-   fi  # "${PACKAGE_MANAGER}" == "brew" ]; then
+   fi  # "${PACKAGE_MANAGER}" = "brew" ]; then
 
 
    #if [ -d "$HOME/.bash-my-aws" ]; then   # folder is there
@@ -1736,7 +1743,7 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
    if [ "${USE_VAULT}" = true ]; then   # -w
       # Alternative: https://hub.docker.com/_/vault
 
-      if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          # See https://www.davehall.com.au/tags/bash
          if ! command -v aws-vault >/dev/null; then  # command not found, so:
             h2 "Brew installing --cask aws-vault ..."
@@ -1750,7 +1757,7 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
          fi
          note "aws-vault version $( aws-vault --version )"  # v5.3.2
 
-      fi  # "${PACKAGE_MANAGER}" == "brew" ]; then
+      fi  # "${PACKAGE_MANAGER}" = "brew" ]; then
 
    fi  # if [ "${USE_VAULT}" = true 
 
@@ -1802,7 +1809,7 @@ if [ "${USE_K8S}" = true ]; then  # -k8s
       exit 9
    fi
 
-      if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then
 
          if ! command -v minikube >/dev/null; then  # command not found, so:
             h2 "brew install --casking minikube ..."
@@ -1817,7 +1824,7 @@ if [ "${USE_K8S}" = true ]; then  # -k8s
          note "minikube version $( minikube version )"  # minikube version: v1.11.0
              # commit: 57e2f55f47effe9ce396cea42a1e0eb4f611ebbd
 
-      fi  # "${PACKAGE_MANAGER}" == "brew" 
+      fi  # "${PACKAGE_MANAGER}" = "brew" 
 
 exit
 
@@ -1828,7 +1835,7 @@ fi  # if [ "${USE_K8S}" = true ]; then  # -k8s
 if [ "${RUN_EKS}" = true ]; then  # -EKS
 
    # h2 "kubectl client install for -EKS ..."
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
       # Use Homebrew instead of https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html
       # See https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
       # to communicate with the k8s cluster API server. 
@@ -1862,7 +1869,7 @@ if [ "${RUN_EKS}" = true ]; then  # -EKS
          fi
          note "eksctl version $( eksctl version )"  # 0.21.0
 
-   fi  # "${PACKAGE_MANAGER}" == "brew" ]; then
+   fi  # "${PACKAGE_MANAGER}" = "brew" ]; then
 
 
    h2 "aws iam get-user to check AWS credentials ... "
@@ -1932,7 +1939,7 @@ exit
 
    # After about 10-15 minutes:
 
-   if [ "${EKS_CRED_IS_LOCAL}" == true ]; then
+   if [ "${EKS_CRED_IS_LOCAL}" = true ]; then
       if [ -f "$HOME/.kube/config" ]; then  # file exists:
          # If file exists in "$HOME/.kube/config" for cluster credentials
          h2 "kubectl get nodes ..."
@@ -2101,7 +2108,7 @@ fi  # USE_CIRCLECI
 
 ### 25. Use Yubikey
 if [ "${USE_YUBIKEY}" = true ]; then   # -Y
-      if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v ykman >/dev/null; then  # command not found, so:
             note "Brew installing ykman ..."
             brew install ykman
@@ -2111,12 +2118,12 @@ if [ "${USE_YUBIKEY}" = true ]; then   # -Y
                brew upgrade ykman
             fi
          fi
-      elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+      elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
          silent-apt-get-install "ykman"
-      elif [ "${PACKAGE_MANAGER}" == "yum" ]; then    # For Redhat distro:
+      elif [ "${PACKAGE_MANAGER}" = "yum" ]; then    # For Redhat distro:
          sudo yum install ykman      ; echo "TODO: please test"
          exit 9                      
-      elif [ "${PACKAGE_MANAGER}" == "zypper" ]; then   # for [open]SuSE:
+      elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then   # for [open]SuSE:
          sudo zypper install ykman   ; echo "TODO: please test"
          exit 9
       fi
@@ -2124,7 +2131,7 @@ if [ "${USE_YUBIKEY}" = true ]; then   # -Y
          # RESPONSE: YubiKey Manager (ykman) version: 3.1.1
 
 
-      if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v yubico-piv-tool >/dev/null; then  # command not found, so:
             note "Brew installing yubico-piv-tool ..."
             brew install yubico-piv-tool
@@ -2136,12 +2143,12 @@ if [ "${USE_YUBIKEY}" = true ]; then   # -Y
          fi
          #  /usr/local/Cellar/yubico-piv-tool/2.0.0: 18 files, 626.7KB
 
-      elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+      elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
          silent-apt-get-install "yubico-piv-tool"
-      elif [ "${PACKAGE_MANAGER}" == "yum" ]; then    # For Redhat distro:
+      elif [ "${PACKAGE_MANAGER}" = "yum" ]; then    # For Redhat distro:
          sudo yum install yubico-piv-tool      ; echo "TODO: please test"
          exit 9                      
-      elif [ "${PACKAGE_MANAGER}" == "zypper" ]; then   # for [open]SuSE:
+      elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then   # for [open]SuSE:
          sudo zypper install yubico-piv-tool   ; echo "TODO: please test"
          exit 9
       fi
@@ -2286,7 +2293,7 @@ if [ "${USE_VAULT}" = true ]; then   # -H
           # https://learn.hashicorp.com/vault/secrets-management/sm-versioned-kv
           # https://www.vaultproject.io/api/secret/kv/kv-v2.html
       # NOTE: vault-cli is a Subversion-like utility to work with Jackrabbit FileVault (not Hashicorp Vault)
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v vault >/dev/null; then  # command not found, so:
             note "Brew installing vault ..."
             brew install vault
@@ -2300,12 +2307,12 @@ if [ "${USE_VAULT}" = true ]; then   # -H
                # exec $SHELL
             fi
          fi
-      elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+      elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
          silent-apt-get-install "vault"
-      elif [ "${PACKAGE_MANAGER}" == "yum" ]; then    # For Redhat distro:
+      elif [ "${PACKAGE_MANAGER}" = "yum" ]; then    # For Redhat distro:
          sudo yum install vault      # please test
          exit 9
-      elif [ "${PACKAGE_MANAGER}" == "zypper" ]; then   # for [open]SuSE:
+      elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then   # for [open]SuSE:
          sudo zypper install vault   # please test
          exit 9
    fi
@@ -2320,7 +2327,7 @@ if [ "${USE_VAULT}" = true ]; then   # -H
 
 
       #### "Installing govaultenv ..."
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          # https://github.com/jamhed/govaultenv
          if ! command -v govaultenv >/dev/null; then  # command not found, so:
             h2 "Brew installing govaultenv ..."
@@ -2336,11 +2343,11 @@ if [ "${USE_VAULT}" = true ]; then   # -H
          note "govaultenv $( govaultenv | grep version | cut -d' ' -f1 )"
             # version:0.1.2 commit:d7754e38bb855f6a0c0c259ee2cced29c86a4da5 build by:goreleaser date:2019-11-13T19:47:16Z
       #elif for Alpine? 
-      elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+      elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
          silent-apt-get-install "govaultenv"  # please test
-      elif [ "${PACKAGE_MANAGER}" == "yum" ]; then    # For Redhat distro:
+      elif [ "${PACKAGE_MANAGER}" = "yum" ]; then    # For Redhat distro:
          sudo yum install govaultenv      # please test
-      elif [ "${PACKAGE_MANAGER}" == "zypper" ]; then   # for [open]SuSE:
+      elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then   # for [open]SuSE:
          sudo zypper install govaultenv   # please test
       else
          fatal "Package code not recognized."
@@ -2608,7 +2615,7 @@ if [ "${NODE_INSTALL}" = true ]; then  # -n
 # If VAULT is used:
 
    # h2 "Install -node"
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then # -U
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
       if ! command -v node ; then
          h2 "Installing node ..."
          brew install node
@@ -2662,7 +2669,7 @@ if [ "${NODE_INSTALL}" = true ]; then  # -n
 
    # See https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/
    # Instead of https://www.mongodb.com/cloud/atlas/mongodb-google-cloud
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then # -U
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
       if ! command -v mongo ; then  # command not found, so:
          h2 "Installing mmongodb-compass@4.2 ..."
          brew tap mongodb/brew
@@ -2757,7 +2764,7 @@ fi # if [ "${NODE_INSTALL}
 if [ "${RUN_VIRTUALENV}" = true ]; then  # -V  (not the default pipenv)
 
    h2 "Install -python"
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then # -U
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
       if ! command -v python3 ; then
          h2 "Installing python3 ..."
          brew install python3
@@ -2767,7 +2774,7 @@ if [ "${RUN_VIRTUALENV}" = true ]; then  # -V  (not the default pipenv)
             brew upgrade python3
          fi
       fi
-   elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+   elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
       silent-apt-get-install "python3"
    fi
    note "$( python3 --version )"  # Python 3.7.6
@@ -2802,6 +2809,7 @@ if [ "${RUN_VIRTUALENV}" = true ]; then  # -V  (not the default pipenv)
    fi
 
 fi   # RUN_VIRTUALENV means Pipenv default
+
 
 
 ### 29. Configure Pyenv with virtualenv
@@ -2858,7 +2866,7 @@ fi    # USE_PYENV
 ### 30. Use Anaconda
 if [ "${RUN_ANACONDA}" = true ]; then  # -A
 
-         if [ "${PACKAGE_MANAGER}" == "brew" ]; then # -U
+         if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
             if ! command -v anaconda ; then
                h2 "brew install --cask anaconda ..."  # miniconda
                brew install --cask anaconda
@@ -2868,7 +2876,7 @@ if [ "${RUN_ANACONDA}" = true ]; then  # -A
                   brew cask upgrade anaconda
                fi
             fi
-         elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+         elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
             silent-apt-get-install "anaconda"
          fi
          note "$( anaconda version )"  # anaconda Command line client (version 1.7.2)
@@ -2885,10 +2893,23 @@ if [ "${RUN_ANACONDA}" = true ]; then  # -A
 fi  # RUN_ANACONDA
 
 
-### 31. Use GoLang
-if [ "${RUN_GOLANG}" = true ]; then  # -s
+### 31. RUN_GOLANG  ### See https://wilsonmar.github.io/golang
+if [ "${RUN_GOLANG}" = true ]; then  # -go
+   h2 "Installing Golang using brew ..."
+   brew install golang
 
-   h2 "TODO: Golang"
+   # It’s considered best practice to use $HOME/go folder for your workspace!
+   mkdir -p $HOME/go/{bin,src,pkg}
+   # NOTE: GOPATH, GOROOT in PATH are defined in ~/.zshrc during each login.
+
+   # Extra: Go Version Manager (GVM)
+   # # If you wish To run multiple version of go, you might want to install this (ref here)
+   # bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
+   # # List All Go Version
+   # gvm listall
+   # # Use GVM to install GO (pick a version from above list)
+   # gvm install go1.16.2
+   # gvm use go1.16.2 [--default]
 
    # See https://www.golangprograms.com/advance-programs/code-formatting-and-naming-conventions-in-golang.html
    # go get -u github.com/golang/gofmt/gofmt
@@ -2903,8 +2924,8 @@ if [ "${RUN_GOLANG}" = true ]; then  # -s
    # golint
 
    # https://github.com/securego/gosec
-# binary will be $GOPATH/bin/gosec
-#curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.zsh \
+   # binary will be $GOPATH/bin/gosec
+   #curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.zsh \
 #   | sh -s -- -b "${GOPATH}/bin" vX.Y.Z
    # securego/gosec info checking GitHub for tag 'vX.Y.Z'
    # securego/gosec crit unable to find 'vX.Y.Z' - use 'latest' or see https://github.com/securego/gosec/releases for details
@@ -2924,12 +2945,15 @@ if [ "${RUN_GOLANG}" = true ]; then  # -s
       # HTTP request sent, awaiting response... 404 Not Found
       # 2020-06-24 07:28:20 ERROR 404: Not Found.
 
-# The file will be in the current folder where you run the command 
-# and you can check the checksum like this
-echo "<check sum from the check sum file>  gosec_vX.Y.Z_OS.tar.gz" | sha256sum -c -
+   # The file will be in the current folder where you run the command 
+   # and you can check the checksum like this
+   #echo "check sum from the check sum file>  gosec_vX.Y.Z_OS.tar.gz" | sha256sum -c -
+   #gosec --help
 
-gosec --help
-
+#   conda create -n godev go -c conda-forge
+#   conda activate godev
+#   echo $GOROOT
+#   which go
 
 fi   # RUN_GOLANG
 
@@ -2984,7 +3008,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -s
                # TRICK: Route console output to a temp folder for display only on error:
                pylint "${MY_FILE}" 1>pylint.console.log  2>pylint.err.log
                STATUS=$?
-               if ! [ "${STATUS}" == "0" ]; then  # NOT good
+               if ! [ "${STATUS}" = "0" ]; then  # NOT good
                   if [ "${CONTINUE_ON_ERR}" = true ]; then  # -E
                      warning "Pylint found ${STATUS} blocking issues, being ignored."
                   else
@@ -3013,7 +3037,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -s
                flake8 "${MY_FILE}"
                flake8 "${MY_FILE}" 1>flake8.console.log  2>flake8.err.log
                STATUS=$?
-               if ! [ "${STATUS}" == "0" ]; then  # NOT good
+               if ! [ "${STATUS}" = "0" ]; then  # NOT good
                   if [ "${CONTINUE_ON_ERR}" = true ]; then  # -E
                      warning "Pylint found ${STATUS} blocking issues, being ignored."
                   else
@@ -3043,7 +3067,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -s
                # TRICK: Route console output to a temp folder for display only on error:
                bandit -r "${MY_FILE}" 1>bandit.console.log  2>bandit.err.log
                STATUS=$?
-               if ! [ "${STATUS}" == "0" ]; then  # NOT good
+               if ! [ "${STATUS}" = "0" ]; then  # NOT good
                   fatal "Bandit found issues : ${STATUS} "
                   cat bandit.err.log
                   cat bandit.console.log
@@ -3071,7 +3095,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -s
          fi
       fi
       if [ "${OPEN_APP}" = true ]; then  # -o
-         if [ "${OS_TYPE}" == "macOS" ]; then
+         if [ "${OS_TYPE}" = "macOS" ]; then
             sleep 3
             open "/Applications/PyCharm.app"
          fi
@@ -3151,7 +3175,7 @@ fi
 
 if [ "${USE_TEST_ENV}" = true ]; then  # -t
 
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
       if ! command -v selenium ; then
          h2 "Pip installing selenium ..."
          pip install selenium
@@ -3196,7 +3220,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -i
 
    # https://websiteforstudents.com/install-refinery-cms-ruby-on-rails-on-ubuntu-16-04-18-04-18-10/
 
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
 
       if ! command -v gnupg2 ; then
          h2 "Installing gnupg2 ..."
@@ -3226,7 +3250,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -i
          fi
       fi
 
-   elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+   elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
 
       sudo apt-get update
 
@@ -3284,10 +3308,10 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -i
       #h2 "Install PostgreSQL ..."
       #silent-apt-get-install "postgres"
 
-   elif [ "${PACKAGE_MANAGER}" == "yum" ]; then
+   elif [ "${PACKAGE_MANAGER}" = "yum" ]; then
       # TODO: More For Redhat distro:
       sudo yum install ruby-devel
-   elif [ "${PACKAGE_MANAGER}" == "zypper" ]; then
+   elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then
       # TODO: More for [open]SuSE:
       sudo zypper install ruby-devel
    fi
@@ -3447,7 +3471,7 @@ if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 
    # As seen at https://www.youtube.com/watch?v=B64_4r0vGkA May 28, 2020
    # See http://docs.eggplantsoftware.com/ePF/gettingstarted/epf-getting-started-eggplant-functional.htm
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then # -U
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
       if [ ! -d "/Applications/Eggplant.app" ]; then  # directory not found:
          h2 "brew install --cask eggplant ..."
          brew install --cask eggplant
@@ -3457,10 +3481,10 @@ if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
             brew cask uninstall eggplant
          fi
       fi
-   fi  #  PACKAGE_MANAGER}" == "brew" 
+   fi  #  PACKAGE_MANAGER}" = "brew" 
 
    if [ "${OPEN_APP}" = true ]; then  # -o
-      if [ "${OS_TYPE}" == "macOS" ]; then  # it's on a Mac:
+      if [ "${OS_TYPE}" = "macOS" ]; then  # it's on a Mac:
          sleep 3
          open "/Applications/Eggplant.app"
          # TODO: Configure floating license server 10.190.70.30
@@ -3469,7 +3493,7 @@ if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
    # Configure floating license on local & SUT on same network 10.190.70.30
    # Thank you to Ritdhwaj Singh Chandel
 
-   if [ "${PACKAGE_MANAGER}" == "brew" ]; then # -U
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
       # Alternately, https://www.realvnc.com/en/connect/download/vnc/macos/
       if [ ! -d "/Applications/RealVNC/VNC Server.app" ]; then  # directory not found:
          h2 "brew install --cask vnc-server ..."
@@ -3486,7 +3510,7 @@ if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 
 
    if [ "$OPEN_APP" = true ]; then  # -o
-      if [ "$OS_TYPE" == "macOS" ]; then  # it's on a Mac:
+      if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
          open "/Applications/RealVNC/VNC Server.app"
          # TODO: Automate configure app to input email, home subscription type, etc.
             # In Mac: ~/.vnc/config.d/vncserver
@@ -3510,7 +3534,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
       h2 "Install Docker and docker-compose:"
 
-      if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then
 
          if ! command -v docker ; then
             h2 "Installing docker ..."
@@ -3552,7 +3576,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
              fi
           fi
 
-       elif [ "${PACKAGE_MANAGER}" == "apt-get" ]; then
+       elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
 
          if ! command -v docker ; then
             h2 "Installing docker using apt-get ..."
@@ -3574,7 +3598,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
             fi
          fi
 
-      elif [ "${PACKAGE_MANAGER}" == "yum" ]; then
+      elif [ "${PACKAGE_MANAGER}" = "yum" ]; then
       
          if ! command -v docker ; then
             h2 "Installing docker using yum ..."
@@ -3606,7 +3630,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    note "$( docker-compose --version )"  # docker-compose version 1.24.1, build 4667896b
 
    Stop_Docker(){   # function
-         if [ "$OS_TYPE" == "macOS" ]; then  # it's on a Mac:
+         if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
             note "-restarting Docker on macOS ..."
             osascript -e 'quit app "Docker"'
          else
@@ -3617,7 +3641,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
          sleep 3
    }
    Start_Docker(){   # function
-      if [ "$OS_TYPE" == "macOS" ]; then  # it's on a Mac:
+      if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
          note "Docker Desktop is starting on macOS ..."
          open "/Applications/Docker.app"  # 
          #open --background -a Docker   # 
@@ -3687,7 +3711,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
          # See https://itsopensource.com/how-to-reduce-node-docker-image-size-by-ten-times/
       #npm prune --production
 
-      if [ "${USE_DOCKER_COMPOSE}" == true ]; then  # -dc
+      if [ "${USE_DOCKER_COMPOSE}" = true ]; then  # -dc
 
          if [ ! -f "docker-compose.yml" ]; then
             error "docker-compose.yml file not found ..."
@@ -3698,7 +3722,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
             docker-compose up --detach --build
             # --build specifies rebuild of pip install image for changes in requirements.txt
             STATUS=$?
-            if [ "${STATUS}" == "0" ]; then
+            if [ "${STATUS}" = "0" ]; then
                warning "Docker run ended with no issues."
             else
                if [ "${CONTINUE_ON_ERR}" = true ]; then  # -E
@@ -3716,7 +3740,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
          # runs scripts without launching "/Applications/Eggplant.app" functional GUI:
          # /Applications/Eggplant.app/Contents/MacOS/runscript  docker-test.script
-         fi   # MY_FILE}" == "docker-compose.yml"
+         fi   # MY_FILE}" = "docker-compose.yml"
       fi  # USE_DOCKER_COMPOSE
    fi   # RUN_ACTUAL
 
@@ -3790,14 +3814,14 @@ if [ "${RUN_ACTUAL}" = true ]; then   # -a
       note "EGGPLANT_SUT_IP=${EGGPLANT_SUT_IP}, EGGPLANT_SUT_PORT=${EGGPLANT_SUT_PORT}"
 
 #            "${MY_FOLDER}/${MY_FILE}" \
-      if [ "${OS_TYPE}" == "macOS" ]; then  # it's on a Mac:
+      if [ "${OS_TYPE}" = "macOS" ]; then  # it's on a Mac:
          "/Applications/Eggplant.app/Contents/MacOS/runscript" \
             "${MY_FILE}" \
             -LicenserHost "${EGGPLANT_HOST}" -host "${EGGPLANT_SUT_IP}" -port "${EGGPLANT_SUT_PORT}" \
             -password "secret" \
             -username "${EGGPLANT_USERNAME}" \
             -type VNC -DefaultHeight 1920 -DefaultWidth 1080 -CommandLineOutput yes
-      elif [ "${OS_TYPE}" == "Windows" ]; then  # it's on a Mac:
+      elif [ "${OS_TYPE}" = "Windows" ]; then  # it's on a Mac:
          # TODO: Change Ritdhwaj to what's in the Docker image:
          #"C:\Program Files\eggPlant\eggPlant.bat"   "C:\Users\Alex\Documents\MyTests.suite\scripts\test3.script" \
          #-host 10.1.11.150 -port 5901 -password "secret"
@@ -3810,7 +3834,7 @@ if [ "${RUN_ACTUAL}" = true ]; then   # -a
    fi 
 
    if [ -z "${APP1_PORT}" ]; then 
-      if [ "${OS_TYPE}" == "macOS" ]; then  # it's on a Mac:
+      if [ "${OS_TYPE}" = "macOS" ]; then  # it's on a Mac:
          sleep 3
          open "http://localhost:${APP1_PORT}"
       fi
@@ -3826,7 +3850,7 @@ fi  # RUN_ACTUAL
 # Alternative: https://github.com/anshumanbh/git-all-secrets
 if [ "${UPDATE_GITHUB}" = true ]; then  # -u
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I & -U
-      if [ "${PACKAGE_MANAGER}" == "brew" ]; then
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! brew ls --versions git-secrets >/dev/null; then  # command not found, so:
             h2 "Brew installing git-secrets ..."
             brew install git-secrets
