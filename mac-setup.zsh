@@ -16,7 +16,7 @@
 
 ### 01. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.81"  # Rename GITHUB vars from .mac-setup.env
+SCRIPT_VERSION="v0.82"  # Renumber steps
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
@@ -87,9 +87,9 @@ args_prompt() {
    echo "   -K           -Keep OS processes running at end of run (instead of killing them)"
    echo "   -D           -Delete containers and other files after run (to save disk space)"
    echo "   -M           remove Docker iMages pulled from DockerHub (to save disk space)"
-   echo "USAGE EXAMPLES:"
-   echo "chmod +x mac-setup.zsh"
-   echo "Using default ~/.mac-setup.env configuration settings file :"
+   echo "# USAGE EXAMPLES:"
+   echo "chmod +x mac-setup.zsh   # change permissions"
+   echo "# Using default configuration settings downloaed to \$HOME/.mac-setup.env "
    echo "./mac-setup.zsh -v -I -U -go         # Install brew, golang"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
    echo "./mac-setup.zsh -v -g \"abcdef...89\" -p \"cp100-1094\"  # Google API call"
@@ -104,7 +104,7 @@ args_prompt() {
    echo "./mac-setup.zsh -v -V -c -L -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -D -M -C"
    echo "./mac-setup.zsh -G -v -f \"challenge.py\" -P \"-v\"  # to run a program in my python-samples repo"
-   echo "Using alternative ~/.alt-mac-setup.env  configuration settings file :"
+   echo "# Using alternative ~/.alt-mac-setup.env  configuration settings file :"
    echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -H -m -o  # -t for local vault for Vault SSH keygen"
    echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -aws  # for Terraform"
    echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -eks -D "
@@ -120,7 +120,45 @@ exit_abnormal() {            # Function: Exit with error.
   exit 1
 }
 
-### 03. Define variables for use as "feature flags"
+### 03. Custom functions to echo text to screen
+# \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
+h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
+   printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+info() {   # output on every run
+   printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+}
+note() { if [ "${RUN_VERBOSE}" = true ]; then
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\n"
+   fi
+}
+success() {
+   printf "\n\e[32m\e[1m✔ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+}
+error() {    # &#9747;
+   printf "\n\e[31m\e[1m✖ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+}
+warning() {  # &#9758; or &#9755;
+   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+}
+fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
+   printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+}
+
+if [ "${RUN_DEBUG}" = true ]; then  # -vv
+   h2 "Header here"
+   info "info"
+   note "note"
+   success "success!"
+   error "error"
+   warning "warning (warnNotice)"
+   fatal "fatal (warnError)"
+fi
+
+
+### 04. Define variables for use as "feature flags"
    RUN_ACTUAL=false             # -a  (dry run is default)
    CONTINUE_ON_ERR=false        # -cont
    SET_TRACE=false              # -x
@@ -225,7 +263,8 @@ CONFIG_FILEPATH="$HOME/.mac-setup.env"  # -env ".mac-setup.en"
 
 SECRETS_FILE=".secrets.env.sample"
 
-### 04. Set variables associated with each parameter flag
+
+### 05. Set variables associated with each parameter flag
 while test $# -gt 0; do
   case "$1" in
     -a)
@@ -534,45 +573,16 @@ while test $# -gt 0; do
 done
 
 
-### 05. Custom functions to echo text to screen
-# \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
-h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
-   printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-   fi
-}
-info() {   # output on every run
-   printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-note() { if [ "${RUN_VERBOSE}" = true ]; then
-   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
-   printf "\n"
-   fi
-}
-success() {
-   printf "\n\e[32m\e[1m✔ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-error() {    # &#9747;
-   printf "\n\e[31m\e[1m✖ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-warning() {  # &#9758; or &#9755;
-   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
-   printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
+### 06. Save config settings file to \$HOME/.mac-setup.env (away from GitHub)
 
-if [ "${RUN_DEBUG}" = true ]; then  # -vv
-   h2 "Header here"
-   info "info"
-   note "note"
-   success "success!"
-   error "error"
-   warning "warning (warnNotice)"
-   fatal "fatal (warnError)"
+if command -v curl ; then
+   if [ ! -f "$HOME/.mac-setup.env" ]; then
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/.mac-setup.env)"
+   fi
 fi
 
 
-### 06. Obtain information about the operating system in use to define which package manager to use
+### 07. Obtain information about the operating system in use to define which package manager to use
    export OS_TYPE="$( uname )"
    export OS_DETAILS=""  # default blank.
    export PACKAGE_MANAGER=""
@@ -623,7 +633,7 @@ fi
 # note "OS_DETAILS=$OS_DETAILS"
 
 
-### 07. Upgrade to the latest version of bash 
+### 08. Upgrade to the latest version of bash 
 BASH_VERSION=$( bash --version | grep bash | cut -d' ' -f4 | head -c 1 )
    if [ "${BASH_VERSION}" -ge "4" ]; then  # use array feature in BASH v4+ :
       DISK_PCT_FREE=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[11]}" )
@@ -650,7 +660,7 @@ BASH_VERSION=$( bash --version | grep bash | cut -d' ' -f4 | head -c 1 )
    fi
 
 
-### 08. Set traps to display information if script is interrupted.
+### 09. Set traps to display information if script is interrupted.
 # See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
 trap this_ending EXIT
 trap this_ending INT QUIT TERM
@@ -676,30 +686,7 @@ sig_cleanup() {
     this_ending
 }
 
-
-### 09. Print run Operating environment information
-HOSTNAME=$( hostname )
-PUBLIC_IP=$( curl -s ifconfig.me )
-INTERNAL_IP=$( ipconfig getifaddr en0 )
-
-if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
-   note "BASHFILE=~/.bash_profile ..."
-   BASHFILE="$HOME/.bash_profile"  # on Macs
-else  # Linux:
-   note "BASHFILE=~/.bashrc ..."
-   BASHFILE="$HOME/.bashrc"  # on Linux
-fi
-      note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
-      note "Start time $LOG_DATETIME"
-      note "Bash $BASH_VERSION from $BASHFILE"
-      note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
-      note "on hostname=$HOSTNAME "
-      note "at PUBLIC_IP=$PUBLIC_IP, intern $INTERNAL_IP"
-# TODO: print all command arguments submitted:
-#while (( "$#" )); do 
-#  echo $1 
-#  shift 
-#done 
+### 10. Set Continue on Error and Trace
 
 if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
    warning "Set to continue despite error ..."
@@ -715,11 +702,38 @@ fi
 # set -o nounset
 
 
-### Keep-alive: update existing `sudo` time stamp until `.osx` has finished
+### 11. Print run Operating environment information
+HOSTNAME=$( hostname )
+PUBLIC_IP=$( curl -s ifconfig.me )
+INTERNAL_IP=$( ipconfig getifaddr en0 )
+
+if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
+   note "OS_TYPE = $OS_TYPE"
+   # BASHFILE=~/.bash_profile ..."
+   # BASHFILE="$HOME/.bash_profile"  # on Macs
+else  # Linux:
+   note "BASHFILE=~/.bashrc ..."
+   BASHFILE="$HOME/.bashrc"  # on Linux
+fi
+   note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
+   note "Start time $LOG_DATETIME"
+   note "Bash $BASH_VERSION from $BASHFILE"
+   note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
+   note "on hostname=$HOSTNAME "
+   note "at PUBLIC_IP=$PUBLIC_IP, intern $INTERNAL_IP"
+
+# TODO: print all command arguments submitted:
+#while (( "$#" )); do 
+#  echo $1 
+#  shift 
+#done 
+
+
+### 12. Keep-alive: update existing `sudo` time stamp until `.osx` has finished
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 
-### 10. Install installers (brew, apt-get), depending on operating system
+### 13. Install installers (brew, apt-get), depending on operating system
 
 # Bashism Internal Field Separator used by echo, read for word splitting to lines newline or tab (not spaces).
 IFS=$'\n\t'  
@@ -753,7 +767,6 @@ function BASHFILE_EXPORT() {
       echo "export $name='$value'" >>"$BASHFILE"
    fi
 }
-
 
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
@@ -884,7 +897,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi # if [ "${DOWNLOAD_INSTALL}"
 
 
-### 11. Define utility functions, such ShellCheck and the function to kill process by name, etc.
+### 14. Define utility functions: ShellCheck & kill process by name, etc.
 ps_kill(){  # $1=process name
       PSID=$( pgrap -l "$1" )
       if [ -z "$PSID" ]; then
@@ -919,7 +932,7 @@ fi  # DOWNLOAD_INSTALL
 #fi
 
 
-### 12. Install basic utilities (git, jq, tree, etc.) used by many:
+### 15. Install basic utilities (git, jq, tree, etc.) used by many:
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # CAUTION: Install only packages that you actually use and trust!
 
@@ -1093,9 +1106,9 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi  # DOWNLOAD_INSTALL
 
 
-
+####
 if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
-   h2 "13. Override defaults in Apple macOS System Preferences:"
+   h2 "16. Override defaults in Apple macOS System Preferences:"
    # https://www.youtube.com/watch?v=r_MpUP6aKiQ = "~/.dotfiles in 100 seconds"
    # Patrick McDonald's $12,99 Udemy course "Dotfiles from Start to Finish" at https://bit.ly/3anaaFh
 
@@ -1179,7 +1192,7 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
 fi  # SET_MACOS_SYSPREFS
 
 
-### 12b. Image SD card
+### 17. Image SD card 
 # See https://wilsonmar.github.io/iot-raspberry-install/
 # To avoid selecting a hard drive and wiping it out,
 # it's best to manually use https://www.sdcard.org/downloads/formatter/
@@ -1240,7 +1253,7 @@ if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
 fi  # IMAGE_SD_CARD
 
 
-### 13. Get secrets from a clear-text file in $HOME folder
+### 18. Get secrets from a clear-text file in $HOME folder
 Input_GitHub_User_Info(){
       # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
       read -r -p "Enter your GitHub user name [John Doe]: " GitHub_USER_NAME
@@ -1297,7 +1310,7 @@ fi  # if [ "${USE_CONFIG_FILE}" = false ]; then  # -s
 #      note "GitHub_USER_ACCOUNT=" "${GitHub_USER_ACCOUNT}"
 #      note "GitHub_USER_EMAIL=" "${GitHub_USER_EMAIL}"
 
-### 14. Configure project folder location where files are created by the run
+### 19. Configure project folder location where files are created by the run
    if [ -z "${PROJECT_FOLDER_PATH}" ]; then  # -p ""  override blank (the default)
       h2 "Using current folder \"${PROJECT_FOLDER_PATH}\" as project folder path ..."
       pwd
@@ -1315,7 +1328,7 @@ fi  # if [ "${USE_CONFIG_FILE}" = false ]; then  # -s
    fi
 
 
-### 15. Obtain repository from GitHub
+### 20. Obtain repository from GitHub
 
 echo "*** GitHub_REPO_URL=${GitHub_REPO_URL}"
 if [ -n "${GitHub_REPO_URL}" ]; then   # variable is NOT blank
@@ -1402,7 +1415,7 @@ fi  # CLONE_GITHUB
 fi   # GitHub_REPO_URL
 
 
-### 16. Reveal secrets stored within <tt>.gitsecret</tt> folder within repo from GitHub 
+### 21. Reveal secrets stored within <tt>.gitsecret</tt> folder within repo from GitHub 
 # (after installing gnupg and git-secret)
 
    # This script detects whether secrets are stored various ways:
@@ -1468,7 +1481,7 @@ if [ -d ".gitsecret" ]; then   # found
    fi  # .gitsecret
 
 
-### 17. Pipenv and Pyenv to install Python and its modules
+### 22. Pipenv and Pyenv to install Python and its modules
 pipenv_install() {
    # Pipenv is a dependency manager for Python projects like Node.js’ npm or Ruby’s bundler.
    # See https://realpython.com/pipenv-guide/
@@ -1527,7 +1540,7 @@ pipenv_install() {
 }  # pipenv_install()
 
 
-### 18. Connect to GitHub Cloud, if requested:
+### 23. Connect to GitHub Cloud, if requested:
 if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
    # Perhaps in https://console.cloud.google.com/cloudshell  (use on Chromebooks with no Terminal)
    # Comes with gcloud, node, docker, kubectl, go, python, git, vim, cloudshell dl file, etc.
@@ -1711,7 +1724,7 @@ exit  # in dev
 fi  # USE_GOOGLE_CLOUD
 
 
-### 19. Connect to AWS
+### 24. Connect to AWS
 if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -1812,7 +1825,7 @@ exit
 fi  # USE_AWS_CLOUD
 
 
-### 20. Install Azure
+### 25. Install Azure
 if [ "${USE_AZURE_CLOUD}" = true ]; then   # -z
     # See https://docs.microsoft.com/en-us/cli/azure/keyvault/secret?view=azure-cli-latest
     note "TODO: Add Azure cloud coding ..."
@@ -1821,7 +1834,7 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -z
 fi
 
 
-### 21. Install K8S minikube
+### 26. Install K8S minikube
 if [ "${USE_K8S}" = true ]; then  # -k8s
 
    h2 "-k8s"
@@ -1857,7 +1870,7 @@ exit
 fi  # if [ "${USE_K8S}" = true ]; then  # -k8s
 
 
-### 22. Install EKS using eksctl
+### 27. Install EKS using eksctl
 if [ "${RUN_EKS}" = true ]; then  # -EKS
 
    # h2 "kubectl client install for -EKS ..."
@@ -2056,7 +2069,7 @@ exit  # DEBUGGING
 fi  # EKS
 
 
-### 23. Open
+### 28. Open
 
    #if [ ! -f "docker-compose.override.yml" ]; then
    #   cp docker-compose.override.example.yml  docker-compose.override.yml
@@ -2065,7 +2078,7 @@ fi  # EKS
    #fi
 
 
-### 24. Use CircleCI
+### 29. Use CircleCI SaaS
 if [ "${USE_CIRCLECI}" = true ]; then   # -L
    # https://circleci.com/docs/2.0/getting-started/#setting-up-circleci
    # h2 "circleci setup ..."
@@ -2132,7 +2145,7 @@ if [ "${USE_CIRCLECI}" = true ]; then   # -L
 fi  # USE_CIRCLECI
 
 
-### 25. Use Yubikey
+### 30. Use Yubikey
 if [ "${USE_YUBIKEY}" = true ]; then   # -Y
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v ykman >/dev/null; then  # command not found, so:
@@ -2204,6 +2217,7 @@ if [ "${USE_YUBIKEY}" = true ]; then   # -Y
 fi  # USE_YUBIKEY
 
 
+#### 31. Use GitHub
 
 if [ "${MOVE_SECURELY}" = true ]; then   # -m
    # See https://github.com/settings/keys 
@@ -2228,6 +2242,8 @@ if [ "${MOVE_SECURELY}" = true ]; then   # -m
 
 fi  # MOVE_SECURELY
 
+
+#### 32. Use Hashicorp Vault
 
 USE_ALWAYS=true
 if [ "${USE_ALWAYS}" = false ]; then   # -H
@@ -2311,7 +2327,7 @@ if [ "${USE_ALWAYS}" = false ]; then   # -H
 fi  # MOVE_SECURELY
 
 
-### 26. Use Hashicorp Vault
+### 33. Use Hashicorp Vault
 if [ "${USE_VAULT}" = true ]; then   # -H
       h2 "-HashicorpVault being used ..."
 
@@ -2608,7 +2624,8 @@ exit
 fi  # USE_VAULT
 
 
-## TODO: 
+#### TODO: 34. Put secret in Hashicorp Vault
+
 if [ "${VAULT_PUT}" = true ]; then  # -n
 
    note -e "\n Put secret/hello ..."
@@ -2635,7 +2652,7 @@ if [ "${VAULT_PUT}" = true ]; then  # -n
 fi  # USE_VAULT
 
 
-### 27. Use NodeJs
+### 35. Install NodeJs
 if [ "${NODE_INSTALL}" = true ]; then  # -n
 
 # If VAULT is used:
@@ -2786,7 +2803,7 @@ if [ "${NODE_INSTALL}" = true ]; then  # -n
 fi # if [ "${NODE_INSTALL}
 
 
-### 28. Run Virtualenv
+### 36. Install Virtualenv
 if [ "${RUN_VIRTUALENV}" = true ]; then  # -V  (not the default pipenv)
 
    h2 "Install -python"
@@ -2838,7 +2855,7 @@ fi   # RUN_VIRTUALENV means Pipenv default
 
 
 
-### 29. Configure Pyenv with virtualenv
+### 37. Configure Pyenv with virtualenv
 if [ "${USE_PYENV}" = true ]; then  # -py
 
    h2 "Use Pipenv by default (not overrided by -Virtulenv)"
@@ -2889,7 +2906,7 @@ if [ "${USE_PYENV}" = true ]; then  # -py
 fi    # USE_PYENV
 
 
-### 30. Use Anaconda
+### 38. Install Anaconda
 if [ "${RUN_ANACONDA}" = true ]; then  # -A
 
          if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
@@ -2919,7 +2936,7 @@ if [ "${RUN_ANACONDA}" = true ]; then  # -A
 fi  # RUN_ANACONDA
 
 
-### 31. RUN_GOLANG  ### See https://wilsonmar.github.io/golang
+### 39. RUN_GOLANG  ### See https://wilsonmar.github.io/golang
 if [ "${RUN_GOLANG}" = true ]; then  # -go
    h2 "Installing Golang using brew ..."
    brew install golang
@@ -2984,7 +3001,7 @@ if [ "${RUN_GOLANG}" = true ]; then  # -go
 fi   # RUN_GOLANG
 
 
-### 32. Use Python
+### 40. Install Python
 if [ "${RUN_PYTHON}" = true ]; then  # -s
 
    # https://docs.python-guide.org/dev/virtualenvs/
@@ -3130,7 +3147,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -s
 fi  # RUN_PYTHON
 
 
-### 33. Use Terraform
+### 41. RUN_TERRAFORM
 if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
    h2 "Running Terraform"
    # echo "$PWD/${MY_FOLDER}/${MY_FILE}"
@@ -3138,7 +3155,7 @@ if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
 fi    # RUN_TERRAFORM
 
 
-### 33. Use Tensorflow
+### 42. RUN_TENSORFLOW
 if [ "${RUN_TENSORFLOW}" = true ]; then  # -tsf
 
       if [ -f "$PWD/${MY_FOLDER}/${MY_FILE}" ]; then
@@ -3190,6 +3207,7 @@ if [ "${RUN_TENSORFLOW}" = true ]; then  # -tsf
 fi  # if [ "${RUN_TENSORFLOW}"
 
 
+#### 43. Finish RUN_VIRTUALENV
 if [ "${RUN_VIRTUALENV}" = true ]; then  # -V
       h2 "Execute deactivate if the function exists (i.e. has been created by sourcing activate):"
       # per https://stackoverflow.com/a/57342256
@@ -3198,6 +3216,7 @@ if [ "${RUN_VIRTUALENV}" = true ]; then  # -V
          #[I 16:03:19.266 NotebookApp] Restoring connection for db5328e3-aa66-4bc9-94a1-3cf27e330912:84adb360adce4699bccffc00c7671793
 fi
 
+#### 44. USE_TEST_ENV
 
 if [ "${USE_TEST_ENV}" = true ]; then  # -t
 
@@ -3241,7 +3260,7 @@ if [ "${USE_TEST_ENV}" = true ]; then  # -t
 fi # if [ "${USE_TEST_ENV}"
 
 
-### 34. Use Ruby
+### 45. RUBY_INSTALL
 if [ "${RUBY_INSTALL}" = true ]; then  # -i
 
    # https://websiteforstudents.com/install-refinery-cms-ruby-on-rails-on-ubuntu-16-04-18-04-18-10/
@@ -3492,7 +3511,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -i
 fi # if [ "${RUBY_INSTALL}" = true ]; then  # -i
 
 
-### 35. Use Eggplant
+### 46. RUN_EGGPLANT
 if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 
    # As seen at https://www.youtube.com/watch?v=B64_4r0vGkA May 28, 2020
@@ -3553,7 +3572,7 @@ if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 fi    # RUN_EGGPLANT
 
 
-### 36. Use Docker
+### 47. USE_DOCKER
 if [ "${USE_DOCKER}" = true ]; then   # -k
 
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I & -U
@@ -3784,7 +3803,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 fi  # if [ "${USE_DOCKER}
 
 
-### 37. Run within Docker
+### 48. RUN_ACTUAL within Docker
 if [ "${RUN_ACTUAL}" = true ]; then   # -a
 
       if [ -z "${MY_FOLDER}" ]; then  # not defined:
@@ -3872,7 +3891,7 @@ fi  # RUN_ACTUAL
 
 
 
-### 38. Update GitHub
+### 49. UPDATE_GITHUB
 # Alternative: https://github.com/anshumanbh/git-all-secrets
 if [ "${UPDATE_GITHUB}" = true ]; then  # -u
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I & -U
@@ -3921,7 +3940,7 @@ if [ "${UPDATE_GITHUB}" = true ]; then  # -u
 fi   # UPDATE_GITHUB
 
 
-### 39. Remove GitHub folder after run
+### 50. REMOVE_GITHUB_AFTER folder after run
 if [ "$REMOVE_GITHUB_AFTER" = true ]; then  # -C
    h2 "Delete cloned GitHub at end ..."
    Delete_GitHub_clone    # defined above in this file.
@@ -3936,7 +3955,7 @@ if [ "$REMOVE_GITHUB_AFTER" = true ]; then  # -C
 fi
 
 
-### 40. Kill processes after run
+### 51. KEEP_PROCESSES after run
 if [ "${KEEP_PROCESSES}" = false ]; then  # -K
 
    if [ "${NODE_INSTALL}" = true ]; then  # -n
@@ -3946,7 +3965,6 @@ if [ "${KEEP_PROCESSES}" = false ]; then  # -K
       fi
    fi 
 fi
-
 
 if [ "${USE_DOCKER}" = true ]; then   # -k
 
@@ -3960,7 +3978,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    fi
 
 
-   ### 41. Delete Docker containers in memory after run ...
+   ### 52. Delete Docker containers in memory after run ...
    if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
 
       # TODO: if docker-compose.yml available:
@@ -3982,7 +4000,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    fi
 
 
-   ### 42. Remove Docker images downloaded
+   ### 53. REMOVE_DOCKER_IMAGES downloaded
    if [ "${REMOVE_DOCKER_IMAGES}" = true ]; then  # -M
 
       note "docker system df ..."
