@@ -17,7 +17,7 @@
 
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.82"  # Renumber steps
+SCRIPT_VERSION="v0.82"  # Renumber steps, remove . from mac-setup.env name, -L, -HV
 
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
@@ -46,11 +46,11 @@ args_prompt() {
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
    echo " "
    echo "   -nenv        Do not retrieve mac-setup.env file"
-   echo "   -env \"~/.alt.secrets.zsh\"   (alternate env file)"
+   echo "   -env \"~/alt-mac-setup.env\"   (alternate env file)"
    echo "   -H           install/use -Hashicorp Vault secret manager"
    echo "   -m           Setup Vault SSH CA cert"
    echo " "
-   echo "   -L           use CircleCI"
+   echo "   -circleci    Use CircleCI SaaS"
    echo "   -aws         -AWS cloud"
    echo "   -eks         -eks (Elastic Kubernetes Service) in AWS cloud"
    echo "   -g \"abcdef...89\" -gcloud API credentials for calls"
@@ -104,14 +104,14 @@ args_prompt() {
    echo "./mac-setup.zsh -q          -s -H    -a        # Initiate Vault prod server"
    echo "./mac-setup.zsh -v -I -U -c    -H -G -N \"python-samples\" -f \"a9y-sample.py\" -P \"-v\" -t -AWS -C  # Python sample app using Vault"
    echo "./mac-setup.zsh -v -V -c -T -F \"section_2\" -f \"2-1.ipynb\" -K  # Jupyter anaconda Tensorflow in Venv"
-   echo "./mac-setup.zsh -v -V -c -L -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -D -M -C"
    echo "./mac-setup.zsh -G -v -f \"challenge.py\" -P \"-v\"  # to run a program in my python-samples repo"
    echo "# Using alternative ~/.alt-mac-setup.env  configuration settings file :"
-   echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -H -m -o  # -t for local vault for Vault SSH keygen"
-   echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -aws  # for Terraform"
-   echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -eks -D "
-   echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -H -m -t    # Use SSH-CA certs with -H Hashicorp Vault -test actual server"
+   echo "./mac-setup.zsh -v -H -m -o  # -t for local vault for Vault SSH keygen"
+   echo "./mac-setup.zsh -v -V -c -circleci -s    # Use CircLeci based on secrets"
+   echo "./mac-setup.zsh -v -aws  # for Terraform"
+   echo "./mac-setup.zsh -v -eks -D "
+   echo "./mac-setup.zsh -v -H -m -t    # Use SSH-CA certs with -H Hashicorp Vault -test actual server"
 }
 if [ $# -eq 0 ]; then  # display if no parameters are provided:
    args_prompt
@@ -164,27 +164,52 @@ fi
 
 ### 04. Define variables for use as "feature flags"
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
-   RUN_ACTUAL=false             # -a  (dry run is default)
+# Normal:
    CONTINUE_ON_ERR=false        # -cont
-   SET_TRACE=false              # -x
-   RUN_VERBOSE=false            # -v
-   OPEN_CONSOLE=false           # -console
-   RUN_DEBUG=false              # -vv
-   USE_TEST_ENV=false              # -t
-   RUN_VIRTUALENV=false         # -V
-   RUN_ANACONDA=false           # -A
-   RUN_PYTHON=false             # -G
-   RUN_GOLANG=false             # -go
-   RUN_PARMS=""                 # -P
-   USE_CIRCLECI=false           # -L
-   USE_DOCKER=false             # -k
-   SET_MACOS_SYSPREFS=false     # -macos
 
-   USE_AWS_CLOUD=false          # -aws
-   RUN_EKS=false                # -eks
-   # From AWS Management Console https://console.aws.amazon.com/iam/
-   #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
-   # From secrets file:
+   RUN_ACTUAL=false             # -a  (dry run is default)
+   RUN_DEBUG=false              # -vv
+   RUN_PARMS=""                 # -P
+   RUN_VERBOSE=false            # -v
+
+   SET_TRACE=false              # -x
+
+   OPEN_CONSOLE=false           # -console
+   USE_TEST_ENV=false           # -t
+
+USE_CONFIG_FILE=true            # -nenv
+CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
+   # Contents of ~/mac-setup.env overrides these defaults:
+   PROJECTS_CONTAINER_PATH="$HOME/Projects"  # -P
+   PROJECT_FOLDER_NAME="webgoat"
+   PROJECT_NAME=""                           # -p
+
+   GITHUB_PATH="$HOME/github-wilsonmar"
+   GITHUB_REPO="wilsonmar.github.io"
+   GITHUB_ACCOUNT="wilsonmar"
+   GITHUB_USER_NAME="Wilson Mar"             # -n
+   GitHub_USER_EMAIL="wilson_mar@gmail.com"  # -e
+
+   GIT_ID="WilsonMar@gmail.com"
+   GIT_EMAIL="WilsonMar+GitHub@gmail.com"
+   GIT_NAME="Wilson Mar"
+   GIT_USERNAME="wilsonmar"
+
+   GITHUB_REPO_URL="https://github.com/wilsonmar/WebGoat.git"
+   GITHUB_FOLDER="ShiftLeft"
+   GITHUB_BRANCH="GC-348-provision-vault-infra"
+
+   CLONE_GITHUB=false           # -c
+
+# Different for each app:
+   MY_FOLDER=""                 # -F folder
+   MY_FILE=""
+     #MY_FILE="2-3.ipynb"
+   APP1_PORT="8000"
+   OPEN_APP=false               # -o
+
+# From secrets file:
+SECRETS_FILE=".secrets.env.sample"
    #   AWS_ACCESS_KEY_ID=""
    #   AWS_SECRET_ACCESS_KEY=""
    #   AWS_USER_ARN=""
@@ -194,79 +219,69 @@ fi
       EKS_KEY_FILE_PREFIX="eksctl-1"
       EKS_NODES="2"
       EKS_NODE_TYPE="m5.large"
-   # EKS_CLUSTER_FILE=""   # cluster.yaml instead
-   EKS_CRED_IS_LOCAL=true
-   USE_K8S=false                # -k8s
-   USE_AZURE_CLOUD=false        # -z
-   USE_GOOGLE_CLOUD=false       # -g
-       GOOGLE_API_KEY=""  # manually copied from APIs & services > Credentials
-   PROJECT_NAME=""              # -p                 
 
-   USE_YUBIKEY=false            # -Y
-   MOVE_SECURELY=false          # -m
-      LOCAL_SSH_KEYFILE=""
-      GITHUB_ORG=""
-   USE_VAULT=false              # -H
+   USE_VAULT=false              # -HV
        VAULT_ADDR=""
       #VAULT_RSA_FILENAME=""
        VAULT_USER_TOKEN=""
        VAULT_CA_KEY_FULLPATH="$HOME/.ssh/ca_key"
    VAULT_PUT=false
 
+# Cloud:
+   RUN_VIRTUALENV=false         # -V
+   RUN_ANACONDA=false           # -A
+   RUN_PYTHON=false             # -G
+   RUN_GOLANG=false             # -go
+   RUN_EKS=false                # -eks
+       EKS_CRED_IS_LOCAL=true
+   RUN_EGGPLANT=false           # -eggplant
+   RUN_QUIET=false              # -q
+   RUN_TENSORFLOW=false         # -tsf
+   RUN_TERRAFORM=false          # -tf
+   RUN_WEBGOAT=false            # -W
+
+   SET_MACOS_SYSPREFS=false     # -macos
+
+   UPDATE_GITHUB=false          # -u
+   UPDATE_PKGS=false            # -U
+
+   USE_CIRCLECI=false           # -circleci
+   USE_DOCKER=false             # -k
+   USE_AWS_CLOUD=false          # -aws
+   # From AWS Management Console https://console.aws.amazon.com/iam/
+   #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
+   # EKS_CLUSTER_FILE=""   # cluster.yaml instead
+   USE_YUBIKEY=false            # -Y
+
+   USE_K8S=false                # -k8s
+   USE_AZURE_CLOUD=false        # -z
+   USE_GOOGLE_CLOUD=false       # -g
+       GOOGLE_API_KEY=""  # manually copied from APIs & services > Credentials
+
+   MOVE_SECURELY=false          # -m
+      LOCAL_SSH_KEYFILE=""
+      GITHUB_ORG=""
+
    RUBY_INSTALL=false           # -i
    NODE_INSTALL=false           # -n
    MONGO_DB_NAME=""
 
-   MY_FOLDER=""                 # -F folder
-   MY_FILE=""
-     #MY_FILE="2-3.ipynb"
-   RUN_EGGPLANT=false           # -eggplant
+# Install?
+   DOWNLOAD_INSTALL=false       # -I
+   IMAGE_SD_CARD=false          # -sd
 
-   RUN_WEBGOAT=false            # -W
-   RUN_QUIET=false              # -q
-   UPDATE_GITHUB=false   # -u
-   UPDATE_PKGS=false            # -U
-
+# Pre-processing:
    RESTART_DOCKER=false         # -r
    BUILD_DOCKER_IMAGE=false     # -b
    WRITE_TO_DOCKERHUB=false     # -w
-   USE_PYENV=false              # -py
    USE_DOCKER_COMPOSE=false     # -dc
-   DOWNLOAD_INSTALL=false       # -I
+   USE_PYENV=false              # -py
+
+# Post-processing:
    DELETE_CONTAINER_AFTER=false # -D
-   RUN_TENSORFLOW=false         # -tsf
-   RUN_TERRAFORM=false          # -tf
-   OPEN_APP=false               # -o
-   APP1_PORT="8000"
-
-   IMAGE_SD_CARD=false          # -sd
-   CLONE_GITHUB=false           # -c
-
    REMOVE_DOCKER_IMAGES=false   # -M
    REMOVE_GITHUB_AFTER=false    # -R
    KEEP_PROCESSES=false         # -K
-
-USE_CONFIG_FILE=true            # -nenv
-CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env ".mac-setup.en"
-   # Contents of ~/mac-setup.env overrides these defaults:
-   PROJECT_FOLDER_PATH="$HOME/Projects"  # -P
-   PROJECT_FOLDER_NAME=""
-
-   GITHUB_PATH="$HOME/github-wilsonmar"
-   GITHUB_REPO="wilsonmar.github.io"
-   GITHUB_ACCOUNT="wilsonmar"
-   GitHub_USER_NAME="Wilson Mar"             # -n
-   GitHub_USER_EMAIL="wilson_mar@gmail.com"  # -e
-
-   GIT_ID="WilsonMar@gmail.com"
-   GIT_EMAIL="WilsonMar+GitHub@gmail.com"
-   GIT_NAME="Wilson Mar"
-   GIT_USERNAME="wilsonmar"
-
-   GITHUB_FOLDER=""
-   GitHub_BRANCH=""
-
-SECRETS_FILE=".secrets.env.sample"
 
 
 ### 05. Download config settings file to \$HOME/mac-setup.env (away from GitHub)
@@ -283,8 +298,8 @@ fi
 
 Input_GitHub_User_Info(){
       # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
-      read -r -p "Enter your GitHub user name [John Doe]: " GitHub_USER_NAME
-      GitHub_USER_NAME=${GitHub_USER_NAME:-"John Doe"}
+      read -r -p "Enter your GitHub user name [John Doe]: " GITHUB_USER_NAME
+      GITHUB_USER_NAME=${GITHUB_USER_NAME:-"John Doe"}
       GitHub_ACCOUNT=${GitHub_ACCOUNT:-"john-doe"}
 
       read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GitHub_USER_EMAIL
@@ -351,6 +366,13 @@ while test $# -gt 0; do
       export BUILD_DOCKER_IMAGE=true
       shift
       ;;
+    -circleci)
+      export USE_CIRCLECI=true
+      #GITHUB_REPO_URL="https://github.com/wilsonmar/circleci_demo.git"
+      export PROJECT_FOLDER_NAME="circleci_demo"
+      export GITHUB_REPO_URL="https://github.com/fedekau/terraform-with-circleci-example"
+      shift
+      ;;
     -console)
       export OPEN_CONSOLE=true
       shift
@@ -386,11 +408,11 @@ while test $# -gt 0; do
       ;;
     -eggplant)
       RUN_EGGPLANT=true
-      GitHub_REPO_URL="https://github.com/wilsonmar/Eggplant.git"
       PROJECT_FOLDER_NAME="eggplant-demo"
-      EGGPLANT_HOST="10.190.70.30"
+      GITHUB_REPO_URL="https://github.com/wilsonmar/Eggplant.git"
       MY_FOLDER="docker-test.suite/Scripts"
       MY_FILE="openurl.script"
+      EGGPLANT_HOST="10.190.70.30"
       APP1_PORT="80"
       shift
       ;;
@@ -438,12 +460,12 @@ while test $# -gt 0; do
       ;;
     -G)
       export RUN_PYTHON=true
-      GitHub_REPO_URL="https://github.com/wilsonmar/python-samples.git"
+      GITHUB_REPO_URL="https://github.com/wilsonmar/python-samples.git"
       PROJECT_FOLDER_NAME="python-samples"
       shift
       ;;
-    -H)
-      USE_VAULT=true
+    -HV)
+      export USE_VAULT=true
       #VAULT_HOST=" "
       export VAULT_ADDR="https://${VAULT_HOST}" 
       # VAULT_USERNAME=""
@@ -452,8 +474,8 @@ while test $# -gt 0; do
       ;;
     -i)
       export RUBY_INSTALL=true
-      GitHub_REPO_URL="https://github.com/nickjj/build-a-saas-app-with-flask.git"
-      PROJECT_FOLDER_NAME="bsawf"
+      export GITHUB_REPO_URL="https://github.com/nickjj/build-a-saas-app-with-flask.git"
+      export PROJECT_FOLDER_NAME="bsawf"
       #DOCKER_DB_NANE="snakeeyes-postgres"
       #DOCKER_WEB_SVC_NAME="snakeeyes_worker_1"  # from docker-compose ps  
       APPNAME="snakeeyes"
@@ -465,7 +487,7 @@ while test $# -gt 0; do
       ;;
     -j)
       export NODE_INSTALL=true
-      GitHub_REPO_URL="https://github.com/wesbos/Learn-Node.git"
+      GITHUB_REPO_URL="https://github.com/wesbos/Learn-Node.git"
       PROJECT_FOLDER_NAME="delicious"
       APPNAME="delicious"
       MONGO_DB_NAME="delicious"
@@ -481,13 +503,6 @@ while test $# -gt 0; do
       ;;
     -K)
       export KEEP_PROCESSES=true
-      shift
-      ;;
-    -L)
-      export USE_CIRCLECI=true
-      #GitHub_REPO_URL="https://github.com/wilsonmar/circleci_demo.git"
-      GitHub_REPO_URL="https://github.com/fedekau/terraform-with-circleci-example"
-      PROJECT_FOLDER_NAME="circleci_demo"
       shift
       ;;
     -macos)
@@ -511,8 +526,8 @@ while test $# -gt 0; do
     -n*)
       shift
       # shellcheck disable=SC2034 # ... appears unused. Verify use (or export if used externally).
-             GitHub_USER_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      export GitHub_USER_NAME
+             GITHUB_USER_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export GITHUB_USER_NAME
       shift
       ;;
     -N*)
@@ -555,11 +570,11 @@ while test $# -gt 0; do
       ;;
     -tf)
       export RUN_TERRAFORM=true
-      PROJECT_FOLDER_PATH="$HOME/mck_acct"  # -P
+      PROJECTS_CONTAINER_PATH="$HOME/mck_acct"  # -P
       PROJECT_FOLDER_NAME="onefirmgithub-vault"
-      GitHub_REPO_URL="https://github.com/Mck-Enterprise-Automation/onefirmgithub-vault"
+      GITHUB_REPO_URL="https://github.com/Mck-Enterprise-Automation/onefirmgithub-vault"
       export APPNAME="onefirmgithub-vault"
-      GitHub_BRANCH="GC-348-provision-vault-infra"
+      GITHUB_BRANCH="GC-348-provision-vault-infra"
       shift
       ;;
     -tsf)
@@ -594,7 +609,7 @@ while test $# -gt 0; do
       ;;
     -V)
       export RUN_VIRTUALENV=true
-      GitHub_REPO_URL="https://github.com/PacktPublishing/Hands-On-Machine-Learning-with-Scikit-Learn-and-TensorFlow-2.0.git"
+      GITHUB_REPO_URL="https://github.com/PacktPublishing/Hands-On-Machine-Learning-with-Scikit-Learn-and-TensorFlow-2.0.git"
       export PROJECT_FOLDER_NAME="scikit"
       export APPNAME="scikit"
       #MY_FOLDER="section_2" # or ="section_3"
@@ -610,7 +625,7 @@ while test $# -gt 0; do
       ;;
     -W)
       export RUN_WEBGOAT=true
-      export GitHub_REPO_URL="https://github.com/wilsonmar/WebGoat.git"
+      export GITHUB_REPO_URL="https://github.com/wilsonmar/WebGoat.git"
       export PROJECT_FOLDER_NAME="webgoat"
       export APPNAME="webgoat"
       export MY_FOLDER="Contrast"  # "ShiftLeft"
@@ -619,7 +634,7 @@ while test $# -gt 0; do
       shift
       ;;
     -y)
-      export GitHub_REPO_URL="https://github.com/nickjj/build-a-saas-app-with-flask.git"
+      export GITHUB_REPO_URL="https://github.com/nickjj/build-a-saas-app-with-flask.git"
       export PROJECT_FOLDER_NAME="rockstar"
       export APPNAME="rockstar"
       shift
@@ -641,14 +656,17 @@ while test $# -gt 0; do
 done
 
 
-### Display run variables 
-#      note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
-#      note "GitHub_USER_NAME=" "${GitHub_USER_NAME}"
-#      note "GitHub_USER_ACCOUNT=" "${GitHub_USER_ACCOUNT}"
-#      note "GitHub_USER_EMAIL=" "${GitHub_USER_EMAIL}"
+### 07. Display run variables 
+# See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
+if [ "${RUN_VERBOSE}" = true ]; then
+   note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
+   note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
+   note "GitHub_USER_ACCOUNT=" "${GitHub_USER_ACCOUNT}"
+   note "GitHub_USER_EMAIL=" "${GitHub_USER_EMAIL}"
+fi
 
 
-### 07. Obtain and show information about the operating system in use to define which package manager to use
+### 08. Obtain and show information about the operating system in use to define which package manager to use
 # See https://wilsonmar.github.io/mac-setup/#OSDetect
    export OS_TYPE="$( uname )"
    export OS_DETAILS=""  # default blank.
@@ -700,36 +718,8 @@ fi
 # note "OS_DETAILS=$OS_DETAILS"
 
 
-### 08. Upgrade to the latest version of bash
-# See https://wilsonmar.github.io/mac-setup/#BashVersions
-BASH_VERSION=$( bash --version | grep bash | cut -d' ' -f4 | head -c 1 )
-   if [ "${BASH_VERSION}" -ge "4" ]; then  # use array feature in BASH v4+ :
-      DISK_PCT_FREE=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[11]}" )
-      FREE_DISKBLOCKS_START=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[10]}" )
-   else
-      if [ "${UPDATE_PKGS}" = true ]; then
-         h2 "Bash version ${BASH_VERSION} too old. Upgrading to latest ..."
-         if [ "${PACKAGE_MANAGER}" = "brew" ]; then
-            brew install bash
-         elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
-            silent-apt-get-install "bash"
-         elif [ "${PACKAGE_MANAGER}" = "yum" ]; then    # For Redhat distro:
-            sudo yum install bash      # please test
-         elif [ "${PACKAGE_MANAGER}" = "zypper" ]; then   # for [open]SuSE:
-            sudo zypper install bash   # please test
-         fi
-         info "Now at $( bash --version  | grep 'bash' )"
-         fatal "Now please run this script again now that Bash is up to date. Exiting ..."
-         exit 0
-      else   # carry on with old bash:
-         DISK_PCT_FREE="0"
-         FREE_DISKBLOCKS_START="0"
-      fi
-   fi
-
-
 ### 09. Set traps to display information if script is interrupted.
-# See https://wilsonmar.github.io/mac-setup/#BashTraps
+# See https://wilsonmar.github.io/mac-setup/#SetTraps
 # See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
 trap this_ending EXIT
 trap this_ending INT QUIT TERM
@@ -1158,7 +1148,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
      # REST API editor (like Postman):
      #brew install --cask postman
      #brew install --cask insomnia
-     #brew install --cask sdkman
+     #brew install --cask sdkman      # for use with Java
 
      # GUI Unicode .keylayout file editor for macOS at https://software.sil.org/ukelele/
      # Precursor to https://keyman.com/
@@ -1183,6 +1173,7 @@ fi  # DOWNLOAD_INSTALL
 
 #### 16. Override defaults in Apple macOS System Preferences:"
 # See https://wilsonmar.github.io/mac-setup/#SysPrefs
+# See https://wilsonmar.github.io/dotfiles/
 
 if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
    h2 "16. Override defaults in Apple macOS System Preferences:"
@@ -1333,31 +1324,31 @@ fi  # IMAGE_SD_CARD
 
 ### 19. Configure project folder location where files are created by the run
 # See https://wilsonmar.github.io/mac-setup/#ProjFolder
-   if [ -z "${PROJECT_FOLDER_PATH}" ]; then  # -p ""  override blank (the default)
-      h2 "Using current folder \"${PROJECT_FOLDER_PATH}\" as project folder path ..."
+   if [ -z "${PROJECTS_CONTAINER_PATH}" ]; then  # -p ""  override blank (the default)
+      h2 "Using current folder \"${PROJECTS_CONTAINER_PATH}\" as project folder path ..."
       pwd
    else
-      if [ ! -d "$PROJECT_FOLDER_PATH" ]; then  # path not available.
-         note "Creating folder ${PROJECT_FOLDER_PATH} as -project folder path ..."
-         mkdir -p "$PROJECT_FOLDER_PATH"
+      if [ ! -d "$PROJECTS_CONTAINER_PATH" ]; then  # path not available.
+         note "Creating folder ${PROJECTS_CONTAINER_PATH} as -project folder path ..."
+         mkdir -p "$PROJECTS_CONTAINER_PATH"
       fi
-      cd "${PROJECT_FOLDER_PATH}" || return # as suggested by SC2164
+      cd "${PROJECTS_CONTAINER_PATH}" || return # as suggested by SC2164
       note "cd into path $PWD ..."
    fi
 
    if [ "${RUN_DEBUG}" = true ]; then  # -vv
-      note "$( ls "${PROJECT_FOLDER_PATH}" )"
+      note "$( ls "${PROJECTS_CONTAINER_PATH}" )"
    fi
 
 
 ### 20. Obtain repository from GitHub
 # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
-echo "*** GitHub_REPO_URL=${GitHub_REPO_URL}"
-if [ -n "${GitHub_REPO_URL}" ]; then   # variable is NOT blank
+echo "*** GITHUB_REPO_URL=${GITHUB_REPO_URL}"
+if [ -n "${GITHUB_REPO_URL}" ]; then   # variable is NOT blank
 
    Delete_GitHub_clone(){
    # https://www.zshellcheck.net/wiki/SC2115 Use "${var:?}" to ensure this never expands to / .
-   PROJECT_FOLDER_FULL_PATH="${PROJECT_FOLDER_PATH}/${PROJECT_FOLDER_NAME}"
+   PROJECT_FOLDER_FULL_PATH="${PROJECTS_CONTAINER_PATH}/${PROJECT_FOLDER_NAME}"
    if [ -d "${PROJECT_FOLDER_FULL_PATH:?}" ]; then  # path available.
       h2 "Removing project folder $PROJECT_FOLDER_FULL_PATH ..."
       ls -al "${PROJECT_FOLDER_FULL_PATH}"
@@ -1365,7 +1356,7 @@ if [ -n "${GitHub_REPO_URL}" ]; then   # variable is NOT blank
    fi
    }
    Clone_GitHub_repo(){
-      git clone "${GitHub_REPO_URL}" "${PROJECT_FOLDER_NAME}"
+      git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
       cd "${PROJECT_FOLDER_NAME}"
       note "At $PWD"
    }
@@ -1377,8 +1368,8 @@ if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
          exit
       fi 
 
-      PROJECT_FOLDER_FULL_PATH="${PROJECT_FOLDER_PATH}/${PROJECT_FOLDER_NAME}"
-      h2 "-clone requested for $GitHub_REPO_URL in $PROJECT_FOLDER_NAME ..."
+      PROJECT_FOLDER_FULL_PATH="${PROJECTS_CONTAINER_PATH}/${PROJECT_FOLDER_NAME}"
+      h2 "-clone requested for $GITHUB_REPO_URL in $PROJECT_FOLDER_NAME ..."
       if [ -d "${PROJECT_FOLDER_FULL_PATH:?}" ]; then  # path available.
          rm -rf "$PROJECT_FOLDER_NAME" 
          Delete_GitHub_clone    # defined above in this file.
@@ -1424,17 +1415,17 @@ fi  # CLONE_GITHUB
    if [ -z "${GitHub_USER_EMAIL}" ]; then   # variable is blank
       Input_GitHub_User_Info  # function defined above.
    else
-      note "Using -u \"${GitHub_USER_NAME}\" -e \"${GitHub_USER_EMAIL}\" ..."
+      note "Using -u \"${GITHUB_USER_NAME}\" -e \"${GitHub_USER_EMAIL}\" ..."
       # since this is hard coded as "John Doe" above
    fi
 
-   if [ -z "${GitHub_BRANCH}" ]; then   # variable is blank
-      git checkout "${GitHub_BRANCH}"
-      note "Using branch \"$GitHub_BRANCH\" ..."
+   if [ -z "${GITHUB_BRANCH}" ]; then   # variable is blank
+      git checkout "${GITHUB_BRANCH}"
+      note "Using branch \"$GITHUB_BRANCH\" ..."
    else
       note "Using master branch ..."
    fi
-fi   # GitHub_REPO_URL
+fi   # GITHUB_REPO_URL
 
 
 ### 21. Reveal secrets stored within .gitsecret folder 
@@ -2279,9 +2270,9 @@ fi  # MOVE_SECURELY
 #### 32. Use Hashicorp Vault
 # See https://wilsonmar.github.io/mac-setup/#HashiVault
 USE_ALWAYS=true
-if [ "${USE_ALWAYS}" = false ]; then   # -H
+if [ "${USE_ALWAYS}" = false ]; then   # -HV
 
-   if [ "${USE_VAULT}" = false ]; then   # -H
+   if [ "${USE_VAULT}" = false ]; then   # -HV
 
       ### STEP: Paste locally generated public key in GitHub UI:
       if [ ! -f "${VAULT_CA_KEY_FULLPATH}" ]; then  # not exists
@@ -2333,7 +2324,7 @@ if [ "${USE_ALWAYS}" = false ]; then   # -H
       #    -O extension:login@github.com=CLOUD-USERNAME extension:login@
    fi  # USE_VAULT
 
-   if [ "${USE_VAULT}" = false ]; then   # -H
+   if [ "${USE_VAULT}" = false ]; then   # -HV
       h2 "Use GitHub extension to sign user public key with 1d Validity for ${GitHub_ACCOUNT} ..."
       ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GitHub_ACCOUNT}" \
          -O "extension:login@github.com=${GitHub_ACCOUNT}" -V '+1d' "${LOCAL_SSH_KEYFILE}.pub"
@@ -2363,7 +2354,7 @@ fi  # MOVE_SECURELY
 ### 33. Use Hashicorp Vault
 # See https://wilsonmar.github.io/hashicorp-vault
 # See https://wilsonmar.github.io/mac-setup/#UseHashiVault
-if [ "${USE_VAULT}" = true ]; then   # -H
+if [ "${USE_VAULT}" = true ]; then   # -HV
       h2 "-HashicorpVault being used ..."
 
       # See https://learn.hashicorp.com/vault/getting-started/install for install video
