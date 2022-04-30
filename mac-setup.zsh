@@ -11,19 +11,22 @@
 # it installs utilities:
 # zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)" -v
 
+# See https://wilsonmar.github.io/mac-setup/#Args
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
 
-### 01. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
+### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
 SCRIPT_VERSION="v0.82"  # Renumber steps
+
+# See https://wilsonmar.github.io/mac-setup/#StartingTimes
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
 echo "=========================== $LOG_DATETIME $THIS_PROGRAM $SCRIPT_VERSION"
 
-
 ### 02. Display a menu if no parameter is specified in the command line
+# See https://wilsonmar.github.io/mac-setup/#EchoFunctions
 args_prompt() {
    echo "OPTIONS:"
    echo "   -cont         continue (NOT stop) on error"
@@ -121,6 +124,7 @@ exit_abnormal() {            # Function: Exit with error.
 }
 
 ### 03. Custom functions to echo text to screen
+# See https://wilsonmar.github.io/mac-setup/#TextColors
 # \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
 h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
    printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
@@ -159,6 +163,7 @@ fi
 
 
 ### 04. Define variables for use as "feature flags"
+# See https://wilsonmar.github.io/mac-setup/#FeatureFlags
    RUN_ACTUAL=false             # -a  (dry run is default)
    CONTINUE_ON_ERR=false        # -cont
    SET_TRACE=false              # -x
@@ -264,7 +269,70 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env ".mac-setup.en"
 SECRETS_FILE=".secrets.env.sample"
 
 
-### 05. Set variables associated with each parameter flag
+### 05. Download config settings file to \$HOME/mac-setup.env (away from GitHub)
+# See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
+if [ ! -f "$HOME/mac-setup.env" ]; then
+   if command -v curl ; then
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"
+   fi
+fi
+if [ ! -f "$HOME/mac-setup.env" ]; then
+   h2 "Loading \$HOME\mac-setup.env values ..."
+   source "$HOME\mac-setup.env"
+fi
+
+Input_GitHub_User_Info(){
+      # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
+      read -r -p "Enter your GitHub user name [John Doe]: " GitHub_USER_NAME
+      GitHub_USER_NAME=${GitHub_USER_NAME:-"John Doe"}
+      GitHub_ACCOUNT=${GitHub_ACCOUNT:-"john-doe"}
+
+      read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GitHub_USER_EMAIL
+      GitHub_USER_EMAIL=${GitHub_USER_EMAIL:-"johb_doe@gmail.com"}
+}
+if [ "${USE_CONFIG_FILE}" = false ]; then  # -nenv
+   warning "Using default values hard-coded in this bash script ..."
+   # PIPENV_DOTENV_LOCATION=/path/to/.env or =1 to not load.
+else  # use .mck-setup.env file:
+   # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
+   if [ ! -f "$CONFIG_FILEPATH" ]; then   # file NOT found, then copy from github:
+      curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env
+      warning "Downloading default config file mac-setup.env file to $HOME ... "
+      if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
+         fatal "File not found after download ..."
+         exit 9
+      fi
+      note "Please edit values in file $HOME/mac-setup.env and run this again ..."
+      exit 9
+   else  # Read from default file name mac-setup.env :
+      h2 "Reading default config file $HOME/mac-setup.env ..."
+      note "$(ls -al "${CONFIG_FILEPATH}" )"
+      chmod +x "${CONFIG_FILEPATH}"
+      source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.
+      if [ -n "$GITHUB_ACCOUNT" ]; then
+         fatal "GITHUB_ACCOUNT variable not defined ..."
+         exit 9
+      fi
+      #if [ "${CIRCLECI_API_TOKEN}" = "xxx" ]; then 
+      #   fatal "Please edit CIRCLECI_API_TOKEN in file \$HOME/.secrets.zsh and run again ..."
+      #   exit 9
+      #fi
+      # VPN_GATEWAY_IP & user cert
+   fi
+
+   # TODO: Capture password manual input once for multiple shares 
+   # (without saving password like expect command) https://www.linuxcloudvps.com/blog/how-to-automate-shell-scripts-with-expect-command/
+      # From https://askubuntu.com/a/711591
+   #   read -p "Password: " -s szPassword
+   #   printf "%s\n" "$szPassword" | sudo --stdin mount \
+   #      -t cifs //192.168.1.1/home /media/$USER/home \
+   #      -o username=$USER,password="$szPassword"
+
+fi  # if [ "${USE_CONFIG_FILE}" = false ]; then  # -s
+
+
+### 06. Set variables dynamically based on each parameter flag
+# See https://wilsonmar.github.io/mac-setup/#VariablesSet
 while test $# -gt 0; do
   case "$1" in
     -a)
@@ -573,16 +641,15 @@ while test $# -gt 0; do
 done
 
 
-### 06. Save config settings file to \$HOME/mac-setup.env (away from GitHub)
-
-if command -v curl ; then
-   if [ ! -f "$HOME/mac-setup.env" ]; then
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"
-   fi
-fi
+### Display run variables 
+#      note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
+#      note "GitHub_USER_NAME=" "${GitHub_USER_NAME}"
+#      note "GitHub_USER_ACCOUNT=" "${GitHub_USER_ACCOUNT}"
+#      note "GitHub_USER_EMAIL=" "${GitHub_USER_EMAIL}"
 
 
-### 07. Obtain information about the operating system in use to define which package manager to use
+### 07. Obtain and show information about the operating system in use to define which package manager to use
+# See https://wilsonmar.github.io/mac-setup/#OSDetect
    export OS_TYPE="$( uname )"
    export OS_DETAILS=""  # default blank.
    export PACKAGE_MANAGER=""
@@ -633,7 +700,8 @@ fi
 # note "OS_DETAILS=$OS_DETAILS"
 
 
-### 08. Upgrade to the latest version of bash 
+### 08. Upgrade to the latest version of bash
+# See https://wilsonmar.github.io/mac-setup/#BashVersions
 BASH_VERSION=$( bash --version | grep bash | cut -d' ' -f4 | head -c 1 )
    if [ "${BASH_VERSION}" -ge "4" ]; then  # use array feature in BASH v4+ :
       DISK_PCT_FREE=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[11]}" )
@@ -661,6 +729,7 @@ BASH_VERSION=$( bash --version | grep bash | cut -d' ' -f4 | head -c 1 )
 
 
 ### 09. Set traps to display information if script is interrupted.
+# See https://wilsonmar.github.io/mac-setup/#BashTraps
 # See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
 trap this_ending EXIT
 trap this_ending INT QUIT TERM
@@ -687,7 +756,7 @@ sig_cleanup() {
 }
 
 ### 10. Set Continue on Error and Trace
-
+# See https://wilsonmar.github.io/mac-setup/#StrictMode
 if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
    warning "Set to continue despite error ..."
 else
@@ -703,6 +772,7 @@ fi
 
 
 ### 11. Print run Operating environment information
+# See https://wilsonmar.github.io/mac-setup/#BashTraps
 HOSTNAME=$( hostname )
 PUBLIC_IP=$( curl -s ifconfig.me )
 INTERNAL_IP=$( ipconfig getifaddr en0 )
@@ -729,16 +799,28 @@ fi
 #done 
 
 
+### 12. Define utility functions: kill process by name, etc.
 ### 12. Keep-alive: update existing `sudo` time stamp until `.osx` has finished
+# See https://wilsonmar.github.io/mac-setup/#KeepAlive
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+
+ps_kill(){  # $1=process name
+      PSID=$( pgrap -l "$1" )
+      if [ -z "$PSID" ]; then
+         h2 "Kill $1 PSID=$PSID ..."
+         kill 2 "$PSID"
+         sleep 2
+      fi
+}
 
 
 ### 13. Install installers (brew, apt-get), depending on operating system
+# See https://wilsonmar.github.io/mac-setup/#InstallInstallers
 
 # Bashism Internal Field Separator used by echo, read for word splitting to lines newline or tab (not spaces).
 IFS=$'\n\t'  
-
 BASHFILE="$HOME/.bash_profile"  # on Macs
+
 # if ~/.bash_profile has not been defined, create it:
 if [ ! -f "$BASHFILE" ]; then #  NOT found:
    note "Creating blank \"${BASHFILE}\" ..."
@@ -897,16 +979,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi # if [ "${DOWNLOAD_INSTALL}"
 
 
-### 14. Define utility functions: ShellCheck & kill process by name, etc.
-ps_kill(){  # $1=process name
-      PSID=$( pgrap -l "$1" )
-      if [ -z "$PSID" ]; then
-         h2 "Kill $1 PSID=$PSID ..."
-         kill 2 "$PSID"
-         sleep 2
-      fi
-}
-
+### 14. Install ShellCheck 
+# See https://wilsonmar.github.io/mac-setup/#ShellCheck
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v shellcheck >/dev/null; then  # command not found, so:
@@ -933,6 +1007,7 @@ fi  # DOWNLOAD_INSTALL
 
 
 ### 15. Install basic utilities (git, jq, tree, etc.) used by many:
+# See https://wilsonmar.github.io/mac-setup/#BasicUtils
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # CAUTION: Install only packages that you actually use and trust!
 
@@ -1106,7 +1181,9 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi  # DOWNLOAD_INSTALL
 
 
-####
+#### 16. Override defaults in Apple macOS System Preferences:"
+# See https://wilsonmar.github.io/mac-setup/#SysPrefs
+
 if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
    h2 "16. Override defaults in Apple macOS System Preferences:"
    # https://www.youtube.com/watch?v=r_MpUP6aKiQ = "~/.dotfiles in 100 seconds"
@@ -1192,7 +1269,8 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
 fi  # SET_MACOS_SYSPREFS
 
 
-### 17. Image SD card 
+### 18. Image SD card 
+# See https://wilsonmar.github.io/mac-setup/#ImageSDCard
 # See https://wilsonmar.github.io/iot-raspberry-install/
 # To avoid selecting a hard drive and wiping it out,
 # it's best to manually use https://www.sdcard.org/downloads/formatter/
@@ -1253,64 +1331,8 @@ if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
 fi  # IMAGE_SD_CARD
 
 
-### 18. Get secrets from a clear-text file in $HOME folder
-Input_GitHub_User_Info(){
-      # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
-      read -r -p "Enter your GitHub user name [John Doe]: " GitHub_USER_NAME
-      GitHub_USER_NAME=${GitHub_USER_NAME:-"John Doe"}
-      GitHub_ACCOUNT=${GitHub_ACCOUNT:-"john-doe"}
-
-      read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GitHub_USER_EMAIL
-      GitHub_USER_EMAIL=${GitHub_USER_EMAIL:-"johb_doe@gmail.com"}
-}
-if [ "${USE_CONFIG_FILE}" = false ]; then  # -nenv
-   warning "Using default values hard-coded in this bash script ..."
-   # PIPENV_DOTENV_LOCATION=/path/to/.env or =1 to not load.
-else  # use .mck-setup.env file:
-   # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
-   if [ ! -f "$CONFIG_FILEPATH" ]; then   # file NOT found, then copy from github:
-      curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env
-      warning "Downloading default config file mac-setup.env file to $HOME ... "
-      if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
-         fatal "File not found after download ..."
-         exit 9
-      fi
-      note "Please edit values in file $HOME/mac-setup.env and run this again ..."
-      exit 9
-   else  # Read from default file name mac-setup.env :
-      h2 "Reading default config file $HOME/mac-setup.env ..."
-      note "$(ls -al "${CONFIG_FILEPATH}" )"
-      chmod +x "${CONFIG_FILEPATH}"
-      source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.
-      if [ -n "$GITHUB_ACCOUNT" ]; then
-         fatal "GITHUB_ACCOUNT variable not defined ..."
-         exit 9
-      fi
-      #if [ "${CIRCLECI_API_TOKEN}" = "xxx" ]; then 
-      #   fatal "Please edit CIRCLECI_API_TOKEN in file \$HOME/.secrets.zsh and run again ..."
-      #   exit 9
-      #fi
-      # VPN_GATEWAY_IP & user cert
-   fi
-
-   # TODO: Capture password manual input once for multiple shares 
-   # (without saving password like expect command) https://www.linuxcloudvps.com/blog/how-to-automate-shell-scripts-with-expect-command/
-      # From https://askubuntu.com/a/711591
-   #   read -p "Password: " -s szPassword
-   #   printf "%s\n" "$szPassword" | sudo --stdin mount \
-   #      -t cifs //192.168.1.1/home /media/$USER/home \
-   #      -o username=$USER,password="$szPassword"
-
-fi  # if [ "${USE_CONFIG_FILE}" = false ]; then  # -s
-
-
-### Display run variables 
-#      note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
-#      note "GitHub_USER_NAME=" "${GitHub_USER_NAME}"
-#      note "GitHub_USER_ACCOUNT=" "${GitHub_USER_ACCOUNT}"
-#      note "GitHub_USER_EMAIL=" "${GitHub_USER_EMAIL}"
-
 ### 19. Configure project folder location where files are created by the run
+# See https://wilsonmar.github.io/mac-setup/#ProjFolder
    if [ -z "${PROJECT_FOLDER_PATH}" ]; then  # -p ""  override blank (the default)
       h2 "Using current folder \"${PROJECT_FOLDER_PATH}\" as project folder path ..."
       pwd
@@ -1329,7 +1351,7 @@ fi  # if [ "${USE_CONFIG_FILE}" = false ]; then  # -s
 
 
 ### 20. Obtain repository from GitHub
-
+# See https://wilsonmar.github.io/mac-setup/#ObtainRepo
 echo "*** GitHub_REPO_URL=${GitHub_REPO_URL}"
 if [ -n "${GitHub_REPO_URL}" ]; then   # variable is NOT blank
 
@@ -1415,8 +1437,10 @@ fi  # CLONE_GITHUB
 fi   # GitHub_REPO_URL
 
 
-### 21. Reveal secrets stored within <tt>.gitsecret</tt> folder within repo from GitHub 
-# (after installing gnupg and git-secret)
+### 21. Reveal secrets stored within .gitsecret folder 
+# See https://wilsonmar.github.io/mac-setup/#UnencryptGitSecret
+# within repo from GitHub (after installing gnupg and git-secret)
+# See https://wilsonmar.github.io/mac-setup/#GitSecret
 
    # This script detects whether secrets are stored various ways:
    # This is https://github.com/AGWA/git-crypt      has 4,500 stars.
@@ -1482,6 +1506,7 @@ if [ -d ".gitsecret" ]; then   # found
 
 
 ### 22. Pipenv and Pyenv to install Python and its modules
+# See https://wilsonmar.github.io/mac-setup/#Pipenv
 pipenv_install() {
    # Pipenv is a dependency manager for Python projects like Node.js’ npm or Ruby’s bundler.
    # See https://realpython.com/pipenv-guide/
@@ -1540,7 +1565,8 @@ pipenv_install() {
 }  # pipenv_install()
 
 
-### 23. Connect to GitHub Cloud, if requested:
+### 23. Connect to Google Cloud, if requested:
+# See https://wilsonmar.github.io/mac-setup/#GCP
 if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
    # Perhaps in https://console.cloud.google.com/cloudshell  (use on Chromebooks with no Terminal)
    # Comes with gcloud, node, docker, kubectl, go, python, git, vim, cloudshell dl file, etc.
@@ -1725,6 +1751,7 @@ fi  # USE_GOOGLE_CLOUD
 
 
 ### 24. Connect to AWS
+# See https://wilsonmar.github.io/mac-setup/#AWS
 if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -1826,6 +1853,7 @@ fi  # USE_AWS_CLOUD
 
 
 ### 25. Install Azure
+# See https://wilsonmar.github.io/mac-setup/#Azure
 if [ "${USE_AZURE_CLOUD}" = true ]; then   # -z
     # See https://docs.microsoft.com/en-us/cli/azure/keyvault/secret?view=azure-cli-latest
     note "TODO: Add Azure cloud coding ..."
@@ -1835,6 +1863,7 @@ fi
 
 
 ### 26. Install K8S minikube
+# See https://wilsonmar.github.io/mac-setup/#Minikube
 if [ "${USE_K8S}" = true ]; then  # -k8s
 
    h2 "-k8s"
@@ -1865,12 +1894,13 @@ if [ "${USE_K8S}" = true ]; then  # -k8s
 
       fi  # "${PACKAGE_MANAGER}" = "brew" 
 
-exit
+echo "DEBUGGING";exit
 
 fi  # if [ "${USE_K8S}" = true ]; then  # -k8s
 
 
 ### 27. Install EKS using eksctl
+# See https://wilsonmar.github.io/mac-setup/#EKS
 if [ "${RUN_EKS}" = true ]; then  # -EKS
 
    # h2 "kubectl client install for -EKS ..."
@@ -1949,7 +1979,8 @@ if [ "${RUN_EKS}" = true ]; then  # -EKS
    # See https://eksctl.io/usage/creating-and-managing-clusters/
    # NOT USED: eksctl create cluster -f "${EKS_CLUSTER_FILE}"  # cluster.yaml
 
-exit
+echo "DEBUGGING";exit
+
    eksctl create cluster -v \
         --name="${EKS_CLUSTER_NAME}" \
         --region="${AWS_DEFAULT_REGION}" \
@@ -2064,7 +2095,7 @@ exit
 
    fi   # if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
 
-exit  # DEBUGGING
+echo "DEBUGGING";exit
 
 fi  # EKS
 
@@ -2079,6 +2110,7 @@ fi  # EKS
 
 
 ### 29. Use CircleCI SaaS
+# See https://wilsonmar.github.io/mac-setup/#CircleCI
 if [ "${USE_CIRCLECI}" = true ]; then   # -L
    # https://circleci.com/docs/2.0/getting-started/#setting-up-circleci
    # h2 "circleci setup ..."
@@ -2146,6 +2178,7 @@ fi  # USE_CIRCLECI
 
 
 ### 30. Use Yubikey
+# See https://wilsonmar.github.io/mac-setup/#Yubikey
 if [ "${USE_YUBIKEY}" = true ]; then   # -Y
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v ykman >/dev/null; then  # command not found, so:
@@ -2218,7 +2251,7 @@ fi  # USE_YUBIKEY
 
 
 #### 31. Use GitHub
-
+# See https://wilsonmar.github.io/mac-setup/#UseGitHub
 if [ "${MOVE_SECURELY}" = true ]; then   # -m
    # See https://github.com/settings/keys 
    # See https://github.blog/2019-08-14-ssh-certificate-authentication-for-github-enterprise-cloud/
@@ -2244,7 +2277,7 @@ fi  # MOVE_SECURELY
 
 
 #### 32. Use Hashicorp Vault
-
+# See https://wilsonmar.github.io/mac-setup/#HashiVault
 USE_ALWAYS=true
 if [ "${USE_ALWAYS}" = false ]; then   # -H
 
@@ -2328,6 +2361,8 @@ fi  # MOVE_SECURELY
 
 
 ### 33. Use Hashicorp Vault
+# See https://wilsonmar.github.io/hashicorp-vault
+# See https://wilsonmar.github.io/mac-setup/#UseHashiVault
 if [ "${USE_VAULT}" = true ]; then   # -H
       h2 "-HashicorpVault being used ..."
 
@@ -2625,7 +2660,7 @@ fi  # USE_VAULT
 
 
 #### TODO: 34. Put secret in Hashicorp Vault
-
+# See https://wilsonmar.github.io/mac-setup/#PutInHashiVault
 if [ "${VAULT_PUT}" = true ]; then  # -n
 
    note -e "\n Put secret/hello ..."
@@ -2653,6 +2688,7 @@ fi  # USE_VAULT
 
 
 ### 35. Install NodeJs
+# See https://wilsonmar.github.io/mac-setup/#InstallNode
 if [ "${NODE_INSTALL}" = true ]; then  # -n
 
 # If VAULT is used:
@@ -2804,6 +2840,7 @@ fi # if [ "${NODE_INSTALL}
 
 
 ### 36. Install Virtualenv
+# See https://wilsonmar.github.io/mac-setup/#Virtualenv
 if [ "${RUN_VIRTUALENV}" = true ]; then  # -V  (not the default pipenv)
 
    h2 "Install -python"
@@ -2856,6 +2893,7 @@ fi   # RUN_VIRTUALENV means Pipenv default
 
 
 ### 37. Configure Pyenv with virtualenv
+# See https://wilsonmar.github.io/mac-setup/#VirtualPyenv
 if [ "${USE_PYENV}" = true ]; then  # -py
 
    h2 "Use Pipenv by default (not overrided by -Virtulenv)"
@@ -2907,6 +2945,7 @@ fi    # USE_PYENV
 
 
 ### 38. Install Anaconda
+# See https://wilsonmar.github.io/mac-setup/#Anaconda
 if [ "${RUN_ANACONDA}" = true ]; then  # -A
 
          if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
@@ -2936,7 +2975,9 @@ if [ "${RUN_ANACONDA}" = true ]; then  # -A
 fi  # RUN_ANACONDA
 
 
-### 39. RUN_GOLANG  ### See https://wilsonmar.github.io/golang
+### 39. RUN_GOLANG  
+# See https://wilsonmar.github.io/golang
+# See https://wilsonmar.github.io/mac-setup/#Golang
 if [ "${RUN_GOLANG}" = true ]; then  # -go
    h2 "Installing Golang using brew ..."
    brew install golang
@@ -3002,6 +3043,7 @@ fi   # RUN_GOLANG
 
 
 ### 40. Install Python
+# See https://wilsonmar.github.io/mac-setup/#InstallPython
 if [ "${RUN_PYTHON}" = true ]; then  # -s
 
    # https://docs.python-guide.org/dev/virtualenvs/
@@ -3148,6 +3190,7 @@ fi  # RUN_PYTHON
 
 
 ### 41. RUN_TERRAFORM
+# See https://wilsonmar.github.io/mac-setup/#Terraform
 if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
    h2 "Running Terraform"
    # echo "$PWD/${MY_FOLDER}/${MY_FILE}"
@@ -3156,6 +3199,7 @@ fi    # RUN_TERRAFORM
 
 
 ### 42. RUN_TENSORFLOW
+# See https://wilsonmar.github.io/mac-setup/#Tensorflow
 if [ "${RUN_TENSORFLOW}" = true ]; then  # -tsf
 
       if [ -f "$PWD/${MY_FOLDER}/${MY_FILE}" ]; then
@@ -3208,6 +3252,7 @@ fi  # if [ "${RUN_TENSORFLOW}"
 
 
 #### 43. Finish RUN_VIRTUALENV
+# See https://wilsonmar.github.io/mac-setup/#RunVirtualenv
 if [ "${RUN_VIRTUALENV}" = true ]; then  # -V
       h2 "Execute deactivate if the function exists (i.e. has been created by sourcing activate):"
       # per https://stackoverflow.com/a/57342256
@@ -3217,7 +3262,7 @@ if [ "${RUN_VIRTUALENV}" = true ]; then  # -V
 fi
 
 #### 44. USE_TEST_ENV
-
+# See https://wilsonmar.github.io/mac-setup/#Testenv
 if [ "${USE_TEST_ENV}" = true ]; then  # -t
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -3261,6 +3306,7 @@ fi # if [ "${USE_TEST_ENV}"
 
 
 ### 45. RUBY_INSTALL
+# See https://wilsonmar.github.io/mac-setup/#InstallRuby
 if [ "${RUBY_INSTALL}" = true ]; then  # -i
 
    # https://websiteforstudents.com/install-refinery-cms-ruby-on-rails-on-ubuntu-16-04-18-04-18-10/
@@ -3512,6 +3558,7 @@ fi # if [ "${RUBY_INSTALL}" = true ]; then  # -i
 
 
 ### 46. RUN_EGGPLANT
+# See https://wilsonmar.github.io/mac-setup/#Eggplant
 if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 
    # As seen at https://www.youtube.com/watch?v=B64_4r0vGkA May 28, 2020
@@ -3573,6 +3620,7 @@ fi    # RUN_EGGPLANT
 
 
 ### 47. USE_DOCKER
+# See https://wilsonmar.github.io/mac-setup/#UseDocker
 if [ "${USE_DOCKER}" = true ]; then   # -k
 
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I & -U
@@ -3804,6 +3852,7 @@ fi  # if [ "${USE_DOCKER}
 
 
 ### 48. RUN_ACTUAL within Docker
+# See https://wilsonmar.github.io/mac-setup/#RunDocker
 if [ "${RUN_ACTUAL}" = true ]; then   # -a
 
       if [ -z "${MY_FOLDER}" ]; then  # not defined:
@@ -3892,6 +3941,7 @@ fi  # RUN_ACTUAL
 
 
 ### 49. UPDATE_GITHUB
+# See https://wilsonmar.github.io/mac-setup/#UpdateGitHub
 # Alternative: https://github.com/anshumanbh/git-all-secrets
 if [ "${UPDATE_GITHUB}" = true ]; then  # -u
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I & -U
@@ -3941,6 +3991,7 @@ fi   # UPDATE_GITHUB
 
 
 ### 50. REMOVE_GITHUB_AFTER folder after run
+# See https://wilsonmar.github.io/mac-setup/#RemoveGitHub
 if [ "$REMOVE_GITHUB_AFTER" = true ]; then  # -C
    h2 "Delete cloned GitHub at end ..."
    Delete_GitHub_clone    # defined above in this file.
@@ -3956,6 +4007,7 @@ fi
 
 
 ### 51. KEEP_PROCESSES after run
+# See https://wilsonmar.github.io/mac-setup/#KeepPS
 if [ "${KEEP_PROCESSES}" = false ]; then  # -K
 
    if [ "${NODE_INSTALL}" = true ]; then  # -n
@@ -3979,6 +4031,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
 
    ### 52. Delete Docker containers in memory after run ...
+   # See https://wilsonmar.github.io/mac-setup/#DeleteDocker
    if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
 
       # TODO: if docker-compose.yml available:
@@ -4001,6 +4054,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
 
    ### 53. REMOVE_DOCKER_IMAGES downloaded
+   # See https://wilsonmar.github.io/mac-setup/#RemoveImages
    if [ "${REMOVE_DOCKER_IMAGES}" = true ]; then  # -M
 
       note "docker system df ..."
@@ -4026,5 +4080,10 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
       note "$( docker images -a )"
    fi
 fi    # USE_DOCKER
+
+
+### 54. Report Timings
+# See https://wilsonmar.github.io/mac-setup/#ReportTimings
+   
 
 # EOF
