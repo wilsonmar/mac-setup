@@ -6,26 +6,10 @@ This approach is faster and repeatable than manually clicking through everything
 It's less error-prone because we've worked out the dependency clashes for you.
 We created the script to automatically take care of workarounds to known issues. 
 
-1. All that you need to do is <a target="_blank" href="https://wilsonmar.github.io/mac-setup">explained in my step-by-step instructions</a>.
+To avoid repeating myself, all you need is follow my <br />
+<a target="_blank" href="https://wilsonmar.github.io/mac-setup">step-by-step instructions at<br />
+https://wilsonmar.github.io/mac-setup</a>
 
-1. Open a Terminal by pressing command+spacebar, then type enough of <strong>Terminal.app</strong> to select it.
-
-1. Drag the right-edge of the Terminal window to expand its width to accomodate longer lines displayed.
-
-1. Do a dry run of the script with <strong>no parameters</strong> so it only displays a (long) list of parameters, use your mouse to triple-click the command below to highlight it, then press command+C to copy it to your Clipboard:
-
-   <pre><strong>zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)"
-   </strong></pre>
-
-   (The script previously invoked bash, but it now invokes zsh because Apple switched to that as the default)
-
-1. Click on this link to read the script code so you can be assured that it is not purposely injecting malware.
-
-   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.zsh">https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.zsh</a>
-
-   Unlike all other "dotfiles" on the internet, the script in this repo is thousands of lines long so that you copy and paste <strong>one</strong> script that installs everything needed: from XCode to Brew to Python to cloud CLI.
-   
-   I've tried to use the easiest to understand shell scripting techniques rather than esoteric one that other "experts" use to prove how superior they are. But if you disagree with something, please let me know. I welcome your suggestions.
 
    You don't need to comment out the ones you don't want. Just don't provide the parameter.
 
@@ -54,6 +38,8 @@ We created the script to automatically take care of workarounds to known issues.
 ## Why?
 
 Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And most webinar demos seem to brag rather than teach skills. To be more helpful, this repo <strong>talks with code</strong> by including manual documentation in the "configuration as code" movement for minimizing risk and ensuring consistency.
+
+## Roadmap
 
 This repo gives you a way to install, configure, and start a large set of programs running sample code for several "stacks":
 

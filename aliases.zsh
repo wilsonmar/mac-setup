@@ -1,3 +1,4 @@
+#!/usr/bin/env zsh
 # This is ~/aliases.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.zsh
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
@@ -270,20 +271,21 @@ alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
 # See https://github.com/ysmike/dotfiles/blob/master/bash/.aliases
 # More: https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html
 
-export GH_ACCT="github-wilsonmar"
-alias wmx='cd $HOME/$GH_ACCT/azure-quickly'
-alias wmf='cd $HOME/$GH_ACCT/futures'
-alias wmb='cd $HOME/$GH_ACCT/DevSecOps/bash'
-alias wmp='cd $HOME/$GH_ACCT/python-samples'
-alias wmgo='cd $HOME/$GH_ACCT/golang-samples'
-#alias wmr='cd $HOME/$GH_ACCT/rustlang-samples'
+if [ -n "${GITHUB_PATH}" ]; then   # variable is NOT blank (set by mac-setup.env)
+   alias wmx='cd $GITHUB_PATH/azure-quickly'
+   alias wmf='cd $GITHUB_PATH/futures'
+   alias wmb='cd $GITHUB_PATH/DevSecOps/bash'
+   alias wmp='cd $GITHUB_PATH/python-samples'
+   alias wmgo='cd $GITHUB_PATH/golang-samples'
+   #alias wmr='cd $GITHUB_PATH/rustlang-samples'
 
-#### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
-alias wmo='cd $HOME/$GH_ACCT/wilsonmar.github.io/_posts'
-alias wm='cd $HOME/$GH_ACCT/wilsonmar.github.io/_posts;git status -s -b'
-alias wf='cd $HOME/$GH_ACCT/futures;git status -s -b'
-alias js='cd $HOME/$GH_ACCT/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental'
-#alias bs='wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml'
+   #### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
+   alias wmo='cd $GITHUB_PATH/wilsonmar.github.io/_posts'
+   alias wm='cd $GITHUB_PATH/wilsonmar.github.io/_posts;git status -s -b'
+   alias wf='cd $GITHUB_PATH/futures;git status -s -b'
+   alias js='cd $GITHUB_PATH/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental'
+   #alias bs='wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml'
+fi
 
-##### Leave this at bottom of file:
+##### Leave this at bottom of file to print using catn defined above:
 alias keys="catn $HOME/aliases.zsh"

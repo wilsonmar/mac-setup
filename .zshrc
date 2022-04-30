@@ -1,3 +1,4 @@
+#!/usr/bin/env zsh
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
 # This is not provided by macOS by default.
 # This is explained in https://wilsonmar.github.io/zsh
@@ -12,8 +13,10 @@ export PATH=/Applications:$HOME/Applications:$HOME/Applications/Utilities:$PATH
 #### Configurations for macOS Operating System :
 sudo launchctl limit maxfiles 65536 200000
 export GREP_OPTIONS='--color=auto'
-#source ~/sf-secrets.sh  # Created by git-flow.sh
 #export PATH="/usr/local/opt/postgresql@9.6/bin:$PATH"
+
+#### Retrieve environment variables
+source ~/mac-setup.env
 
 # Add `killall` tab completion for common apps:
 complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;

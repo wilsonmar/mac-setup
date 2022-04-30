@@ -16,7 +16,7 @@
 
 ### 01. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.79"  # Fix invocation cmd to zsh
+SCRIPT_VERSION="v0.80"  # Fix ==
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
@@ -26,7 +26,7 @@ echo "=========================== $LOG_DATETIME $THIS_PROGRAM $SCRIPT_VERSION"
 ### 02. Display a menu if no parameter is specified in the command line
 args_prompt() {
    echo "OPTIONS:"
-   echo "   -E            continue (NOT stop) on error"
+   echo "   -cont         continue (NOT stop) on error"
    echo "   -v            run -verbose (list space use and each image to console)"
    echo "   -vv           run -very verbose diagnostics"
    echo "   -x            set -x to trace command lines"
@@ -42,8 +42,8 @@ args_prompt() {
    echo "   -n  \"john-doe\"            GitHub account -name"
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
    echo " "
-   echo "   -s           -secrets retrieve"
-   echo "   -S \"~/.alt.secrets.zsh\"  -Secrets full file path"
+   echo "   -nenv        Do not retrieve .mac-setup.env file"
+   echo "   -env \"~/.alt.secrets.zsh\"   (alternate env file)"
    echo "   -H           install/use -Hashicorp Vault secret manager"
    echo "   -m           Setup Vault SSH CA cert"
    echo " "
@@ -89,8 +89,8 @@ args_prompt() {
    echo "   -M           remove Docker iMages pulled from DockerHub (to save disk space)"
    echo "USAGE EXAMPLES # WebGoat Docker with Contrast agent"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
-   echo "./mac-setup.zsh -v -S \"\$HOME/.mck-secrets.zsh\" -eks -D "
-   echo "./mac-setup.zsh -v -S \"\$HOME/.mck-secrets.zsh\" -H -m -t    # Use SSH-CA certs with -H Hashicorp Vault -test actual server"
+   echo "./mac-setup.zsh -v -env \"\$HOME/.mck-setup.env\" -eks -D "
+   echo "./mac-setup.zsh -v -env \"\$HOME/.mck-setup.env\" -H -m -t    # Use SSH-CA certs with -H Hashicorp Vault -test actual server"
    echo "./mac-setup.zsh -v -g \"abcdef...89\" -p \"cp100-1094\"  # Google API call"
    echo "./mac-setup.zsh -v -n -a  # NodeJs app with MongoDB"
    echo "./mac-setup.zsh -v -i -o  # Ruby app"   
@@ -103,8 +103,8 @@ args_prompt() {
    echo "./mac-setup.zsh -v -V -c -L -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -D -M -C"
    echo "./mac-setup.zsh -G -v -f \"challenge.py\" -P \"-v\"  # to run a program in my python-samples repo"
-   echo "./mac-setup.zsh -v -S \"$HOME/.mck-secrets.zsh\" -H -m -o  # -t for local vault for Vault SSH keygen"
-   echo "./mac-setup.zsh -v -S \"$HOME/.mck-secrets.zsh\" -aws  # for Terraform"
+   echo "./mac-setup.zsh -v -env \"$HOME/.mck-setup.env\" -H -m -o  # -t for local vault for Vault SSH keygen"
+   echo "./mac-setup.zsh -v -env \"$HOME/.mck-setup.env\" -aws  # for Terraform"
 }
 if [ $# -eq 0 ]; then  # display if no parameters are provided:
    args_prompt
@@ -118,7 +118,7 @@ exit_abnormal() {            # Function: Exit with error.
 
 ### 03. Define variables for use as "feature flags"
    RUN_ACTUAL=false             # -a  (dry run is default)
-   CONTINUE_ON_ERR=false        # -E
+   CONTINUE_ON_ERR=false        # -cont
    SET_TRACE=false              # -x
    RUN_VERBOSE=false            # -v
    OPEN_CONSOLE=false           # -console
@@ -169,9 +169,9 @@ exit_abnormal() {            # Function: Exit with error.
    RUBY_INSTALL=false           # -i
    NODE_INSTALL=false           # -n
    MONGO_DB_NAME=""
-   USE_SECRETS_FILE=false       # -s
-   SECRETS_FILEPATH="$HOME/.secrets.zsh"  # -S
-   SECRETS_FILE="variables.env.sample"
+   USE_CONFIG_FILE=true        # -nenv
+   CONFIG_FILEPATH="$HOME/.mac-setup.env"  # -env
+   CONFIG_FILE="variables.env.sample"
    MY_FOLDER=""                 # -F folder
    MY_FILE=""
      #MY_FILE="2-3.ipynb"
@@ -203,7 +203,8 @@ exit_abnormal() {            # Function: Exit with error.
 
 PROJECT_FOLDER_PATH="$HOME/Projects"  # -P
 PROJECT_FOLDER_NAME=""
-GITHUB_ACCOUNT=""
+GITHUB_FOLDER=""
+GITHUB_PATH="$HOME/gmail_acct"
 GitHub_USER_NAME="Wilson Mar"             # -n
 GitHub_USER_EMAIL="wilson_mar@gmail.com"  # -e
 GitHub_BRANCH=""
@@ -230,6 +231,10 @@ while test $# -gt 0; do
       ;;
     -console)
       export OPEN_CONSOLE=true
+      shift
+      ;;
+    -cont)
+      export CONTINUE_ON_ERR=true
       shift
       ;;
     -c)
@@ -265,6 +270,13 @@ while test $# -gt 0; do
       MY_FOLDER="docker-test.suite/Scripts"
       MY_FILE="openurl.script"
       APP1_PORT="80"
+      shift
+      ;;
+    -env*)
+      export USE_CONFIG_FILE=true
+      shift
+             CONFIG_FILEPATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export CONFIG_FILEPATH
       shift
       ;;
     -e*)
@@ -370,6 +382,10 @@ while test $# -gt 0; do
       export REMOVE_DOCKER_IMAGES=true
       shift
       ;;
+    -nenv)
+      export USE_CONFIG_FILE=false
+      shift
+      ;;
     -n*)
       shift
       # shellcheck disable=SC2034 # ... appears unused. Verify use (or export if used externally).
@@ -413,17 +429,6 @@ while test $# -gt 0; do
       ;;
     -sd)
       export IMAGE_SD_CARD=true
-      shift
-      ;;
-    -s)
-      export USE_SECRETS_FILE=true
-      shift
-      ;;
-    -S*)
-      export USE_SECRETS_FILE=true
-      shift
-             SECRETS_FILEPATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      export SECRETS_FILEPATH
       shift
       ;;
     -tf)
@@ -551,8 +556,9 @@ if [ "${RUN_DEBUG}" = true ]; then  # -vv
    fatal "fatal (warnError)"
 fi
 
+
 ### 06. Obtain information about the operating system in use to define which package manager to use
-   OS_TYPE="$( uname )"
+   export OS_TYPE="$( uname )"
    export OS_DETAILS=""  # default blank.
    export PACKAGE_MANAGER=""
 if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
@@ -680,7 +686,7 @@ fi
 #  shift 
 #done 
 
-if [ "${CONTINUE_ON_ERR}" = true ]; then  # -E
+if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
    warning "Set to continue despite error ..."
 else
    note "Set -e (error stops execution) ..."
@@ -893,7 +899,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi  # DOWNLOAD_INSTALL
 
 # TODO: (Removed because it executes even if shellcheck is not installed:
-#if [ "${CONTINUE_ON_ERR}" = false ]; then  # -E
+#if [ "${CONTINUE_ON_ERR}" = false ]; then  # -cont
 #   shellcheck "$0"
 #fi
 
@@ -1229,31 +1235,33 @@ Input_GitHub_User_Info(){
       read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GitHub_USER_EMAIL
       GitHub_USER_EMAIL=${GitHub_USER_EMAIL:-"johb_doe@gmail.com"}
 }
-if [ "${USE_SECRETS_FILE}" = false ]; then  # -s
+if [ "${USE_CONFIG_FILE}" = false ]; then  # -nenv
    warning "Using default values hard-coded in this bash script ..."
-   # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
    # PIPENV_DOTENV_LOCATION=/path/to/.env or =1 to not load.
-else
-   if [ ! -f "$SECRETS_FILEPATH" ]; then   # file NOT found, then copy from github:
-      fatal "-F \"${SECRETS_FILEPATH}\" file not found."
-#      code "${SECRETS_FILEPATH}"
-      exit 9
-
-      warning "Downloading file .secrets.mac-setup.zsh ... "
-      #curl -s -O https://raw.GitHubusercontent.com/wilsonmar/DevSecOps/master/secrets.mac-setup.zsh
-      #warning "Copying secrets.mac-setup.zsh downloaded to \$HOME/.secrets.zsh ... "
-      #cp secrets.mac-setup.zsh  .secrets.zsh
-      #fatal "Please edit file \$HOME/.secrets.zsh and run again ..."
-      #exit 1
-   else  # secrets file found:
-      h2 "Reading -secrets.zsh in ${SECRETS_FILEPATH} ..."
-      note "$(ls -al "${SECRETS_FILEPATH}" )"
-      chmod +x "${SECRETS_FILEPATH}"
-      source   "${SECRETS_FILEPATH}"  # run file containing variable definitions.
-      if [ "${CIRCLECI_API_TOKEN}" = "xxx" ]; then 
-         fatal "Please edit CIRCLECI_API_TOKEN in file \$HOME/.secrets.zsh and run again ..."
+else  # use .mck-setup.env file:
+   # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
+   if [ ! -f "$CONFIG_FILEPATH" ]; then   # file NOT found, then copy from github:
+      curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/.mac-setup.env
+      warning "Downloading default config file .mac-setup.env file to $HOME ... "
+      if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
+         fatal "File not found after download ..."
          exit 9
       fi
+      note "Please edit values in file $HOME/.mac-setup.env and run this again ..."
+      exit 9
+   else  # Read from default file name .mac-setup.env :
+      h2 "Reading default config file $HOME/.mac-setup.env ..."
+      note "$(ls -al "${CONFIG_FILEPATH}" )"
+      chmod +x "${CONFIG_FILEPATH}"
+      source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.
+      if [ -n "$GITHUB_ACCOUNT" ]; then
+         fatal "GITHUB_ACCOUNT variable not defined ..."
+         exit 9
+      fi
+      #if [ "${CIRCLECI_API_TOKEN}" = "xxx" ]; then 
+      #   fatal "Please edit CIRCLECI_API_TOKEN in file \$HOME/.secrets.zsh and run again ..."
+      #   exit 9
+      #fi
       # VPN_GATEWAY_IP & user cert
    fi
 
@@ -1265,7 +1273,7 @@ else
    #      -t cifs //192.168.1.1/home /media/$USER/home \
    #      -o username=$USER,password="$szPassword"
 
-fi  # if [ "${USE_SECRETS_FILE}" = false ]; then  # -s
+fi  # if [ "${USE_CONFIG_FILE}" = false ]; then  # -s
 
 
 ### Display run variables 
@@ -1297,7 +1305,7 @@ fi  # if [ "${USE_SECRETS_FILE}" = false ]; then  # -s
 echo "*** GitHub_REPO_URL=${GitHub_REPO_URL}"
 if [ -n "${GitHub_REPO_URL}" ]; then   # variable is NOT blank
 
-Delete_GitHub_clone(){
+   Delete_GitHub_clone(){
    # https://www.zshellcheck.net/wiki/SC2115 Use "${var:?}" to ensure this never expands to / .
    PROJECT_FOLDER_FULL_PATH="${PROJECT_FOLDER_PATH}/${PROJECT_FOLDER_NAME}"
    if [ -d "${PROJECT_FOLDER_FULL_PATH:?}" ]; then  # path available.
@@ -1305,12 +1313,12 @@ Delete_GitHub_clone(){
       ls -al "${PROJECT_FOLDER_FULL_PATH}"
       rm -rf "${PROJECT_FOLDER_FULL_PATH}"
    fi
-}
-Clone_GitHub_repo(){
+   }
+   Clone_GitHub_repo(){
       git clone "${GitHub_REPO_URL}" "${PROJECT_FOLDER_NAME}"
       cd "${PROJECT_FOLDER_NAME}"
       note "At $PWD"
-}
+   }
 # To ensure that we have a project folder (from GitHub clone or not):
 if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
 
@@ -1431,14 +1439,14 @@ if [ -d ".gitsecret" ]; then   # found
          PREFIX="/usr/local" make install      
       fi  # PACKAGE_MANAGER
 
-      if [ -f "${SECRETS_FILE}.secret" ]; then   # found
-         h2 "${SECRETS_FILE}.secret being decrypted using the private key in the bash user's local $HOME folder"
+      if [ -f "${CONFIG_FILE}.secret" ]; then   # found
+         h2 "${CONFIG_FILE}.secret being decrypted using the private key in the bash user's local $HOME folder"
          git secret reveal
             # gpg ...
-         if [ -f "${SECRETS_FILE}" ]; then   # found
-            h2 "File ${SECRETS_FILE} decrypted ..."
+         if [ -f "${CONFIG_FILE}" ]; then   # found
+            h2 "File ${CONFIG_FILE} decrypted ..."
          else
-            fatal "File ${SECRETS_FILE} not decrypted ..."
+            fatal "File ${CONFIG_FILE} not decrypted ..."
             exit 9
          fi
       fi 
@@ -3012,7 +3020,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -s
                pylint "${MY_FILE}" 1>pylint.console.log  2>pylint.err.log
                STATUS=$?
                if ! [ "${STATUS}" = "0" ]; then  # NOT good
-                  if [ "${CONTINUE_ON_ERR}" = true ]; then  # -E
+                  if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
                      warning "Pylint found ${STATUS} blocking issues, being ignored."
                   else
                      fatal "pylint found issues : ${STATUS} "
@@ -3041,7 +3049,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -s
                flake8 "${MY_FILE}" 1>flake8.console.log  2>flake8.err.log
                STATUS=$?
                if ! [ "${STATUS}" = "0" ]; then  # NOT good
-                  if [ "${CONTINUE_ON_ERR}" = true ]; then  # -E
+                  if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
                      warning "Pylint found ${STATUS} blocking issues, being ignored."
                   else
                      fatal "pylint found issues : ${STATUS} "
@@ -3728,7 +3736,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
             if [ "${STATUS}" = "0" ]; then
                warning "Docker run ended with no issues."
             else
-               if [ "${CONTINUE_ON_ERR}" = true ]; then  # -E
+               if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
                   warning "Docker run exit ${STATUS} error, being ignored."
                else
                   fatal "Docker run found issues : ${STATUS} "
