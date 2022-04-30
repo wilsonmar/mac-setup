@@ -16,7 +16,7 @@
 
 ### 01. Capture a time stamp to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.80"  # Fix ==
+SCRIPT_VERSION="v0.81"  # Rename GITHUB vars from .mac-setup.env
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
@@ -87,10 +87,11 @@ args_prompt() {
    echo "   -K           -Keep OS processes running at end of run (instead of killing them)"
    echo "   -D           -Delete containers and other files after run (to save disk space)"
    echo "   -M           remove Docker iMages pulled from DockerHub (to save disk space)"
-   echo "USAGE EXAMPLES # WebGoat Docker with Contrast agent"
+   echo "USAGE EXAMPLES:"
+   echo "chmod +x mac-setup.zsh"
+   echo "Using default ~/.mac-setup.env configuration settings file :"
+   echo "./mac-setup.zsh -v -I -U -go         # Install brew, golang"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
-   echo "./mac-setup.zsh -v -env \"\$HOME/.mck-setup.env\" -eks -D "
-   echo "./mac-setup.zsh -v -env \"\$HOME/.mck-setup.env\" -H -m -t    # Use SSH-CA certs with -H Hashicorp Vault -test actual server"
    echo "./mac-setup.zsh -v -g \"abcdef...89\" -p \"cp100-1094\"  # Google API call"
    echo "./mac-setup.zsh -v -n -a  # NodeJs app with MongoDB"
    echo "./mac-setup.zsh -v -i -o  # Ruby app"   
@@ -103,8 +104,11 @@ args_prompt() {
    echo "./mac-setup.zsh -v -V -c -L -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -D -M -C"
    echo "./mac-setup.zsh -G -v -f \"challenge.py\" -P \"-v\"  # to run a program in my python-samples repo"
-   echo "./mac-setup.zsh -v -env \"$HOME/.mck-setup.env\" -H -m -o  # -t for local vault for Vault SSH keygen"
-   echo "./mac-setup.zsh -v -env \"$HOME/.mck-setup.env\" -aws  # for Terraform"
+   echo "Using alternative ~/.alt-mac-setup.env  configuration settings file :"
+   echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -H -m -o  # -t for local vault for Vault SSH keygen"
+   echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -aws  # for Terraform"
+   echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -eks -D "
+   echo "./mac-setup.zsh -v -env \"~/.alt-mck-setup.env\" -H -m -t    # Use SSH-CA certs with -H Hashicorp Vault -test actual server"
 }
 if [ $# -eq 0 ]; then  # display if no parameters are provided:
    args_prompt
@@ -169,9 +173,7 @@ exit_abnormal() {            # Function: Exit with error.
    RUBY_INSTALL=false           # -i
    NODE_INSTALL=false           # -n
    MONGO_DB_NAME=""
-   USE_CONFIG_FILE=true        # -nenv
-   CONFIG_FILEPATH="$HOME/.mac-setup.env"  # -env
-   CONFIG_FILE="variables.env.sample"
+
    MY_FOLDER=""                 # -F folder
    MY_FILE=""
      #MY_FILE="2-3.ipynb"
@@ -201,14 +203,27 @@ exit_abnormal() {            # Function: Exit with error.
    REMOVE_GITHUB_AFTER=false    # -R
    KEEP_PROCESSES=false         # -K
 
-PROJECT_FOLDER_PATH="$HOME/Projects"  # -P
-PROJECT_FOLDER_NAME=""
-GITHUB_FOLDER=""
-GITHUB_PATH="$HOME/gmail_acct"
-GitHub_USER_NAME="Wilson Mar"             # -n
-GitHub_USER_EMAIL="wilson_mar@gmail.com"  # -e
-GitHub_BRANCH=""
+USE_CONFIG_FILE=true            # -nenv
+CONFIG_FILEPATH="$HOME/.mac-setup.env"  # -env ".mac-setup.en"
+   # Contents of ~/.mac-setup.env overrides these defaults:
+   PROJECT_FOLDER_PATH="$HOME/Projects"  # -P
+   PROJECT_FOLDER_NAME=""
 
+   GITHUB_PATH="$HOME/github-wilsonmar"
+   GITHUB_REPO="wilsonmar.github.io"
+   GITHUB_ACCOUNT="wilsonmar"
+   GitHub_USER_NAME="Wilson Mar"             # -n
+   GitHub_USER_EMAIL="wilson_mar@gmail.com"  # -e
+
+   GIT_ID="WilsonMar@gmail.com"
+   GIT_EMAIL="WilsonMar+GitHub@gmail.com"
+   GIT_NAME="Wilson Mar"
+   GIT_USERNAME="wilsonmar"
+
+   GITHUB_FOLDER=""
+   GitHub_BRANCH=""
+
+SECRETS_FILE=".secrets.env.sample"
 
 ### 04. Set variables associated with each parameter flag
 while test $# -gt 0; do
@@ -1439,14 +1454,14 @@ if [ -d ".gitsecret" ]; then   # found
          PREFIX="/usr/local" make install      
       fi  # PACKAGE_MANAGER
 
-      if [ -f "${CONFIG_FILE}.secret" ]; then   # found
-         h2 "${CONFIG_FILE}.secret being decrypted using the private key in the bash user's local $HOME folder"
+      if [ -f "${SECRETS_FILE}.secret" ]; then   # found
+         h2 "${SECRETS_FILE}.secret being decrypted using the private key in the bash user's local $HOME folder"
          git secret reveal
             # gpg ...
-         if [ -f "${CONFIG_FILE}" ]; then   # found
-            h2 "File ${CONFIG_FILE} decrypted ..."
+         if [ -f "${SECRETS_FILE}" ]; then   # found
+            h2 "File ${SECRETS_FILE} decrypted ..."
          else
-            fatal "File ${CONFIG_FILE} not decrypted ..."
+            fatal "File ${SECRETS_FILE} not decrypted ..."
             exit 9
          fi
       fi 
