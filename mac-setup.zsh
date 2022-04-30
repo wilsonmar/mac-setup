@@ -42,7 +42,7 @@ args_prompt() {
    echo "   -n  \"john-doe\"            GitHub account -name"
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
    echo " "
-   echo "   -nenv        Do not retrieve .mac-setup.env file"
+   echo "   -nenv        Do not retrieve mac-setup.env file"
    echo "   -env \"~/.alt.secrets.zsh\"   (alternate env file)"
    echo "   -H           install/use -Hashicorp Vault secret manager"
    echo "   -m           Setup Vault SSH CA cert"
@@ -89,7 +89,7 @@ args_prompt() {
    echo "   -M           remove Docker iMages pulled from DockerHub (to save disk space)"
    echo "# USAGE EXAMPLES:"
    echo "chmod +x mac-setup.zsh   # change permissions"
-   echo "# Using default configuration settings downloaed to \$HOME/.mac-setup.env "
+   echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
    echo "./mac-setup.zsh -v -I -U -go         # Install brew, golang"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
    echo "./mac-setup.zsh -v -g \"abcdef...89\" -p \"cp100-1094\"  # Google API call"
@@ -242,8 +242,8 @@ fi
    KEEP_PROCESSES=false         # -K
 
 USE_CONFIG_FILE=true            # -nenv
-CONFIG_FILEPATH="$HOME/.mac-setup.env"  # -env ".mac-setup.en"
-   # Contents of ~/.mac-setup.env overrides these defaults:
+CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env ".mac-setup.en"
+   # Contents of ~/mac-setup.env overrides these defaults:
    PROJECT_FOLDER_PATH="$HOME/Projects"  # -P
    PROJECT_FOLDER_NAME=""
 
@@ -573,11 +573,11 @@ while test $# -gt 0; do
 done
 
 
-### 06. Save config settings file to \$HOME/.mac-setup.env (away from GitHub)
+### 06. Save config settings file to \$HOME/mac-setup.env (away from GitHub)
 
 if command -v curl ; then
-   if [ ! -f "$HOME/.mac-setup.env" ]; then
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/.mac-setup.env)"
+   if [ ! -f "$HOME/mac-setup.env" ]; then
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"
    fi
 fi
 
@@ -1269,16 +1269,16 @@ if [ "${USE_CONFIG_FILE}" = false ]; then  # -nenv
 else  # use .mck-setup.env file:
    # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
    if [ ! -f "$CONFIG_FILEPATH" ]; then   # file NOT found, then copy from github:
-      curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/.mac-setup.env
-      warning "Downloading default config file .mac-setup.env file to $HOME ... "
+      curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env
+      warning "Downloading default config file mac-setup.env file to $HOME ... "
       if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
          fatal "File not found after download ..."
          exit 9
       fi
-      note "Please edit values in file $HOME/.mac-setup.env and run this again ..."
+      note "Please edit values in file $HOME/mac-setup.env and run this again ..."
       exit 9
-   else  # Read from default file name .mac-setup.env :
-      h2 "Reading default config file $HOME/.mac-setup.env ..."
+   else  # Read from default file name mac-setup.env :
+      h2 "Reading default config file $HOME/mac-setup.env ..."
       note "$(ls -al "${CONFIG_FILEPATH}" )"
       chmod +x "${CONFIG_FILEPATH}"
       source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.

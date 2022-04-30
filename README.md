@@ -6,31 +6,9 @@ This approach is faster and repeatable than manually clicking through everything
 It's less error-prone because we've worked out the dependency clashes for you.
 We created the script to automatically take care of workarounds to known issues. 
 
-To avoid repeating myself, all you need is follow my <br />
+To avoid repeating myself, all you need is follow my 
 <a target="_blank" href="https://wilsonmar.github.io/mac-setup">step-by-step instructions at<br />
 https://wilsonmar.github.io/mac-setup</a>
-
-
-   You don't need to comment out the ones you don't want. Just don't provide the parameter.
-
-   The exception to that are brew commands in the script.
-
-1. If you want to run the script to configure your laptop the <strong>most popular and trusted</strong> components macOS developers use, use your mouse to triple-click the command below to highlight it, then press command+C to copy it to your Clipboard:
-
-   <pre><strong>zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)" -v -I
-   </strong></pre>
-
-   <tt>-I</tt> specifies <strong>Install</strong> of utilities.
-   
-1. Press command+V to paste the command from your Clipboard. It starts running.
-
-   The script creates a <tt>~/Projects/mac-setup</tt> folder on your machine and downloads files into it, such as the <tt>mac-setup.zsh</tt> script. 
-
-   If a utility program is not installed, the script installs it.
-
-1. If you and your team may want a different set of utilities and apps to install, edit the mac-setup.zsh script and put it in your own repo on GitHub. Then run the mac-setup.zsh command from your own repo. You'll miss out on frequent updates of my repo, though.
-
-1. Alternately, you can edit the configuration file and run Ansible.
 
 
 <a name="Why"></a>
@@ -41,7 +19,7 @@ Most tutorials ask you to <strong>manually type</strong> or copy and paste strin
 
 ## Roadmap
 
-This repo gives you a way to install, configure, and start a large set of programs running sample code for several "stacks":
+Scripts in this repo gives you a way to install, configure,  start, and clean-up after a large set of programs runs code for several languages in various "stacks":
 
    * MEAN (MongoDB, Express, Angular, NodeJs) with the <a target="_blank" href="http://meanjs.org/">MeanJs sample app</a>
    * <a target="_blank" href="http://mern.io/">MERN</a> (MongoDB, Express, React/Redux, NodeJs) for "Universal" apps, including WebPack
@@ -66,15 +44,11 @@ In this course, well-known DevOps practitioners Ernest Mueller and James Wickett
 
 ### Limited Memory
 
-If you're now thinking "a Mac can't run every one of these programs" you're correct.
-A Mac has at most 16 GB of RAM.
+If you're now thinking "a Mac can't run every one of these programs" you're correct. A Mac has 16 GB - 32 GB of RAM.
 
-This repo isn't designed to run every service, but to enable you to pick a few at a time,
-even on a MacBook Air with 4GB RAM and 128 GB hard disk.
+This repo isn't designed to run every service, but to enable you to <strong>use one at a time</strong>.
 
-The advantage gained by this script is <strong>fast change</strong>.
-For example, setup to try the Atom editor, then remove it, and install something else.
-This script enables you to <strong>switch quickly</strong> among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time.
+The advantage gained by this script is <strong>fast change</strong>. This script enables you to <strong>switch quickly</strong> among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time.
 
 Scripts here are <strong>modular</strong>. Its default setting is to not install everything. It installs only what you tell it to by adding a keyword in the control file.
 
