@@ -33,7 +33,7 @@ alias ka="killall"
 alias kp="ps auxwww | more"  # "que pasa" processes running
 
 alias rs='exec -l $SHELL'    # reset shell
-
+alias sleepnow="pmset sleepnow"
 
 #### Define aliases to invoke GUI apps with several words:
 
