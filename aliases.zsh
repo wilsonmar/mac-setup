@@ -304,7 +304,3 @@ alias keys="catn $HOME/aliases.zsh"
 # For more Mac aliases, see https://gist.github.com/natelandau/10654137
    # described at https://natelandau.com/my-mac-osx-bash_profile/
    # https://github.com/clvv/fasd
-
-   # NOTE: parse_git_branch is defined in .bash_profile, but not exported. 
-   # When you run sudo bash, it starts an nonlogin shell that sources .bashrc instead of .bash_profile. 
-   # PS1 was exported and so is defined in the new shell, but parse_git_branch is not.
