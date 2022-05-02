@@ -288,15 +288,14 @@ alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
    alias wmgo='cd $GITHUB_PATH/golang-samples'
    #alias wmr='cd $GITHUB_PATH/rustlang-samples'
 
-#### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
+   #### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
    alias wmo='cd $GITHUB_PATH/wilsonmar.github.io/_posts'
    alias wm='cd $GITHUB_PATH/wilsonmar.github.io/_posts;git status -s -b'
    alias wf='cd $GITHUB_PATH/futures;git status -s -b'
    alias js='cd $GITHUB_PATH/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental'
-#alias bs='wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml'
+   alias bs='wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml'
 #fi
 
-##### Leave this at bottom of file to print using catn defined above:
 #     catn filename to show text file without comment (#) lines:
 alias catn="grep -Ev '''^(#|$)'''"
 alias keys="catn $HOME/aliases.zsh"
