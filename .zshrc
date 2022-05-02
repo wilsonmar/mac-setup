@@ -19,7 +19,12 @@ export PATH="/bin:/usr/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:${PATH}"
    # /sbin contains fsck, mount, etc.
 
 # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
-BREW_PATH="$(brew --prefix)"   # /opt/homebrew or /usr/local/bin
+BREW_PATH="/opt/homebrew"   # /opt/homebrew or /usr/local/bin
+# This in .zshrc fixes the "brew not found" error on a machine with Apple M1 CPU under Monterey:
+# See https://apple.stackexchange.com/questions/148901/why-does-my-brew-installation-not-work
+eval $( "${BREW_PATH}/bin/brew" shellenv)
+export FPATH="$BREW_PATH/share/zsh-completions:$FPATH"
+
    # On M1 chips (uname -u = "arm_64"), brew modules are installed in "/opt/homebrew/bin/""
    # On x86_64, brew modules are install in "/usr/local/bin" 
 export PATH="$BREW_PATH/:$BREW_PATH/bin/:${PATH}"
@@ -36,11 +41,6 @@ export PATH="$BREW_PATH/:$BREW_PATH/bin/:${PATH}"
 
 export PATH="/Applications:$HOME/Applications:$HOME/Applications/Utilities:${PATH}"  # for apps
 export PATH="${PATH}:/usr/local/opt/grep/libexec/gnubin"   # after brew install grep
-
-# This in .zshrc fixes the "brew not found" error on a machine with Apple M1 CPU under Monterey:
-# See https://apple.stackexchange.com/questions/148901/why-does-my-brew-installation-not-work
-eval $( "${BREW_PATH}/bin/brew" shellenv)
-export FPATH="$BREW_PATH/share/zsh-completions:$FPATH"
 
 #### Configurations for macOS Operating System :
 sudo launchctl limit maxfiles 65536 200000
