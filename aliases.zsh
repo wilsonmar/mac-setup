@@ -279,7 +279,7 @@ alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
 # See https://github.com/ysmike/dotfiles/blob/master/bash/.aliases
 # More: https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html
 
-#if [ -n "${GITHUB_PATH}" ]; then   # variable is NOT blank (set by source ~/mac-setup.env)
+if [ -n "${GITHUB_PATH}" ]; then   # variable is NOT blank (set by source ~/mac-setup.env)
    echo "GITHUB_PATH=$GITHUB_PATH"
    alias wmx='cd $GITHUB_PATH/azure-quickly'
    alias wmf='cd $GITHUB_PATH/futures'
@@ -289,12 +289,12 @@ alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
    #alias wmr='cd $GITHUB_PATH/rustlang-samples'
 
    #### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
-   alias wmo='cd $GITHUB_PATH/wilsonmar.github.io/_posts'
-   alias wm='cd $GITHUB_PATH/wilsonmar.github.io/_posts;git status -s -b'
-   alias wf='cd $GITHUB_PATH/futures;git status -s -b'
-   alias js='cd $GITHUB_PATH/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental'
-   alias bs='wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml'
-#fi
+   alias wmo="cd $GITHUB_PATH/wilsonmar.github.io/_posts"
+   alias wm="cd $GITHUB_PATH/wilsonmar.github.io/_posts;git status -s -b"
+   alias wf="cd $GITHUB_PATH/futures;git status -s -b"
+   alias js="cd $GITHUB_PATH/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental"
+   alias bs="wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml"
+fi
 
 #     catn filename to show text file without comment (#) lines:
 alias catn="grep -Ev '''^(#|$)'''"
