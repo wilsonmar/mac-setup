@@ -17,7 +17,7 @@
 
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.82"  # Renumber steps, remove . from mac-setup.env name, -L, -HV
+SCRIPT_VERSION="v0.83"  # Add Podman
 
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
@@ -188,7 +188,7 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    GITHUB_REPO="wilsonmar.github.io"
    GITHUB_ACCOUNT="wilsonmar"
    GITHUB_USER_NAME="Wilson Mar"             # -n
-   GitHub_USER_EMAIL="wilson_mar@gmail.com"  # -e
+   GITHUB_USER_EMAIL="wilson_mar@gmail.com"  # -e
 
    GIT_ID="WilsonMar@gmail.com"
    GIT_EMAIL="WilsonMar+GitHub@gmail.com"
@@ -221,7 +221,7 @@ SECRETS_FILE=".secrets.env.sample"
       EKS_NODE_TYPE="m5.large"
 
    USE_VAULT=false              # -HV
-       VAULT_ADDR=""
+      VAULT_ADDR=https://vault.???.com:8200
       #VAULT_RSA_FILENAME=""
        VAULT_USER_TOKEN=""
        VAULT_CA_KEY_FULLPATH="$HOME/.ssh/ca_key"
@@ -245,8 +245,10 @@ SECRETS_FILE=".secrets.env.sample"
    UPDATE_GITHUB=false          # -u
    UPDATE_PKGS=false            # -U
 
-   USE_CIRCLECI=false           # -circleci
    USE_DOCKER=false             # -k
+   USE_PODMAN=false             # -podman
+
+   USE_CIRCLECI=false           # -circleci
    USE_AWS_CLOUD=false          # -aws
    # From AWS Management Console https://console.aws.amazon.com/iam/
    #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
@@ -286,15 +288,23 @@ SECRETS_FILE=".secrets.env.sample"
 
 ### 05. Download config settings file to \$HOME/mac-setup.env (away from GitHub)
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
-if [ ! -f "$HOME/mac-setup.env" ]; then
-   if command -v curl ; then
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"
+if command -v curl ; then
+   pwd
+   if [ ! -f "$HOME/mac-setup.env" ]; then
+      h2 "Downloading mac-setup.env to \$HOME folder"
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"  # to
+   fi
+   if [ ! -f "$HOME/.zshrc" ]; then
+      h2 "Downloading .zshrc to \$HOME folder"
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/.zshrc)"  # to
    fi
 fi
-if [ ! -f "$HOME/mac-setup.env" ]; then
-   h2 "Loading \$HOME\mac-setup.env values ..."
+if [ -f "$HOME/mac-setup.env" ]; then
+   h2 "Loading \$HOME\mac-setup.env ..."
    source "$HOME\mac-setup.env"
 fi
+
+
 
 Input_GitHub_User_Info(){
       # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
@@ -302,8 +312,8 @@ Input_GitHub_User_Info(){
       GITHUB_USER_NAME=${GITHUB_USER_NAME:-"John Doe"}
       GitHub_ACCOUNT=${GitHub_ACCOUNT:-"john-doe"}
 
-      read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GitHub_USER_EMAIL
-      GitHub_USER_EMAIL=${GitHub_USER_EMAIL:-"johb_doe@gmail.com"}
+      read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GITHUB_USER_EMAIL
+      GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL:-"johb_doe@gmail.com"}
 }
 if [ "${USE_CONFIG_FILE}" = false ]; then  # -nenv
    warning "Using default values hard-coded in this bash script ..."
@@ -425,7 +435,7 @@ while test $# -gt 0; do
       ;;
     -e*)
       shift
-      GitHub_USER_EMAIL=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      GITHUB_USER_EMAIL=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -E)
@@ -538,6 +548,10 @@ while test $# -gt 0; do
       ;;
     -o)
       export OPEN_APP=true
+      shift
+      ;;
+    -podman)
+      export USE_PODMAN=true
       shift
       ;;
     -py)
@@ -659,10 +673,11 @@ done
 ### 07. Display run variables 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
 if [ "${RUN_VERBOSE}" = true ]; then
-   note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
    note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
-   note "GitHub_USER_ACCOUNT=" "${GitHub_USER_ACCOUNT}"
-   note "GitHub_USER_EMAIL=" "${GitHub_USER_EMAIL}"
+   note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
+   note "GITHUB_USER_EMAIL=" "${GITHUB_USER_EMAIL}"
+
+   note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
 fi
 
 
@@ -744,6 +759,7 @@ sig_cleanup() {
     false # sets $?
     this_ending
 }
+
 
 ### 10. Set Continue on Error and Trace
 # See https://wilsonmar.github.io/mac-setup/#StrictMode
@@ -1122,7 +1138,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
      # Licensed Python IDE from ___:
      #brew install --cask pycharm
      #brew install --cask macvim
-     #brew install --cask neovim    # https://github.com/neovim/neovim
+     brew install --cask neovim    # https://github.com/neovim/neovim
 
      #brew install --cask anki
       brew install --cask diffmerge  # https://sourcegear.com/diffmerge/
@@ -1412,10 +1428,10 @@ else   # -clone not specified:
 fi  # CLONE_GITHUB
 
 
-   if [ -z "${GitHub_USER_EMAIL}" ]; then   # variable is blank
+   if [ -z "${GITHUB_USER_EMAIL}" ]; then   # variable is blank
       Input_GitHub_User_Info  # function defined above.
    else
-      note "Using -u \"${GITHUB_USER_NAME}\" -e \"${GitHub_USER_EMAIL}\" ..."
+      note "Using -u \"${GITHUB_USER_NAME}\" -e \"${GITHUB_USER_EMAIL}\" ..."
       # since this is hard coded as "John Doe" above
    fi
 
@@ -2099,6 +2115,24 @@ fi  # EKS
    #   warning "no .yml file"
    #fi
 
+if [ "${USE_PODMAN}" = true ]; then   # -podman
+   # https://medium.com/@davutozcan87/podman-setup-for-mac-4b1ac9cd959
+   brew install --cask podman
+   podman machine init
+   alias docker=podman
+   # Verify podman is working
+   podman machine start
+   podman run hello-world
+   docker ps
+   pip3 install podman-compose
+   podman-compose up
+   5.3 Test docker api is working fine
+   # Verify print of version info:
+   curl -X GET — unix-socket /tmp/podman.sock 'http://localhost/version'
+   # Set docker api address:
+   export DOCKER_HOST=unix:///tmp/podman.sock
+fi
+
 
 ### 29. Use CircleCI SaaS
 # See https://wilsonmar.github.io/mac-setup/#CircleCI
@@ -2305,9 +2339,9 @@ if [ "${USE_ALWAYS}" = false ]; then   # -HV
       fi
       
       ### STEP: Call Vault to sign public key and return it as a cert:
-      h2 "Signing user ${GitHub_ACCOUNT} public key file ${LOCAL_SSH_KEYFILE} ..."
-      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GitHub_ACCOUNT}" \
-         -O "extension:login@github.com=${GitHub_ACCOUNT}" "${LOCAL_SSH_KEYFILE}.pub"
+      h2 "Signing user ${GITHUB_ACCOUNT} public key file ${LOCAL_SSH_KEYFILE} ..."
+      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT}" \
+         -O "extension:login@github.com=${GITHUB_ACCOUNT}" "${LOCAL_SSH_KEYFILE}.pub"
          # RESPONSE: Signed user key test-ssh-cert.pub: id "wilson-mar" serial 0 valid forever
 
       SSH_CERT_PUB_KEYFILE="${LOCAL_SSH_KEYFILE}-cert.pub"
@@ -2325,9 +2359,9 @@ if [ "${USE_ALWAYS}" = false ]; then   # -HV
    fi  # USE_VAULT
 
    if [ "${USE_VAULT}" = false ]; then   # -HV
-      h2 "Use GitHub extension to sign user public key with 1d Validity for ${GitHub_ACCOUNT} ..."
-      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GitHub_ACCOUNT}" \
-         -O "extension:login@github.com=${GitHub_ACCOUNT}" -V '+1d' "${LOCAL_SSH_KEYFILE}.pub"
+      h2 "Use GitHub extension to sign user public key with 1d Validity for ${GITHUB_ACCOUNT} ..."
+      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT}" \
+         -O "extension:login@github.com=${GITHUB_ACCOUNT}" -V '+1d' "${LOCAL_SSH_KEYFILE}.pub"
          # 1m = 1minute, 1d = 1day
          # -n user1 user1.pub
          # RESPONSE: Signed user key test-ssh-cert.pub: id "wilsonmar" serial 0 valid from 2020-05-23T12:59:00 to 2020-05-24T13:00:46
@@ -2496,7 +2530,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
          vault write "${SSH_CLIENT_SIGNER_PATH}/config/ca"  generate_signing_key=true
 
 
-         export SSH_USER_ROLE="${GitHub_USER_EMAIL}"
+         export SSH_USER_ROLE="${GITHUB_USER_EMAIL}"
          SSH_ROLE_FILENAME="myrole.json"  # reuse for every user
          echo -e "{" >"${SSH_ROLE_FILENAME}"
          echo -e "  \"allow_user_certificates\": true," >>"${SSH_ROLE_FILENAME}"
@@ -2775,8 +2809,8 @@ if [ "${NODE_INSTALL}" = true ]; then  # -n
       awk -v var="$var" -v new_val="$new_value" 'BEGIN{FS=OFS="="}match($1, "^\\s*" var "\\s*") {$2=" " new_val}1' "$file"
    }
    # Use the function defined above: https://stackoverflow.com/questions/5955548/how-do-i-use-sed-to-change-my-configuration-files-with-flexible-keys-and-values/5955591#5955591
-   # replace_1config "conf" "MAIL_USER" "${GitHub_USER_EMAIL}"  # from 123
-   # replace_1config "conf" "MAIL_HOST" "${GitHub_USER_EMAIL}"  # from smpt.mailtrap.io
+   # replace_1config "conf" "MAIL_USER" "${GITHUB_USER_EMAIL}"  # from 123
+   # replace_1config "conf" "MAIL_HOST" "${GITHUB_USER_EMAIL}"  # from smpt.mailtrap.io
    # NODE_ENV=development
    # DATABASE=mongodb://user:pass@host.com:port/database
    # MAIL_USER=123

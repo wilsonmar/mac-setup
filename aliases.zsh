@@ -20,6 +20,7 @@ alias cd....='....'
 alias d='docker'
 alias h='history'
 alias j='jobs -l'
+alias l='ls -FalhGT | more'   # T for year
 alias p="pwd"        # present working directory
 alias x='exit'
 
@@ -31,6 +32,9 @@ alias k9='kill -9'
 alias ka="killall"
 alias kp="ps auxwww | more"  # "que pasa" processes running
 
+alias rs='exec -l $SHELL'    # reset shell
+
+
 #### Define aliases to invoke GUI apps with several words:
 
 #### built-in macOS system GUI apps invoke from command line:
@@ -38,46 +42,43 @@ alias aam='open -a "/Applications/Utilities/Activity Monitor.app"'  # See CPU us
 alias prefs='open -a "/Applications/System\Preferences.app"'
 alias sysinfo='open -a "/Applications/Utilities/System Information.app"'
 
-#### System utilities:
-#alias alfred='open -a "/Applications/Alfred 3.app"'
-
-# VIDEO: https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
-# https://macosxautomation.com/automator/
-alias automator='open -a "/Applications/Automator.app"'    # https://support.apple.com/guide/automator/welcome/mac
-
-#alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'   # performance benchmarking
-#alias vfusion='open -a "/Applications/VMware Fusion.app"'      # VMware Fusion (licensed)
-
-
 ##### Terminal 
 # terminal.app
 #alias hyper='open -a "$HOME/Applications/Hyper.app"'
 alias iterm='open -a "$HOME/Applications/iTerm.app"'
 # alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
 
+#### System utilities:
+#alias alfred='open -a "/Applications/Alfred 3.app"'
+
+# VIDEO: https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
+# https://macosxautomation.com/automator/
+# alias automator='open -a "/Applications/Automator.app"'   # https://support.apple.com/guide/automator/welcome/mac
+
+#alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'   # performance benchmarking
+#alias vfusion='open -a "/Applications/VMware Fusion.app"'        # VMware Fusion (licensed)
+
 
 ##### See https://wilsonmar.github.io/text-editor
 export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
    # export EDITOR="/usr/local/bin/mate -w" 
 alias edit="$EDITOR"   # make a habit of using this instead program name (such as code), so you can switch default editor easier 
+alias ebp="$EDITOR ~/.bash_profile && source ~/.bash_profile"
+alias sbp='source ~/.bash_profile'
 alias ezs="$EDITOR ~/.zshrc"   # for Zsh
 alias szs='source ~/.zshrc'
-alias rs='exec -l $SHELL'    # reset shell
 #alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
-
-#alias ebp="$EDITOR ~/.bash_profile && source ~/.bash_profile"
-#alias sbp='source ~/.bash_profile'
-# alias eclipse='open "/Applications/Eclipse.app"'
 
 # alias atom='open -a "/Applications/Atom.app"'
 # alias brackets='open -a "/Applications/Brackets.app"'
 alias code='open -a "$HOME/Applications/Visual Studio Code.app"'
-# alias vs='$HOME/Applications/Visual\ Studio.app/Contents/MacOS/VisualStudio &'
-
+# alias eclipse='open "/Applications/Eclipse.app"'
+# alias nvim=='open "/Applications/Neovim.app"'
 #alias pycharm='open -a "$HOME/Applications/Pycharm.app"'
 # alias sts='open -a "/Applications/STS.app"'
 alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
 # alias sourcetree='open -a SourceTree'
+# alias vs='$HOME/Applications/Visual\ Studio.app/Contents/MacOS/VisualStudio &'
 
 # See https://wilsonmar.github.io/dotfiles/#SublimeText.app
 alias subl='open -a "/Applications/Sublime Text.app"'
@@ -176,10 +177,11 @@ alias ghd='open -a "/Applications/GitHub Desktop.app"'
 #   function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
 #fi
 
+# Listings:
 alias cf="find . -print | wc -l"  # count files in folder.
 alias lf="ls -p | more"      # list folders only
 alias dir='ls -alrT'         # for windows habits
-alias l='ls -FalhGT | more'         # T for year
+#alias l='ls -FalhGT | more'         # T for year
 alias ll='ls -FalhGT | more'  # T for year
 alias lt="ls -ltaT | more"   # list by date
 # Last 30 files updated anywhere:
