@@ -16,10 +16,11 @@ alias cd..='..'
 alias cd...='...'
 alias cd....='....'
 
-# One-key keyboard shortcuts:
+# Recap: One-key keyboard shortcuts (used most often):
 alias d='docker'
 alias h='history'
 alias j='jobs -l'
+alias k="kubectl"
 alias l='ls -FalhGT | more'   # T for year
 alias p="pwd"        # present working directory
 alias x='exit'
@@ -94,7 +95,7 @@ alias vim="nvim"
 
 alias word='open -a "/Applications/Microsoft Word.app"'
 
-# Diff:
+# Enhanced diff:
 alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
 
 
@@ -239,17 +240,21 @@ alias sign='gpg --detach-sign --armor'
 alias gsk="gpg --list-secret-keys --keyid-format LONG"
 alias gst="gpg show-ref --tags"
 
-alias cr="cargo run --verbose"  # Rust .rs program file in folder
 
+#### See https://wilsonmar.github.io/python/
 alias ven="virtualenv venv"
 alias vbc="source venv/bin/activate"
 alias vde="source deactivate"
+
+alias cr="cargo run --verbose"  # Rust .rs program file in folder
+
 
 #### See https://wilsonmar.github.io/terraform
 alias tf="terraform $1"  # provide a parameter
 alias tfa="terraform apply"
 alias tfd="terraform destroy"
 alias tfs="terraform show"
+
 
 #### See https://wilsonmar.github.io/docker
 alias ddk="killall com.docker.osx.hyperkit.linux"   # docker restart
@@ -261,6 +266,7 @@ if [ -f "/var/run/docker.pid" ]; then  # NOT found:
    alias dsa="docker stop $(docker container ls -aq )" # docker stop active container
    alias dpx="docker rm -v $(docker ps -aq -f status=exited)"  # Remove stopped containers
 fi
+
 #### See https://wilsonmar.github.io/kubernetes
 alias k="kubectl"
 complete -F __start_kubectl k
@@ -273,7 +279,8 @@ alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
 # See https://github.com/ysmike/dotfiles/blob/master/bash/.aliases
 # More: https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html
 
-if [ -n "${GITHUB_PATH}" ]; then   # variable is NOT blank (set by mac-setup.env)
+#if [ -n "${GITHUB_PATH}" ]; then   # variable is NOT blank (set by source ~/mac-setup.env)
+   echo "GITHUB_PATH=$GITHUB_PATH"
    alias wmx='cd $GITHUB_PATH/azure-quickly'
    alias wmf='cd $GITHUB_PATH/futures'
    alias wmb='cd $GITHUB_PATH/DevSecOps/bash'
@@ -281,13 +288,24 @@ if [ -n "${GITHUB_PATH}" ]; then   # variable is NOT blank (set by mac-setup.env
    alias wmgo='cd $GITHUB_PATH/golang-samples'
    #alias wmr='cd $GITHUB_PATH/rustlang-samples'
 
-   #### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
+#### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
    alias wmo='cd $GITHUB_PATH/wilsonmar.github.io/_posts'
    alias wm='cd $GITHUB_PATH/wilsonmar.github.io/_posts;git status -s -b'
    alias wf='cd $GITHUB_PATH/futures;git status -s -b'
    alias js='cd $GITHUB_PATH/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental'
-   #alias bs='wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml'
-fi
+#alias bs='wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml'
+#fi
 
 ##### Leave this at bottom of file to print using catn defined above:
+#     catn filename to show text file without comment (#) lines:
+alias catn="grep -Ev '''^(#|$)'''"
 alias keys="catn $HOME/aliases.zsh"
+
+
+# For more Mac aliases, see https://gist.github.com/natelandau/10654137
+   # described at https://natelandau.com/my-mac-osx-bash_profile/
+   # https://github.com/clvv/fasd
+
+   # NOTE: parse_git_branch is defined in .bash_profile, but not exported. 
+   # When you run sudo bash, it starts an nonlogin shell that sources .bashrc instead of .bash_profile. 
+   # PS1 was exported and so is defined in the new shell, but parse_git_branch is not.

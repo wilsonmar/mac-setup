@@ -4,47 +4,46 @@
 # This is explained in https://wilsonmar.github.io/zsh
 # This was migrated from ~/.bash_profile
 
+# Colons separate items in $PATH:
+export PATH="/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
+   # /bin contains bash, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, zsh, ...
+   # /usr/bin contains alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, zip, etc.
+   # /usr/sbin contains chown, cron, disktutil, fdisk, mkfile, sysctl, etc.
+   # /sbin contains fsck, mount, etc.
+export PATH="/Applications:$HOME/Applications:$HOME/Applications/Utilities:${PATH}"  # for apps
+
+echo "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
+# This in .zshrc fixes the "brew not found" error on a machine with Apple M1 CPU under Monterey:
+# See https://apple.stackexchange.com/questions/148901/why-does-my-brew-installation-not-work
+if [ "$(uname -m)" = "arm64" ]; then
+   # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
+   export BREW_PATH="/opt/homebrew"
+   eval $( "${BREW_PATH}/bin/brew" shellenv)
+elif [ "$(uname -m)" = "x86_64" ]; then
+   export BREW_PATH="/usr/local/bin"
+fi
+export PATH="$BREW_PATH/:$BREW_PATH/bin/:${PATH}"
+   # /opt/homebrew/ contains bin, Cellar, Caskroom, completions, lib, opt, sbin, var, etc.
+   # /opt/homebrew/bin/ contains brew, atom, git, go, htop, jq, tree, vault, wget, xz, zsh, etc. installed
+   # /opt/homebrew/share/ contains emacs, fish, man, perl5, vim, zsh, zsh-completions, etc.
+export FPATH="$BREW_PATH/share/zsh-completions:$FPATH"
+# Turn off group-writable permissions: see https://thevaluable.dev/zsh-install-configure-mouseless/
+   #chmod 755 "$BREW_PATH/share/zsh"
+   #chmod g-w "$BREW_PATH/share/zsh"
+   #chmod g-w "$BREW_PATH/share/zsh/site-functions"
+   # "/usr/share/zsh/5.8/functions:${PATH}"  # contains autoload, compinit,
+#export PATH="${PATH}:/usr/local/opt/grep/libexec/gnubin"   # after brew install grep
+
 # Apple Directory Services database Command Line utility:
 echo "$( dscl . -read /Users/$USER UserShell )"
     # UserShell: /bin/zsh
 #which zsh
    # /opt/homebrew/bin/zsh
-# echo "sw_vers = $( sw_vers -productVersion )"  # example: 10.15.1
 
-# Colons separate items in $PATH:
-export PATH="/bin:/usr/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:${PATH}"
-   # /bin contains bash, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, zsh, ...
-   # /usr/bin contains alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, zip, etc.
-   # /usr/sbin contains chown, cron, disktutil, fdisk, mkfile, sysctl, etc.
-   # /sbin contains fsck, mount, etc.
-
-# On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
-BREW_PATH="/opt/homebrew"   # /opt/homebrew or /usr/local/bin
-# This in .zshrc fixes the "brew not found" error on a machine with Apple M1 CPU under Monterey:
-# See https://apple.stackexchange.com/questions/148901/why-does-my-brew-installation-not-work
-eval $( "${BREW_PATH}/bin/brew" shellenv)
-export FPATH="$BREW_PATH/share/zsh-completions:$FPATH"
-
-   # On M1 chips (uname -u = "arm_64"), brew modules are installed in "/opt/homebrew/bin/""
-   # On x86_64, brew modules are install in "/usr/local/bin" 
-export PATH="$BREW_PATH/:$BREW_PATH/bin/:${PATH}"
-   # /opt/homebrew/ contains bin, Cellar, Caskroom, completions, lib, opt, sbin, var, etc.
-   # /opt/homebrew/bin/ contains brew, atom, git, go, htop, jq, tree, vault, wget, xz, zsh, etc. installed
-   # /opt/homebrew/share/ contains emacs, fish, man, perl5, vim, zsh, zsh-completions, etc.
-# Turn off group-writable permissions: see https://thevaluable.dev/zsh-install-configure-mouseless/
-   chmod 755 "$BREW_PATH/share/zsh"
-   #chmod g-w "$BREW_PATH/share/zsh"
-   #chmod g-w "$BREW_PATH/share/zsh/site-functions"
-
-#  chmod g-w "/usr/share/zsh/5.8/functions"
-#export PATH="/usr/share/zsh/5.8/functions:${PATH}"  # contains autoload, compinit,
-
-export PATH="/Applications:$HOME/Applications:$HOME/Applications/Utilities:${PATH}"  # for apps
-export PATH="${PATH}:/usr/local/opt/grep/libexec/gnubin"   # after brew install grep
 
 #### Configurations for macOS Operating System :
 sudo launchctl limit maxfiles 65536 200000
-export GREP_OPTIONS='--color=auto'
+export GREP_OPTIONS="--color=auto"
 #export PATH="/usr/local/opt/postgresql@9.6/bin:$PATH"
 
 
@@ -62,7 +61,8 @@ autoload -Uz compinit
 compinit
 
 # Add `killall` tab completion for common apps:
-complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;
+COMMON_APPS="Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter"
+complete -o "nospace" -W "$COMMON_APPS" killall;
 
 #[[ -r ~/Projects/autopkg_complete/autopkg ]] && source ~/Projects/autopkg_complete/autopkg
 
@@ -174,7 +174,7 @@ fi
 #### See https://wilsonmar.github.io/azure
 # TODO:
 if [ -d "$HOME/azure" ]; then  # folder was created for Microsoft Azure cloud, so:
-   source '$HOME/lib/azure-cli/az.completion'
+   source "$HOME/lib/azure-cli/az.completion"
 fi
 
 ### See https://wilsonmar.github.io/sonar
@@ -251,21 +251,20 @@ fi
 if command -v go >/dev/null; then
     export GOROOT="$(brew --prefix golang)/libexec"  # /usr/local/opt/go/libexec/bin"
     if [ -d "$GOROOT" ]; then
-      export PATH="$PATH:${GOROOT}"
+      export PATH="${PATH}:${GOROOT}"
     fi
 
-    export GOPATH='$HOME/go'   #### Folders created in mac-setup.zsh
-    if [ -d "$GOPATH" ]; then  # folder was created for Golang, so:
-      export PATH="$PATH:${GOPATH}/bin"
+    export GOPATH="$HOME/go"   #### Folders created in mac-setup.zsh
+    if [ -d "${GOPATH}" ]; then  # folder was created for Golang, so:
+      export PATH="${PATH}:${GOPATH}/bin"
     fi
 
-   if [ ! -d "$GOPATH/src" ]; then
-      mkdir -p "$GOPATH/src"
+   if [ ! -d "${GOPATH}/src" ]; then
+      mkdir -p "${GOPATH}/src"
    fi
-      # echo "Start Golang projects by making a new folder within GOPATH ~/go/src"
-      # ls "${GOPATH}/src"
-
-   # export GOHOME='$HOME/golang1'   # defined in mac-setup.env
+   # echo "Start Golang projects by making a new folder within GOPATH ~/go/src"
+   # ls "${GOPATH}/src"
+   # export GOHOME="$HOME/golang1"   # defined in mac-setup.env
 fi
 
 
@@ -296,23 +295,5 @@ fi
 #export SDKMAN_DIR="$HOME/.sdkman"
 #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-
-#### See https://wilsonmar.github.io/mac-setup
-# Show aliases keys as reminder:
-source ~/aliases.zsh
-#     catn filename to show text file without comment (#) lines:
-alias catn="grep -Ev '''^(#|$)'''"
-catn ~/aliases.zsh
-# For more Mac aliases, see https://gist.github.com/natelandau/10654137
-   # described at https://natelandau.com/my-mac-osx-bash_profile/
-   # https://github.com/clvv/fasd
-
-   # NOTE: parse_git_branch is defined in .bash_profile, but not exported. 
-   # When you run sudo bash, it starts an nonlogin shell that sources .bashrc instead of .bash_profile. 
-   # PS1 was exported and so is defined in the new shell, but parse_git_branch is not.
-
-
-#THIS MUST BE AT THE END OF THE FILE FOR Java SDKMAN TO WORK!!!
-#export SDKMAN_DIR="/Users/wilsonmar/.sdkman"
-#[[ -s "/Users/wilsonmar/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/wilsonmar/.sdkman/bin/sdkman-init.sh"
-
+source ~/aliases.zsh   # export alias variables into memory
+#catn ~/aliases.zsh    # Show aliases keys as reminder
