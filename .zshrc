@@ -302,11 +302,10 @@ fi
 source ~/aliases.zsh
 #     catn filename to show text file without comment (#) lines:
 alias catn="grep -Ev '''^(#|$)'''"
-#catn ~/aliases.zsh
+catn ~/aliases.zsh
 # For more Mac aliases, see https://gist.github.com/natelandau/10654137
    # described at https://natelandau.com/my-mac-osx-bash_profile/
-# https://github.com/clvv/fasd
-
+   # https://github.com/clvv/fasd
 
    # NOTE: parse_git_branch is defined in .bash_profile, but not exported. 
    # When you run sudo bash, it starts an nonlogin shell that sources .bashrc instead of .bash_profile. 
