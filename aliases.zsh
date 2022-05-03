@@ -117,8 +117,8 @@ alias calc='open -a "/System/Applications/Calculator.app"'
 
 
 #### See https://wilsonmar.github.io/1password/
-alias 1pass='open -a "/Applications/1Password 7.app"'      # Secret
-#alias keybase='open -a "$HOME/Applications/Keybase.app"'                  # Secrets
+alias 1pass='open -a "/Applications/1Password 7.app"'         # Secret
+# alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
 # sentinel   # from Hashicorp
 # terraform
 # terragoat
@@ -145,14 +145,14 @@ alias zoom='open -a "/Applications/zoom.us.app"'
 ##### Reading/Learning:
 #alias anki='open -a "$HOME/Applications/Anki.app"'         # Flash cards https://apps.ankiweb.net/
 alias kindle='open -a "/Applications/Kindle.app"'
-alias reader='open -a "/Applications/Adobe Acrobat Reader DC.app"'
+# alias reader='open -a "/Applications/Adobe Acrobat Reader DC.app"'
 # https://wilsonmar.github.io/dotfiles/#Transmission.app  # Torrent
 
 
-##### Media creation:
+##### Content creation:
 #alias audacity='open -a "/Applications/Audacity.app"'      # Audio engineering
 alias excel='open -a "/Applications/Microsoft Excel.app"'
-#alias obs='open -a "/Applications/OBS.app"'
+alias obs='open -a "/Applications/OBS.app"'
 alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
 alias sketch='open -a "$HOME/Applications/Sketch.app"'
 #alias unity='open -a "$HOME/Applications/Unity.app"'
