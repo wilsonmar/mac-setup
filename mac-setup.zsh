@@ -17,13 +17,14 @@
 
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.83"  # Add Podman
+SCRIPT_VERSION="v0.84"  # Add migrate cmd from bash- to zsh, USE_PROD_ENV
 
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
 echo "=========================== $LOG_DATETIME $THIS_PROGRAM $SCRIPT_VERSION"
+
 
 ### 02. Display a menu if no parameter is specified in the command line
 # See https://wilsonmar.github.io/mac-setup/#EchoFunctions
@@ -94,25 +95,28 @@ args_prompt() {
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
    echo "./mac-setup.zsh -v -I -U -go         # Install brew, golang"
-   echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
+   echo "./mac-setup.zsh -v -HV -m -o  # Use Hashicorp Vault for localhost:8200/vault"
+   echo "./mac-setup.zsh -v -HV -m -t  # Use Hashicorp Vault -test server"
+   echo "./mac-setup.zsh -v -I -U    -s -HV    -t        # Initiate Vault test server"
+   echo "./mac-setup.zsh -v          -s -HV    -prod     #      Run Vault test program"
+   echo "./mac-setup.zsh -q          -s -HV    -a        # Initiate Vault prod server"
+   echo " "
+   echo "./mac-setup.zsh -v -aws  # for Terraform"
+   echo "./mac-setup.zsh -v -eks -D "
    echo "./mac-setup.zsh -v -g \"abcdef...89\" -p \"cp100-1094\"  # Google API call"
-   echo "./mac-setup.zsh -v -n -a  # NodeJs app with MongoDB"
-   echo "./mac-setup.zsh -v -i -o  # Ruby app"   
-   echo "./mac-setup.zsh -v -I -U -c -s -y -r -a -aws   # Python Flask web app in Docker"
-   echo "./mac-setup.zsh -v -I -U    -s -H    -t        # Initiate Vault test server"
-   echo "./mac-setup.zsh -v          -s -H              #      Run Vault test program"
-   echo "./mac-setup.zsh -q          -s -H    -a        # Initiate Vault prod server"
-   echo "./mac-setup.zsh -v -I -U -c    -H -G -N \"python-samples\" -f \"a9y-sample.py\" -P \"-v\" -t -AWS -C  # Python sample app using Vault"
+   echo " "
+   echo "./mac-setup.zsh -v -I -U -c    -HV -G -N \"python-samples\" -f \"a9y-sample.py\" -P \"-v\" -t -AWS -C  # Python sample app using Vault"
    echo "./mac-setup.zsh -v -V -c -T -F \"section_2\" -f \"2-1.ipynb\" -K  # Jupyter anaconda Tensorflow in Venv"
    echo "./mac-setup.zsh -v -D -M -C"
    echo "./mac-setup.zsh -G -v -f \"challenge.py\" -P \"-v\"  # to run a program in my python-samples repo"
-   echo "# Using alternative ~/.alt-mac-setup.env  configuration settings file :"
-   echo "./mac-setup.zsh -v -H -m -o  # -t for local vault for Vault SSH keygen"
+   echo "./mac-setup.zsh -v -I -U -c -s -y -r -a -aws   # Python Flask web app in Docker"
+   echo " "
+   echo "./mac-setup.zsh -v -n -a  # NodeJs app with MongoDB"
+   echo "./mac-setup.zsh -v -i -o  # Ruby app"   
    echo "./mac-setup.zsh -v -V -c -circleci -s    # Use CircLeci based on secrets"
-   echo "./mac-setup.zsh -v -aws  # for Terraform"
-   echo "./mac-setup.zsh -v -eks -D "
-   echo "./mac-setup.zsh -v -H -m -t    # Use SSH-CA certs with -H Hashicorp Vault -test actual server"
-}
+   echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
+echo "DEBUGGING";exit
+   
 if [ $# -eq 0 ]; then  # display if no parameters are provided:
    args_prompt
    exit 1
@@ -122,6 +126,7 @@ exit_abnormal() {            # Function: Exit with error.
   #args_prompt
   exit 1
 }
+
 
 ### 03. Custom functions to echo text to screen
 # See https://wilsonmar.github.io/mac-setup/#TextColors
@@ -161,7 +166,6 @@ if [ "${RUN_DEBUG}" = true ]; then  # -vv
    fatal "fatal (warnError)"
 fi
 
-
 ### 04. Define variables for use as "feature flags"
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
@@ -176,6 +180,7 @@ fi
 
    OPEN_CONSOLE=false           # -console
    USE_TEST_ENV=false           # -t
+   USE_PROD_ENV=false           # -prod
 
 USE_CONFIG_FILE=true            # -nenv
 CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
@@ -221,11 +226,15 @@ SECRETS_FILE=".secrets.env.sample"
       EKS_NODE_TYPE="m5.large"
 
    USE_VAULT=false              # -HV
-      VAULT_ADDR=https://vault.???.com:8200
-      #VAULT_RSA_FILENAME=""
+       VAULT_HOST=" "
+       VAULT_ADDR="http://localhost:8200"
+      #VAULT_ADDR="https://${VAULT_HOST}:8200" 
        VAULT_USER_TOKEN=""
+       #VAULT_USERNAME=""
+       VAULT_PUT=false          # -hvput
+       VAULT_RSA_FILENAME=""
        VAULT_CA_KEY_FULLPATH="$HOME/.ssh/ca_key"
-   VAULT_PUT=false
+       VAULT_VERSION=""  # tobe added later by vault --version
 
 # Cloud:
    RUN_VIRTUALENV=false         # -V
@@ -476,10 +485,10 @@ while test $# -gt 0; do
       ;;
     -HV)
       export USE_VAULT=true
-      #VAULT_HOST=" "
-      export VAULT_ADDR="https://${VAULT_HOST}" 
-      # VAULT_USERNAME=""
-      #VAULT_RSA_FILENAME="mck2"
+      shift
+      ;;
+    -hvput)
+      export VAULT_PUT=true
       shift
       ;;
     -i)
@@ -554,6 +563,10 @@ while test $# -gt 0; do
       export USE_PODMAN=true
       shift
       ;;
+    -prod)
+      export USE_PROD_ENV=true
+      shift
+      ;;
     -py)
       export USE_PYENV=true
       shift
@@ -594,10 +607,6 @@ while test $# -gt 0; do
     -tsf)
       export RUN_TENSORFLOW=true
       export RUN_ANACONDA=true
-      shift
-      ;;
-    -t)
-      export USE_TEST_ENV=true
       shift
       ;;
     -T)
@@ -679,6 +688,12 @@ if [ "${RUN_VERBOSE}" = true ]; then
 
    note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
 fi
+
+# TODO: print all command arguments submitted:
+#while (( "$#" )); do 
+#  echo $1 
+#  shift 
+#done 
 
 
 ### 08. Obtain and show information about the operating system in use to define which package manager to use
@@ -777,32 +792,51 @@ fi
 # set -o nounset
 
 
-### 11. Print run Operating environment information
+### 11a. Print run Operating environment information 
+note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
+note "Start time $LOG_DATETIME"
+note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
+
+### 11b. Upgrade Bash to Zsh
+# Apple Directory Services database Command Line utility:
+echo "SHELL=$SHELL"
+USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
+echo "USER_SHELL_INFO=$USER_SHELL_INFO"
+# Shell scripting NOTE: Double brackets and double dashes to compare strings, with space between symbols:
+if [[ "UserShell: /bin/bash" = *"${USER_SHELL_INFO}"* ]]; then
+   echo "chsh -s /bin/zsh to switch to zsh from ${USER_SHELL_INFO}"
+  #chsh -s /opt/homebrew/bin/zsh  # not allow because it is a non-standard shell.
+   chsh -s /bin/zsh 
+   # Password will be requested here.
+   # exit 9  # to restart
+fi
+   which zsh   # Answer: /opt/homebrew/bin/zsh  (using homebrew or default one from Apple?)
+      # Answer: "/usr/local/bin/zsh" if still running Bash.
+
+
 # See https://wilsonmar.github.io/mac-setup/#BashTraps
-HOSTNAME=$( hostname )
-PUBLIC_IP=$( curl -s ifconfig.me )
-INTERNAL_IP=$( ipconfig getifaddr en0 )
+note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
 
 if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    note "OS_TYPE = $OS_TYPE"
-   # BASHFILE=~/.bash_profile ..."
-   # BASHFILE="$HOME/.bash_profile"  # on Macs
-else  # Linux:
-   note "BASHFILE=~/.bashrc ..."
-   BASHFILE="$HOME/.bashrc"  # on Linux
+   if [ "$(uname -m)" = "arm64" ]; then
+      # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
+      export BREW_PATH="/opt/homebrew"
+      eval $( "${BREW_PATH}/bin/brew" shellenv)
+      # BASHFILE=~/.bash_profile ..."
+      # BASHFILE="$HOME/.bash_profile"  # on Macs
+   elif [ "$(uname -m)" = "x86_64" ]; then
+      export BREW_PATH="/usr/local/bin"
+      note "BASHFILE=~/.bashrc ..."
+      BASHFILE="$HOME/.bashrc"  # on Linux
+   fi
 fi
-   note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
-   note "Start time $LOG_DATETIME"
-   note "Bash $BASH_VERSION from $BASHFILE"
-   note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
-   note "on hostname=$HOSTNAME "
-   note "at PUBLIC_IP=$PUBLIC_IP, intern $INTERNAL_IP"
 
-# TODO: print all command arguments submitted:
-#while (( "$#" )); do 
-#  echo $1 
-#  shift 
-#done 
+HOSTNAME=$( hostname )
+   note "on hostname=$HOSTNAME "
+PUBLIC_IP=$( curl -s ifconfig.me )
+INTERNAL_IP=$( ipconfig getifaddr en0 )
+   note "at PUBLIC_IP=$PUBLIC_IP, intern $INTERNAL_IP"
 
 
 ### 12. Define utility functions: kill process by name, etc.
@@ -820,7 +854,8 @@ ps_kill(){  # $1=process name
 }
 
 
-### 13. Install installers (brew, apt-get), depending on operating system
+
+### 13b. Install installers (brew, apt-get), depending on operating system
 # See https://wilsonmar.github.io/mac-setup/#InstallInstallers
 
 # Bashism Internal Field Separator used by echo, read for word splitting to lines newline or tab (not spaces).

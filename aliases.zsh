@@ -4,8 +4,6 @@
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
 
-# Not using alias -s  # suffix alias at https://github.com/seebi/zshrc/blob/master/aliases.zsh
-
 alias now='date +"%A %Y-%m-%d %T %p %s"'
 alias c="clear"  # screen
 alias cd=' cd'
@@ -39,14 +37,15 @@ alias sleepnow="pmset sleepnow"
 #### Define aliases to invoke GUI apps with several words:
 
 #### built-in macOS system GUI apps invoke from command line:
-alias aam='open -a "/Applications/Utilities/Activity Monitor.app"'  # See CPU usage by app
-alias prefs='open -a "/Applications/System\Preferences.app"'
-alias sysinfo='open -a "/Applications/Utilities/System Information.app"'
+alias airport='open -a "/System/Applications/Utilities/Airport Utility.app"'
+alias amon='open -a "/System//Applications/Utilities/Activity Monitor.app"'  # See CPU usage by app
+alias sysinfo='open -a "/System/Applications/Utilities/System Information.app"'
+alias syspref='open -a "/System//Applications/System Preferences.app"'
 
 ##### Terminal 
 # terminal.app
 #alias hyper='open -a "$HOME/Applications/Hyper.app"'
-alias iterm='open -a "$HOME/Applications/iTerm.app"'
+#alias iterm='open -a "$HOME/Applications/iTerm.app"'
 # alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
 
 #### System utilities:
@@ -304,3 +303,6 @@ alias keys="catn $HOME/aliases.zsh"
 # For more Mac aliases, see https://gist.github.com/natelandau/10654137
    # described at https://natelandau.com/my-mac-osx-bash_profile/
    # https://github.com/clvv/fasd
+   # Not using alias -s  # suffix alias at https://github.com/seebi/zshrc/blob/master/aliases.zsh
+
+# END
