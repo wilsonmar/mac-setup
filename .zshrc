@@ -142,6 +142,7 @@ if [ -d "$HOME/.rvm" ]; then  # Ruby version manager
    #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin:${PATH}"
    #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 fi
+# https://github.com/asdf-vm/asdf
 
 
 #### See https://wilsonmar.github.io/task-runners

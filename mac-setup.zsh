@@ -1,32 +1,33 @@
 #!/usr/bin/env zsh
 # This is mac-setup.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.zsh
+# Coding of this shell script is explained in https://wilsonmar.github.io/mac-setup
+# Coding of shell scripting is explained in https://wilsonmar.github.io/shell-scripts
+
+# shellcheck does not work on zsh, but 
 # shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
 # shellcheck disable=SC1090 # Can't follow non-constant source. Use a directive to specify location.
 # shellcheck disable=SC2129  # Consider using { cmd1; cmd2; } >> file instead of individual redirects.
-
-# Coding of this shell script is explained in https://wilsonmar.github.io/shell-scripts
 
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
 # it installs utilities:
 # zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)" -v
 
-# See https://wilsonmar.github.io/mac-setup/#Args
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
 
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
-THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.84"  # Add migrate cmd from bash- to zsh, USE_PROD_ENV
-
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
-EPOCH_START="$( date -u +%s )"  # such as 1572634619
+THIS_PROGRAM="$0"
+SCRIPT_VERSION="v0.85"  # 
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
-echo "=========================== $LOG_DATETIME $THIS_PROGRAM $SCRIPT_VERSION"
+echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
+EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 
 ### 02. Display a menu if no parameter is specified in the command line
+# See https://wilsonmar.github.io/mac-setup/#Args
 # See https://wilsonmar.github.io/mac-setup/#EchoFunctions
 args_prompt() {
    echo "OPTIONS:"
@@ -39,9 +40,10 @@ args_prompt() {
    echo " "
    echo "   -I           -Install brew utilities, apps"
    echo "   -U           -Upgrade installed packages if already installed"
+   echo "   -zsh         Convert from bash to zsh"
    echo "   -sd          -sd card initialize"
    echo " "
-   echo "   -N           -Name of Project folder"
+   echo "   -N  \"Proj\"            -Name of Project folder"
    echo "   -fn \"John Doe\"            user full name"
    echo "   -n  \"john-doe\"            GitHub account -name"
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
@@ -66,40 +68,38 @@ args_prompt() {
    echo "   -u           -update GitHub (scan for secrets)"
    echo " "
    echo "   -k           -k install and use Docker"
-   echo "   -k8s         -k8s (Kubernetes) minikube"
    echo "   -b           -build Docker image"
    echo "   -dc           use docker-compose.yml file"
    echo "   -w           -write image to DockerHub"
+   echo "   -k8s         -k8s (Kubernetes) minikube"
    echo "   -r           -restart (Docker) before run"
+   echo " "
+   echo "   -go           Install Go language"
+   echo "   -ruby         Install Ruby and Refinery"
+   echo "   -j            Install -JavaScript (NodeJs) app with MongoDB"
    echo " "
    echo "   -py          run with Pyenv"
    echo "   -V           to run within VirtualEnv (pipenv is default)"
    echo "   -tsf         -tensorflow"
-   echo "   -tf          -terraform"
    echo "   -A           run with Python -Anaconda "
-   echo "   -y            install Python Flask"
+   echo "   -y            Install Python Flask"
    echo " "
-   echo "   -go          -install Go language"
-   echo "   -i           -install Ruby and Refinery"
-   echo "   -j            install -JavaScript (NodeJs) app with MongoDB"
-   echo " "
+   echo "   -tf          -terraform"
    echo "   -a           -actually run server (not dry run)"
-   echo "   -t           setup -test server to run tests"
+   echo "   -ts           setup -testserver to run tests"
    echo "   -o           -open/view app or web page in default browser"
    echo " "
    echo "   -C           remove -Cloned files after run (to save disk space)"
-   echo "   -K           -Keep OS processes running at end of run (instead of killing them)"
+   echo "   -K           -Keep OS processes running at end of run (instead of killing them automatically)"
    echo "   -D           -Delete containers and other files after run (to save disk space)"
    echo "   -M           remove Docker iMages pulled from DockerHub (to save disk space)"
    echo "# USAGE EXAMPLES:"
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
-   echo "./mac-setup.zsh -v -I -U -go         # Install brew, golang"
-   echo "./mac-setup.zsh -v -HV -m -o  # Use Hashicorp Vault for localhost:8200/vault"
-   echo "./mac-setup.zsh -v -HV -m -t  # Use Hashicorp Vault -test server"
-   echo "./mac-setup.zsh -v -I -U    -s -HV    -t        # Initiate Vault test server"
-   echo "./mac-setup.zsh -v          -s -HV    -prod     #      Run Vault test program"
-   echo "./mac-setup.zsh -q          -s -HV    -a        # Initiate Vault prod server"
+   echo "./mac-setup.zsh -v -I -U -go         # Install brew, plus golang"
+   echo "./mac-setup.zsh -v -HV -k -K    # Use HashicorpVault localhost:8200/vault Kept alive"
+   echo "./mac-setup.zsh -v -HV -m -ts   # Use HashicorpVault -testserver"
+   echo "./mac-setup.zsh -v -HV -s -ts   # Initiate Vault testserver"
    echo " "
    echo "./mac-setup.zsh -v -aws  # for Terraform"
    echo "./mac-setup.zsh -v -eks -D "
@@ -111,12 +111,12 @@ args_prompt() {
    echo "./mac-setup.zsh -G -v -f \"challenge.py\" -P \"-v\"  # to run a program in my python-samples repo"
    echo "./mac-setup.zsh -v -I -U -c -s -y -r -a -aws   # Python Flask web app in Docker"
    echo " "
-   echo "./mac-setup.zsh -v -n -a  # NodeJs app with MongoDB"
-   echo "./mac-setup.zsh -v -i -o  # Ruby app"   
+   echo "./mac-setup.zsh -v -n -a     # NodeJs app with MongoDB"
+   echo "./mac-setup.zsh -v -ruby -o  # Ruby app"   
    echo "./mac-setup.zsh -v -V -c -circleci -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
-echo "DEBUGGING";exit
-   
+}  # args_prompt()
+
 if [ $# -eq 0 ]; then  # display if no parameters are provided:
    args_prompt
    exit 1
@@ -126,7 +126,6 @@ exit_abnormal() {            # Function: Exit with error.
   #args_prompt
   exit 1
 }
-
 
 ### 03. Custom functions to echo text to screen
 # See https://wilsonmar.github.io/mac-setup/#TextColors
@@ -166,6 +165,7 @@ if [ "${RUN_DEBUG}" = true ]; then  # -vv
    fatal "fatal (warnError)"
 fi
 
+
 ### 04. Define variables for use as "feature flags"
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
@@ -176,10 +176,11 @@ fi
    RUN_PARMS=""                 # -P
    RUN_VERBOSE=false            # -v
 
+   CONVERT_TO_ZSH=false         # -zsh
    SET_TRACE=false              # -x
 
    OPEN_CONSOLE=false           # -console
-   USE_TEST_ENV=false           # -t
+   USE_TEST_SERVER=false        # -ts
    USE_PROD_ENV=false           # -prod
 
 USE_CONFIG_FILE=true            # -nenv
@@ -273,7 +274,7 @@ SECRETS_FILE=".secrets.env.sample"
       LOCAL_SSH_KEYFILE=""
       GITHUB_ORG=""
 
-   RUBY_INSTALL=false           # -i
+   RUBY_INSTALL=false           # -ruby
    NODE_INSTALL=false           # -n
    MONGO_DB_NAME=""
 
@@ -491,7 +492,7 @@ while test $# -gt 0; do
       export VAULT_PUT=true
       shift
       ;;
-    -i)
+    -ruby)
       export RUBY_INSTALL=true
       export GITHUB_REPO_URL="https://github.com/nickjj/build-a-saas-app-with-flask.git"
       export PROJECT_FOLDER_NAME="bsawf"
@@ -666,6 +667,10 @@ while test $# -gt 0; do
       export USE_YUBIKEY=true
       shift
       ;;
+    -zsh)
+      export CONVERT_TO_ZSH=true
+      shift
+      ;;
     -z)
       export USE_AZURE_CLOUD=true
       shift
@@ -804,13 +809,17 @@ USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
 echo "USER_SHELL_INFO=$USER_SHELL_INFO"
 # Shell scripting NOTE: Double brackets and double dashes to compare strings, with space between symbols:
 if [[ "UserShell: /bin/bash" = *"${USER_SHELL_INFO}"* ]]; then
-   echo "chsh -s /bin/zsh to switch to zsh from ${USER_SHELL_INFO}"
-  #chsh -s /opt/homebrew/bin/zsh  # not allow because it is a non-standard shell.
-   chsh -s /bin/zsh 
-   # Password will be requested here.
-   # exit 9  # to restart
+   if [ "${CONVERT_TO_ZSH}" = true ]; then
+      warning "chsh -s /bin/zsh  # to switch to zsh from ${USER_SHELL_INFO}"
+      #chsh -s /opt/homebrew/bin/zsh  # not allow because it is a non-standard shell.
+      chsh -s /bin/zsh 
+      # Password will be requested here.
+
+      # TODO: read manual user input
+      # exit 9  # to restart?
+   fi
 fi
-   which zsh   # Answer: /opt/homebrew/bin/zsh  (using homebrew or default one from Apple?)
+which zsh   # Answer: /opt/homebrew/bin/zsh  (using homebrew or default one from Apple?)
       # Answer: "/usr/local/bin/zsh" if still running Bash.
 
 
@@ -2510,7 +2519,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    fi  # VAULT_HOST
 
 
-   if [ "${USE_TEST_ENV}" = true ]; then   # -t
+   if [ "${USE_TEST_SERVER}" = true ]; then   # -ts
 
       # If vault process is already running, use it:
       PS_NAME="vault"
@@ -2546,7 +2555,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
 
          exit  # because
 
-      else  # USE_TEST_ENV}" = true
+      else  # USE_TEST_SERVER}" = true
          h2 "Making use of \"${PS_NAME}\" as PSID=${PSID} ..."
          # See https://www.vaultproject.io/docs/secrets/ssh/signed-ssh-certificates.html
          # And https://grantorchard.com/securing-github-access-with-hashicorp-vault/
@@ -2588,7 +2597,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
 
       fi  # PSID for vault exists
 
-   fi  # USE_TEST_ENV
+   fi  # USE_TEST_SERVER
 
 
    if [ -n "${VAULT_ADDR}" ]; then  # filled
@@ -3321,9 +3330,10 @@ if [ "${RUN_VIRTUALENV}" = true ]; then  # -V
          #[I 16:03:19.266 NotebookApp] Restoring connection for db5328e3-aa66-4bc9-94a1-3cf27e330912:84adb360adce4699bccffc00c7671793
 fi
 
-#### 44. USE_TEST_ENV
+
+#### 44. USE_TEST_SERVER
 # See https://wilsonmar.github.io/mac-setup/#Testenv
-if [ "${USE_TEST_ENV}" = true ]; then  # -t
+if [ "${USE_TEST_SERVER}" = true ]; then  # -t
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
       if ! command -v selenium ; then
@@ -3362,12 +3372,12 @@ if [ "${USE_TEST_ENV}" = true ]; then  # -t
    
    # reports are produced by TestNG, a plug-in to Selenium.
 
-fi # if [ "${USE_TEST_ENV}"
+fi # if [ "${USE_TEST_SERVER}"
 
 
 ### 45. RUBY_INSTALL
 # See https://wilsonmar.github.io/mac-setup/#InstallRuby
-if [ "${RUBY_INSTALL}" = true ]; then  # -i
+if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
 
    # https://websiteforstudents.com/install-refinery-cms-ruby-on-rails-on-ubuntu-16-04-18-04-18-10/
 
@@ -3614,7 +3624,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -i
 
    exit
 
-fi # if [ "${RUBY_INSTALL}" = true ]; then  # -i
+fi # RUBY_INSTALL
 
 
 ### 46. RUN_EGGPLANT
@@ -4146,4 +4156,4 @@ fi    # USE_DOCKER
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
    
 
-# EOF
+# END
