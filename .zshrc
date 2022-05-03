@@ -17,9 +17,7 @@ export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
 #export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
 
 # Apple Directory Services database Command Line utility:
-echo "SHELL=$SHELL"
-USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
-echo "USER_SHELL_INFO=$USER_SHELL_INFO"
+USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"   # UserShell: /bin/zsh
 # Shell scripting NOTE: Double brackets and double dashes to compare strings, with space between symbols:
 if [[ "UserShell: /bin/bash" = *"${USER_SHELL_INFO}"* ]]; then
    echo "chsh -s /bin/zsh to switch to zsh from ${USER_SHELL_INFO}"
@@ -28,7 +26,9 @@ if [[ "UserShell: /bin/bash" = *"${USER_SHELL_INFO}"* ]]; then
    # Password will be requested here.
    exit 9  # to restart
 fi
-   which zsh   # Answer: /opt/homebrew/bin/zsh  (using homebrew or default one from Apple?)
+# if Zsh:
+   echo "SHELL=$SHELL at $(which zsh)"  # /bin/zsh
+      # Answer: /opt/homebrew/bin/zsh  (using homebrew or default one from Apple?)
       # Answer: "/usr/local/bin/zsh" if still running Bash.
 
 
@@ -45,6 +45,7 @@ if [[ "$(uname -m)" = *"arm64"* ]]; then
 elif [[ "$(uname -m)" = *"x86_64"* ]]; then
    export BREW_PATH="/usr/local/bin"
 fi
+echo "BREW_PATH=$BREW_PATH"
 export PATH="$BREW_PATH/bin/:$BREW_PATH/bin/share/:${PATH}"
    # /opt/homebrew/ contains folders bin, Cellar, Caskroom, completions, lib, opt, sbin, var, etc.
    # /opt/homebrew/bin/ contains brew, atom, git, go, htop, jq, tree, vault, wget, xz, zsh, etc. installed
@@ -56,6 +57,8 @@ export FPATH=":$BREW_PATH/share/zsh-completions:$FPATH"
    #chmod g-w "$BREW_PATH/share/zsh/site-functions"
    # "/usr/share/zsh/5.8/functions:${PATH}"  # contains autoload, compinit,
    #export PATH="${PATH}:/usr/local/opt/grep/libexec/gnubin"   # after brew install grep
+   # zsh completions have been installed to:
+       # /usr/local/share/zsh/site-functions
 
 
 #### Configurations for macOS Operating System :
@@ -103,8 +106,13 @@ complete -o "nospace" -W "$COMMON_APPS" killall;
 #fi
 
 # Set Terminal prompt that shows the Zsh % prompt rather than $ bash prompt:
-export PS1="%10F%m%f:%11F%1~%f % "
-
+# bash:
+   #export PS1="\n  \w\[\033[33m\]\n$ "
+# zsh:
+autoload -Uz promptinit && promptinit
+export PS1="${prompt_newline}${prompt_newline}  %11F%~${prompt_newline}%% "
+   # %11F = yellow. %~ = full path, %% for the Zsh prompt (instead of $ prompt for bash)
+   # %n = username
 
 #### For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63 
 export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
@@ -133,15 +141,17 @@ complete -W "NSGlobalDomain" defaults;
 
 #### See https://wilsonmar.github.io/ruby-on-apple-mac-osx/
 # No command checking since Ruby was installed by default on Apple macOS:
-echo "$( ruby --version)"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
-if [ -d "$HOME/.rbenv" ]; then  # Ruby version manager
+if [ -d "$HOME/.rbenv" ]; then  # Ruby environment manager
    export PATH="$HOME/.rbenv/bin:${PATH}"
    eval "$(rbenv init -)"   # at the end of the file
+   echo "$( ruby --version) with .rbenv"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
 fi
 if [ -d "$HOME/.rvm" ]; then  # Ruby version manager
    #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin:${PATH}"
    #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+   echo "$( ruby --version) with .rvm"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
 fi
+
 # https://github.com/asdf-vm/asdf
 
 

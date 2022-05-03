@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.85"  # 
+SCRIPT_VERSION="v0.86"  # -HV
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -183,7 +183,7 @@ fi
    USE_TEST_SERVER=false        # -ts
    USE_PROD_ENV=false           # -prod
 
-USE_CONFIG_FILE=true            # -nenv
+USE_CONFIG_FILE=false            # -nenv
 CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    # Contents of ~/mac-setup.env overrides these defaults:
    PROJECTS_CONTAINER_PATH="$HOME/Projects"  # -P
@@ -302,18 +302,24 @@ if command -v curl ; then
    pwd
    if [ ! -f "$HOME/mac-setup.env" ]; then
       h2 "Downloading mac-setup.env to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"  # to
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"
+      cp "$HOME/mac-setup.env" "$HOME"
    fi
    if [ ! -f "$HOME/.zshrc" ]; then
       h2 "Downloading .zshrc to \$HOME folder"
       curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/.zshrc)"  # to
+      cp "$HOME/.zshrc" "$HOME"
+   fi
+   if [ ! -f "$HOME/mac-setup.zsh" ]; then
+      h2 "Downloading mac-setup.zsh to \$HOME folder"
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)"
+      cp "$HOME/mac-setup.zsh" "$HOME"
    fi
 fi
 if [ -f "$HOME/mac-setup.env" ]; then
-   h2 "Loading \$HOME\mac-setup.env ..."
-   source "$HOME\mac-setup.env"
+   h2 "Loading \$HOME/mac-setup.env ..."
+   source "$HOME/mac-setup.env"
 fi
-
 
 
 Input_GitHub_User_Info(){
@@ -325,7 +331,7 @@ Input_GitHub_User_Info(){
       read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GITHUB_USER_EMAIL
       GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL:-"johb_doe@gmail.com"}
 }
-if [ "${USE_CONFIG_FILE}" = false ]; then  # -nenv
+if [ "${USE_CONFIG_FILE}" = true ]; then  # -nenv
    warning "Using default values hard-coded in this bash script ..."
    # PIPENV_DOTENV_LOCATION=/path/to/.env or =1 to not load.
 else  # use .mck-setup.env file:
@@ -334,7 +340,7 @@ else  # use .mck-setup.env file:
       curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env
       warning "Downloading default config file mac-setup.env file to $HOME ... "
       if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
-         fatal "File not found after download ..."
+         fatal "File mac-setup.env not found after download ..."
          exit 9
       fi
       note "Please edit values in file $HOME/mac-setup.env and run this again ..."
@@ -344,7 +350,7 @@ else  # use .mck-setup.env file:
       note "$(ls -al "${CONFIG_FILEPATH}" )"
       chmod +x "${CONFIG_FILEPATH}"
       source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.
-      if [ -n "$GITHUB_ACCOUNT" ]; then
+      if [ ! -n "$GITHUB_ACCOUNT" ]; then
          fatal "GITHUB_ACCOUNT variable not defined ..."
          exit 9
       fi
@@ -1640,9 +1646,6 @@ if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
          # core 2020.02.07
          # gsutil 4.47
 
-   # Set cursor to be consistently on left side after a blank line:
-   export PS1="\n  \w\[\033[33m\]\n$ "
-   note "$( ls )"
 
       h2 "gcloud info & auth list ..."
       GCP_AUTH=$( gcloud auth list )
@@ -2462,19 +2465,16 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
          sudo zypper install vault   # please test
          exit 9
    fi
-      RESPONSE="$( vault --version | cut -d' ' -f2 )"  # 2nd column of "Vault v1.3.4"
+      # Notice shell scripting technique to get 2nd column from "Vault v1.3.4"
+      RESPONSE="$( vault --version | cut -d' ' -f2 )"
       export VAULT_VERSION="${RESPONSE:1}"   # remove first character.
-      note "VAULT_VERSION=$VAULT_VERSION"   # 1.4.2_1
-      
-      # Instead of vault -autocomplete-install   # for interactive manual use.
-      # The complete command inserts in $HOME/.bashrc and .zsh
-      complete -C /usr/local/bin/vault vault
-         # No response is expected. Requires running exec $SHELL to work.
+      note "VAULT_VERSION=$VAULT_VERSION"   # Example: 1.10.1
+      # Shell file .zshrc will load CLI completion for Vault
 
 
       #### "Installing govaultenv ..."
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
-         # https://github.com/jamhed/govaultenv
+         # https://github.com/jamhed/govaultenv  RUN_GOLANG
          if ! command -v govaultenv >/dev/null; then  # command not found, so:
             h2 "Brew installing govaultenv ..."
             brew tap jamhed/govaultenv https://github.com/jamhed/govaultenv
@@ -2502,7 +2502,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
 
 
 
-   if [ -n "${VAULT_HOST}" ]; then  # filled
+   if [ -n "${VAULT_HOST}" ]; then  # var filled
          # use production ADDR from secrets
          # note "VAULT_USERNAME=${VAULT_USERNAME}"
          if [ -z "${VAULT_HOST}" ]; then  # it's blank:
@@ -3818,9 +3818,9 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
       timer_start=$SECONDS
       # Docker Docker is starting ...
       while ( ! docker ps -q  2>/dev/null ); do
-         sleep 5  # seconds
+         sleep 2  # seconds 
          duration=$(( SECONDS - timer_start ))
-         # Docker takes a few seconds to initialize
+         # Docker takes a few seconds to initialize (drop off if longer to updating Docker, Update, and Relaunch)
          note "${duration} seconds waiting for Docker to begin running ..."
       done
  
