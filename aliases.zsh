@@ -50,7 +50,6 @@ alias syspref='open -a "/System//Applications/System Preferences.app"'
 
 #### System utilities:
 #alias alfred='open -a "/Applications/Alfred 3.app"'
-
 # VIDEO: https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
 # https://macosxautomation.com/automator/
 # alias automator='open -a "/Applications/Automator.app"'   # https://support.apple.com/guide/automator/welcome/mac
@@ -60,6 +59,7 @@ alias syspref='open -a "/System//Applications/System Preferences.app"'
 
 
 ##### See https://wilsonmar.github.io/text-editor
+alias code='open -a "/Applications/Visual Studio Code.app"'
 export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
    # export EDITOR="/usr/local/bin/mate -w" 
 alias edit="$EDITOR"   # make a habit of using this instead program name (such as code), so you can switch default editor easier 
@@ -69,7 +69,7 @@ alias ezs="$EDITOR ~/.zshrc"   # for Zsh
 alias szs='source ~/.zshrc'
 #alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 
-# alias atom='open -a "/Applications/Atom.app"'
+alias atom='open -a "/Applications/Atom.app"'
 # alias brackets='open -a "/Applications/Brackets.app"'
 alias code='open -a "$HOME/Applications/Visual Studio Code.app"'
 # alias eclipse='open "/Applications/Eclipse.app"'
@@ -105,36 +105,36 @@ alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
 alias chrome='open -a "/Applications/Google Chrome.app"'
 
 alias edge='open -a "/Applications/Microsoft Edge.app"'
-#alias firefox='open -a "/Applications/Firefox.app"'
-# alias opera='open -a "/Applications/Opera.app"'
-alias safari='open -a "/Applications/Safari.app"'
-# alias tor='open -a "/Applications/Tor Browser.app"'
+#alias firefox='open -a "$HOME/Applications/Firefox.app"'
+# alias opera='open -a "$HOME/Applications/Opera.app"'
+alias safari='open -a "$HOME/Applications/Safari.app"'
+alias tor='open -a "$HOME/Applications/Tor Browser.app"'
 
 
 ### built-in Apple apps:
-alias appstore='open -a "/Applications/App Store.app"'
-alias calc='open -a "/Applications/Calculator.app"'
+alias appstore='open -a "/System/Applications/App Store.app"'
+alias calc='open -a "/System/Applications/Calculator.app"'
 
 
 #### See https://wilsonmar.github.io/1password/
 alias 1pass='open -a "/Applications/1Password 7.app"'      # Secret
 #alias keybase='open -a "$HOME/Applications/Keybase.app"'                  # Secrets
-#alias sentinel='open -a "/Applications/Sentinel.app"'  # Hashicorp
+# sentinel   # from Hashicorp
 # terraform
 # terragoat
 
 
 #### Meetings (Communications):
-#alias facetime='open -a "/Applications/FaceTime.app"'       # built-in from Apple
-#alias messages='open -a "/Applications/Messages.app"'       # built-in from Apple
+alias facetime='open -a "/System/Applications/FaceTime.app"'       # built-in from Apple
+alias messages='open -a "/System/Applications/Messages.app"'       # built-in from Apple
 
-alias chime='open -a "/Applications/Amazon Chime.app"'
+#alias chime='open -a "/Applications/Amazon Chime.app"'
 #alias collo='open -a "/Applications/Colloquy.app"'         # Installed from Apple store 
 #alias discord='open -a "/Applications/Discord.app"'       # Has security issue. Don't use.
 #alias gotomeeting='open -a "/Applications/GoToMeeting.app"'
-#alias skype='open -a "$HOME/Applications/Skype.app"'
+alias skype='open -a "$HOME/Applications/Skype.app"'
 #alias signal='open -a "/Applications/Signal.app"'
-#alias slack='open -a "$HOME/Applications/Slack.app"'
+alias slack='open -a "$HOME/Applications/Slack.app"'
 alias teams='open -a "$HOME/Applications/Microsoft Teams.app"'
 #alias telegram='open -a "$HOME/Applications/Telegram.app"'
 alias teams='open -a "/Applications/Microsoft Teams.app"'
@@ -144,7 +144,7 @@ alias zoom='open -a "/Applications/zoom.us.app"'
 
 ##### Reading/Learning:
 #alias anki='open -a "$HOME/Applications/Anki.app"'         # Flash cards https://apps.ankiweb.net/
-#alias kindle='open -a "$HOME/Applications/Kindle.app"'
+alias kindle='open -a "/Applications/Kindle.app"'
 alias reader='open -a "/Applications/Adobe Acrobat Reader DC.app"'
 # https://wilsonmar.github.io/dotfiles/#Transmission.app  # Torrent
 
@@ -154,28 +154,19 @@ alias reader='open -a "/Applications/Adobe Acrobat Reader DC.app"'
 alias excel='open -a "/Applications/Microsoft Excel.app"'
 #alias obs='open -a "/Applications/OBS.app"'
 alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
-#alias sketch='open -a "$HOME/Applications/Sketch.app"'
+alias sketch='open -a "$HOME/Applications/Sketch.app"'
 #alias unity='open -a "$HOME/Applications/Unity.app"'
 
 
 ##### Software development:
 # https://expo.dev/tools
-alias ghd='open -a "/Applications/GitHub Desktop.app"'
-# alias jprofiler='open -a "/Applications/JProfiler.app"'
-#alias soapui='open -a "/Applications/SoapUI-5.4.0.app"'
-#alias postman='open -a "$HOME/Applications/Postman.app"'
+alias ghd='open -a "$HOME/Applications/GitHub Desktop.app"'
+# alias postman='open -a "/Applications/Chrome Apps/Postman.app"'
 # alias insomnia='open -a "/Applications/Insomnia.app"'
 # alias rstudio='open -a "/Applications/RStudio.app"'
+# alias jprofiler='open -a "/Applications/JProfiler.app"'
+# alias soapui='open -a "/Applications/SoapUI-5.4.0.app"'
 
-# Only on MacOS, not git bash on Windows MINGW64:
-#if [ "$(uname)" == "Darwin" ]; then  # it's on a Mac:
-#   alias vers="sw_vers"
-#   function gd() { # get dirty
-#	[[ $(git status 2> /dev/null | tail -n1) != *"working directory clean"* ]] && echo "*"
-#   }
-#  function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
-#   function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
-#fi
 
 # Listings:
 alias cf="find . -print | wc -l"  # count files in folder.
@@ -206,6 +197,15 @@ alias spacefree="du -h | awk 'END{print $1}'"
 alias gcs='cd ~/.google-cloud-sdk;ls'
 
 #### See https://wilsonmar.github.io/git-shortcuts/
+# Only on MacOS, not git bash on Windows MINGW64:
+if [[ "$(uname)" == *"Darwin"* ]]; then  # it's on a Mac:
+   alias vers="sw_vers"
+   function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
+   function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
+   function gd() { # get dirty
+     [[ $(git status 2> /dev/null | tail -n1) != *"working directory clean"* ]] && echo "*"
+   }
+fi
 alias ga='git add . -A'  # --patch
 alias gb='git branch -avv'
 alias gbs='git status -s -b;git add . -A;git commit --quiet -m"Update";git push'

@@ -1113,11 +1113,12 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       brew install git
       note "$( git --version )"
          # git, version 2018.11.26
-      #brew install hub   # github
+      brew install hub   # github CLI
       #note "$( hub --version )"
          # git version 2.27.0
          # hub version 2.14.2
-
+      brew install --cask github
+      
      #Crypto for Security:
       brew install --cask 1password
       if [ ! -d "/Applications/Keybase.app" ]; then   # file NOT found:
