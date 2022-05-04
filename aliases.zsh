@@ -258,8 +258,10 @@ alias tfs="terraform show"
 #### See https://wilsonmar.github.io/docker
 alias ddk="killall com.docker.osx.hyperkit.linux"   # docker restart
 alias dps="docker ps"                               # docker processes list
+   # CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
 alias dcl="docker container ls -aq"                 # docker list active container
-alias dpa="docker container prune --force"          # Remove all stopped containers
+alias dcp="docker container prune --force"          # Remove all stopped containers
+   # Total reclaimed space: 0B
 # To avoid "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
 if [ -f "/var/run/docker.pid" ]; then  # NOT found:
    alias dsa="docker stop $(docker container ls -aq )" # docker stop active container
