@@ -4,15 +4,19 @@
 # This is explained in https://wilsonmar.github.io/zsh
 # This was migrated from ~/.bash_profile
 
+# In .zshenv
 # Colons separate items in $PATH (semicolons as in Windows will cause error):
 export PATH="/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
-   # /bin contains bash, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, zsh, ...
-   # /usr/bin contains alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, zip, etc.
-   # /usr/sbin contains chown, cron, disktutil, fdisk, mkfile, sysctl, etc.
-   # /sbin contains fsck, mount, etc.
+   # /usr/local/bin contains brew-installed links
+   # /bin contains macOS bash, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, zsh, ...
+   # /usr/bin contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.
+   # /usr/sbin contains macOS chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.
+   # /sbin contains macOS fsck, mount, etc.
+
 export PATH="/Applications:$HOME/Applications:$HOME/Applications/Utilities:${PATH}"  # for apps
 
-#### See https://wilsonmar.github.io/zsh
+#### See https://wilsonmar.github.io/homebrew
+# Provide a separate folder to install additional apps:
 export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
 #export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
 
@@ -31,7 +35,6 @@ fi
       # Answer: /opt/homebrew/bin/zsh  (using homebrew or default one from Apple?)
       # Answer: "/usr/local/bin/zsh" if still running Bash.
 
-
 echo "Apple macOS sw_vers = $(sw_vers -productVersion) / uname = $(uname -r)"  # sw_vers: 10.15.1 / uname = 21.4.0
    # See https://eclecticlight.co/2020/08/13/macos-version-numbering-isnt-so-simple/
    # See https://scriptingosx.com/2020/09/macos-version-big-sur-update/
@@ -40,6 +43,7 @@ echo "Apple macOS sw_vers = $(sw_vers -productVersion) / uname = $(uname -r)"  #
 if [[ "$(uname -m)" = *"arm64"* ]]; then
    # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
    export BREW_PATH="/opt/homebrew"
+   complete "${BREW_PATH}/share/zsh/site-functions"  # auto-completions
    eval $( "${BREW_PATH}/bin/brew" shellenv)
    # Password will be requested here.
 elif [[ "$(uname -m)" = *"x86_64"* ]]; then
@@ -51,15 +55,7 @@ export PATH="$BREW_PATH/bin/:$BREW_PATH/bin/share/:${PATH}"
    # /opt/homebrew/bin/ contains brew, atom, git, go, htop, jq, tree, vault, wget, xz, zsh, etc. installed
    # /opt/homebrew/share/ contains emacs, fish, man, perl5, vim, zsh, zsh-completions, etc.
 export FPATH=":$BREW_PATH/share/zsh-completions:$FPATH"
-# Per https://thevaluable.dev/zsh-install-configure-mouseless/ Turn off group-writable permissions?
-   #chmod 755 "$BREW_PATH/share/zsh"
-   #chmod g-w "$BREW_PATH/share/zsh"
-   #chmod g-w "$BREW_PATH/share/zsh/site-functions"
-   # "/usr/share/zsh/5.8/functions:${PATH}"  # contains autoload, compinit,
-   #export PATH="${PATH}:/usr/local/opt/grep/libexec/gnubin"   # after brew install grep
-   # zsh completions have been installed to:
-       # /usr/local/share/zsh/site-functions
-
+   #export PATH="${PATH}:/usr/local/opt/grep/libexec/gnubin"   # after brew install grep ?
 
 #### Configurations for macOS Operating System :
 # sudo launchctl limit maxfiles 65536 200000
@@ -87,7 +83,6 @@ COMMON_APPS="Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Ter
 complete -o "nospace" -W "$COMMON_APPS" killall;
 
 #[[ -r ~/Projects/autopkg_complete/autopkg ]] && source ~/Projects/autopkg_complete/autopkg
-
 
 #export ZSH="$HOME/.oh-my-zsh"
 #if [ -d "$ZSH" ]; then  # is installed:

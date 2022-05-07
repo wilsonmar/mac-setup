@@ -15,7 +15,7 @@ alias cd...='...'
 alias cd....='....'
 
 # Recap: One-key keyboard shortcuts (used most often):
-alias d='docker'
+#alias d='docker'
 alias h='history'
 alias j='jobs -l'
 alias k="kubectl"
@@ -57,9 +57,10 @@ alias syspref='open -a "/System//Applications/System Preferences.app"'
 #alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'   # performance benchmarking
 #alias vfusion='open -a "/Applications/VMware Fusion.app"'        # VMware Fusion (licensed)
 
-
 ##### See https://wilsonmar.github.io/text-editor
-alias code='open -a "/Applications/Visual Studio Code.app"'
+if [ -d "/Applications/Visual Studio Code.app" ]; then
+   alias code='open -a "/Applications/Visual Studio Code.app"'
+fi
 export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
    # export EDITOR="/usr/local/bin/mate -w" 
 alias edit="$EDITOR"   # make a habit of using this instead program name (such as code), so you can switch default editor easier 
@@ -73,11 +74,11 @@ alias atom='open -a "/Applications/Atom.app"'
 # alias brackets='open -a "/Applications/Brackets.app"'
 alias code='open -a "$HOME/Applications/Visual Studio Code.app"'
 # alias eclipse='open "/Applications/Eclipse.app"'
-# alias nvim=='open "/Applications/Neovim.app"'
+alias electron='open -a "$HOME/Applications/Electron.app"'
+alias nvim=='open "/Applications/Neovim.app"'
 #alias pycharm='open -a "$HOME/Applications/Pycharm.app"'
 # alias sts='open -a "/Applications/STS.app"'
 alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
-# alias sourcetree='open -a SourceTree'
 # alias vs='$HOME/Applications/Visual\ Studio.app/Contents/MacOS/VisualStudio &'
 
 # See https://wilsonmar.github.io/dotfiles/#SublimeText.app
@@ -100,10 +101,8 @@ alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
 
 ##### Internet Browsers:
 # alias brave='open -a "/Applications/Brave.app"'
-
 # See https://wilsonmar.github.io/dotfiles/#GoogleChrome.app
 alias chrome='open -a "/Applications/Google Chrome.app"'
-
 alias edge='open -a "/Applications/Microsoft Edge.app"'
 #alias firefox='open -a "$HOME/Applications/Firefox.app"'
 # alias opera='open -a "$HOME/Applications/Opera.app"'
@@ -256,6 +255,8 @@ alias tfs="terraform show"
 
 
 #### See https://wilsonmar.github.io/docker
+# Because docker is both a cask and CLI formula:
+# Do not define  alias docker='open -a "$HOME/Applications/Docker.app"'
 alias ddk="killall com.docker.osx.hyperkit.linux"   # docker restart
 alias dps="docker ps"                               # docker processes list
    # CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
