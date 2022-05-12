@@ -220,7 +220,7 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    MY_FOLDER=""                 # -F folder
    MY_FILE=""
      #MY_FILE="2-3.ipynb"
-   APP1_HOST="localhost"   # default
+   APP1_HOST="127.0.0.1"   # default
    APP1_PORT="8200"        # default
    APP1_FOLDER=""          # custom specified
    OPEN_APP=false               # -o
@@ -843,7 +843,7 @@ note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"
 
 # See https://wilsonmar.github.io/mac-setup/#BashTraps
 note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
-HOSTNAME=$( hostname )
+HOSTNAME="$( hostname )"
    note "on hostname=$HOSTNAME "
 PUBLIC_IP=$( curl -s ifconfig.me )
 INTERNAL_IP=$( ipconfig getifaddr en0 )
@@ -1187,18 +1187,19 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
      # Terminal enhancements:
       brew install --cask hyper
          # hyper stores a file in /usr/local/bin on ARM machines.
+
       brew install --cask iterm2   # for use by .oh-my-zsh
       # Path to your oh-my-zsh installation:
-      export ZSH="$HOME/.oh-my-zsh"
-      if [ ! -d "$ZSH" ]; then # install:
-         note "Creating ~/.oh-my-zsh and installing based on https://ohmyz.sh/ (NO brew install)"
-         mkdir -p "${ZSH}"
-         sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-      else
-         if [ "${UPDATE_PKGS}" = true ]; then
-            upgrade_oh_my_zsh   # function.
-         fi
-      fi
+      # export ZSH="$HOME/.oh-my-zsh"
+      #if [ ! -d "$ZSH" ]; then # install:
+      #   note "Creating ~/.oh-my-zsh and installing based on https://ohmyz.sh/ (NO brew install)"
+      #   mkdir -p "${ZSH}"
+      #   sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+      #else
+         #if [ "${UPDATE_PKGS}" = true ]; then
+            # upgrade_oh_my_zsh   # function.
+         #fi
+      #fi
 
       zsh --version  # Check the installed version
       # Custom theme from : git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
@@ -1217,12 +1218,16 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          brew install --cask google-chrome
       else
          if [ "${UPDATE_PKGS}" = true ]; then
-            rm -rf "/Applications/Google Chrome.app"
-            brew upgrade --cask google-chrome
+            # CAUTION: Chrome requires deletion for some reason:
+            # Password will be required here:
+            sudo rm -rf "/Applications/Google Chrome.app"
+            brew install --cask google-chrome
          else
             note "Google Chrome.app already installed."
          fi
       fi
+      # TODO: Install Chrome Add-ons
+
      #brew install --cask brave
       brew install --cask firefox
       brew install --cask microsoft-edge
@@ -3998,9 +4003,9 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
  
    Remove_Dangling_Docker(){   # function
       RESPONSE="$( docker images -qf dangling=true )"
-         note "Ignore \"Error: No such image\" "
-      if [ -z "${RESPONSE}" ]; then
-         RESPONSE=$( docker rmi -f "${RESPONSE}" )
+      # note "Ignore \"Error: No such image\" "
+      if [ -z "${RESPONSE}" ]; then  # there's something:
+         RESPONSE=$( docker rmi -f "${RESPONSE}" >/dev/null )
       fi
       #   if [ -z `docker ps -q --no-trunc | grep $(docker-compose ps -q "$DOCKER_WEB_SVC_NAME")` ]; then
       # --no-trunc flag because docker ps shows short version of IDs by default.
@@ -4041,6 +4046,7 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
          h2 "Building docker image (from Dockerfile) ..."
          docker build  #Dockerfile
       fi    # BUILD_DOCKER_IMAGE
+
 
       #h2 "node-prune to remove unnecessary files from the node_modules folder"
          # Test files, markdown files, typing files and *.map files in Npm packages are not required in prod.
@@ -4091,8 +4097,12 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
       fi  # USE_DOCKER_COMPOSE
    
       if [ "${RUN_VERBOSE}" = true ]; then
-         h2 "docker images ..."
-         docker images
+         h2 "docker images downloaded, sorted by size ..."
+         # Thanks to https://tunzor.github.io/posts/docker-list-images-by-size/
+         docker image ls --format "{{.Repository}}:{{.Tag}} {{.Size}}" | \
+         awk '{if ($2~/GB/) print substr($2, 1, length($2)-2) * 1000 "MB - " $1 ; else print $2 " - " $1 }' | \
+         sed '/^0/d' | \
+         sort -n
       fi
 
 
@@ -4303,10 +4313,12 @@ fi
 
 
 if [ "${USE_DOCKER}" = true ]; then   # -k
-   h2 "-k  USE_DOCKER ..."
    if [ "${KEEP_PROCESSES}" = true ]; then  # -K
       RESPONSE="$( docker images -qf dangling=true )"
+      note "docker images -qf dangling=true ..."
+      note "$RESPONSE"
       if [ -z "${RESPONSE}" ]; then
+         note "docker rmi -f ${RESPONSE} ... "
          docker rmi -f "${RESPONSE}"
       fi      
 
@@ -4377,6 +4389,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
    if [ "${RUN_VERBOSE}" = true ]; then
       h2 "docker images -a ..."
+      note "At end of run:"
       note "$( docker images -a )"
    fi
 fi    # USE_DOCKER
