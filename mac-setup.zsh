@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.87"  # Add Podman instead of Docker
+SCRIPT_VERSION="v0.88"  # Add -Consul
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -57,10 +57,11 @@ args_prompt() {
    echo "   -g \"abcdef...89\" -gcloud API credentials for calls"
    echo "   -p \"cp100\"   -project in cloud"
    echo " "
+   echo "   -Consul       Install Hashicorp Consul in Docker"
+   echo "   -Doormat      install/use Hashicorp's doormat-cli & hcloud"
+   echo "   -Envoy        install/use Hashicorp's Envoy client"
    echo "   -HV           install/use -Hashicorp Vault secret manager"
-   echo "   -doormat      install/use Hashicorp's doormat-cli & hcloud"
    echo "   -m            Setup Vault SSH CA cert"
-   echo "   -envoy        install/use Hashicorp's Envoy client"
    echo " "
    echo "   -d           -delete GitHub and pyenv from previous run"
    echo "   -c           -clone from GitHub"
@@ -79,7 +80,7 @@ args_prompt() {
    echo "   -k8s         -k8s (Kubernetes) minikube"
    echo "   -r           -restart (Docker) before run"
    echo " "
-   echo "   -go           Install Go language"
+   echo "   -Golang       Install Golang language"
    echo "   -ruby         Install Ruby and Refinery"
    echo "   -js           Install JavaScript (NodeJs) app (no MongoDB/PostgreSQL)"
    echo " "
@@ -103,10 +104,11 @@ args_prompt() {
    echo "# USAGE EXAMPLES:"
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
-   echo "./mac-setup.zsh -v -I -U -go -ruby   # Install brew, plus golang"
-   echo "./mac-setup.zsh -v -k -HV -a -K  # Use HashicorpVault in Docker for localhost Kept alive"
-   echo "./mac-setup.zsh -v -HV -m -ts   # Use HashicorpVault -testserver"
-   echo "./mac-setup.zsh -v -HV -s -ts   # Initiate Vault testserver"
+   echo "./mac-setup.zsh -v -I -U -Golang  # Install brew, plus golang"
+   echo "./mac-setup.zsh -v -k -Consul -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
+   echo "./mac-setup.zsh -v -k -HV -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
+   echo "./mac-setup.zsh -v -HV -m -ts     # Use HashicorpVault -testserver"
+   echo "./mac-setup.zsh -v -HV -s -ts     # Initiate Vault testserver"
    echo " "
    echo "./mac-setup.zsh -v -aws  # for Terraform"
    echo "./mac-setup.zsh -v -eks -D "
@@ -237,8 +239,9 @@ SECRETS_FILE=".secrets.env.sample"
       EKS_NODES="2"
       EKS_NODE_TYPE="m5.large"
 
-   USE_ENVOY=false              # -envoy
-   USE_DOORMAT=false            # -doormat
+   USE_ENVOY=false              # -Envoy
+   USE_DOORMAT=false            # -Doormat
+   USE RUN_CONSUL=false         # -Consul
    USE_VAULT=false              # -HV
        VAULT_HOST="localhost"  # default value
       #VAULT_ADDR="https://${VAULT_HOST}:8200"  # assembled in code below.
@@ -253,7 +256,7 @@ SECRETS_FILE=".secrets.env.sample"
    RUN_VIRTUALENV=false         # -venv
    RUN_CONDA=false              # -conda
    RUN_PYTHON=false             # -python
-   RUN_GOLANG=false             # -go
+   RUN_GOLANG=false             # -Golang
    RUN_EKS=false                # -eks
        EKS_CRED_IS_LOCAL=true
    RUN_EGGPLANT=false           # -eggplant
@@ -417,6 +420,13 @@ while test $# -gt 0; do
       export OPEN_CONSOLE=true
       shift
       ;;
+    -Consul)
+      RUN_CONSUL=true
+      DOCKER_IMAGE_FILE="consul"
+         # https://hub.docker.com/_/consul
+         # https://github.com/hashicorp/docker-consul
+      shift
+      ;;
     -cont)
       export CONTINUE_ON_ERR=true
       shift
@@ -433,7 +443,7 @@ while test $# -gt 0; do
       export USE_DOCKER_COMPOSE=true
       shift
       ;;
-    -doormat)
+    -Doormat)
       export USE_DOORMAT=true
       shift
       ;;
@@ -501,7 +511,7 @@ while test $# -gt 0; do
       GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
-    -go)
+    -Golang)
       export RUN_GOLANG=true
       shift
       ;;
@@ -515,6 +525,7 @@ while test $# -gt 0; do
     -HV)
       export USE_VAULT=true
       DOCKER_IMAGE_FILE="vault"
+      # https://hub.docker.com/_/vault
       shift
       ;;
     -hvput)
@@ -889,6 +900,7 @@ if [ "${CONVERT_TO_ZSH}" = true ]; then
       h2 "Install Apple Rosetta x86 emulator on M1"
       # See https://chrisjune-13837.medium.com/how-to-install-python-3-x-on-apple-m1-9e77ff94266a
       if ! command -v /usr/sbin/softwareupdate >/dev/null; then  # command not found, so:
+         # Run this before installing Docker - https://javascript.plainenglish.io/which-docker-images-can-you-use-on-the-mac-m1-daba6bbc2dc5
          /usr/sbin/softwareupdate --install-rosetta agree-to-license
          # I have read and agree to the terms of the software license agreement. A list of Apple SLAs may be found here: http://www.apple.com/legal/sla/
          # Type A and press return to agree: A
@@ -1178,12 +1190,23 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       fi
      #https://www.hashicorp.com/blog/announcing-hashicorp-homebrew-tap referencing https://github.com/hashicorp/homebrew-tap
       brew install hashicorp/tap/vault
+      which vault
+      
       brew install hashicorp/tap/consul
+      which consul   # /usr/local/bin/consul
+      brew install hashicorp/tap/envconsul
+      which envconsul
+
       brew install hashicorp/tap/nomad
      #brew install hashicorp/tap/packer
+      which nomad
+
       brew install hashicorp/tap/terraform
+      which terraform
+
       brew install hashicorp/tap/sentinel
-     
+      which sentinel
+
      # Terminal enhancements:
       brew install --cask hyper
          # hyper stores a file in /usr/local/bin on ARM machines.
@@ -1263,7 +1286,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
      #Installs as zoom.us.app
       brew install --cask zoom
      #Can't if [ ! -d "/Applications/Slack.app" ]; then   # file NOT found:
-      brew install --cask skype
+     #brew install --cask skype
 
       brew install --cask kindle
 
@@ -1386,7 +1409,7 @@ fi  # SET_MACOS_SYSPREFS
 ### 17a. Hashicorp Cloud using Doormat
 # Command-line interface for https://github.com/hetznercloud/cli
 
-if [ "${USE_DOORMAT}" = true ]; then  # -doormat
+if [ "${USE_DOORMAT}" = true ]; then  # -Doormat
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
       if ! command -v doormat >/dev/null; then  # command not found, so:
@@ -1434,7 +1457,7 @@ fi  # USE_DOORMAT
 
 ### 17b. Hashicorp Consul using Envoy
 # https://learn.hashicorp.com/tutorials/consul/service-mesh-with-envoy-proxy
-if [ "${USE_ENVOY}" = true ]; then  # -envoy
+if [ "${USE_ENVOY}" = true ]; then  # -Envoy
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
       # https://func-e.io/  (pronounced "funky")
       if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
@@ -1629,7 +1652,7 @@ else   # -clone not specified:
       git checkout "${GITHUB_BRANCH}"
       note "Using branch \"$GITHUB_BRANCH\" ..."
    else
-      note "Using master branch ..."
+      note "GITHUB_BRANCH not specified. Using master branch ..."
    fi
 
 fi   # GITHUB_REPO_URL
@@ -1645,7 +1668,7 @@ fi   # GITHUB_REPO_URL
    # This is https://github.com/AGWA/git-crypt      has 4,500 stars.
    # Whereas https://github.com/sobolevn/git-secret has 1,700 stars.
 
-if [ -d "$HOME/.gitsecret" ]; then   # found directory folder
+if false; then  # [ -d "$HOME/.gitsecret" ]; then   # found directory folder in repo
    # This script detects whether https://github.com/sobolevn/git-secret was used to store secrets inside a local git repo.
    # This looks in the repo .gitsecret folder created by the "git secret init" command on this repo (under DevSecOps).
    # "git secret tell" stores the public key of the current git user email.
@@ -1762,7 +1785,6 @@ pipenv_install() {
          # where "-gTkdon9O" adds the leading part of a hash of the full path to the project’s root.
       fi
 }  # pipenv_install()
-
 
 
 ### 23. Connect to Google Cloud, if requested:
@@ -2101,7 +2123,6 @@ if [ "${USE_K8S}" = true ]; then  # -k8s
       fi  # "${PACKAGE_MANAGER}" = "brew" 
    fi  # DOWNLOAD_INSTALL
 fi  # USE_K8S
-
 
 
 ### 27. Install EKS using eksctl
@@ -2472,8 +2493,9 @@ fi  # MOVE_SECURELY
 
 #### 32. Use Hashicorp Vault
 # See https://wilsonmar.github.io/mac-setup/#HashiVault
-USE_ALWAYS=true
-if [ "${USE_ALWAYS}" = false ]; then   # -HV
+export USE_ALWAYS=false  # DEBUGGING
+if [ USE_ALWAYS = true ]; then
+# if [ "${USE_ALWAYS}" = false ]; then   # -HV
 
    if [ "${USE_VAULT}" = false ]; then   # -HV
 
@@ -2554,10 +2576,12 @@ if [ "${USE_ALWAYS}" = false ]; then   # -HV
 fi  # USE_ALWAYS, USE_VAULT
 
 
-### 3a. Install Hashicorp Vault
+
+### 33a. Install Hashicorp Vault
 # See https://wilsonmar.github.io/hashicorp-vault
 # See https://wilsonmar.github.io/mac-setup/#UseHashiVault
 if [ "${USE_VAULT}" = true ]; then   # -HV
+
    h2 "-HV (HashicorpVault) being used ..."
       # See https://learn.hashicorp.com/vault/getting-started/install for install video
           # https://learn.hashicorp.com/vault/secrets-management/sm-versioned-kv
@@ -2593,8 +2617,8 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    note "VAULT_VERSION=$VAULT_VERSION"   # Example: 1.10.1
    # Shell file .zshrc will load CLI completion for Vault
 
-   ### 33b. -go RUN_GOLANG
-   if [ "${RUN_GOLANG}" = true ]; then  # -go
+   ### 33b. -Golang RUN_GOLANG
+   if [ "${RUN_GOLANG}" = true ]; then  # -Golang
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          h2 "Installing govaultenv ..."
          # https://github.com/jamhed/govaultenv  RUN_GOLANG
@@ -2648,8 +2672,8 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
 
    ### 33d. Obtain Vault Status
    # TODO: use production ADDR from secrets
-      export VAULT_ADDR="https://${VAULT_HOST}:8200"
-      note "VAULT_ADDR=${VAULT_ADDR} ..."
+   export VAULT_ADDR="https://${VAULT_HOST}:8200"
+   note "VAULT_ADDR=${VAULT_ADDR} ..."
 
    if [ "${RUN_DEBUG}" = true ]; then
       if [ -n "${VAULT_ADDR}" ]; then  # filled
@@ -3178,7 +3202,7 @@ fi  # RUN_CONDA
 ### 39. RUN_GOLANG  
 # See https://wilsonmar.github.io/golang
 # See https://wilsonmar.github.io/mac-setup/#Golang
-if [ "${RUN_GOLANG}" = true ]; then  # -go
+if [ "${RUN_GOLANG}" = true ]; then  # -Golang
    h2 "Installing Golang using brew ..."
    brew install golang
 
@@ -3242,33 +3266,35 @@ if [ "${RUN_GOLANG}" = true ]; then  # -go
 fi   # RUN_GOLANG
 
 
+
 ### 40. Install Python
 # See https://wilsonmar.github.io/mac-setup/#InstallPython
 if [ "${RUN_PYTHON}" = true ]; then  # -python
 
    # https://docs.python-guide.org/dev/virtualenvs/
 
-   PYTHON_VERSION="$( python3 -V )"   # "Python 3.7.6"
+   PYTHON_VERSION="$( python3 -V )"   # "Python 3.9.11"
    # TRICK: Remove leading white space after removing first word
    PYTHON_SEMVER=$(sed -e 's/^[[:space:]]*//' <<<"${PYTHON_VERSION//Python/}")
+   note "PYTHON_SEMVER=${PYTHON_SEMVER}"  #    =3.9.11"
 
    if [ -z "${MY_FILE}" ]; then  # is empty
       fatal "No program -file specified ..."
       exit 9
    fi
 
-     if [ -z "${MY_FOLDER}" ]; then  # is empty
-         note "-Folder not specified for within $PWD ..."
-      else
-         cd  "${MY_FOLDER}"
-      fi
+   if [ -z "${MY_FOLDER}" ]; then  # is empty
+      note "-Folder not specified for within $PWD ..."
+   else
+      cd  "${MY_FOLDER}"
+   fi
 
-      if [ ! -f "${MY_FILE}" ]; then  # file not found:
-         fatal "-file \"${MY_FILE}\" not found ..."
-         exit 9
-      fi
+   if [ ! -f "${MY_FILE}" ]; then  # file not found:
+      fatal "-file \"${MY_FILE}\" not found ..."
+      exit 9
+   fi
 
-      h2 "-Good Python ${PYTHON_SEMVER} running ${MY_FILE} ${RUN_PARMS} ..."
+   h2 "-Good Python ${PYTHON_SEMVER} running ${MY_FILE} ${RUN_PARMS} ..."
 
 # while debugging:
 #         if [ ! -f "Pipfile" ]; then  # file not found:
@@ -3276,115 +3302,117 @@ if [ "${RUN_PYTHON}" = true ]; then  # -python
 #            PYTHONPATH='.' pipenv run python "${MY_FILE}" "${RUN_PARMS}"
 #         else
 
-            # TRICK: Determine if a Python module was installed:
-            RESPONSE="$( python -c 'import pkgutil; print(1 if pkgutil.find_loader("pylint") else 0)' )"
-            if [ "${RESPONSE}" = 0 ]; then
-               h2 "Installing pylint code scanner ..." 
-               # See https://pylint.pycqa.org/en/latest/ and https://www.python.org/dev/peps/pep-0008/
-               python3 -m pip install pylint
-               command -v pylint   # https://stackoverflow.com/questions/43272664/linter-pylint-is-not-installed
-            else  # RESPONSE=1
-               if [ "${UPDATE_PKGS}" = true ]; then
-                  h2 "Upgrading pylint ..."
-                  python3 -m pip install pylint --upgrade
-               fi
-            fi
-               h2 "Running pylint scanner on -file ${MY_FILE} ..."
-               # TRICK: Route console output to a temp folder for display only on error:
-               pylint "${MY_FILE}" 1>pylint.console.log  2>pylint.err.log
-               STATUS=$?
-               if ! [ "${STATUS}" = "0" ]; then  # NOT good
-                  if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
-                     warning "Pylint found ${STATUS} blocking issues, being ignored."
-                  else
-                     fatal "pylint found issues : ${STATUS} "
-                     cat pylint.err.log
-                     cat pylint.console.log
-                     # The above files are removed depending on $REMOVE_GITHUB_AFTER
-                     exit 9
-                  fi
-               else
-                  warning "Pylint found no issues. Congratulations."
-               fi
+   # TRICK: Determine if a Python module was installed:
+   RESPONSE="$( python -c 'import pkgutil; print(1 if pkgutil.find_loader("pylint") else 0)' )"
+   if [ "${RESPONSE}" = 0 ]; then
+      h2 "Installing pylint code scanner ..." 
+      # See https://pylint.pycqa.org/en/latest/ and https://www.python.org/dev/peps/pep-0008/
+      python3 -m pip install pylint
+      command -v pylint   # https://stackoverflow.com/questions/43272664/linter-pylint-is-not-installed
+   else  # RESPONSE=1
+      if [ "${UPDATE_PKGS}" = true ]; then
+         h2 "Upgrading pylint ..."
+         python3 -m pip install pylint --upgrade
+      fi
+   fi
+      h2 "Running pylint scanner on -file ${MY_FILE} ..."
+      # TRICK: Route console output to a temp folder for display only on error:
+      pylint "${MY_FILE}" 1>pylint.console.log  2>pylint.err.log
+      STATUS=$?
+      if ! [ "${STATUS}" = "0" ]; then  # NOT good
+         if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
+            warning "Pylint found ${STATUS} blocking issues, being ignored."
+         else
+            fatal "pylint found issues : ${STATUS} "
+            cat pylint.err.log
+            cat pylint.console.log
+            # The above files are removed depending on $REMOVE_GITHUB_AFTER
+            exit 9
+         fi
+      else
+         warning "Pylint found no issues. Congratulations."
+      fi
 
-            RESPONSE="$( python -c 'import pkgutil; print(1 if pkgutil.find_loader("flake8") else 0)' )"
-            if [ "${RESPONSE}" = 0 ]; then
-               h2 "Installing flake8 PEP8 code formatting scanner ..." 
-               # See https://flake8.pycqa.org/en/latest/ and https://www.python.org/dev/peps/pep-0008/
-               python3 -m pip install flake8
-            else
-               if [ "${UPDATE_PKGS}" = true ]; then
-                  h2 "Upgrading flake8 ..."
-                  python3 -m pip install flake8 --upgrade
-               fi
-            fi
-               h2 "Running flake8 Pip8 code formatting scanner on ${MY_FILE} ..."
-               flake8 "${MY_FILE}"
-               flake8 "${MY_FILE}" 1>flake8.console.log  2>flake8.err.log
-               STATUS=$?
-               if ! [ "${STATUS}" = "0" ]; then  # NOT good
-                  if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
-                     warning "Pylint found ${STATUS} blocking issues, being ignored."
-                  else
-                     fatal "pylint found issues : ${STATUS} "
-                     cat flake8.err.log
-                     cat flake8.console.log
-                     # The above files are removed depending on $REMOVE_GITHUB_AFTER
-                     exit 9
-                  fi
-               else
-                  warning "Pylint found no issues. Congratulations."
-               fi
+   RESPONSE="$( python -c 'import pkgutil; print(1 if pkgutil.find_loader("flake8") else 0)' )"
+   if [ "${RESPONSE}" = 0 ]; then
+      h2 "Installing flake8 PEP8 code formatting scanner ..." 
+      # See https://flake8.pycqa.org/en/latest/ and https://www.python.org/dev/peps/pep-0008/
+      python3 -m pip install flake8
+   else
+      if [ "${UPDATE_PKGS}" = true ]; then
+         h2 "Upgrading flake8 ..."
+         python3 -m pip install flake8 --upgrade
+      fi
+   fi
 
-            RESPONSE="$( python -c 'import pkgutil; print(1 if pkgutil.find_loader("bandit") else 0)' )"
-            if [ "${RESPONSE}" = 0 ]; then
-               h2 "Installing Bandit secure Python coding scanner ..."
-               # See https://pypi.org/project/bandit/
-               python3 -m pip install bandit
-            else
-               if [ "${UPDATE_PKGS}" = true ]; then
-                  h2 "Upgrading flake8 ..."
-                  python3 -m pip install bandit --upgrade
-               fi
-            fi
-               h2 "Running Bandit secure Python coding scanner ..."  
-               # See https://developer.rackspace.com/blog/getting-started-with-bandit/
-               # TRICK: Route console output to a temp folder for display only on error:
-               bandit -r "${MY_FILE}" 1>bandit.console.log  2>bandit.err.log
-               STATUS=$?
-               if ! [ "${STATUS}" = "0" ]; then  # NOT good
-                  fatal "Bandit found issues : ${STATUS} "
-                  cat bandit.err.log
-                  cat bandit.console.log
-                  # The above files are removed depending on $REMOVE_GITHUB_AFTER
-                  exit 9
-               else
-                  note "Bandit found ${STATUS} blocking issues."
-               fi
+   h2 "Running flake8 Pip8 code formatting scanner on ${MY_FILE} ..."
+   flake8 "${MY_FILE}"
+   flake8 "${MY_FILE}" 1>flake8.console.log  2>flake8.err.log
+   STATUS=$?
+   if ! [ "${STATUS}" = "0" ]; then  # NOT good
+      if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
+         warning "Pylint found ${STATUS} blocking issues, being ignored."
+      else
+         fatal "pylint found issues : ${STATUS} "
+         cat flake8.err.log
+         cat flake8.console.log
+         # The above files are removed depending on $REMOVE_GITHUB_AFTER
+         exit 9
+      fi
+   else
+      warning "Pylint found no issues. Congratulations."
+   fi
+
+   RESPONSE="$( python -c 'import pkgutil; print(1 if pkgutil.find_loader("bandit") else 0)' )"
+   if [ "${RESPONSE}" = 0 ]; then
+      h2 "Installing Bandit secure Python coding scanner ..."
+      # See https://pypi.org/project/bandit/
+      python3 -m pip install bandit
+   else
+      if [ "${UPDATE_PKGS}" = true ]; then
+         h2 "Upgrading flake8 ..."
+         python3 -m pip install bandit --upgrade
+      fi
+   fi
+      h2 "Running Bandit secure Python coding scanner ..."  
+      # See https://developer.rackspace.com/blog/getting-started-with-bandit/
+      # TRICK: Route console output to a temp folder for display only on error:
+      bandit -r "${MY_FILE}" 1>bandit.console.log  2>bandit.err.log
+      STATUS=$?
+      if ! [ "${STATUS}" = "0" ]; then  # NOT good
+         fatal "Bandit found issues : ${STATUS} "
+         cat bandit.err.log
+         cat bandit.console.log
+         # The above files are removed depending on $REMOVE_GITHUB_AFTER
+         exit 9
+      else
+         note "Bandit found ${STATUS} blocking issues."
+      fi
 
 
-            # Run a different way than with Pipfile:
-            h2 "Running Python file ${MY_FILE} ${RUN_PARMS} ..."
-            python3 "${MY_FILE}" "${RUN_PARMS}"
-         
+   # Run a different way than with Pipfile:
+   h2 "Running Python file ${MY_FILE} ${RUN_PARMS} ..."
+   python3 "${MY_FILE}" "${RUN_PARMS}"
+
 #      fi   # Pipfile
 
-      # Instead of https://www.jetbrains.com/pycharm/download/other.html
-      if [ ! -d "/Applications/mongodb Compass.app" ]; then  # directory not found:
-         h2 "brew install --cask PyCharm.app ..."
-         brew install --cask pycharm
-      else  # installed already:
-         if [ "${UPDATE_PKGS}" = true ]; then
-            h2 "brew cask upgrade PyCharm.app ..."
-            brew cask upgrade pycharm
-         fi
+   # Instead of https://www.jetbrains.com/pycharm/download/other.html
+   if [ ! -d "/Applications/mongodb Compass.app" ]; then  # directory not found:
+      h2 "brew install --cask PyCharm.app ..."
+      brew install --cask pycharm
+   else  # installed already:
+      if [ "${UPDATE_PKGS}" = true ]; then
+         h2 "brew cask upgrade PyCharm.app ..."
+         brew cask upgrade pycharm
       fi
-      if [ "${OPEN_APP}" = true ]; then  # -o
-         if [ "${OS_TYPE}" = "macOS" ]; then
-            sleep 3
-            open "/Applications/PyCharm.app"
-         fi
+   fi
+
+   if [ "${OPEN_APP}" = true ]; then  # -o
+      if [ "${OS_TYPE}" = "macOS" ]; then
+         sleep 3
+         open "/Applications/PyCharm.app"
       fi
+   fi
 
 fi  # RUN_PYTHON
 
@@ -3829,6 +3857,7 @@ fi    # RUN_EGGPLANT
    #   warning "no .yml file"
    #fi
 
+
 if [ "${USE_PODMAN}" = true ]; then   # -podman
    # https://medium.com/@davutozcan87/podman-setup-for-mac-4b1ac9cd959
    h2 "-podman  TODO: USE_PODMAN"
@@ -3855,8 +3884,11 @@ if [ "${USE_PODMAN}" = true ]; then   # -podman
    curl -X GET — unix-socket /tmp/podman.sock 'http://localhost/version'
    # Set docker api address:
    export DOCKER_HOST=unix:///tmp/podman.sock
+fi
 
-elif [ "${USE_DOCKER}" = true ]; then   # -k
+
+if [ "${USE_DOCKER}" = true ]; then   # -k
+
    h2 "-k = USE_DOCKER install ..."
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I & -U
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -3867,6 +3899,9 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
          else
             if [ "${UPDATE_PKGS}" = true ]; then
                h2 "Upgrading docker CLI ..."
+               # https://www.weplayinternet.com/posts/error-it-seem-there-is-already-a-binary/
+               brew remove docker
+               brew install --cask docker
                brew upgrade docker
             fi
          fi
@@ -3874,6 +3909,7 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
          if ! command -v docker.app ; then
             h2 "Installing docker ..."
             brew install --cask docker
+            # Error: It seems there is already a Binary at '/opt/homebrew/share/zsh/site-functions/_docker'.
          else
             if [ "${UPDATE_PKGS}" = true ]; then
                h2 "Upgrading docker ..."
@@ -3963,10 +3999,10 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
       fi # brew
    fi  # DOWNLOAD_INSTALL
    # Docker need not be running to obtain version:
-   note "$( docker --version )"          # Docker version 19.03.5, build 633a0ea
+   # note "$( docker --version )"          # Docker version 19.03.5, build 633a0ea
    note "$( docker-compose --version )"  # docker-compose version 2.5.0
 
-   h2 "Starting Docker ..."
+   h2 "Starting Docker on \"${OS_TYPE}\" ..."
    Stop_Docker(){   # function
          if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
             note "-restarting Docker on macOS ..."
@@ -3990,7 +4026,7 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
          sudo service docker start
       fi
 
-      timer_start=$SECONDS
+      timer_start="${SECONDS}"
       # Docker Docker is starting ...
       while ( ! docker ps -q  2>/dev/null ); do
          sleep 2  # seconds 
@@ -4085,15 +4121,19 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
          fi   # MY_FILE}" = "docker-compose.yml"
       else  # NOT Docker compose .yaml
 
-         h2 "docker pull (image) \"${DOCKER_IMAGE_FILE}\" (from Dockerhub) as default ..."
          if [ -n "${DOCKER_IMAGE_FILE}" ]; then  # known value:
+            h2 "docker pull (image) \"${DOCKER_IMAGE_FILE}\" (from Dockerhub) as default ..."
             docker pull "${DOCKER_IMAGE_FILE}"
                # Error: No such image: 
                # Using default tag: latest
                # latest: Pulling from library/vault
                # Status: Downloaded newer image for vault:latest
                # docker.io/library/vault:latest
+         # else
          fi
+         docker images -f "reference=${DOCKER_IMAGE_FILE}"
+            # REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
+            # consul       latest    58fe9fa6a8a4   3 weeks ago   128MB
       fi  # USE_DOCKER_COMPOSE
    
       if [ "${RUN_VERBOSE}" = true ]; then
@@ -4140,7 +4180,116 @@ elif [ "${USE_DOCKER}" = true ]; then   # -k
          fi
       fi  # MY_FOLDER
 
-   ### 49. Docker RUN_EGGPLANT or container
+
+   ### 49a. Docker RUN_CONSUL
+   if [ "${RUN_CONSUL}" = true ]; then  # -Consul
+
+      # See https://learn.hashicorp.com/tutorials/consul/docker-container-agents 
+      CONSUL_DOCKER_NAME="docker-badger"
+      CONSUL_CLIENT_NODE1_NAME="client-1"
+      CONSUL_SERVER_NODE1_NAME="server-1"
+      CONSUL_CLIENT_NODE2_NAME="docker-weasel"
+      CONSUL_SVC2_IMAGE="hashicorp/counting-service:0.0.2"
+      CONSUL_SVC2_NAME="counting.service.consul"
+      CONSUL_SVC2_NAME="counting-fox"
+
+      # https://github.com/hashicorp/docker-consul
+
+      # First check if already running: https://stackoverflow.com/questions/44731451/how-to-run-a-docker-container-if-not-already-running
+      note "docker container list = docker ps ... "
+      RESPONSE=$( docker ps -a -f status=running )
+          # CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                                                                                    NAMES
+         # 79399f38f301   consul    "docker-entrypoint.s…"   14 minutes ago   Up 14 minutes   8300-8302/tcp, 8600/tcp, 8301-8302/udp, 0.0.0.0:8500->8500/tcp, 0.0.0.0:8600->8600/udp   docker-badger
+      if [[ "${RESPONSE}" == *"${CONSUL_DOCKER_NAME}"* ]]; then  # contains it:
+          note "Docker name ${CONSUL_DOCKER_NAME} already running ..."
+      else  
+         note "docker run \"${CONSUL_DOCKER_NAME}\" node \"${CONSUL_SERVER_NODE1_NAME}\" ... "
+         docker run -d --name="${CONSUL_DOCKER_NAME}" \
+            -p 8500:8500 \
+            -p 8600:8600/udp \
+            consul agent -server -ui -node="${CONSUL_SERVER_NODE1_NAME}" \
+               -bootstrap-expect=1 -client=0.0.0.0
+         # -d = detached mode, meaning the process runs in the background.
+         # If the container already is running, docker start will return 0 
+         # If the container EXISTS but is not running, docker start will start it.
+      fi
+
+      # The Consul Docker image sets up the Consul configuration directory at /consul/config by default.
+      # the agent, which loads configuration files into that directory.
+      if [ ! -d "/consul/config" ]; then
+         error "/consul/config not found"
+         # exit 9
+      else 
+         note "$( ls -al /consul/config )"
+      fi
+
+      note "docker exec \"${CONSUL_DOCKER_NAME}\" consul members ... "
+      # Discover the Server IP address:
+      docker exec "${CONSUL_DOCKER_NAME}" consul members
+         # Node       Address         Status    Type    Build  Protocol  DC   Segment
+         # server-1  172.17.0.2:8301  alive     server  1.4.4  2         dc1  <all>
+      # TODO: Capture CONSUL_SERVER_NODE1_IP
+         # docker: Error response from daemon: Conflict. The container name "/docker-badger" is already in use by container 
+         # "79399f38f301ea20ac95c4e10c4074cf16c69b1cf04e996d12454a69cfb989df". 
+         # You have to remove (or rename) that container to be able to reuse that name.
+      export CONSUL_SERVER_NODE1_IP="172.17.0.2"
+
+echo "DEBUGGING";exit
+
+
+
+      # Run Consul Client to the Server IP:
+      note "docker run client node ${CONSUL_CLIENT_NODE1_NAME} ... "
+      docker run --name="${CONSUL_CLIENT_NODE1_NAME}" \
+         consul agent -node="${CONSUL_CLIENT_NODE1_NAME}" -join="${CONSUL_SERVER_NODE1_IP}"
+
+      note "docker exec ${"${CONSUL_DOCKER_NAME}"} client members ... "
+      docker exec "${CONSUL_DOCKER_NAME}" consul members
+         # Node      Address          Status  Type    Build  Protocol  DC   Segment
+         # server-1  172.17.0.2:8301  alive   server  1.4.3  2         dc1  <all>
+         # client-1  172.17.0.3:8301  alive   client  1.4.3  2         dc1  <default>
+
+      note "docker pull hashicorp/counting-service:0.0.2 ..."
+      docker pull "${CONSUL_SVC2_IMAGE}"
+         # This sample basic service increments a number every time it is accessed
+         # and returns that number.
+
+      note "Run container with port forwarding for access from a web browser ..."
+      docker run \
+         -p 9001:9001 \
+         -d \
+         --name="${CONSUL_CLIENT_NODE2_NAME}" \
+         "${CONSUL_UI_NODE1_IMAGE}"
+
+      note "Add svc definition file counting.json to register service \"${CONSUL_SVC2_NAME}\" ..."
+      # with the Consul client by in the directory consul/config.
+      docker exec "${CONSUL_SVC2_NAME}" /bin/sh \
+         -c "echo '{\"service\": {\"name\": \"counting\", \"tags\": [\"go\"], \"port\": 9001}}' \
+         >> /consul/config/counting.json"
+
+      # Since the Consul client does not automatically detect changes in the configuration directory, 
+      note "Issue a reload command for the same \"{CONSUL_SVC2_NAME}\" container ..."
+      docker exec "${CONSUL_SVC2_NAME}" consul reload
+         # RESPONSE: Configuration reload triggered
+         # In the log:
+            # [INFO] agent: Caught signal:  hangup
+            # [INFO] agent: Reloading configuration...
+            # [INFO] agent: Synced service "counting"
+
+      # Query Consul for the location of your service using the following dig command against Consul's DNS.
+      note "Use Consul DNS query to discover service ${CONSUL_SVC2_ID} ..."
+      # See https://wilsonmar.github.io/hashicorp-consul/#dig_discover
+      dig @127.0.0.1 -p 8600 "${CONSUL_SVC2_ID}"
+
+
+      # TODO: For an in-memory reload, send a SIGHUP to the container.
+      # docker kill --signal=HUP <container_id>
+
+   fi
+
+echo "DEBUGGING 2";exit
+
+   ### 49b. Docker RUN_EGGPLANT or container
    if [ "${RUN_EGGPLANT}" = true ]; then  # -O
       # Connect target browser to Eggplant license server: 
       if [ -z "${EGGPLANT_USERNAME}" ]; then
@@ -4397,6 +4546,6 @@ fi    # USE_DOCKER
 
 ### 54. Report Timings
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
-   
+
 
 # END
