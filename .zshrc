@@ -26,7 +26,7 @@ USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"   # UserShell: /bin/z
 if [[ "UserShell: /bin/bash" = *"${USER_SHELL_INFO}"* ]]; then
    echo "chsh -s /bin/zsh to switch to zsh from ${USER_SHELL_INFO}"
   #chsh -s /opt/homebrew/bin/zsh  # not allow because it is a non-standard shell.
-   # chsh -s /bin/zsh 
+   # chsh -s /bin/zsh
    # Password will be requested here.
    exit 9  # to restart
 fi
@@ -109,7 +109,7 @@ export PS1="${prompt_newline}${prompt_newline}  %11F%~${prompt_newline}%% "
    # %11F = yellow. %~ = full path, %% for the Zsh prompt (instead of $ prompt for bash)
    # %n = username
 
-#### For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63 
+#### For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63
 export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
 export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib"
 export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
@@ -158,7 +158,7 @@ fi
 
 
 #### See https://wilsonmar.github.io/maven  since which maven doesn't work:
-#if [ -d "$HOME/.m2" ]; then  # folder was created 
+#if [ -d "$HOME/.m2" ]; then  # folder was created
 #   if ! command -v maven >/dev/null; then
       #/usr/local/opt/maven
       #/usr/local/Cellar/maven
@@ -191,13 +191,17 @@ if [ -d "$HOME/azure" ]; then  # folder was created for Microsoft Azure cloud, s
    source "$HOME/lib/azure-cli/az.completion"
 fi
 
+# https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/
+if command -v kubectl >/dev/null; then  # found:
+   source <(kubectl completion zsh)
+fi
 
 ### See https://wilsonmar.github.io/sonar
 #export PATH="$PATH:$HOME/onpath/sonar-scanner/bin"
 
 
 #### See https://wilsonmar.github.io/android-install/
-#export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"      
+#export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 #export ANDROID_HOME=/usr/local/opt/android-sdk
 #export ANDROID_NDK_HOME=/usr/local/opt/android-ndk
 #export PATH=$PATH:$ANDROID_HOME/tools
@@ -293,7 +297,7 @@ fi
 
 #### See https://wilsonmar.github.io/airflow  # ETL
 # PATH=$PATH:~/.local/bin
-# export AIRFLOW_HOME="$HOME/airflow-tutorial"  
+# export AIRFLOW_HOME="$HOME/airflow-tutorial"
 
 
 #### See https://wilsonmar.github.io/neo4j  # Graph DB
@@ -305,7 +309,7 @@ fi
 
 
 #### See https://wilsonmar.github.io/jmeter-install/
-#export PATH="$HOME/jmeter:$PATH" 
+#export PATH="$HOME/jmeter:$PATH"
 
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!

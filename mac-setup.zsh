@@ -66,6 +66,7 @@ args_prompt() {
    echo "   -d           -delete GitHub and pyenv from previous run"
    echo "   -c           -clone from GitHub"
    echo "   -G           -GitHub is the basis for program to run"
+   echo "   -gcb \"v0.5\"     git checkout branch or tag"
    echo "   -F \"abc\"     -Folder inside repo"
    echo "   -f \"a9y.py\"  -file (program) to run"
    echo "   -P \"-v -x\"   -Parameters controlling program called"
@@ -105,7 +106,8 @@ args_prompt() {
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
    echo "./mac-setup.zsh -v -I -U -Golang  # Install brew, plus golang"
-   echo "./mac-setup.zsh -v -k -Consul -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
+   echo "./mac-setup.zsh -v -Consul -k -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
+   echo "./mac-setup.zsh -v -Consul -podman -a -K   # Use HashicorpVault in Podman for localhost Kept alive"
    echo "./mac-setup.zsh -v -k -HV -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
    echo "./mac-setup.zsh -v -HV -m -ts     # Use HashicorpVault -testserver"
    echo "./mac-setup.zsh -v -HV -s -ts     # Initiate Vault testserver"
@@ -125,6 +127,8 @@ args_prompt() {
    echo "./mac-setup.zsh -v -venv -c -circleci -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
 }  # args_prompt()
+
+# TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
 
 if [ $# -eq 0 ]; then  # display if no parameters are provided:
    args_prompt
@@ -213,8 +217,8 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    GIT_USERNAME="wilsonmar"
 
    GITHUB_REPO_URL="https://github.com/wilsonmar/WebGoat.git"
-   GITHUB_FOLDER="ShiftLeft"
-   GITHUB_BRANCH="GC-348-provision-vault-infra"
+   GITHUB_FOLDER=""
+   GITHUB_BRANCH=""             # -gcb
 
    CLONE_GITHUB=false           # -c
 
@@ -298,6 +302,7 @@ SECRETS_FILE=".secrets.env.sample"
    IMAGE_SD_CARD=false          # -sd
 
 # Pre-processing:
+   USE_QEMU                     # -qemu
    RESTART_DOCKER=false         # -r
    DOCKER_IMAGE_FILE=""  # custom specified
    DOCKER_PS_NAME="dev1"        # -dps
@@ -425,6 +430,10 @@ while test $# -gt 0; do
       DOCKER_IMAGE_FILE="consul"
          # https://hub.docker.com/_/consul
          # https://github.com/hashicorp/docker-consul
+      # When -tf set:
+      GITHUB_REPO_URL="git@github.com:hashicorp/learn-consul-terraform.git"
+      GITHUB_FOLDER="datacenter-deploy-ecs-hcp"
+      GITHUB_BRANCH="v0.5"             # -gcb
       shift
       ;;
     -cont)
@@ -628,6 +637,12 @@ while test $# -gt 0; do
       shift
              RUN_PARMS=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       export RUN_PARMS
+      shift
+      ;;
+    -qemu)
+      export USE_QEMU=true
+      # https://medium.com/@AbhijeetKasurde/running-podman-machine-on-macos-1f3fb0dbf73d
+      # https://wiki.qemu.org/Hosts/Mac
       shift
       ;;
     -q)
@@ -861,7 +876,7 @@ INTERNAL_IP=$( ipconfig getifaddr en0 )
    note "at PUBLIC_IP=$PUBLIC_IP, internal $INTERNAL_IP"
 
 if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
-   MACHINE_TYPE="$(uname -m)"
+   export MACHINE_TYPE="$(uname -m)"
    note "OS_TYPE=$OS_TYPE MACHINE_TYPE=$MACHINE_TYPE"
    if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
       # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
@@ -2129,8 +2144,16 @@ fi  # USE_K8S
 # See https://wilsonmar.github.io/mac-setup/#EKS
 if [ "${RUN_EKS}" = true ]; then  # -EKS
 
-   # h2 "kubectl client install for -EKS ..."
+   h2 "kubectl ${MACHINE_TYPE} client install ..."
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
+      note $( brew info kubectl )
+      # Avoid this need to specify version all the time, badly recommended
+      # at https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/
+      #      if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
+      #         curl -LO "https://dl.k8s.io/release/v1.24.0/bin/darwin/arm64/kubectl"
+      #      else  # Intel
+      #         curl -LO "https://dl.k8s.io/release/v1.24.0/bin/darwin/amd64/kubectl"
+      #      fi
       # Use Homebrew instead of https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html
       # See https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
       # to communicate with the k8s cluster API server. 
@@ -2591,6 +2614,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
       if ! command -v vault >/dev/null; then  # command not found, so:
          note "Brew installing vault ..."
          brew install vault
+         zzzz
          # vault -autocomplete-install
          # exec $SHELL
       else  # installed already:
@@ -3420,9 +3444,35 @@ fi  # RUN_PYTHON
 ### 41. RUN_TERRAFORM
 # See https://wilsonmar.github.io/mac-setup/#Terraform
 if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
-   h2 "Running Terraform"
-   # echo "$PWD/${MY_FOLDER}/${MY_FILE}"
+   if [ "${SET_TRACE}" = true ]; then   # -x
+      if [ -z "${TF_LOG_PATH}" ]; then  # not defined:
+         # mkidr -p "/tmp"
+         export TF_LOG_PATH="tmp.tf.debug.${LOG_DATETIME}.txt"
+      fi
+      h2 "Running Terraform with TF_LOG=DEBUG to ${TF_LOG_PATH} ..."
+      # https://www.khalidjhosein.net/2018/12/terraform-tips-and-tricks/
+      export TF_LOG=DEBUG
+   else
+      h2 "Running Terraform with TF_LOG file unset ..."
+      unset TF_LOG
+   fi
+echo "DEBUGGING TF"; exit
+   # git clone git@github.com:hashicorp/learn-consul-terraform.git
+   # git checkout v0.5
 
+   # terraform init
+   # terraform validate  # syntax is good
+   # terraform plan
+   # tfsec   # scan static tf code for security issues
+   # terraform-docs  # generates documentation (Markdown or JSON) from the comments and the variables in tf code.
+
+   # terraform apply
+   # terraform destroy
+   if [ "${SET_TRACE}" = true ]; then   # -x
+      if [ -f "${TF_LOG_PATH}" ]; then  # file created:
+         rm -rf "${TF_LOG_PATH}"
+      fi
+   fi
 fi    # RUN_TERRAFORM
 
 
@@ -3848,6 +3898,17 @@ if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 fi    # RUN_EGGPLANT
 
 
+### 4x. 
+if [ "${USE_QEMU}" = true ]; then   # -qemu
+   RESPONSE="$(podman ps -a)"
+   if [[ "${RESPONSE}" == *"${/bin/qemu-system-aarch64}"* ]]; then  # contains it:
+      note "podman already running"
+      note "$RESPONSE"
+   fi
+   # https://www.qemu.org/download/#macos
+fi  # USE_PODMAN
+
+
 ### 47. USE_DOCKER or USE_PODMAN (from RedHat, instead of Docker)
 # See https://wilsonmar.github.io/mac-setup/#UseDocker
 
@@ -3864,26 +3925,76 @@ if [ "${USE_PODMAN}" = true ]; then   # -podman
    if ! command -v podman >/dev/null; then  # command not found, so:
       brew install podman
    fi
-   podman machine init
 
+   h2 "podman machine init ..."
+   RESPONSE=$( podman machine init )
+   if [[ "${RESPONSE}" == *"${VM already exists}"* ]]; then  # contains:
+      # Error: podman-machine-default: VM already exists
+      note "$RESPONSE"
+      # TODO: bring down and up again without "else"?
+   else
+      podman machine init
+      
+      podman ps -a
+
+      h2 "podman machine start ..."
+      # TODO: To avoid "Error: podman-machine-default: VM already exists
+      podman machine start
+   fi
+
+   h2 " alias docker=podman ..."
    alias docker=podman
    # Verify podman is working
+   h2 "podman version ..."
+   note "$( docker -v )"
+      # podman version 4.0.3
 
-   podman machine start
-
+   h2 "podman run hello-world ..."
    podman run hello-world
+      # !... Hello Podman World ...!
+      # 
+      #          .--"--.           
+      #        / -     - \         
+      #       / (O)   (O) \        
+      #    ~~~| -=(,Y,)=- |         
+      #     .---. /`  \   |~~      
+      #  ~/  o  o \~~~~.----. ~~   
+      #   | =(X)= |~  / (O (O) \   
+      #    ~~~~~~~  ~| =(Y_)=-  |   
+      #   ~~~~    ~~~|   U      |~~ 
+      # 
+      # Project:   https://github.com/containers/podman
+      # Website:   https://podman.io
+      # Documents: https://docs.podman.io
+      # Twitter:   @Podman_io
+      
+   # hello-world stops on its own, so
+   h2 "docker ps ..."
+   podman ps
+      # CONTAINER ID  IMAGE       COMMAND     CREATED     STATUS      PORTS       NAMES
 
-   docker ps
+   h2 "pip3 install podman-compose ..."
+      # Collecting podman-compose
+      #   Downloading podman_compose-1.0.3-py2.py3-none-any.whl (27 kB)
+      # Collecting pyyaml
+      #   Downloading PyYAML-6.0-cp39-cp39-macosx_11_0_arm64.whl (173 kB)
+      #      |████████████████████████████████| 173 kB 1.5 MB/s 
+      # Collecting python-dotenv
+      #   Downloading python_dotenv-0.20.0-py3-none-any.whl (17 kB)
+      # Installing collected packages: pyyaml, python-dotenv, podman-compose
+      # Successfully installed podman-compose-1.0.3 python-dotenv-0.20.0 pyyaml-6.0
 
-   pip3 install podman-compose
-
+   h2 "podman-compose up ..."
    podman-compose up
+      # ['podman', '--version', '']
+      # using podman version: 4.0.3
+      # no compose.yaml, docker-compose.yml or container-compose.yml file found, pass files with -f
 
-   # Test docker api is working fine
+   # TODO: Test if api is working fine
    # Verify print of version info:
-   curl -X GET — unix-socket /tmp/podman.sock 'http://localhost/version'
+   # curl -X GET — unix-socket /tmp/podman.sock 'http://localhost/version'
    # Set docker api address:
-   export DOCKER_HOST=unix:///tmp/podman.sock
+   # export DOCKER_HOST=unix:///tmp/podman.sock
 fi
 
 
@@ -4518,8 +4629,12 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    # See https://wilsonmar.github.io/mac-setup/#RemoveImages
    if [ "${REMOVE_DOCKER_IMAGES}" = true ]; then  # -M
 
-      note "docker system df ..."
-            docker system df
+      h2 "docker system df  ..."
+      note "$( docker system df )"
+         # TYPE           TOTAL       ACTIVE      SIZE        RECLAIMABLE
+         # Images         2           2           356.4MB     0B (0%)
+         # Containers     6           0           460B        460B (100%)
+         # Local Volumes  0           0           0B          0B (0%)
      
       DOCKER_IMAGES="$( docker images -a -q )"
       if [ -n "${DOCKER_IMAGES}" ]; then  # variable is NOT empty
@@ -4537,8 +4652,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    fi
 
    if [ "${RUN_VERBOSE}" = true ]; then
-      h2 "docker images -a ..."
-      note "At end of run:"
+      h2 "At end of run: docker images -a ..."
       note "$( docker images -a )"
    fi
 fi    # USE_DOCKER
