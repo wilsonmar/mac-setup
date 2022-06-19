@@ -156,6 +156,8 @@ if [ -d "${GRADLE_HOME}/bin" ]; then  # folder is there
    export PATH="$GRADLE_HOME/bin:${PATH}"  # contains gradle file.
 fi
 
+#### See https://wilsonmar.github.io/hashicorp-consul
+# export PATH="$HOME/.func-e/versions/1.20.1/bin/:${PATH}"  # contains envoy
 
 #### See https://wilsonmar.github.io/maven  since which maven doesn't work:
 #if [ -d "$HOME/.m2" ]; then  # folder was created

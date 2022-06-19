@@ -45,14 +45,14 @@ alias syspref='open -a "/System//Applications/System Preferences.app"'
 ##### Terminal 
 # terminal.app
 #alias hyper='open -a "$HOME/Applications/Hyper.app"'
-#alias iterm='open -a "$HOME/Applications/iTerm.app"'
+alias iterm='open -a "/Applications/iTerm.app"'
 # alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
 
 #### System utilities:
-#alias alfred='open -a "/Applications/Alfred 3.app"'
-# VIDEO: https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
-# https://macosxautomation.com/automator/
-# alias automator='open -a "/Applications/Automator.app"'   # https://support.apple.com/guide/automator/welcome/mac
+alias automator='open -a "/System/Applications/Automator.app"'   # https://support.apple.com/guide/automator/welcome/mac
+   # https://macosxautomation.com/automator/
+   # https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
+#alias alfred='open -a "$HOME/Applications/Alfred 3.app"'
 
 #alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'   # performance benchmarking
 #alias vfusion='open -a "/Applications/VMware Fusion.app"'        # VMware Fusion (licensed)
@@ -60,6 +60,7 @@ alias syspref='open -a "/System//Applications/System Preferences.app"'
 ##### See https://wilsonmar.github.io/text-editor
 if [ -d "/Applications/Visual Studio Code.app" ]; then
    alias code='open -a "/Applications/Visual Studio Code.app"'
+   alias vscode='open -a "/Applications/Visual Studio Code.app"'
 fi
 export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
    # export EDITOR="/usr/local/bin/mate -w" 
@@ -70,12 +71,11 @@ alias ezs="$EDITOR ~/.zshrc"   # for Zsh
 alias szs='source ~/.zshrc'
 #alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 
-alias atom='open -a "/Applications/Atom.app"'
+alias atom='open -a "$HOME/Applications/Atom.app"'
 # alias brackets='open -a "/Applications/Brackets.app"'
 alias code='open -a "$HOME/Applications/Visual Studio Code.app"'
 # alias eclipse='open "/Applications/Eclipse.app"'
 alias electron='open -a "$HOME/Applications/Electron.app"'
-alias nvim=='open "/Applications/Neovim.app"'
 #alias pycharm='open -a "$HOME/Applications/Pycharm.app"'
 # alias sts='open -a "/Applications/STS.app"'
 alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
@@ -84,7 +84,8 @@ alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
 # See https://wilsonmar.github.io/dotfiles/#SublimeText.app
 alias subl='open -a "/Applications/Sublime Text.app"'
 alias textedit='open -a "/Applications/TextEdit.app"'
-alias xcode='open -a /Applications/xcode.app'
+alias xcode='open -a /Applications/Xcode.app'
+alias nvim='open "$HOME/Applications/Neovim.app"'
 alias vi="nvim"
 alias vim="nvim"
 # alias macvim='open -a "/Applications/MacVim.app"'
@@ -95,19 +96,19 @@ alias vim="nvim"
 
 alias word='open -a "/Applications/Microsoft Word.app"'
 
-# Enhanced diff:
-alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
+# Enhanced diff: Not in brew
+# alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
 
 
 ##### Internet Browsers:
 # alias brave='open -a "/Applications/Brave.app"'
 # See https://wilsonmar.github.io/dotfiles/#GoogleChrome.app
-alias chrome='open -a "/Applications/Google Chrome.app"'
+alias chrome='open -a "$HOME/Applications/Google Chrome.app"'
 alias edge='open -a "/Applications/Microsoft Edge.app"'
-#alias firefox='open -a "$HOME/Applications/Firefox.app"'
-# alias opera='open -a "$HOME/Applications/Opera.app"'
-alias safari='open -a "$HOME/Applications/Safari.app"'
+alias firefox='open -a "/Applications/Firefox.app"'
+alias safari='open -a "/Applications/Safari.app"'
 alias tor='open -a "$HOME/Applications/Tor Browser.app"'
+# alias opera='open -a "$HOME/Applications/Opera.app"'
 
 
 ### built-in Apple apps:
@@ -118,9 +119,15 @@ alias calc='open -a "/System/Applications/Calculator.app"'
 #### See https://wilsonmar.github.io/1password/
 alias 1pass='open -a "/Applications/1Password 7.app"'         # Secret
 # alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
+
 # sentinel   # from Hashicorp
 # terraform
 # terragoat
+# alias falcon='open -a "/Applications/Falcon.app"'  # controlled by HC Infosec
+
+
+#### Data:
+alias 1drive='open -a "/Applications/OneDrive.app"'
 
 
 #### Meetings (Communications):
@@ -131,9 +138,9 @@ alias messages='open -a "/System/Applications/Messages.app"'       # built-in fr
 #alias collo='open -a "/Applications/Colloquy.app"'         # Installed from Apple store 
 #alias discord='open -a "/Applications/Discord.app"'       # Has security issue. Don't use.
 #alias gotomeeting='open -a "/Applications/GoToMeeting.app"'
-alias skype='open -a "$HOME/Applications/Skype.app"'
+alias skype='open -a "/Applications/Skype.app"'
 #alias signal='open -a "/Applications/Signal.app"'
-alias slack='open -a "$HOME/Applications/Slack.app"'
+alias slack='open -a "/Applications/Slack.app"'
 alias teams='open -a "$HOME/Applications/Microsoft Teams.app"'
 #alias telegram='open -a "$HOME/Applications/Telegram.app"'
 alias teams='open -a "/Applications/Microsoft Teams.app"'
@@ -153,14 +160,15 @@ alias kindle='open -a "/Applications/Kindle.app"'
 alias excel='open -a "/Applications/Microsoft Excel.app"'
 alias obs='open -a "/Applications/OBS.app"'
 alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
-alias sketch='open -a "$HOME/Applications/Sketch.app"'
+alias sketch='open -a "/Applications/Sketch.app"'
 #alias unity='open -a "$HOME/Applications/Unity.app"'
 
 
 ##### Software development:
 # https://expo.dev/tools
 alias ghd='open -a "$HOME/Applications/GitHub Desktop.app"'
-# alias postman='open -a "/Applications/Chrome Apps/Postman.app"'
+alias postman='open -a "/Applications/Postman.app"'
+   #alias postman='open -a "/Applications/Chrome Apps/Postman.app"'
 # alias insomnia='open -a "/Applications/Insomnia.app"'
 # alias rstudio='open -a "/Applications/RStudio.app"'
 # alias jprofiler='open -a "/Applications/JProfiler.app"'
@@ -193,10 +201,11 @@ alias wanip6='dig @resolver1.opendns.com AAAA myip.opendns.com +short -6'
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
 alias spacefree="du -h | awk 'END{print $1}'"
 
-alias gcs='cd ~/.google-cloud-sdk;ls'
 
 #### See https://wilsonmar.github.io/git-shortcuts/
 # Only on MacOS, not git bash on Windows MINGW64:
+alias hb="hub browse"
+
 if [[ "$(uname)" == *"Darwin"* ]]; then  # it's on a Mac:
    alias vers="sw_vers"
    function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
@@ -231,12 +240,13 @@ alias gss='git stash show'
 alias githead="git rev-parse --short HEAD"  # current SHA commit ID
 alias grx="rm .git/merge"  # Remove merge
 
-alias hb="hub browse"
+alias gcs='cd ~/.google-cloud-sdk;ls'
+
 
 #### See https://wilsonmar.github.io/git-signing/
-alias sign='gpg --detach-sign --armor'
 alias gsk="gpg --list-secret-keys --keyid-format LONG"
 alias gst="gpg show-ref --tags"
+alias sign='gpg --detach-sign --armor'
 
 
 #### See https://wilsonmar.github.io/python/
@@ -271,7 +281,7 @@ fi
 
 #### See https://wilsonmar.github.io/kubernetes
 alias k="kubectl"
-complete -F __start_kubectl k
+# FIXME: complete -F __start_kubectl k
 alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
 
 #if command -v docker >/dev/null; then  # installed in /usr/local/bin/docker

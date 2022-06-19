@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.88"  # Add -Consul
+SCRIPT_VERSION="v0.89"  # Add -Consul
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -245,7 +245,7 @@ SECRETS_FILE=".secrets.env.sample"
 
    USE_ENVOY=false              # -Envoy
    USE_DOORMAT=false            # -Doormat
-   USE RUN_CONSUL=false         # -Consul
+   RUN_CONSUL=false             # -Consul
    USE_VAULT=false              # -HV
        VAULT_HOST="localhost"  # default value
       #VAULT_ADDR="https://${VAULT_HOST}:8200"  # assembled in code below.
@@ -915,6 +915,7 @@ if [ "${CONVERT_TO_ZSH}" = true ]; then
       h2 "Install Apple Rosetta x86 emulator on M1"
       # See https://chrisjune-13837.medium.com/how-to-install-python-3-x-on-apple-m1-9e77ff94266a
       if ! command -v /usr/sbin/softwareupdate >/dev/null; then  # command not found, so:
+         # QUESTION: Shouldn't this be there by default from Apple?
          # Run this before installing Docker - https://javascript.plainenglish.io/which-docker-images-can-you-use-on-the-mac-m1-daba6bbc2dc5
          /usr/sbin/softwareupdate --install-rosetta agree-to-license
          # I have read and agree to the terms of the software license agreement. A list of Apple SLAs may be found here: http://www.apple.com/legal/sla/
@@ -1163,7 +1164,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          rm -rf "/Applications/Garage Band.app"
       fi
 
-      # If you have Microsoft O365, download from https://www.office.com/?auth=2&home=1
+      # If you want Microsoft O365, download from https://www.office.com/?auth=2&home=1
 
       h2 "Remaining apps installed by Apple App Store:"
       find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
@@ -1221,6 +1222,21 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
       brew install hashicorp/tap/sentinel
       which sentinel
+
+      brew install hashicorp/tap/consul-k8s
+      which consul-k8s
+      # https://learning.oreilly.com/library/view/consul-up-and/9781098106133/ch03.html
+      # minikube tunnel
+      # y  consul-k8s install -config-file values.yaml
+         #  --> Service does not have load balancer ingress IP address: consul/consul-ui
+      #  Cannot install Consul. A Consul cluster is already installed in namespace consul with name consul.
+        #Use the command `consul-k8s uninstall` to uninstall Consul from the cluster.
+      # consul status
+         #    NAME  | NAMESPACE |     STATUS      | CHART VERSION | APPVERSION | REVISION |      LAST UPDATED        
+         # ---------+-----------+-----------------+---------------+------------+----------+--------------------------
+           # consul | consul    | pending-install | 0.44.0        | 1.12.0     |        1 | 2022/06/05 17:47:57 MDT  
+          # ✓ Consul servers healthy (1/1)
+          # ✓ Consul clients healthy (1/1)
 
      # Terminal enhancements:
       brew install --cask hyper
@@ -1876,7 +1892,7 @@ if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
       gcloud version
          # git: [git version 2.11.0]
          docker --version  # Docker version 19.03.5, build 633a0ea838
-         kubectl version
+         kubectl version --short
          node --version
          go version        # go version go1.13 linux/amd64
          python --version  # Python 2.7.13
@@ -2109,7 +2125,7 @@ fi
 ### 26. Install K8S minikube
 # See https://wilsonmar.github.io/mac-setup/#Minikube
 if [ "${USE_K8S}" = true ]; then  # -k8s
-   h2 "-k8s"
+   h2 "-k8s means minkube locally ..."
 
    # See https://kubernetes.io/docs/tasks/tools/install-minikube/
    RESPONSE="$( sysctl -a | grep -E --color 'machdep.cpu.features|VMX' )"
@@ -2120,9 +2136,12 @@ if [ "${USE_K8S}" = true ]; then  # -k8s
       exit 9
    fi
 
+   # TODO: https://www.freecodecamp.org/news/how-to-set-up-a-serious-kubernetes-terminal-dd07cab51cd4/
+
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v minikube >/dev/null; then  # command not found, so:
+            # See https://minikube.sigs.k8s.io/docs/start/
             h2 "brew install --casking minikube ..."
             brew install minikube  
          else  # installed already:
@@ -2136,7 +2155,93 @@ if [ "${USE_K8S}" = true ]; then  # -k8s
              # commit: 57e2f55f47effe9ce396cea42a1e0eb4f611ebbd
 
       fi  # "${PACKAGE_MANAGER}" = "brew" 
+
+      # See https://minikube.sigs.k8s.io/docs/start/
+      # Run Docker
+      KUBE_VERSION="1.23.3"
+      h2 "minikube start with ${KUBE_VERSION} ..."
+      time minikube start --driver=docker --kubernetes-version="${KUBE_VERSION}"
+         # 😄  minikube v1.25.2 on Darwin 12.3.1 (arm64)
+         # ✨  Automatically selected the docker driver. Other choices: ssh, podman (experimental)
+         # 👍  Starting control plane node minikube in cluster minikube
+         # 🚜  Pulling base image ...
+         # 💾  Downloading Kubernetes v1.23.3 preload ...
+         #     > preloaded-images-k8s-v17-v1...: 419.07 MiB / 419.07 MiB  100.00% 10.90 Mi
+         #     > gcr.io/k8s-minikube/kicbase: 343.12 MiB / 343.12 MiB  100.00% 7.79 MiB p/
+         # 🔥  Creating docker container (CPUs=2, Memory=4000MB) .../ 
+         # 🐳  Preparing Kubernetes v1.23.3 on Docker 20.10.12 ...
+         #     ▪ kubelet.housekeeping-interval=5m
+         #     ▪ Generating certificates and keys ...
+         #     ▪ Booting up control plane ...
+         #     ▪ Configuring RBAC rules ...
+         # 🔎  Verifying Kubernetes components...
+         #     ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
+         # 🌟  Enabled addons: storage-provisioner, default-storageclass
+         # 🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+         # minikube start  1.80s user 1.11s system 17% cpu 17.048 total      
+      minikube status
+         # minikube
+         # type: Control Plane
+         # host: Running
+         # kubelet: Running
+         # apiserver: Running
+         # kubeconfig: Configured
+
+      kubectl get nodes
+          # NAME       STATUS   ROLES                  AGE   VERSION
+          # minikube   Ready    control-plane,master   30m   v1.23.3
+
+      # Switch context to the minikube cluster (if it isn’t already):
+      #kubectl config use-context minikube
+
+      KUBE_DEPLOY_NAME="hello-minkiube"
+      h2 "Create a ${KUBE_DEPLOY_NAME} deployment of echoserver with port 8080 ..."
+      kubectl create deployment "${KUBE_DEPLOY_NAME}" --image=k8s.gcr.io/echoserver:1.4
+         # Response: deployment.apps/hello-minikube created
+         # TODO: error: failed to create deployment: deployments.apps "hello-minikube" already exists
+      kubectl expose deployment "${KUBE_DEPLOY_NAME}" --type=NodePort --port=8080
+          # Reponse: service/hello-minikube exposed
+
+      # It may take a moment, but your deployment will soon show up when you run:
+      kubectl get services hello-minikube
+         # NAME             TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+         # hello-minikube   NodePort   10.101.75.182   <none>        8080:32486/TCP   29s
+
+      # ps
+         # 28282 ttys003    0:01.34 /opt/homebrew/bin/kubectl --context minikube proxy --port 0
+   
+      # h2 "Create tunnel (locking up Terminal window) to ensure load balancer services are allocated external IPs on minikube."
+      #minikube tunnel
+         # ✅  Tunnel successfully started
+         # 📌  NOTE: Please do not close this terminal as this process must stay alive for the tunnel to be accessible ...
+   
+      minikube service "${KUBE_DEPLOY_NAME}" --url
+      # See https://minikube.sigs.k8s.io/docs/handbook/accessing
+      # Let minikube launch a web browser:
+      
+      #minikube service "${KUBE_DEPLOY_NAME}"
+      # Alternatively, use kubectl to forward the port:
+      kubectl port-forward service/hello-minikube 7080:8080
+         # Forwarding from 127.0.0.1:7080 -> 8080
+         # Forwarding from [::1]:7080 -> 8080
+      # Your application should now available at http://localhost:7080/
+      # FIXME: But it's not.
+
+      # if NOT delete:
+         h2 "Stop to restart the same cluster to continue work ..."
+         minikube stop
+            # ✋  Stopping node "minikube"  ...
+            # 🛑  Powering off "minikube" via SSH ...
+            # 🛑  1 node stopped.
+#      else
+         h2 "Fully re-create your cluster from scratch for some reason, you can delete it ..."
+         minikube delete
+            # 🔥  Deleting "minikube" in docker ...
+            # 🔥  Removing /Users/wilsonmar/.minikube/machines/minikube ...
+            # 💀  Removed all traces of the "minikube" cluster.
+
    fi  # DOWNLOAD_INSTALL
+
 fi  # USE_K8S
 
 
@@ -2164,11 +2269,15 @@ if [ "${RUN_EKS}" = true ]; then  # -EKS
          else  # installed already:
             if [ "${UPDATE_PKGS}" = true ]; then
                h2 "Brew upgrading kubectl ..."
-               note "kubectl $( kubectl version --short --client )"  # Client Version: v1.16.6-beta.0
+               note "kubectl before upgrade = $( kubectl version --short --client )"  # Client Version: v1.16.6-beta.0
                brew upgrade kubectl
             fi
          fi
-         note "kubectl $( kubectl version --short --client )"  # Client Version: v1.16.6-beta.0
+         RESPONSE="$( kubectl version --short --client )"
+            # Flag --short has been deprecated, and will be removed in the future. The --short output will become the default.
+            # Client Version: v1.24.0
+            # Kustomize Version: v4.5.4
+         KUBECTL_VERSION="v1.24.0"  # CAUTION: HARD CODED!
 
          # iam-authenticator
 
@@ -4108,6 +4217,14 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
          fi
 
       fi # brew
+
+      if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then  # on MacOS:
+         # https://servian.github.io/hashiqube/#/
+         # If you see an Apple M1 chip, please specify the environment variable and the provider to be docker.
+         h2 "Using Apple M1 chip for vagrant ..."
+         vagrant plugin uninstall vagrant-hostsupdater # the hostsupdator plugin does not work with the docker provider      fi
+      fi
+
    fi  # DOWNLOAD_INSTALL
    # Docker need not be running to obtain version:
    # note "$( docker --version )"          # Docker version 19.03.5, build 633a0ea
@@ -4303,6 +4420,14 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
       CONSUL_SVC2_IMAGE="hashicorp/counting-service:0.0.2"
       CONSUL_SVC2_NAME="counting.service.consul"
       CONSUL_SVC2_NAME="counting-fox"
+
+      # Per https://servian.github.io/hashiqube/#/
+      # h2 "Local DNS name server via Consul to port 8600 ..."
+      # To use DNS like nomad.service.consul:9999 vault.service.consul:9999 via Fabio Load Balancer,
+      # mkdir -p /etc/resolver/
+      # TODO: Add local file /etc/resolver/consul with below contents:
+         # echo nameserver 10.9.99.10
+         # port 8600
 
       # https://github.com/hashicorp/docker-consul
 
