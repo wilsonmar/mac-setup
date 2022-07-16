@@ -256,15 +256,20 @@ alias vde="source deactivate"
 
 alias cr="cargo run --verbose"  # Rust .rs program file in folder
 
-#### See https://wilsonmar.github.io/hashicorp-consul#Shortcuts
-alias ccn="consul catalog nodes"
-alias ccs="consul catalog services"
 
 #### See https://wilsonmar.github.io/terraform
 alias tf="terraform $1"  # provide a parameter
 alias tfa="terraform apply"
 alias tfd="terraform destroy"
 alias tfs="terraform show"
+
+#### See https://wilsonmar.github.io/hashicorp-consul#Shortcuts
+alias ccn="consul catalog nodes"
+alias ccs="consul catalog services"
+alias cml="consul members"
+alias cmlw="consul members -wan"
+alias cnl="consul namespace list"
+alias crl="consul operator raft list-peers"
 
 
 #### See https://wilsonmar.github.io/docker
