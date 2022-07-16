@@ -176,13 +176,16 @@ alias postman='open -a "/Applications/Postman.app"'
 
 
 # Listings:
+alias lt="ls -ltaT | more"   # list by date
 alias cf="find . -print | wc -l"  # count files in folder.
+alias lsx="exa --group-directories-first --group --color=always --classify --binary"
+alias tree="exa --tree --group-directories-first --ignore-glob 'node_modules|bower_components|.git'"
 alias lf="ls -p | more"      # list folders only
 alias dir='ls -alrT'         # for windows habits
 #alias l='ls -FalhGT | more'         # T for year
 alias ll='ls -FalhGT | more'  # T for year
-alias lt="ls -ltaT | more"   # list by date
-# Last 30 files updated anywhere:
+
+# Last 50 files updated anywhere:
 alias f50='stat -f "%m%t%Sm %N" /tmp/* | sort -rn | head -50 | cut -f2- 2>/dev/null'
 
 # wireless en0, wired en1: PRIVATE_IP address:
@@ -267,7 +270,7 @@ alias tfs="terraform show"
 alias ccn="consul catalog nodes"
 alias ccs="consul catalog services"
 alias cml="consul members"
-alias cmlw="consul members -wan"
+alias cmw="consul members -wan"
 alias cnl="consul namespace list"
 alias crl="consul operator raft list-peers"
 

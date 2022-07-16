@@ -43,7 +43,7 @@ echo "Apple macOS sw_vers = $(sw_vers -productVersion) / uname = $(uname -r)"  #
 if [[ "$(uname -m)" = *"arm64"* ]]; then
    # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
    export BREW_PATH="/opt/homebrew"
-   complete "${BREW_PATH}/share/zsh/site-functions"  # auto-completions
+   complete "${BREW_PATH}/share/zsh/site-functions"  # auto-completions in .bashrc
    eval $( "${BREW_PATH}/bin/brew" shellenv)
    # Password will be requested here.
 elif [[ "$(uname -m)" = *"x86_64"* ]]; then
@@ -325,3 +325,6 @@ source ~/aliases.zsh   # export alias variables into memory
 cd "$HOME/github-wilsonmar/mac-setup"
 # cd $GITHUB_PATH/wilsonmar.github.io/_posts
 # END
+
+# Inserted by: consul -autocomplete-install
+complete -o nospace -C /usr/local/bin/consul consul

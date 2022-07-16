@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.89"  # Add -Consul
+SCRIPT_VERSION="v0.90"  # Add exa
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -245,7 +245,7 @@ SECRETS_FILE=".secrets.env.sample"
 
    USE_ENVOY=false              # -Envoy
    USE_DOORMAT=false            # -Doormat
-   RUN_CONSUL=false             # -Consul
+   USE RUN_CONSUL=false         # -Consul
    USE_VAULT=false              # -HV
        VAULT_HOST="localhost"  # default value
       #VAULT_ADDR="https://${VAULT_HOST}:8200"  # assembled in code below.
@@ -915,7 +915,6 @@ if [ "${CONVERT_TO_ZSH}" = true ]; then
       h2 "Install Apple Rosetta x86 emulator on M1"
       # See https://chrisjune-13837.medium.com/how-to-install-python-3-x-on-apple-m1-9e77ff94266a
       if ! command -v /usr/sbin/softwareupdate >/dev/null; then  # command not found, so:
-         # QUESTION: Shouldn't this be there by default from Apple?
          # Run this before installing Docker - https://javascript.plainenglish.io/which-docker-images-can-you-use-on-the-mac-m1-daba6bbc2dc5
          /usr/sbin/softwareupdate --install-rosetta agree-to-license
          # I have read and agree to the terms of the software license agreement. A list of Apple SLAs may be found here: http://www.apple.com/legal/sla/
@@ -1164,7 +1163,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          rm -rf "/Applications/Garage Band.app"
       fi
 
-      # If you want Microsoft O365, download from https://www.office.com/?auth=2&home=1
+      # If you have Microsoft O365, download from https://www.office.com/?auth=2&home=1
 
       h2 "Remaining apps installed by Apple App Store:"
       find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
@@ -1180,24 +1179,23 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       brew install curl
       brew install wget
 
+      # Replacement for ls - see https://the.exa.website/#installation
+      brew install exa
+
      ### Unzip:
      #brew install --cask keka
       brew install xz
      #brew install --cask the-unarchiver
 
       brew install git
-      note "$( git --version )"  # OUTPUT: version 2018.11.26
+      note "$( git --version )"
+         # git, version 2018.11.26
       brew install hub   # github CLI
       #note "$( hub --version )"
          # git version 2.27.0
          # hub version 2.14.2
       brew install --cask github
-
-     #Mimic linux:
-      brew install iproute2mac  # for Linux ip command on MacOS
-      brew install coreutils    # for gdate
-      brew install tcpflow      # TCP/IP packet capture (demultiplexer)
-
+      
      #Crypto for Security:
       brew install --cask 1password
       if [ ! -d "/Applications/Keybase.app" ]; then   # file NOT found:
@@ -1241,7 +1239,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
            # consul | consul    | pending-install | 0.44.0        | 1.12.0     |        1 | 2022/06/05 17:47:57 MDT  
           # ✓ Consul servers healthy (1/1)
           # ✓ Consul clients healthy (1/1)
-
+     # kubectl get daemonset,statefulset,deployment -n consul
+     
      # Terminal enhancements:
       brew install --cask hyper
          # hyper stores a file in /usr/local/bin on ARM machines.
@@ -4034,17 +4033,10 @@ fi  # USE_PODMAN
 
 if [ "${USE_PODMAN}" = true ]; then   # -podman
    # https://medium.com/@davutozcan87/podman-setup-for-mac-4b1ac9cd959
-   # https://durgesh-cdac.medium.com/docker-vs-podman-f6b4de217ef5
    h2 "-podman  TODO: USE_PODMAN"
    if ! command -v podman >/dev/null; then  # command not found, so:
       brew install podman
    fi
-
-   h2 "install podman-compose ..."
-   # https://medium.com/@butkovic/favoring-podman-over-docker-desktop-33368e031ba0
-   # podman-compose: https://github.com/containers/podman-compose#installation
-   pip3 install https://github.com/containers/podman-compose/archive/devel.tar.gz
-   # pip3 install --upgrade podman-compose
 
    h2 "podman machine init ..."
    RESPONSE=$( podman machine init )
@@ -4228,14 +4220,6 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
          fi
 
       fi # brew
-
-      if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then  # on MacOS:
-         # https://servian.github.io/hashiqube/#/
-         # If you see an Apple M1 chip, please specify the environment variable and the provider to be docker.
-         h2 "Using Apple M1 chip for vagrant ..."
-         vagrant plugin uninstall vagrant-hostsupdater # the hostsupdator plugin does not work with the docker provider      fi
-      fi
-
    fi  # DOWNLOAD_INSTALL
    # Docker need not be running to obtain version:
    # note "$( docker --version )"          # Docker version 19.03.5, build 633a0ea
@@ -4431,14 +4415,6 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
       CONSUL_SVC2_IMAGE="hashicorp/counting-service:0.0.2"
       CONSUL_SVC2_NAME="counting.service.consul"
       CONSUL_SVC2_NAME="counting-fox"
-
-      # Per https://servian.github.io/hashiqube/#/
-      # h2 "Local DNS name server via Consul to port 8600 ..."
-      # To use DNS like nomad.service.consul:9999 vault.service.consul:9999 via Fabio Load Balancer,
-      # mkdir -p /etc/resolver/
-      # TODO: Add local file /etc/resolver/consul with below contents:
-         # echo nameserver 10.9.99.10
-         # port 8600
 
       # https://github.com/hashicorp/docker-consul
 
