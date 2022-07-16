@@ -1186,14 +1186,18 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
      #brew install --cask the-unarchiver
 
       brew install git
-      note "$( git --version )"
-         # git, version 2018.11.26
+      note "$( git --version )"  # OUTPUT: version 2018.11.26
       brew install hub   # github CLI
       #note "$( hub --version )"
          # git version 2.27.0
          # hub version 2.14.2
       brew install --cask github
-      
+
+     #Mimic linux:
+      brew install iproute2mac  # for Linux ip command on MacOS
+      brew install coreutils    # for gdate
+      brew install tcpflow      # TCP/IP packet capture (demultiplexer)
+
      #Crypto for Security:
       brew install --cask 1password
       if [ ! -d "/Applications/Keybase.app" ]; then   # file NOT found:
@@ -4030,10 +4034,17 @@ fi  # USE_PODMAN
 
 if [ "${USE_PODMAN}" = true ]; then   # -podman
    # https://medium.com/@davutozcan87/podman-setup-for-mac-4b1ac9cd959
+   # https://durgesh-cdac.medium.com/docker-vs-podman-f6b4de217ef5
    h2 "-podman  TODO: USE_PODMAN"
    if ! command -v podman >/dev/null; then  # command not found, so:
       brew install podman
    fi
+
+   h2 "install podman-compose ..."
+   # https://medium.com/@butkovic/favoring-podman-over-docker-desktop-33368e031ba0
+   # podman-compose: https://github.com/containers/podman-compose#installation
+   pip3 install https://github.com/containers/podman-compose/archive/devel.tar.gz
+   # pip3 install --upgrade podman-compose
 
    h2 "podman machine init ..."
    RESPONSE=$( podman machine init )

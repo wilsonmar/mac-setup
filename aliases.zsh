@@ -44,7 +44,7 @@ alias syspref='open -a "/System//Applications/System Preferences.app"'
 
 ##### Terminal 
 # terminal.app
-#alias hyper='open -a "$HOME/Applications/Hyper.app"'
+# hyper is in /usr/local/bin 
 alias iterm='open -a "/Applications/iTerm.app"'
 # alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
 
@@ -73,12 +73,12 @@ alias szs='source ~/.zshrc'
 
 alias atom='open -a "$HOME/Applications/Atom.app"'
 # alias brackets='open -a "/Applications/Brackets.app"'
-alias code='open -a "$HOME/Applications/Visual Studio Code.app"'
+alias code='open -a "/Applications/Visual Studio Code.app"'
 # alias eclipse='open "/Applications/Eclipse.app"'
-alias electron='open -a "$HOME/Applications/Electron.app"'
+# alias electron='open -a "$HOME/Applications/Electron.app"'
 #alias pycharm='open -a "$HOME/Applications/Pycharm.app"'
 # alias sts='open -a "/Applications/STS.app"'
-alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
+# alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
 # alias vs='$HOME/Applications/Visual\ Studio.app/Contents/MacOS/VisualStudio &'
 
 # See https://wilsonmar.github.io/dotfiles/#SublimeText.app
@@ -256,6 +256,9 @@ alias vde="source deactivate"
 
 alias cr="cargo run --verbose"  # Rust .rs program file in folder
 
+#### See https://wilsonmar.github.io/hashicorp-consul#Shortcuts
+alias ccn="consul catalog nodes"
+alias ccs="consul catalog services"
 
 #### See https://wilsonmar.github.io/terraform
 alias tf="terraform $1"  # provide a parameter
