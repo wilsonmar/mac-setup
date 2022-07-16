@@ -289,6 +289,10 @@ if [ -f "/var/run/docker.pid" ]; then  # NOT found:
    alias dsa="docker stop $(docker container ls -aq )" # docker stop active container
    alias dpx="docker rm -v $(docker ps -aq -f status=exited)"  # Remove stopped containers
 fi
+alias dcu="docker compose up"
+alias dcp="docker compose ps"
+alias dcd="docker compose down -v"
+
 
 #### See https://wilsonmar.github.io/kubernetes
 alias k="kubectl"
