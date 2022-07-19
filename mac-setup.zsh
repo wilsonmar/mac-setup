@@ -1219,9 +1219,17 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
      #brew install hashicorp/tap/packer
       which nomad
 
-      brew install hashicorp/tap/terraform
+      brew install tfenv
+      # NO brew install hashicorp/tap/terraform
+      brew install tfenv
+      tfenv install latest
+      tfenv use 1.2.5
       which terraform
-
+         # /opt/homebrew/bin//terraform
+      terraform version
+         # Terraform v1.2.5
+         # on darwin_arm64
+   
       brew install hashicorp/tap/sentinel
       which sentinel
 
