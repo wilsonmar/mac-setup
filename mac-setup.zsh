@@ -1181,6 +1181,10 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
       # Replacement for ls - see https://the.exa.website/#installation
       brew install exa
+      
+      brew install ncdu  # linux disk usage
+         # Pouring ncdu--2.1.2.arm64_monterey.bottle.tar.gz
+         # /opt/homebrew/Cellar/ncdu/2.1.2: 6 files, 485.5KB
 
      ### Unzip:
      #brew install --cask keka
@@ -3313,8 +3317,9 @@ if [ "${USE_PYENV}" = true ]; then  # -pyenv
 fi    # USE_PYENV
 
 
-### 38. Install Conda (Anaconda has too many unknown vulnerabilities)
+### 38. Install MiniConda (Anaconda has too many unknown vulnerabilities)
 # See https://wilsonmar.github.io/mac-setup/#Conda
+# See https://betterprogramming.pub/how-to-use-miniconda-with-python-and-jupyterlab-5ce07845e818
 if [ "${RUN_CONDA}" = true ]; then  # -conda
 
    h2 "-conda RUN_CONDA "
@@ -3328,19 +3333,72 @@ if [ "${RUN_CONDA}" = true ]; then  # -conda
    note "$( conda --version )"  # conda 4.11.0
    if [ "${RUN_DEBUG}" = true ]; then
       note "$( conda info )"
-      note "$( conda list )"
+      #      active environment : base
+      #     active env location : /opt/homebrew/Caskroom/miniconda/base
+      #             shell level : 1
+      #        user config file : /Users/wilsonmar/.condarc
+      #  populated config files : 
+      #           conda version : 4.11.0      
    fi
-                  
    #export PREFIX="/usr/local/anaconda3"
    #export   PATH="/usr/local/anaconda3/bin:$PATH"
    # -vv
    # note "PATH=$( $PATH )"
 
-   # conda create -n PDSH python=3.7 --file requirements.txt
-   # conda create -n tf tensorflow
+   conda init zsh
+      # no change     /opt/homebrew/Caskroom/miniconda/base/condabin/conda
+   # stop and restart shell
+
+   # TODO: Define in parameters
+   export PYTHON_VER="3.9"
+   export CONDA_ENV="jpy39"
+
+   RESPONSE="$( conda info --envs )"
+         # conda environments: 
+         # base                  *  /opt/homebrew/Caskroom/miniconda/base   fi
+         # jpy39                 *  /opt/homebrew/Caskroom/miniconda/base/envs/jpy39
+   if [[ "${RESPONSE}" == *"${CONDA_ENV}"* ]]; then  # contains it:
+      echo "using whatever"
+   else
+      # Creating CONDA_ENV=${CONDA_ENV} with PYTHON_VER=${PYTHON_VER}"
+      # conda create -name PDSH python==3.9 --file requirements.txt
+      yes | conda create --name "${CONDA_ENV}" python="${PYTHON_VER}"
+      # conda create -name tf tensorflow
+   fi
+   conda activate "${CONDA_ENV}"
+      # (jyp39) should show above the prompt.
+   
+
+   # Check if already installed:
+   RESPONSE="$( conda list )"
+      # For the latest: conda install numpy -n base -c conda-forge
+   if [[ "${RESPONSE}" != *"numpy"* ]]; then  # NOT contains it:
+      note "$( yes | conda install numpy )"
+                   # conda remove  numpy -n base -c conda-forge
+      # To use env in a Jupyter notebook:
+   fi
+   if [[ "${RESPONSE}" != *"ipykernel"* ]]; then  # NOT contains it:
+      yes | conda install ipykernel
+   fi
+
+   # TODO: Check if needed:
+   python -m ipykernel install --user --name "${CONDA_ENV}" --display-name "${CONDA_ENV} environment"
+      # Installed kernelspec jpy39 in /Users/wilsonmar/Library/Jupyter/kernels/jpy39
+
+   # Like conda list to file:
+   conda env export --name "${CONDA_ENV}" > environment.yml
+      # Now move the environment.yml file to your HPC using scp
+
+   # Manually install https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter
+   # ... Do what you need to do ...
+
+   # LATER in this script:
+   # source deactivate "${CONDA_ENV}"
+
+   # LATER in this script:
+   # conda env remove --name "${CONDA_ENV}"
 
 fi  # RUN_CONDA
-
 
 
 ### 39. RUN_GOLANG  

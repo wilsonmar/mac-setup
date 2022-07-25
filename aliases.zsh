@@ -253,6 +253,7 @@ alias sign='gpg --detach-sign --armor'
 
 
 #### See https://wilsonmar.github.io/python/
+alias python="python3"
 alias ven="virtualenv venv"
 alias vbc="source venv/bin/activate"
 alias vde="source deactivate"
@@ -262,17 +263,21 @@ alias cr="cargo run --verbose"  # Rust .rs program file in folder
 
 #### See https://wilsonmar.github.io/terraform
 alias tf="terraform $1"  # provide a parameter
+alias tfp="terraform plan"
 alias tfa="terraform apply"
-alias tfd="terraform destroy"
 alias tfs="terraform show"
+alias tfd="terraform destroy"
 
 #### See https://wilsonmar.github.io/hashicorp-consul#Shortcuts
+alias csl="curl http://127.0.0.1:8500/v1/status/leader"
+alias cacc="consul agent -config-dir /etc/consul.d/config"
 alias ccn="consul catalog nodes"
 alias ccs="consul catalog services"
-alias cml="consul members"
-alias cmw="consul members -wan"
+alias cml="consul members -wan"
+alias cmld="consul members -detailed"
 alias cnl="consul namespace list"
 alias crl="consul operator raft list-peers"
+alias crj="cat /var/consul/raft/peers.json"
 
 
 #### See https://wilsonmar.github.io/docker
