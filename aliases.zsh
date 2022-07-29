@@ -206,12 +206,15 @@ alias spacefree="du -h | awk 'END{print $1}'"
 
 
 #### See https://wilsonmar.github.io/git-shortcuts/
+# https://coderwall.com/p/_-ypzq/git-bash-fixing-it-with-alias-and-functions
 # Only on MacOS, not git bash on Windows MINGW64:
 alias hb="hub browse"
 
 if [[ "$(uname)" == *"Darwin"* ]]; then  # it's on a Mac:
+   # https://www.phillip-kruger.com/post/some_bash_functions_for_git/
+   echo "Adding functions for Mac ..."
    alias vers="sw_vers"
-   function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
+   function gas($1) { git status ;  git add . -A ; git commit -m "$1" ; git push; }
    function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
    function gd() { # get dirty
      [[ $(git status 2> /dev/null | tail -n1) != *"working directory clean"* ]] && echo "*"
