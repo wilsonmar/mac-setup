@@ -211,10 +211,10 @@ alias spacefree="du -h | awk 'END{print $1}'"
 alias hb="hub browse"
 
 if [[ "$(uname)" == *"Darwin"* ]]; then  # it's on a Mac:
-   # https://www.phillip-kruger.com/post/some_bash_functions_for_git/
-   echo "Adding functions for Mac ..."
+   # echo "Adding functions for Mac ..."
+   # TODO: https://www.phillip-kruger.com/post/some_bash_functions_for_git/
    alias vers="sw_vers"
-   function gas($1) { git status ;  git add . -A ; git commit -m "$1" ; git push; }
+   function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
    function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
    function gd() { # get dirty
      [[ $(git status 2> /dev/null | tail -n1) != *"working directory clean"* ]] && echo "*"
