@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# This is mac-setup.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.zsh
+# This is mac-setup.zsh from template https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.zsh
 # Coding of this shell script is explained in https://wilsonmar.github.io/mac-setup
 # Coding of shell scripting is explained in https://wilsonmar.github.io/shell-scripts
 
@@ -11,7 +11,7 @@
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
 # it installs utilities:
-# zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)" -v
+# zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup.zsh)" -v
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
@@ -324,17 +324,17 @@ if command -v curl ; then
    pwd
    if [ ! -f "$HOME/mac-setup.env" ]; then
       h2 "Downloading mac-setup.env to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env)"
       cp "$HOME/mac-setup.env" "$HOME"
    fi
    if [ ! -f "$HOME/.zshrc" ]; then
       h2 "Downloading .zshrc to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/.zshrc)"  # to
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/.zshrc)"  # to
       cp "$HOME/.zshrc" "$HOME"
    fi
    if [ ! -f "$HOME/mac-setup.zsh" ]; then
       h2 "Downloading mac-setup.zsh to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)"
+      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup.zsh)"
       cp "$HOME/mac-setup.zsh" "$HOME"
    fi
 fi
