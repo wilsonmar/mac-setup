@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# This is mac-setup.zsh from template https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.zsh
+# This is mac-setup.zsh based on template from https://github.com/wilsonmar/mac-setup/blob/master/mac-setup.zsh
 # Coding of this shell script is explained in https://wilsonmar.github.io/mac-setup
 # Coding of shell scripting is explained in https://wilsonmar.github.io/shell-scripts
 
@@ -11,7 +11,7 @@
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
 # it installs utilities:
-# zsh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup.zsh)" -v
+# zsh -c "$(curl -fsSL https://raw.githubusercontent.com/inean/mac-setup/master/mac-setup.zsh)" -v
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
@@ -205,16 +205,16 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    PROJECT_FOLDER_NAME="webgoat"
    PROJECT_NAME=""                           # -p
 
-   GITHUB_PATH="$HOME/github-wilsonmar"
-   GITHUB_REPO="wilsonmar.github.io"
-   GITHUB_ACCOUNT="wilsonmar"
+   GITHUB_PATH="$HOME/github-inean"
+   GITHUB_REPO="inean.github.io"
+   GITHUB_ACCOUNT="inean"
    GITHUB_USER_NAME="Wilson Mar"             # -n
    GITHUB_USER_EMAIL="wilson_mar@gmail.com"  # -e
 
-   GIT_ID="WilsonMar@gmail.com"
-   GIT_EMAIL="WilsonMar+GitHub@gmail.com"
-   GIT_NAME="Wilson Mar"
-   GIT_USERNAME="wilsonmar"
+   GIT_ID="inean@gmail.com"
+   GIT_EMAIL="inean+GitHub@gmail.com"
+   GIT_NAME="Carlos Martín"
+   GIT_USERNAME="inean"
 
    GITHUB_REPO_URL="https://github.com/wilsonmar/WebGoat.git"
    GITHUB_FOLDER=""
@@ -324,17 +324,17 @@ if command -v curl ; then
    pwd
    if [ ! -f "$HOME/mac-setup.env" ]; then
       h2 "Downloading mac-setup.env to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env)"
+      curl -LO "https://raw.githubusercontent.com/inean/mac-setup/master/mac-setup.env)"
       cp "$HOME/mac-setup.env" "$HOME"
    fi
    if [ ! -f "$HOME/.zshrc" ]; then
       h2 "Downloading .zshrc to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/.zshrc)"  # to
-      cp "$HOME/.zshrc" "$HOME"
+      curl -LO "https://raw.githubusercontent.com/inean/mac-setup/master/.zshrc)"  # to
+      cp "$HOME/.zshrc" "$HOME"wi
    fi
    if [ ! -f "$HOME/mac-setup.zsh" ]; then
       h2 "Downloading mac-setup.zsh to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/mac-setup.zsh)"
+      curl -LO "https://raw.githubusercontent.com/inean/mac-setup/master/mac-setup.zsh)"
       cp "$HOME/mac-setup.zsh" "$HOME"
    fi
 fi
@@ -359,7 +359,7 @@ if [ "${USE_CONFIG_FILE}" = true ]; then  # -nenv
 else  # use .mck-setup.env file:
    # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
    if [ ! -f "$CONFIG_FILEPATH" ]; then   # file NOT found, then copy from github:
-      curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env
+      curl -s -O https://raw.GitHubusercontent.com/inean/mac-setup/master/mac-setup.env
       warning "Downloading default config file mac-setup.env file to $HOME ... "
       if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
          fatal "File mac-setup.env not found after download ..."
@@ -750,7 +750,7 @@ done
 
 
 ### 07. Display run variables 
-# See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
+# See https://inean.github.io/mac-setup/#DisplayRunVars
 if [ "${RUN_VERBOSE}" = true ]; then
    note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
    note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
@@ -1919,7 +1919,7 @@ if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
          # [compute]
          # gce_metadata_read_timeout_sec = 5
          # [core]
-         # account = wilsonmar@gmail.com
+         # account = inean@gmail.com
          # disable_usage_reporting = False
          # project = qwiklabs-gcp-00-3d1faad4cd8f
          # [metrics]
@@ -1934,7 +1934,7 @@ if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
    # See https://cloud.google.com/blog/products/management-tools/scripting-with-gcloud-a-beginners-guide-to-automating-gcp-tasks
       # docker run --name web-test -p 8000:8000 crccheck/hello-world
 
-   # To manage secrets stored in the Google cloud per https://wilsonmar.github.io/vault
+   # To manage secrets stored in the Google cloud per https://inean.github.io/vault
    # enable APIs for your account: https://console.developers.google.com/project/123456789012/settings%22?pli=1
    gcloud services enable \
       cloudfunctions.googleapis.com \
