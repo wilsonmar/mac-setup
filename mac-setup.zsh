@@ -3545,6 +3545,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -python
          h2 "Upgrading flake8 ..."
          python3 -m pip install flake8 --upgrade
       fi
+   # pip
    fi
 
    h2 "Running flake8 Pip8 code formatting scanner on ${MY_FILE} ..."
