@@ -314,6 +314,9 @@ alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
 # See https://github.com/ysmike/dotfiles/blob/master/bash/.aliases
 # More: https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html
 
+USERNAME_ID=$( id -un )  # whoami has been deprecated
+export GITHUBDIR="github-$USERNAME_ID"
+# for  cd $HOME/$GITHUBDIR
 
 #     catn filename to show text file without comment (#) lines:
 alias catn="grep -Ev '''^(#|$)'''"

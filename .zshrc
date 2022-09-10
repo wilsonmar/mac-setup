@@ -313,6 +313,8 @@ fi
 #### See https://wilsonmar.github.io/jmeter-install/
 #export PATH="$HOME/jmeter:$PATH"
 
+# Inserted by: consul -autocomplete-install
+complete -o nospace -C /usr/local/bin/consul consul
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 #export SDKMAN_DIR="$HOME/.sdkman"
@@ -321,10 +323,9 @@ fi
 source ~/aliases.zsh   # export alias variables into memory
 #catn ~/aliases.zsh    # Show aliases keys as reminder
 
-# For working on the latest:
-cd "$HOME/github-wilsonmar/mac-setup"
-# cd $GITHUB_PATH/wilsonmar.github.io/_posts
+# echo "*** For working on the latest:"
+cd ~/github-wilsonmar/wilsonmar.github.io/_posts
+# cd "$HOME/github-wilsonmar/mac-setup"
+# cd "$HOME/bomonike/fullest-stack"
 # END
 
-# Inserted by: consul -autocomplete-install
-complete -o nospace -C /usr/local/bin/consul consul

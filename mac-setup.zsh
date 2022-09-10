@@ -188,6 +188,7 @@ fi
    RUN_DEBUG=false              # -vv
    RUN_PARMS=""                 # -P
    RUN_VERBOSE=false            # -v
+   RUN_QUIET=false              # -q
 
    CONVERT_TO_ZSH=false         # -zsh
    SET_TRACE=false              # -x
@@ -264,7 +265,6 @@ SECRETS_FILE=".secrets.env.sample"
    RUN_EKS=false                # -eks
        EKS_CRED_IS_LOCAL=true
    RUN_EGGPLANT=false           # -eggplant
-   RUN_QUIET=false              # -q
    RUN_TENSORFLOW=false         # -tsf
    RUN_TERRAFORM=false          # -tf
    RUN_WEBGOAT=false            # -W
