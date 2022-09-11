@@ -482,7 +482,7 @@ h2 "Unzip"
 if [ -f "consul_${CONSUL_VERSION}_${PLATFORM}.zip" ]; then  # found:
    yes | unzip "consul_${CONSUL_VERSION}_${PLATFORM}.zip" consul
    # yes | to avoid replace consul? [y]es, [n]o, [A]ll, [N]one, [r]ename: 
-   # specifying just consul so EULA.txt and TermsOfEvaluation.txt are not downloaded.
+   # specifying just consul so EULA.txt and TermsOfEvaluation.txt are not
 fi
 
 if [ ! -f "consul" ]; then  # not found:
