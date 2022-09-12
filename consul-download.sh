@@ -1,6 +1,10 @@
 #!/usr/bin/env sh
 # This is consul-download.sh at https://github.com/wilsonmar/mac-setup/blob/main/scripts/consul-download.sh
 # This automates manual instructions at https://learn.hashicorp.com/tutorials/consul/deployment-guide?in=consul/production-deploy
+
+# Copy and paste this:
+# sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/consul-download.sh)"
+
 # This downloads and installs "safely" - verifying that what is downloaded has NOT been altered.
 #   1. The fingerprint used here matches what the author saved in Keybase.
 #   2. The author's hash of the downloaded file matches the hash created by the author.
@@ -9,10 +13,10 @@
 # Techniques for shell scripting used here are explained at https://wilsonmar.github.io/shell-scripts
 # Explainer: https://serverfault.com/questions/896228/how-to-verify-a-file-using-an-asc-signature-file
 
-# This is gas "v1.10 unzip just consul file"
+# This is git commit "v1.11 add -vers parm"
     # Kermit TODO: The expires: date above must be in the future ..."
     # Kermit? TODO: Change file name with time stamp instead of removing.
-    # TODO: Add install of more utilities # To be hashi-agents-install.sh
+    # TODO: Add install of more utilities # To be consul-download.sh
     # TODO: Add install of more HashiCorp programs: terraform, vault, consul-k8s, etc.
     # TODO: Add processing on other OS/Platforms.
 
@@ -37,15 +41,17 @@ args_prompt() {
    echo "   -q           -quiet headings for each step"
    echo "   -ni          -no install of utilities brew, gpg2, jq, etc. (default is install)"
    echo " "
+   echo "   -vers         list versions and stop"
    echo "   -oss          Install Open Source Sofware edition instead of default Enterprise edition"
    echo "   -consul \"1.13.1\"     Version of Consul"
    echo "   -installdir \"/usr/local/bin\"     target folder"
    echo " "
    echo "# USAGE EXAMPLES:"
-   echo "chmod +x hashi-agents-install.sh   # (one time) change permissions"
-   echo "./hashi-agents-install.sh # assumes -ent and lates version available"
-   echo "./hashi-agents-install.sh -v -oss"
-   echo "./hashi-agents-install.sh -v -consul 1.13.1  # specific version"
+   echo "chmod +x consul-download.sh   # (one time) change permissions"
+   echo "./consul-download.sh -vers  # just list versions and stop"
+   echo "./consul-download.sh # assumes -ent and lates version available"
+   echo "./consul-download.sh -v -oss"
+   echo "./consul-download.sh -v -consul 1.13.1  # specific version"
 }  # args_prompt()
 #if [ $# -eq 0 ]; then  # display if no parameters are provided:
 #   args_prompt
@@ -56,6 +62,7 @@ args_prompt() {
 # Normal:
    CONTINUE_ON_ERR=false        # -cont
    RUN_VERBOSE=false            # -v
+   LIST_VERSIONS=false          # -vers
    RUN_DEBUG=false              # -vv
    SET_TRACE=false              # -x
    RUN_QUIET=false              # -q
@@ -141,6 +148,10 @@ while test $# -gt 0; do
       export RUN_DEBUG=true
       shift
       ;;
+    -vers)
+      export LIST_VERSIONS=true
+      shift
+      ;;
     -v)
       export RUN_VERBOSE=true
       shift
@@ -213,6 +224,19 @@ fi
 
 
 ### 07. Verify parameters vs. exports defined on Terminal before invoking this:
+
+if [ "${LIST_VERSIONS}" = true ]; then
+    # Just the version codes: 
+    CONSUL_VER_LIST="https://releases.hashicorp.com/consul"
+    open "${CONSUL_VER_LIST}"
+
+    if [ "${RUN_VERBOSE}" = true ]; then  # -v
+        # show website with description of each release:
+        CONSUL_VER_LIST="https://github.com/hashicorp/consul/releases"
+        open "${CONSUL_VER_LIST}"
+    fi
+    exit
+fi
 
 # Instead of obtaining manually: https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases
 CONSUL_LATEST_VERSION=$( curl -sL "https://api.github.com/repos/hashicorp/consul/releases/latest" | jq -r ".tag_name" | cut -c2- )
@@ -364,7 +388,7 @@ if ! command -v gpg ; then
     # Install gpg if needed: see https://wilsonmar.github.io/git-signing
     echo "*** brew install gnupg2 (gpg)..."
     brew install gnupg2
-    chmod 700 ~/.gnupg
+    # TODO: chmod 700 ~/.gnupg
 fi
 h2 "gpg import hashicorp.asc ..."
 # No Using gpg --list-keys @34365D9472D7468F to check if asc file is already been imported into keychain (a one-time process)
