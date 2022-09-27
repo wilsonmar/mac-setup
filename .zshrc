@@ -182,6 +182,7 @@ if [ -d "$HOME/aws" ]; then  # folder was created for AWS cloud, so:
 fi
 
 #### See https://wilsonmar.github.io/gcp
+source "/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 GOOGLE_BIN_PATH="$HOME/.google-cloud-sdk/bin"
 if [ -d "$GOOGLE_BIN_PATH" ]; then  # folder was created for GCP cloud, so:
    export PATH="$PATH:$GOOGLE_BIN_PATH"

@@ -1,5 +1,9 @@
 # .gitignore file
 
+pubring.kbx
+keydetails
+*.asc
+
 *.log
 secrets.sh
 .gitsecret/
