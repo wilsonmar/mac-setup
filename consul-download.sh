@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# This is consul-download.sh at https://github.com/wilsonmar/mac-setup/blob/master/scripts/consul-download.sh
+# This is consul-download.sh at https://github.com/wilsonmar/mac-setup/blob/master/consul-download.sh
 # This is git commit "v1.14 input email"
 
 # Copy and paste this:
