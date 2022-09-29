@@ -249,32 +249,26 @@ if [ "${LIST_VERSIONS}" = true ]; then
     exit
 fi
 
-# Instead of obtaining manually: https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases
-CONSUL_LATEST_VERSION=$( curl -sL "https://api.github.com/repos/hashicorp/consul/releases/latest" | jq -r ".tag_name" | cut -c2- )
 
 # Enable run specification of this variable within https://releases.hashicorp.com/consul
 # Thanks to https://fabianlee.org/2021/02/16/bash-determining-latest-github-release-tag-and-version/
-
+# Instead of obtaining manually: https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases
 if [ -n "${CONSUL_VERSION_PARM}" ]; then  # specified by parameter
    # lastest spec wins (use parameter with run)
    success "Using CONSUL_VERSION_PARM defined specified in script parm: -consul \"$CONSUL_VERSION_PARM\" ..."
    export CONSUL_VERSION="${CONSUL_VERSION_PARM}"
 else
-   # Since parm is not specified, try variable set before program invoke:
-#   if [ -z "${CONSUL_VERSION_IN+x}" ]; then  # specified:
-#      echo "*** Using \"$CONSUL_VERSION_IN\" defined before script invoke ..."
-#      export CONSUL_VERSION="${CONSUL_VERSION_IN}"
-#   else
-      success "Using latest consul version \"${CONSUL_LATEST_VERSION}\" ..."
-      export CONSUL_VERSION="${CONSUL_LATEST_VERSION}"
-#   fi
+   # Since parm is not specified, lookup variable:
+   # This no longer works: curl -sL https://api.github.com/repos/hashicorp/consul/releases/latest" | jq -r ".tag_name" | cut -c2- )
+    if [ "${INSTALL_OPEN_SOURCE}" = true ]; then  # -oss 
+        CONSUL_LATEST_VERSION=$( curl -sS https://api.releases.hashicorp.com/v1/releases/consul/latest |jq -r .version )
+           # Example: "1.13.2+ent" thanks to Ranjandas Athiyanathum Poyil for identifying this.
+    else  # Enterprise:
+        CONSUL_LATEST_VERSION=$( curl -sS https://api.releases.hashicorp.com/v1/releases/consul/latest\?license_class\=enterprise |jq -r .version )
+    fi
+    success "Using latest consul version \"${CONSUL_LATEST_VERSION}\" ..."
+    export CONSUL_VERSION="${CONSUL_LATEST_VERSION}"
 fi
-
-if [ "${INSTALL_OPEN_SOURCE}" = false ]; then  # -oss not specified
-    CONSUL_VERSION="${CONSUL_VERSION}+ent"  # for "1.12.2+ent"
-    success "Using consul version $CONSUL_VERSION ..."
-fi
-
 
 if [ -n "${TARGET_FOLDER_PARM}" ]; then  # specified by parameter
    TARGET_FOLDER="${TARGET_FOLDER_PARM}"
