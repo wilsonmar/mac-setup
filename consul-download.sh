@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # This is consul-download.sh at https://github.com/wilsonmar/mac-setup/blob/master/consul-download.sh
-# This is git commit "v1.14 input email"
+# This is git commit -m"v1.15 update consul latest version"
 
 # Copy and paste this:
 # sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/consul-download.sh)"

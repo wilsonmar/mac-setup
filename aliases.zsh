@@ -120,11 +120,6 @@ alias calc='open -a "/System/Applications/Calculator.app"'
 alias 1pass='open -a "/Applications/1Password 7.app"'         # Secret
 # alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
 
-# sentinel   # from Hashicorp
-# terraform
-# terragoat
-# alias falcon='open -a "/Applications/Falcon.app"'  # controlled by HC Infosec
-
 
 #### Data:
 alias 1drive='open -a "/Applications/OneDrive.app"'
@@ -281,6 +276,12 @@ alias cmld="consul members -detailed"
 alias cnl="consul namespace list"
 alias crl="consul operator raft list-peers"
 alias crj="cat /var/consul/raft/peers.json"
+
+#### See https://wilsonmar.github.io/hashicorp-boundary#Shortcuts
+alias bdy="boundary"
+
+# sentinel   # from Hashicorp
+# alias falcon='open -a "/Applications/Falcon.app"'  # controlled by HC Infosec
 
 
 #### See https://wilsonmar.github.io/docker
