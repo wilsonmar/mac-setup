@@ -195,6 +195,7 @@ alias pubip="curl -s ifconfig.me"  # public IP
 alias ipinfo="curl ipinfo.io"  # more verbose JSON containing country and zip of IP
 alias wanip4='dig @resolver1.opendns.com ANY myip.opendns.com +short'
 alias wanip6='dig @resolver1.opendns.com AAAA myip.opendns.com +short -6'
+alias ports='sudo lsof -i -n -P | grep TCP'
 
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
 alias spacefree="du -h | awk 'END{print $1}'"
@@ -290,6 +291,9 @@ alias bdy="boundary"
 alias ddk="killall com.docker.osx.hyperkit.linux"   # docker restart
 alias dps="docker ps"                               # docker processes list
    # CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+alias dports='docker ps --format "table {{.Names}}\t{{.Ports}}"'
+alias dcmds='docker ps --format "table {{.Names}}\t{{.Commands}}"'
+
 alias dcl="docker container ls -aq"                 # docker list active container
 alias dcp="docker container prune --force"          # Remove all stopped containers
    # Total reclaimed space: 0B
