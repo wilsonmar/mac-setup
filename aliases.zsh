@@ -163,7 +163,7 @@ alias sketch='open -a "/Applications/Sketch.app"'
 # https://expo.dev/tools
 alias ghd='open -a "$HOME/Applications/GitHub Desktop.app"'
 alias postman='open -a "/Applications/Postman.app"'
-   #alias postman='open -a "/Applications/Chrome Apps/Postman.app"'
+# alias postman='open -a "/Applications/Chrome Apps/Postman.app"'
 # alias insomnia='open -a "/Applications/Insomnia.app"'
 # alias rstudio='open -a "/Applications/RStudio.app"'
 # alias jprofiler='open -a "/Applications/JProfiler.app"'
@@ -185,17 +185,19 @@ alias f50='stat -f "%m%t%Sm %N" /tmp/* | sort -rn | head -50 | cut -f2- 2>/dev/n
 
 # wireless en0, wired en1: PRIVATE_IP address:
 alias en0="ipconfig getifaddr en0"  # like 172.20.1.91 or 192.168.1.253
-   #alias myip="ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2" 
-   # ip route get 1 | awk '{print $NF;exit}'
+#alias myip="ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2" 
+# ip route get 1 | awk '{print $NF;exit}'
 
 # These all return the public ip like https://www.whatismyip.com/:
 # alias mac="curl http://canhazip.com"  # public IP 
 #alias pubip="curl https://checkip.amazonaws.com"  # public IP
 alias pubip="curl -s ifconfig.me"  # public IP
+alias ipa="ip a"  # analyze networking
 alias ipinfo="curl ipinfo.io"  # more verbose JSON containing country and zip of IP
 alias wanip4='dig @resolver1.opendns.com ANY myip.opendns.com +short'
 alias wanip6='dig @resolver1.opendns.com AAAA myip.opendns.com +short -6'
-alias ports='sudo lsof -i -n -P | grep TCP'
+alias ports='lsof -i -n -P | grep TCP'
+alias listening='lsof -nP +c 15 | grep LISTEN'
 
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
 alias spacefree="du -h | awk 'END{print $1}'"
@@ -260,12 +262,18 @@ alias vde="source deactivate"
 alias cr="cargo run --verbose"  # Rust .rs program file in folder
 
 
-#### See https://wilsonmar.github.io/terraform
+#### See https://wilsonmar.github.io/terraform#KeyboardAliases
 alias tf="terraform $1"  # provide a parameter
-alias tfp="terraform plan"
-alias tfa="terraform apply"
-alias tfs="terraform show"
+alias tfa="terraform apply -auto-approve"
 alias tfd="terraform destroy"
+alias tffd="terraform fmt -diff"
+alias tfi="terraform init"
+alias tfp="terraform plan"
+alias tfr="terraform refresh"
+alias tfs="terraform show"
+alias tfsl="terraform state list"
+alias tfsp="terraform state pull"
+alias tfv="terraform validate"
 
 #### See https://wilsonmar.github.io/hashicorp-consul#Shortcuts
 alias csl="curl http://127.0.0.1:8500/v1/status/leader"
@@ -290,13 +298,13 @@ alias bdy="boundary"
 # Do not define  alias docker='open -a "$HOME/Applications/Docker.app"'
 alias ddk="killall com.docker.osx.hyperkit.linux"   # docker restart
 alias dps="docker ps"                               # docker processes list
-   # CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+# CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
 alias dports='docker ps --format "table {{.Names}}\t{{.Ports}}"'
 alias dcmds='docker ps --format "table {{.Names}}\t{{.Commands}}"'
 
 alias dcl="docker container ls -aq"                 # docker list active container
 alias dcp="docker container prune --force"          # Remove all stopped containers
-   # Total reclaimed space: 0B
+# Total reclaimed space: 0B
 # To avoid "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
 if [ -f "/var/run/docker.pid" ]; then  # NOT found:
    alias dsa="docker stop $(docker container ls -aq )" # docker stop active container
@@ -305,7 +313,7 @@ fi
 alias dcu="docker compose up"
 alias dcp="docker compose ps"
 alias dcd="docker compose down -v"
-
+# docker inspect $CONTAINER_NAME
 
 #### See https://wilsonmar.github.io/kubernetes
 alias k="kubectl"

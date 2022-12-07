@@ -1378,6 +1378,7 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
    fi
 
    # Explained in https://wilsonmar.github.io/dotfiles/#general-uiux
+
          # General Appearance: Dark
          defaults write AppleInterfaceStyle –string "Dark";
 
@@ -1446,8 +1447,15 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       # Tracking speed: maximum 5.0
       defaults write -g com.apple.mouse.scaling 5.0
 
-   # https://www.youtube.com/watch?v=8fFNVlpM-Tw
+   # See https://www.youtube.com/watch?v=8fFNVlpM-Tw
    # Changing the login screen image on Monterey.
+
+   # Show the ~/Library Folder https://weibeld.net/mac/setup-new-mac.html
+   chflags nohidden ~/Library
+
+    # Mute Startup Sound - just before logout, and restores the previous volume just after login. 
+   sudo defaults write com.apple.loginwindow LogoutHook "osascript -e 'set volume with output muted'"
+   sudo defaults write com.apple.loginwindow LoginHook "osascript -e 'set volume without output muted'"
 
 fi  # SET_MACOS_SYSPREFS
 

@@ -652,6 +652,7 @@ fi
 if ! command -v consul ; then  # NOT found:
     note "*** consul not installed."
 else
+   echo $( consul version | head -1 | awk '{print $2}' )
    h2 "Remove existing consul from path \"${TARGET_FOLDER}\" "
    if [ -f "${TARGET_FOLDER}/consul" ]; then  # specified by parameter
       echo "*** removing existing consul binary file from \"$TARGET_FOLDER\" before unzip of new file:"
