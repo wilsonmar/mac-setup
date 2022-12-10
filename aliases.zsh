@@ -70,7 +70,9 @@ alias sbp='source ~/.bash_profile'
 alias ezs="$EDITOR ~/.zshrc"   # for Zsh
 alias szs='source ~/.zshrc'
 #alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
-
+alias awscreds="$EDITOR ~/.aws/credentials"
+# From https://stackoverflow.com/questions/31331788/using-aws-cli-what-is-best-way-to-determine-the-current-region
+alias awsregion="aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'"
 alias atom='open -a "$HOME/Applications/Atom.app"'
 # alias brackets='open -a "/Applications/Brackets.app"'
 alias code='open -a "/Applications/Visual Studio Code.app"'
@@ -202,7 +204,6 @@ alias listening='lsof -nP +c 15 | grep LISTEN'
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
 alias spacefree="du -h | awk 'END{print $1}'"
 
-
 #### See https://wilsonmar.github.io/git-shortcuts/
 # https://coderwall.com/p/_-ypzq/git-bash-fixing-it-with-alias-and-functions
 # Only on MacOS, not git bash on Windows MINGW64:
@@ -317,6 +318,7 @@ alias dcd="docker compose down -v"
 
 #### See https://wilsonmar.github.io/kubernetes
 alias k="kubectl"
+alias kubec="$EDITOR ~/.kube/conf
 # FIXME: complete -F __start_kubectl k
 alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
 

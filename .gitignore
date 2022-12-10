@@ -3,6 +3,7 @@
 pubring.kbx
 keydetails
 *.asc
+pgpkeys*
 
 *.log
 secrets.sh
