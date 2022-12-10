@@ -18,7 +18,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.90"  # Add exa
+SCRIPT_VERSION="v0.92"  # Add exa
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
