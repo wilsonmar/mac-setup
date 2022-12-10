@@ -41,12 +41,13 @@ args_prompt() {
    echo "   -email \"johndoe@gmail.com\"     # to generate GPG keys for"
    echo "   -gpg        #  Install gpg2 utility and generate key if needed"
    echo " "
-   echo "   -oss        #  Install Open Source Sofware edition instead of default Enterprise edition"
    echo "   -tf \"1.3.6\"       # Specify version of Terraform to install"
-   echo "   -consul \"1.13.1\"  # Specify version of Consul to install"
+#   echo "   -consul \"1.13.1\"  # Specify version of Consul to install"
+#   echo "   -oss        #  Install Open Source Sofware edition instead of default Enterprise edition"
    echo "   -vers       #  list versions released"
    echo " "
    echo "   -aws        # -AWS cloud awscli"
+   echo "   -DE         # -Delete terraform-created Kubernetes resources at End of run"
    echo " "
    echo "USAGE EXAMPLES:"
    echo "# (one time) change permission to enable run:"
@@ -93,6 +94,7 @@ exit_abnormal() {            # Function: Exit with error.
 
 # Post-processing:
    REMOVE_GITHUB_AFTER=false    # -R
+   REMOVE_K8S_AT_END=false      # -DE
 
 ### STEP 04. Custom functions to format echo text to screen
 # See https://wilsonmar.github.io/mac-setup/#TextColors
@@ -155,6 +157,10 @@ while test $# -gt 0; do
       shift
       CONSUL_VERSION_PARM=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       GET_ASC=true
+      shift
+      ;;
+    -DE)
+      export REMOVE_K8S_AT_END=true
       shift
       ;;
     -email*)
@@ -773,6 +779,7 @@ Install_terraform(){  # function
                 # Terraform v1.2.5
                 # on darwin_arm64
                 # Your version of Terraform is out of date! The latest version
+        RESPONSE="${RESPONSE:1}"
         if [[ "${TF_VERSION_PARM}" == *"${RESPONSE}"* ]]; then  # contains it:
             info "Current Terraform version $RESPONSE already at $TF_INSTALLED_AT"
             # No need to install.
@@ -811,6 +818,26 @@ Install_terraform(){  # function
 
 AWS_REGION="us-east-1"
 K8S_CLUSTER_ID="eks-cluster-with-new-vpc"
+#git clone https://github.com/aws-ia/terraform-aws-eks-blueprints.git --depth 1
+#cd "examples/${K8S_CLUSTER_ID}"  # eks-cluster-with-new-vpc/
+
+Cleanup_k8s() {
+    h2 "STEP 90. Destroy addons:"
+    terraform destroy -target="module.eks_blueprints_kubernetes_addons" \
+       -auto-approve >"${LOG_DATETIME}_90_destroy_addons.txt"
+
+    h2 "STEP 91. Destroy blueprints:"
+    terraform destroy -target="module.eks_blueprints" \
+       -auto-approve >"${LOG_DATETIME}_91_destroy_eks_blueprints.txt"
+
+    h2 "STEP 92. Destroy vpc:"
+    terraform destroy -target="module.vpc" \
+       -auto-approve >"${LOG_DATETIME}_92_destroy_vpc.txt"
+
+    h2 "STEP 93. Destroy additional:"
+    terraform destroy \
+       -auto-approve >"${LOG_DATETIME}_93_destroy_additional.txt"
+}
 
 h2 "STEP 41. terraform init:"
 terraform init >"${LOG_DATETIME}_41_tf_init.txt"
@@ -822,31 +849,57 @@ h2 "STEP 43. tfsec:"
 tfsec >"${LOG_DATETIME}_43_tfsec.txt"
 
 h2 "STEP 44. terraform apply:"
-terraform apply -target="module.vpc" -auto-approve >"${LOG_DATETIME}_44_tf_apply_vpc.txt"
+terraform apply -target="module.eks_blueprints" -auto-approve >"${LOG_DATETIME}_44_tf_apply_eks_blueprints.txt"
 
 h2 "STEP 45. terraform apply:"
-terraform apply -target="module.eks_blueprints" -auto-approve >"${LOG_DATETIME}_45_tf_apply_eks_blueprints.txt"
+terraform apply -target="module.vpc" -auto-approve >"${LOG_DATETIME}_45_tf_apply_vpc.txt"
 
 h2 "STEP 46. terraform apply:"
 terraform apply -auto-approve >"${LOG_DATETIME}_46_tf_apply.txt"
 
 h2 "STEP 47. update-kubeconfig:"
 aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}"
+   # Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
 
 h2 "STEP 48. list worker nodes:"
 kubectl get nodes
+   # NAME                                        STATUS   ROLES    AGE   VERSION
+   # ip-10-0-10-135.us-west-2.compute.internal   Ready    <none>   10m   v1.23.13-eks-fb459a0
+   # ip-10-0-11-241.us-west-2.compute.internal   Ready    <none>   10m   v1.23.13-eks-fb459a0
+   # ip-10-0-12-240.us-west-2.compute.internal   Ready    <none>   10m   v1.23.13-eks-fb459a0
 
 h2 "STEP 49. list pods:"
 kubectl get pods -n kube-system
+   # NAME                                                         READY   STATUS    RESTARTS   AGE
+   # aws-load-balancer-controller-854cb78798-p47sr                1/1     Running   0          3m52s
+   # aws-load-balancer-controller-854cb78798-qthql                1/1     Running   0          3m52s
+   # aws-node-nzvzq                                               1/1     Running   0          3m17s
+   # aws-node-pfbl2                                               1/1     Running   0          3m56s
+   # aws-node-qcv2m                                               1/1     Running   0          3m34s
+   # cluster-autoscaler-aws-cluster-autoscaler-7ccbf68bc9-bgzg2   1/1     Running   0          3m56s
+   # cluster-proportional-autoscaler-coredns-6fcfcd685f-lpkwl     1/1     Running   0          4m14s
+   # coredns-57ff979f67-mpkzg                                     1/1     Running   0          16m
+   # coredns-57ff979f67-nxn6v                                     1/1     Running   0          16m
+   # ebs-csi-controller-79998cddcc-67c4c                          6/6     Running   0          4m5s
+   # ebs-csi-controller-79998cddcc-vlfm4                          6/6     Running   0          4m6s
+   # ebs-csi-node-l8gxl                                           3/3     Running   0          4m6s
+   # ebs-csi-node-px26g                                           3/3     Running   0          4m6s
+   # ebs-csi-node-tbhb8                                           3/3     Running   0          4m6s
+   # kube-proxy-2bnb4                                             1/1     Running   0          10m
+   # kube-proxy-ghpm2                                             1/1     Running   0          10m
+   # kube-proxy-j5c9s                                             1/1     Running   0          10m
+   # metrics-server-7d76b744cd-vchnk                              1/1     Running   0          4m14s
 
-h2 "STEP 50. Cleanup:"
-terraform destroy -target="module.eks_blueprints_kubernetes_addons" -auto-approve
+h2 "STEP 50. Diagram resources:"
 
-terraform destroy -target="module.eks_blueprints" -auto-approve
+h2 "STEP 51. Get costs:"
 
-terraform destroy -target="module.vpc" -auto-approve
 
-terraform destroy -auto-approve
+if [ "${REMOVE_K8S_AT_END}" = true ]; then  # -DE
+   Cleanup_k8s  # function defined above. 90-93
+
+fi # REMOVE_K8S_AT_END
+
 
 ### STEP 99. End-of-run stats
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
