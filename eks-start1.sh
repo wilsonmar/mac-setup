@@ -3,6 +3,8 @@
 # This is git commit -m"v0.01 update latest version"
 
 # Copy and paste this:
+# curl -s "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-start1.sh" \
+# --output eks-start1.sh
 # sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-start1.sh)"
 
 # This automates manual instructions at https://aws-ia.github.io/terraform-aws-eks-blueprints/main/getting-started/
@@ -17,7 +19,7 @@
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
 SCRIPT_VERSION="v0.90"  # Add exa
-LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
+LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
@@ -805,9 +807,46 @@ Install_terraform(){  # function
 
 # TODO: Add install of more HashiCorp programs: vault, consul, consul-k8s, instruqt, etc.
 
+######################
 
-h2 "STEP 40. Removing downloaded files no longer needed:"
+AWS_REGION="us-east-1"
+K8S_CLUSTER_ID="eks-cluster-with-new-vpc"
 
+h2 "STEP 41. terraform init:"
+terraform init >"${LOG_DATETIME}_41_tf_init.txt"
+
+h2 "STEP 42. terraform plan:"
+terraform plan >"${LOG_DATETIME}_42_tf_plan.txt"
+
+h2 "STEP 43. tfsec:"
+tfsec >"${LOG_DATETIME}_43_tfsec.txt"
+
+h2 "STEP 44. terraform apply:"
+terraform apply -target="module.vpc" -auto-approve >"${LOG_DATETIME}_44_tf_apply_vpc.txt"
+
+h2 "STEP 45. terraform apply:"
+terraform apply -target="module.eks_blueprints" -auto-approve >"${LOG_DATETIME}_45_tf_apply_eks_blueprints.txt"
+
+h2 "STEP 46. terraform apply:"
+terraform apply -auto-approve >"${LOG_DATETIME}_46_tf_apply.txt"
+
+h2 "STEP 47. update-kubeconfig:"
+aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}"
+
+h2 "STEP 48. list worker nodes:"
+kubectl get nodes
+
+h2 "STEP 49. list pods:"
+kubectl get pods -n kube-system
+
+h2 "STEP 50. Cleanup:"
+terraform destroy -target="module.eks_blueprints_kubernetes_addons" -auto-approve
+
+terraform destroy -target="module.eks_blueprints" -auto-approve
+
+terraform destroy -target="module.vpc" -auto-approve
+
+terraform destroy -auto-approve
 
 ### STEP 99. End-of-run stats
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
