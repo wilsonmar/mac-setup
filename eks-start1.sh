@@ -18,7 +18,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.94"  # error handle
+SCRIPT_VERSION="v0.95"  # No TFsec
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -854,32 +854,36 @@ Cleanup_k8s() {
        -auto-approve >"${LOG_DATETIME}_93_destroy_additional.txt"
 }
 
-h2 "STEP 41. terraform init:"
+h2 "STEP 41. terraform init: ${LOG_DATETIME}_41_tf_init.txt"
 terraform init >"${LOG_DATETIME}_41_tf_init.txt"
 echo $?
 
-h2 "STEP 42. terraform plan:"
+h2 "STEP 42. ${LOG_DATETIME}_42_tf_plan.txt"
 terraform plan >"${LOG_DATETIME}_42_tf_plan.txt"
 echo $?
 
-h2 "STEP 43. tfsec:"
-tfsec >"${LOG_DATETIME}_43_tfsec.txt"
+h2 "STEP 43. ${LOG_DATETIME}_43_tfsec.txt"
+# || true added to ignore error 1 returned if errors are found.
+tfsec || true >"${LOG_DATETIME}_43_tfsec.txt"
 echo $?
 
-h2 "STEP 44. terraform apply:"
-terraform apply -target="module.eks_blueprints" -auto-approve >"${LOG_DATETIME}_44_tf_apply_eks_blueprints.txt"
+h2 "STEP 44. terraform apply: ${LOG_DATETIME}_44_tf_apply_eks_blueprints.txt"
+terraform apply -target="module.eks_blueprints" -auto-approve \
+   >"${LOG_DATETIME}_44_tf_apply_eks_blueprints.txt"
 echo $?
 
-h2 "STEP 45. terraform apply:"
-terraform apply -target="module.vpc" -auto-approve >"${LOG_DATETIME}_45_tf_apply_vpc.txt"
+h2 "STEP 45. terraform apply: ${LOG_DATETIME}_45_tf_apply_vpc.txt"
+terraform apply -target="module.vpc" -auto-approve \
+   >"${LOG_DATETIME}_45_tf_apply_vpc.txt"
 echo $?
 
-h2 "STEP 46. terraform apply:"
+h2 "STEP 46. terraform apply: ${LOG_DATETIME}_46_tf_apply.txt"
 terraform apply -auto-approve >"${LOG_DATETIME}_46_tf_apply.txt"
 echo $?
 
-h2 "STEP 47. update-kubeconfig:"
-aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}"
+h2 "STEP 47. update-kubeconfig: ${LOG_DATETIME}_47_tf_update_kubeconfig.txt"
+aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}" \
+   >"${LOG_DATETIME}_47_tf_update_kubeconfig.txt"
    # Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
 
 h2 "STEP 48. list worker nodes:"
