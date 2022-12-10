@@ -18,7 +18,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.93"  # deletes
+SCRIPT_VERSION="v0.94"  # error handle
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -856,21 +856,27 @@ Cleanup_k8s() {
 
 h2 "STEP 41. terraform init:"
 terraform init >"${LOG_DATETIME}_41_tf_init.txt"
+echo $?
 
 h2 "STEP 42. terraform plan:"
 terraform plan >"${LOG_DATETIME}_42_tf_plan.txt"
+echo $?
 
 h2 "STEP 43. tfsec:"
 tfsec >"${LOG_DATETIME}_43_tfsec.txt"
+echo $?
 
 h2 "STEP 44. terraform apply:"
 terraform apply -target="module.eks_blueprints" -auto-approve >"${LOG_DATETIME}_44_tf_apply_eks_blueprints.txt"
+echo $?
 
 h2 "STEP 45. terraform apply:"
 terraform apply -target="module.vpc" -auto-approve >"${LOG_DATETIME}_45_tf_apply_vpc.txt"
+echo $?
 
 h2 "STEP 46. terraform apply:"
 terraform apply -auto-approve >"${LOG_DATETIME}_46_tf_apply.txt"
+echo $?
 
 h2 "STEP 47. update-kubeconfig:"
 aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}"
@@ -911,8 +917,12 @@ h2 "STEP 51. Get costs:"
 
 
 if [ "${REMOVE_K8S_AT_END}" = true ]; then  # -DE
-   Cleanup_k8s  # function defined above. 90-93
+    Cleanup_k8s  # function defined above. 90-93
 
+    h2 "STEP 94. Remove run log.txt files:"
+    rm "${LOG_DATETIME}*"
+    # Recover deleted files from your Mac Trash
+   
 fi # REMOVE_K8S_AT_END
 
 
