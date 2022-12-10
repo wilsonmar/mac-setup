@@ -18,7 +18,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.92"  # Add exa
+SCRIPT_VERSION="v0.93"  # deletes
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -803,11 +803,26 @@ Install_terraform(){  # function
     fi
 
     h2 "STEP 37. Removing downloaded files no longer needed:"
-    rm "hashicorp.asc"
-    rm "terraform_${TF_VERSION}_SHA256SUMS"
-    rm "terraform_${TF_VERSION}_SHA256SUMS.${ASC_SHA}.sig"
-    rm "terraform_${TF_VERSION}_SHA256SUMS.sig"
-    rm "terraform_${TF_VERSION}_${PLATFORM}.zip"
+    FILE_TO_DELETE="hashicorp.asc"
+    if [ -f "${FILE_TO_DELETE}" ]; then  # found - remove
+        rm "${FILE_TO_DELETE}"
+    fi
+    FILE_TO_DELETE="terraform_${TF_VERSION}_SHA256SUMS"
+    if [ -f "${FILE_TO_DELETE}" ]; then  # found - remove
+        rm "${FILE_TO_DELETE}"
+    fi
+    FILE_TO_DELETE="terraform_${TF_VERSION}_SHA256SUMS.${ASC_SHA}.sig"
+    if [ -f "${FILE_TO_DELETE}" ]; then  # found - remove
+        rm "${FILE_TO_DELETE}"
+    fi
+    FILE_TO_DELETE="terraform_${TF_VERSION}_SHA256SUMS.sig"
+    if [ -f "${FILE_TO_DELETE}" ]; then  # found - remove
+        rm "${FILE_TO_DELETE}"
+    fi
+    FILE_TO_DELETE="terraform_${TF_VERSION}_${PLATFORM}.zip"
+    if [ -f "${FILE_TO_DELETE}" ]; then  # found - remove
+        rm "${FILE_TO_DELETE}"
+    fi
 
 # fi  # INSTALL_TF
 
