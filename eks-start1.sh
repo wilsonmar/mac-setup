@@ -18,7 +18,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.95"  # No TFsec
+SCRIPT_VERSION="v0.16"  # eksctl
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -95,6 +95,7 @@ exit_abnormal() {            # Function: Exit with error.
 # Post-processing:
    REMOVE_GITHUB_AFTER=false    # -R
    REMOVE_K8S_AT_END=false      # -DE
+
 
 ### STEP 04. Custom functions to format echo text to screen
 # See https://wilsonmar.github.io/mac-setup/#TextColors
@@ -224,7 +225,7 @@ done
 # See https://docs.aws.amazon.com/general/latest/gr/rande.html
 # https://docs.aws.amazon.com/general/latest/gr/rande-manage.html
 
-h2 "STEP 06. Obtain info about the OS and define which package manager to use:"
+h2 "STEP 06a. Obtain info about the OS and define which package manager to use:"
 # See https://wilsonmar.github.io/mac-setup/#OSDetect
 export OS_TYPE="$( uname )" 
 export OS_DETAILS=""  # default blank.
@@ -232,6 +233,12 @@ export PACKAGE_MANAGER=""
 if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
     export OS_TYPE="macOS"
     export PACKAGE_MANAGER="brew"
+
+    h2 "STEP 06b. Set sleep off (sudo requires password):"
+    sudo systemsetup -getcomputersleep
+        # Computer Sleep: Never
+    sudo systemsetup -setcomputersleep Never
+        # 2022-12-10 14:33:10.540 systemsetup[54166:30878895] ### Error:-99 File:/AppleInternal/Library/BuildRoots/a0876c02-1788-11ed-b9c4-96898e02b808/Library/Caches/com.apple.xbs/Sources/Admin/InternetServices.m Line:379
 # else Windows, Linux...
 fi
 # For HashiCorp downloading:
@@ -319,7 +326,7 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
     # echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
     # eval "$(/opt/homebrew/bin/brew shellenv)"
 
-    #if ! command -v clang ; then
+    #if ! command -v clang >/dev/null; then
         # Not in /Applications/Xcode.app/Contents/Developer/usr/bin/
         # sudo xcode-select -switch /Library/Developer/CommandLineTools
         # XCode version: https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man1/pkgutil.1.html
@@ -334,7 +341,7 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
     note "$( gcc --version )"  #  note "$(  cc --version )"
     note "$( xcode-select --version )"  # Example output: xcode-select version 2395 (as of 23APR2022).
 
-    if ! command -v brew ; then
+    if ! command -v brew >/dev/null; then
         h2 "Installing brew package manager on macOS using Ruby ..."
         mkdir homebrew && curl -L https://GitHub.com/Homebrew/brew/tarball/master \
             | tar xz --strip 1 -C homebrew
@@ -342,22 +349,22 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
     fi
     
     h2 "Using brew to install jq, curl, wget, tree"
-    if ! command -v jq ; then
+    if ! command -v jq >/dev/null; then
         note "Installing jq ..."
         brew install jq
     fi
 
-    if ! command -v curl ; then
+    if ! command -v curl >/dev/null; then
         note "Installing curl ..."
         brew install curl
     fi
 
-    if ! command -v wget ; then
+    if ! command -v wget >/dev/null; then
         note "Installing wget ..."
         brew install wget
     fi
 
-    if ! command -v tree ; then
+    if ! command -v tree >/dev/null; then
         note "Installing tree ..."
         brew install tree
     fi
@@ -373,13 +380,16 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
     if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
       # For aws-cli commands, see http://docs.aws.amazon.com/cli/latest/userguide/ 
-      if ! command -v aws >/dev/null; then
-         h2 "brew install awscli ..."
-         brew install awscli
-      fi
-      note "$( aws --version )"  # aws-cli/2.6.1 Python/3.9.12 Darwin/21.4.0 source/arm64 prompt/off
-                     # previously: aws-cli/2.0.9 Python/3.8.2 Darwin/19.5.0 botocore/2.0.0dev13
-      note "which aws at $( which aws )"  # /usr/local/bin/aws
+      brew install awscli
+      brew install eksctl
+
+      note "$( aws --version )"  
+          # aws-cli/2.9.4 Python/3.11.0 Darwin/21.6.0 source/arm64 prompt/off
+          # aws-cli/2.6.1 Python/3.9.12 Darwin/21.4.0 source/arm64 prompt/off
+          # aws-cli/2.0.9 Python/3.8.2 Darwin/19.5.0 botocore/2.0.0dev13
+      note "which aws at $( which aws )"  
+          # /opt/homebrew/bin//aws
+          # /usr/local/bin/aws
 
       # h2 "aws version ..."  
       # SHELL TECHNIQUE: any error results in a long extraneous list, so send the err output to a file
@@ -391,7 +401,7 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
    fi
 
     h2 "STEP 13. Install GPG2:"
-    if ! command -v gpg ; then
+    if ! command -v gpg >/dev/null; then
         # Install gpg if needed: see https://wilsonmar.github.io/git-signing
         note "brew install gnupg2 (gpg) for Terminal use ..."
         # brew install --cask gpg-suite   # GUI 
@@ -864,7 +874,7 @@ echo $?
 
 h2 "STEP 43. ${LOG_DATETIME}_43_tfsec.txt"
 # || true added to ignore error 1 returned if errors are found.
-tfsec || true >"${LOG_DATETIME}_43_tfsec.txt"
+tfsec >"${LOG_DATETIME}_43_tfsec.txt" || true 
 echo $?
 
 h2 "STEP 44. terraform apply: ${LOG_DATETIME}_44_tf_apply_eks_blueprints.txt"
@@ -915,9 +925,12 @@ kubectl get pods -n kube-system
    # kube-proxy-j5c9s                                             1/1     Running   0          10m
    # metrics-server-7d76b744cd-vchnk                              1/1     Running   0          4m14s
 
-h2 "STEP 50. Diagram resources:"
+h2 "STEP 50. List resources allocated:"
+# See https://bobbyhadz.com/blog/aws-list-all-resources
 
-h2 "STEP 51. Get costs:"
+h2 "STEP 51. Diagram resources:"
+
+h2 "STEP 52. Get costs (by tags):"
 
 
 if [ "${REMOVE_K8S_AT_END}" = true ]; then  # -DE
