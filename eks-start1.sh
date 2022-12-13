@@ -1,13 +1,14 @@
 #!/usr/bin/env sh
 # This is eks-start1.sh at https://github.com/wilsonmar/mac-setup/blob/master/eks-start1.sh
-# This is git commit -m"v0.01 update latest version"
+# This automates manual instructions at https://aws-ia.github.io/terraform-aws-eks-blueprints/main/getting-started/
 
+# Call:
+#    time ./eks-start1.sh -email wilsonmar@gmail.com -v -DE -tf 
+#
 # Copy and paste this:
 # curl -s "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-start1.sh" \
 # --output eks-start1.sh
 # sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-start1.sh)"
-
-# This automates manual instructions at https://aws-ia.github.io/terraform-aws-eks-blueprints/main/getting-started/
 
 # shellcheck disable=SC3010,SC2155,SC2005,SC2046
    # SC3010 POSIX compatibility per http://mywiki.wooledge.org/BashFAQ/031 where [[ ]] is undefined.
@@ -18,8 +19,8 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.16"  # eksctl
-LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)
+SCRIPT_VERSION="v0.18"  # out to log
+LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
@@ -235,10 +236,14 @@ if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
     export PACKAGE_MANAGER="brew"
 
     h2 "STEP 06b. Set sleep off (sudo requires password):"
-    sudo systemsetup -getcomputersleep
-        # Computer Sleep: Never
-    sudo systemsetup -setcomputersleep Never
+    RESPONSE=$( sudo systemsetup -getcomputersleep | awk '{print $3}' )
+        # "Never" from Computer Sleep: Never 
+    if [[ "${MACHINE_TYPE}" == *"Never"* ]]; then
+       info "Already at Never"
+    else
+       sudo systemsetup -setcomputersleep Never
         # 2022-12-10 14:33:10.540 systemsetup[54166:30878895] ### Error:-99 File:/AppleInternal/Library/BuildRoots/a0876c02-1788-11ed-b9c4-96898e02b808/Library/Caches/com.apple.xbs/Sources/Admin/InternetServices.m Line:379
+    fi
 # else Windows, Linux...
 fi
 # For HashiCorp downloading:
@@ -345,37 +350,18 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
         h2 "Installing brew package manager on macOS using Ruby ..."
         mkdir homebrew && curl -L https://GitHub.com/Homebrew/brew/tarball/master \
             | tar xz --strip 1 -C homebrew
-        # if PATH for brew available:
+        # brew upgrades itself later.
     fi
     
-    h2 "Using brew to install jq, curl, wget, tree"
-    if ! command -v jq >/dev/null; then
-        note "Installing jq ..."
-        brew install jq
-    fi
+    h2 "STEP 11. Using brew to install jq, curl, wget, tree"
+    brew install jq  curl  wget tree
 
-    if ! command -v curl >/dev/null; then
-        note "Installing curl ..."
-        brew install curl
-    fi
-
-    if ! command -v wget >/dev/null; then
-        note "Installing wget ..."
-        brew install wget
-    fi
-
-    if ! command -v tree >/dev/null; then
-        note "Installing tree ..."
-        brew install tree
-    fi
-
-    h2 "Installing Linux equivalents for MacOS ..."
+    # h2 "STEP 11. Installing Linux equivalents for MacOS ..."
     brew install gnu-getopt coreutils xz gzip bzip2 lzip zstd
 
     # h2 "STEP 11. Install Visual Studio Code editor (if parameter allows):"
 
-
-    h2 "STEP 12. Install AWSCLI:"
+    h2 "STEP 12. Install awscli, eksctl:"
     # See https://wilsonmar.github.io/mac-setup/#AWS
     if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
@@ -849,52 +835,54 @@ K8S_CLUSTER_ID="eks-cluster-with-new-vpc"
 Cleanup_k8s() {
     h2 "STEP 90. Destroy addons:"
     terraform destroy -target="module.eks_blueprints_kubernetes_addons" \
-       -auto-approve >"${LOG_DATETIME}_90_destroy_addons.txt"
+       -auto-approve >"${LOG_DATETIME}_90_destroy_addons.log"
 
     h2 "STEP 91. Destroy blueprints:"
     terraform destroy -target="module.eks_blueprints" \
-       -auto-approve >"${LOG_DATETIME}_91_destroy_eks_blueprints.txt"
+       -auto-approve >"${LOG_DATETIME}_91_destroy_eks_blueprints.log"
 
     h2 "STEP 92. Destroy vpc:"
     terraform destroy -target="module.vpc" \
-       -auto-approve >"${LOG_DATETIME}_92_destroy_vpc.txt"
+       -auto-approve >"${LOG_DATETIME}_92_destroy_vpc.log"
 
     h2 "STEP 93. Destroy additional:"
     terraform destroy \
-       -auto-approve >"${LOG_DATETIME}_93_destroy_additional.txt"
+       -auto-approve >"${LOG_DATETIME}_93_destroy_additional.log"
+
+    # Manually check: https://aws.amazon.com/premiumsupport/knowledge-center/check-for-active-resources/
 }
 
-h2 "STEP 41. terraform init: ${LOG_DATETIME}_41_tf_init.txt"
-terraform init >"${LOG_DATETIME}_41_tf_init.txt"
+h2 "STEP 41. terraform init: ${LOG_DATETIME}_41_tf_init.log"
+terraform init >"${LOG_DATETIME}_41_tf_init.log"
 echo $?
 
-h2 "STEP 42. ${LOG_DATETIME}_42_tf_plan.txt"
-terraform plan >"${LOG_DATETIME}_42_tf_plan.txt"
+h2 "STEP 42. ${LOG_DATETIME}_42_tf_plan.log"
+terraform plan >"${LOG_DATETIME}_42_tf_plan.log"
 echo $?
 
-h2 "STEP 43. ${LOG_DATETIME}_43_tfsec.txt"
+h2 "STEP 43. ${LOG_DATETIME}_43_tfsec.log"
 # || true added to ignore error 1 returned if errors are found.
-tfsec >"${LOG_DATETIME}_43_tfsec.txt" || true 
+tfsec >"${LOG_DATETIME}_43_tfsec.log" || true 
 echo $?
 
-h2 "STEP 44. terraform apply: ${LOG_DATETIME}_44_tf_apply_eks_blueprints.txt"
-terraform apply -target="module.eks_blueprints" -auto-approve \
-   >"${LOG_DATETIME}_44_tf_apply_eks_blueprints.txt"
-echo $?
-
-h2 "STEP 45. terraform apply: ${LOG_DATETIME}_45_tf_apply_vpc.txt"
+h2 "STEP 44. terraform apply: ${LOG_DATETIME}_44_tf_apply_vpc.log"
 terraform apply -target="module.vpc" -auto-approve \
-   >"${LOG_DATETIME}_45_tf_apply_vpc.txt"
+   >"${LOG_DATETIME}_44_tf_apply_vpc.log"
 echo $?
 
-h2 "STEP 46. terraform apply: ${LOG_DATETIME}_46_tf_apply.txt"
-terraform apply -auto-approve >"${LOG_DATETIME}_46_tf_apply.txt"
+h2 "STEP 45. terraform apply: ${LOG_DATETIME}_45_tf_apply_eks_blueprints.log"
+terraform apply -target="module.eks_blueprints" -auto-approve \
+   >"${LOG_DATETIME}_45_tf_apply_eks_blueprints.log"
 echo $?
 
-h2 "STEP 47. update-kubeconfig: ${LOG_DATETIME}_47_tf_update_kubeconfig.txt"
+h2 "STEP 46. terraform apply: ${LOG_DATETIME}_46_tf_apply.log"
+terraform apply -auto-approve >"${LOG_DATETIME}_46_tf_apply.log"
+echo $?
+
+h2 "STEP 47. update-kubeconfig: ${K8S_CLUSTER_ID} to ${LOG_DATETIME}_47_tf_update_kubeconfig.log"
 aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}" \
-   >"${LOG_DATETIME}_47_tf_update_kubeconfig.txt"
-   # Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
+   >"${LOG_DATETIME}_47_tf_update_kubeconfig.log"
+   # OUTPUT: Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
 
 h2 "STEP 48. list worker nodes:"
 kubectl get nodes
@@ -931,13 +919,13 @@ h2 "STEP 50. List resources allocated:"
 h2 "STEP 51. Diagram resources:"
 
 h2 "STEP 52. Get costs (by tags):"
-
+   # Kubecost?
 
 if [ "${REMOVE_K8S_AT_END}" = true ]; then  # -DE
     Cleanup_k8s  # function defined above. 90-93
 
-    h2 "STEP 94. Remove run log.txt files:"
-    rm "${LOG_DATETIME}*"
+    h2 "STEP 94. Remove run log files:"
+    rm "${LOG_DATETIME}*.log"
     # Recover deleted files from your Mac Trash
    
 fi # REMOVE_K8S_AT_END
