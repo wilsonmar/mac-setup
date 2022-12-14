@@ -19,7 +19,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.18"  # out to log
+SCRIPT_VERSION="v0.19"  # add region
 LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -38,17 +38,23 @@ args_prompt() {
    echo "   -q          # -quiet headings for each step"
    echo " "
    echo "   -ni         # -no install of utilities brew, jq, etc. (default is install)"
-   echo "   -installdir \"/usr/local/bin\"   # target folder for program installation"
+   echo "   -DGB        # Delete GitHub at Beginning (download again)"
+   echo "   -GFP \"$HOME/githubs\"   # Folder path to install repo from GitHub"
+   echo "   -c          # -clone again from GitHub (default uses what exists)"
+#   echo "   -G          # -GitHub is the basis for program to run"
+   echo " "
    echo "   -email \"johndoe@gmail.com\"     # to generate GPG keys for"
    echo "   -gpg        #  Install gpg2 utility and generate key if needed"
    echo " "
-   echo "   -tf \"1.3.6\"       # Specify version of Terraform to install"
+   echo "   -aws        # -AWS cloud awscli"
+   echo "   -region \"us-east-1\"    # region in the cloud awscli"
+   echo "   -tf \"1.3.6\"            # version of Terraform to install"
 #   echo "   -consul \"1.13.1\"  # Specify version of Consul to install"
-#   echo "   -oss        #  Install Open Source Sofware edition instead of default Enterprise edition"
+#   echo "   -oss        #  Install Open Source instead of default Enterprise ed."
    echo "   -vers       #  list versions released"
    echo " "
-   echo "   -aws        # -AWS cloud awscli"
-   echo "   -DE         # -Delete terraform-created Kubernetes resources at End of run"
+   echo "   -DTB        # Destroy Terraform-created resources at Beginning of run"
+   echo "   -DTE        # Destroy Terraform-created resources at End of run"
    echo " "
    echo "USAGE EXAMPLES:"
    echo "# (one time) change permission to enable run:"
@@ -88,14 +94,27 @@ exit_abnormal() {            # Function: Exit with error.
    INSTALL_OPEN_SOURCE=false    # -oss turns to true
    MY_EMAIL_ADDRESS=""          # johndoe@gmail.com
 
+   GITHUB_FOLDER_PATH=""        # -GFP (default "$HOME/githubs")
+   DEL_GH_AT_BEG=false          # -DGB
+   CLONE_GITHUB=false           # -c
+   GITHUB_REPO_FOLDER="terraform-aws-eks-blueprints"
+   GITHUB_REPO_URL="https://github.com/aws-ia/terraform-aws-eks-blueprints"
+   GITHUB_PROJ_PATH="examples"
+   GITHUB_PROJ_FOLDER="eks-cluster-with-new-vpc"
+   K8S_CLUSTER_ID="${GITHUB_PROJ_FOLDER}"
+   REMOVE_GITHUB_AFTER=false    # -R
+
+   CLOUD_REGION=""              # -region us-east1
    USE_AWS_CLOUD=false          # -aws
    # From AWS Management Console https://console.aws.amazon.com/iam/
    #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
    # EKS_CLUSTER_FILE=""   # cluster.yaml instead
+   
+   KUBE_NAMESPACE="kube-system"
 
 # Post-processing:
-   REMOVE_GITHUB_AFTER=false    # -R
-   REMOVE_K8S_AT_END=false      # -DE
+   DEL_TF_RESC_AT_BEG=false     # -DTB
+   DEL_TF_RESC_AT_END=false     # -DTE
 
 
 ### STEP 04. Custom functions to format echo text to screen
@@ -113,14 +132,14 @@ note() { if [ "${RUN_VERBOSE}" = true ]; then
    printf "\n"
    fi
 }
-success() {
+success() {  # Green
    printf "\n\e[32m\e[1m✔ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
-error() {    # &#9747;
+error() {    # Red &#9747;
    printf "\n\e[31m\e[1m✖ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
-warning() {  # &#9758; or &#9755;
-   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+warning() {  # White bold &#9758; or &#9755;
+   printf "\n\e[47m\e[1m☞ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
 fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
    printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
@@ -150,19 +169,26 @@ while test $# -gt 0; do
       export CONTINUE_ON_ERR=true
       shift
       ;;
-    -h)
-      args_prompt
-      exit 1
+    -c)
+      export CLONE_GITHUB=true
       shift
       ;;
     -consul*)
       shift
       CONSUL_VERSION_PARM=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      GET_ASC=true
+      # GET_ASC=true
       shift
       ;;
-    -DE)
-      export REMOVE_K8S_AT_END=true
+    -DGB)
+      export DEL_GH_AT_BEG=true
+      shift
+      ;;
+    -DTB)
+      export DEL_TF_RESC_AT_BEG=true
+      shift
+      ;;
+    -DTE)
+      export DEL_TF_RESC_AT_END=true
       shift
       ;;
     -email*)
@@ -174,6 +200,11 @@ while test $# -gt 0; do
       export INSTALL_GPG=true
       shift
       ;;
+    -h)
+      args_prompt
+      exit 1
+      shift
+      ;;
     -installdir*)
       shift
       TARGET_FOLDER_PARM=$( echo "$1" | sed -e 's/^[^=]*=//g' )
@@ -181,6 +212,12 @@ while test $# -gt 0; do
       ;;
     -ni)
       export INSTALL_UTILS=false
+      shift
+      ;;
+    -N*)
+      shift
+      GITHUB_FOLDER_PATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export GITHUB_FOLDER_PATH
       shift
       ;;
     -oss)
@@ -191,12 +228,17 @@ while test $# -gt 0; do
       export RUN_QUIET=true
       shift
       ;;
-    -tf)
+    -region*)
+      shift
+      CLOUD_REGION=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -tf*)
       shift
       TF_VERSION_PARM=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       # There is no Enteprise Terraform version executable:
       INSTALL_TF=true
-      GET_ASC=true
+      # GET_ASC=true
       shift
       ;;
     -vv)
@@ -235,15 +277,17 @@ if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
     export OS_TYPE="macOS"
     export PACKAGE_MANAGER="brew"
 
-    h2 "STEP 06b. Set sleep off (sudo requires password):"
-    RESPONSE=$( sudo systemsetup -getcomputersleep | awk '{print $3}' )
-        # "Never" from Computer Sleep: Never 
-    if [[ "${MACHINE_TYPE}" == *"Never"* ]]; then
-       info "Already at Never"
-    else
-       sudo systemsetup -setcomputersleep Never
-        # 2022-12-10 14:33:10.540 systemsetup[54166:30878895] ### Error:-99 File:/AppleInternal/Library/BuildRoots/a0876c02-1788-11ed-b9c4-96898e02b808/Library/Caches/com.apple.xbs/Sources/Admin/InternetServices.m Line:379
-    fi
+#    h2 "STEP 06b. Set sleep off (sudo requires password):"
+#    # See https://wilsonmar.github.io/mac-setup/#NeverSleep
+#    RESPONSE=$( sudo systemsetup -getcomputersleep | awk '{print $3}' )
+#        # "Never" from Computer Sleep: Never 
+#    if [[ "${MACHINE_TYPE}" == *"Never"* ]]; then
+#       info "Already at Never"
+#    else
+#       sudo systemsetup -setcomputersleep Never
+#        # 2022-12-10 14:33:10.540 systemsetup[54166:30878895] ### Error:-99 File:/AppleInternal/Library/BuildRoots/a0876c02-1788-11ed-b9c4-96898e02b808/Library/Caches/com.apple.xbs/Sources/Admin/InternetServices.m Line:379
+#    fi
+
 # else Windows, Linux...
 fi
 # For HashiCorp downloading:
@@ -331,6 +375,7 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
     # echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
     # eval "$(/opt/homebrew/bin/brew shellenv)"
 
+    #h2 "STEP 10a. Install XCode Command Utilities"
     #if ! command -v clang >/dev/null; then
         # Not in /Applications/Xcode.app/Contents/Developer/usr/bin/
         # sudo xcode-select -switch /Library/Developer/CommandLineTools
@@ -346,34 +391,38 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
     note "$( gcc --version )"  #  note "$(  cc --version )"
     note "$( xcode-select --version )"  # Example output: xcode-select version 2395 (as of 23APR2022).
 
+
     if ! command -v brew >/dev/null; then
-        h2 "Installing brew package manager on macOS using Ruby ..."
+        h2 "STEP 10b. Installing brew package manager on macOS using Ruby ..."
         mkdir homebrew && curl -L https://GitHub.com/Homebrew/brew/tarball/master \
             | tar xz --strip 1 -C homebrew
         # brew upgrades itself later.
     fi
-    
-    h2 "STEP 11. Using brew to install jq, curl, wget, tree"
-    brew install jq  curl  wget tree
-
-    # h2 "STEP 11. Installing Linux equivalents for MacOS ..."
+    brew install jq  curl  wget  tree  git
+    # STEP 10d. Installing Linux equivalents for MacOS ..."
     brew install gnu-getopt coreutils xz gzip bzip2 lzip zstd
+    # STEP 10e. Install Visual Studio Code editor (if parameter allows):"
+    brew install --cask visual-studio-code
+    # h2 "STEP 10f. Install kubectl, tfsec, and other scanners:"
+    brew install kubectl
+    brew install tfsec
 
-    # h2 "STEP 11. Install Visual Studio Code editor (if parameter allows):"
+    # TODO: STEP 10c. Add install of more utilities: python, shellcheck, go
+    # TODO: Add install of more HashiCorp programs: vault, consul, consul-k8s, instruqt, etc.
 
-    h2 "STEP 12. Install awscli, eksctl:"
     # See https://wilsonmar.github.io/mac-setup/#AWS
     if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
-      # For aws-cli commands, see http://docs.aws.amazon.com/cli/latest/userguide/ 
-      brew install awscli
-      brew install eksctl
+       h2 "STEP 11. Install awscli, eksctl:"
+       # For aws-cli commands, see http://docs.aws.amazon.com/cli/latest/userguide/ 
+       brew install awscli
+       brew install eksctl
 
-      note "$( aws --version )"  
+       note "$( aws --version )"  
           # aws-cli/2.9.4 Python/3.11.0 Darwin/21.6.0 source/arm64 prompt/off
           # aws-cli/2.6.1 Python/3.9.12 Darwin/21.4.0 source/arm64 prompt/off
           # aws-cli/2.0.9 Python/3.8.2 Darwin/19.5.0 botocore/2.0.0dev13
-      note "which aws at $( which aws )"  
+       note "which aws at $( which aws )"  
           # /opt/homebrew/bin//aws
           # /usr/local/bin/aws
 
@@ -386,175 +435,218 @@ if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
       #rm aws-err-response.txt
    fi
 
-    h2 "STEP 13. Install GPG2:"
+    h2 "STEP 12. Install GPG2:"
     if ! command -v gpg >/dev/null; then
         # Install gpg if needed: see https://wilsonmar.github.io/git-signing
         note "brew install gnupg2 (gpg) for Terminal use ..."
-        # brew install --cask gpg-suite   # GUI 
-        brew install gnupg2
+    # brew install --cask gpg-suite   # GUI 
+    brew install gnupg2
         # Above should create folder "${HOME}/.gnupg"
     fi
 
-    h2 "STEP 14. Install kubectl, tfsec, and other scanners:"
-    brew install kubectl
-    brew install tfsec
-
-    # TODO: Add install of more utilities: python, shellcheck, go
-
 fi  #INSTALL_UTILS
 
+# "STEP 13. Saved for future use"
 
-h2 "STEP 15. Verify email needed by GPG (if parameter allows):"
-if [ -z "${MY_EMAIL_ADDRESS}" ]; then  # not found:
-    read -e -p "Input email address: " MY_EMAIL_ADDRESS
-    # check for @ in email address:
-    if [[ ! "$MY_EMAIL_ADDRESS" == *"@"* ]]; then
-        fatal "MY_EMAIL_ADDRESS \"$MY_EMAIL_ADDRESS\" does not contain @. Aborting."
-    fi
+h2 "STEP 14. Verify Region:"
+if [ -z "${CLOUD_REGION}" ]; then  # not found:
+   export AWS_REGION="us-east-1"
+   info "-region not specified in parameter, set to default \"$AWS_REGION\" "
+else
+   export AWS_REGION="${CLOUD_REGION}"
+   info "AWS region \"$AWS_REGION\" set from parameter."
 fi
 
-h2 "STEP 16. Ensure a key was created for $MY_EMAIL_ADDRESS:"
-RESPONSE=$( gpg2 --list-keys )
-if [[ "${RESPONSE}" == *"<${MY_EMAIL_ADDRESS}>"* ]]; then  # contains it:
-    success "MY_EMAIL_ADDRESS $MY_EMAIL_ADDRESS found among GPG keys ..."
-        # pub   rsa4096 2021-06-20 [SC] [expires: 2025-06-20]
-        #    123456789E91004D4C5D88CAE21961814AC0EF1B
-        # uid           [ultimate] John Doe <johndoe+github@gmail.com>
-    if [ "${RUN_VERBOSE}" = true ]; then  # -v
-        echo "$RESPONSE"
-    fi
-else
-    warning "MY_EMAIL_ADDRESS $MY_EMAIL_ADDRESS NOT found among GPG keys ..."
-    # exit 9
-    # TODO: recover by creating key:
 
-    h2 "STEP 17. Set permission for the folder and conf file:"
-    # ~/.gnupg should have been created by install of gpg2
-    if [ ! -d "${HOME}/.gnupg" ]; then  # found per https://gnupg.org/documentation/manuals/gnupg-2.0/GPG-Configuration.html
-        note "mkdir -m 0700 .gnupg"
-        # mkdir -m 0700 .gnupg
-        chmod 0700 "${HOME}/.gnupg"
+if [ "${INSTALL_TF}" = true ]; then  # -tf
+
+    h2 "STEP 25. Lookup latest Terraform app version:"
+    TF_LATEST_VERSION=$( curl -sS https://api.releases.hashicorp.com/v1/releases/terraform/latest |jq -r .version )
+    # Example: "1.3.6"
+    if [[ "${TF_LATEST_VERSION}" == *"null"* ]]; then
+        fatal "null TF_VERSION_PARM"
+        exit 9
+    else
+        info "Latest Terraform version is \"${TF_LATEST_VERSION}\" ..."
     fi
 
-    if [ -f "${HOME}/.gnupg/gpg.conf" ]; then  # found - remove for rebuilt:
-        note "rm .gnupg/gpg.conf"
-        rm "${HOME}/.gnupg/gpg.conf"
+    h2 "STEP 26. List app versions if requested by \"-vers\" parameter:"
+    if [ "${LIST_VERSIONS}" = true ]; then  # -vers
+        note "Look at browser for https://releases.hashicorp.com/terraform"
+        TF_VER_LIST="https://releases.hashicorp.com/terraform"
+        open "${TF_VER_LIST}"
+        # FIXME: Wait until it appears?
+
+        if [ "${RUN_VERBOSE}" = true ]; then  # -v
+            note "Look at browser for https://github.com/hashicorp/terraform/releases"
+            # show website with description of each release:
+            TF_VER_LIST="https://github.com/hashicorp/terraform/releases"
+            open "${TF_VER_LIST}"
+        fi
+        note "Exiting because attention switched to browser page."
+        exit
     fi
-    note "Creating $HOME/.gnupg/gpg.conf"  # Linux /usr/share/gnupg2/ 
-    touch "$HOME/.gnupg/gpg.conf"
-    chmod 600 "$HOME/.gnupg/gpg.conf"
 
-    # See https://wilsonmar.github.io/git-signing/#verify-gpg-install-version
-    # and https://serverfault.com/questions/691120/how-to-generate-gpg-key-without-user-interaction
-    # No response is expected if the permissions command is successful.
+    h2 "STEP 27. Determine what version of Terraform to install:"
+    if [ -z "${TF_VERSION_PARM}" ]; then  # is NOT specified
+        note "-tf parameter not specified with a version."
+        export TF_VERSION_PARM="${TF_LATEST_VERSION}"
+        note "-tf ${TF_LATEST_VERSION} is assumed based on the latest version."
+    fi  # parameter specified:
 
-    h2 "STEP 18: Generate 4096-bit RSA GPG key for $MY_EMAIL_ADDRESS ..."
-    # Create a keydetails file containing commands used by 
-    cat >keydetails <<EOF
-    %echo Generating a basic OpenPGP key for $MY_EMAIL_ADDRESS
-    Key-Type: RSA
-    Key-Length: 4096
-    Subkey-Type: RSA
-    Subkey-Length: 4096
-    Name-Real: User 1
-    Name-Comment: User 1
-    Name-Email: $MY_EMAIL_ADDRESS
-    Expire-Date: 0
-    %no-ask-passphrase
-    %no-protection
-    %pubring pubring.kbx
-    %secring trustdb.gpg
-    # Do a commit here, so that we can later print "done" :-)
-    %commit
-    %echo done
-EOF
-
-    h2 "STEP 19: Generate key pair:"
-    gpg2 --verbose --batch --gen-key keydetails
-        # gpg --default-new-key-algo rsa4096 --gen-key
-
-        # gpg: Generating a basic OpenPGP key
-        # gpg: writing public key to 'pubring.kbx'
-        # gpg: writing self signature
-        # gpg: RSA/SHA256 signature from: "2807AFD6A08A9BD0 [?]"
-        # gpg: writing key binding signature
-        # gpg: RSA/SHA256 signature from: "2807AFD6A08A9BD0 [?]"
-        # gpg: RSA/SHA256 signature from: "A205B8C17D16A303 [?]"
-        # gpg: done
-        # gpg (GnuPG/MacGPG2) 2.2.34; Copyright (C) 2022 g10 Code GmbH
-        # This is free software: you are free to change and redistribute it.
-        # There is NO WARRANTY, to the extent permitted by law.
-
-        # gpg: key "johndoe@gmail.com" not found: No public key
-echo "here"
-
-    # So we can encrypt without prompt, set trust to 5 for "I trust ultimately" the key :
-    echo -e "5\ny\n" |  gpg2 --command-fd 0 --expert --edit-key $MY_EMAIL_ADDRESS trust;
-
-    # TODO: Test whether the key can encrypt and decrypt:
-    # gpg2 -e -a -r $MY_EMAIL_ADDRESS keydetails
-    # TODO: Check failure
-        # gpg: error retrieving 'wilsonmar@gmail.com' via Local: Unusable public key
-        # gpg: error retrieving 'wilsonmar@gmail.com' via WKD: Server indicated a failure
-        # gpg: wilsonmar@gmail.com: skipped: Server indicated a failure
-        # gpg: keydetails: encryption failed: Server indicated a failure
-        # https://sites.lafayette.edu/newquisk/archives/504
-
-    # Remove:
-    rm keydetails
-    gpg2 -d keydetails.asc
-    rm keydetails.asc
-
-    h2 "STEP 20: Create a public GPG (.asc) file between BEGIN PGP PUBLIC KEY BLOCK-----"
-    gpg --armor --export $MY_EMAIL_ADDRESS > "$MY_EMAIL_ADDRESS.asc"
-    ls -al "$MY_EMAIL_ADDRESS.asc"
-
-    echo "Please switch to browser window opened to https://github.com/settings/keys, then "
-    cat "$MY_EMAIL_ADDRESS.asc" | pbcopy
-    open https://github.com/settings/keys
-    echo "paste (command+V) the private GPG key from Clipboard, then switch back " 
-    read -e -p "here to press Enter to continue: " RESPONSE
-
-    # FIX: extract key fingerprint (123456789E91004D4C5D88CAE21961814AC0EF1B above) :
-    RESPONSE=$( gpg --show-keys "$MY_EMAIL_ADDRESS.asc" )
-    echo $RESPONSE
-
-    h2 "Verifying fingerprint ..."
-    # Extract 2nd line (containing fingerprint):
-    RESPONSE2=$( echo "$RESPONSE" | sed -n 2p ) 
-    # Remove spaces:
-    FINGERPRINT=$( echo "${RESPONSE2}" | xargs )
-    # Verify we want key ID 72D7468F and fingerprint C874 011F 0AB4 0511 0D02 1055 3436 5D94 72D7 468F. 
-    gpg --fingerprint "${FINGERPRINT}"
-
-echo "DEBUGGING";exit
-
-    # Update the gpgconf file dynamically
-    # echo ‘default-key:0:”xxxxxxxxxxxxxxxxxxxx’ | gpgconf —change-options gpg
-        # note there is only ONE double-quote to signify a text string is about to begin.
-        # There is a pair of single-quote surrounding the entire echo statement.
-    h2 "$HOME/.gnupg/gpg.conf now contains ..."
-    cat "$HOME/.gnupg/gpg.conf"
-
-
-echo "DEBUGGING";exit
-
-    h2 "STEP 21: "
-    gpg2 -d "$MY_EMAIL_ADDRESS.asc"
-    rm "$MY_EMAIL_ADDRESS.asc"
-
-    # TODO: Verify
-    # default-key "${RESPONSE}"  # contents = 123456789E91004D4C5D88CAE21961814AC0EF1B
-        # cat $HOME/.gnupg/gpg.conf should now contain:
-        # auto-key-retrieve
-        # no-emit-version
-        # use-agent
-        # default-key 123456789E91004D4C5D88CAE21961814AC0EF1B
-
-fi  # MY_EMAIL_ADDRESS
+fi # INSTALL_TF
 
 
 if [ "${GET_ASC}" = true ]; then  # -asc
+
+    h2 "STEP 15. Ensure an email is provided for GPG (if parameter allows):"
+    if [ -z "${MY_EMAIL_ADDRESS}" ]; then  # not found:
+        read -e -p "Input email address: " MY_EMAIL_ADDRESS
+        # check for @ in email address:
+        if [[ ! "$MY_EMAIL_ADDRESS" == *"@"* ]]; then
+            fatal "MY_EMAIL_ADDRESS \"$MY_EMAIL_ADDRESS\" does not contain @. Aborting."
+        fi
+    fi
+
+
+    h2 "STEP 16. Ensure a key was created for $MY_EMAIL_ADDRESS:"
+    RESPONSE=$( gpg2 --list-keys )
+            # pub   rsa4096 2021-06-20 [SC] [expires: 2025-06-20]
+            #    123456789E91004D4C5D88CAE21961814AC0EF1B
+            # uid           [ultimate] John Doe <johndoe+github@gmail.com>
+    if [[ "${RESPONSE}" == *"<${MY_EMAIL_ADDRESS}>"* ]]; then  # contains it:
+        success "MY_EMAIL_ADDRESS $MY_EMAIL_ADDRESS found among GPG keys ..."
+        if [ "${RUN_VERBOSE}" = true ]; then  # -v
+            echo "$RESPONSE"
+        fi
+    else
+        warning "MY_EMAIL_ADDRESS $MY_EMAIL_ADDRESS NOT found among GPG keys ..."
+        # TODO: recover by creating key rather than  # exit 9
+
+        h2 "STEP 17. Set permission for the folder and conf file:"
+            # ~/.gnupg should have been created by install of gpg2
+        if [ ! -d "${HOME}/.gnupg" ]; then  # found per https://gnupg.org/documentation/manuals/gnupg-2.0/GPG-Configuration.html
+            note "mkdir -m 0700 .gnupg"
+            # mkdir -m 0700 .gnupg
+            chmod 0700 "${HOME}/.gnupg"
+        fi
+
+        if [ -f "${HOME}/.gnupg/gpg.conf" ]; then  # found - remove for rebuilt:
+            note "rm .gnupg/gpg.conf"
+            rm "${HOME}/.gnupg/gpg.conf"
+        fi
+        note "Creating $HOME/.gnupg/gpg.conf"  # Linux /usr/share/gnupg2/ 
+        touch "$HOME/.gnupg/gpg.conf"
+        chmod 600 "$HOME/.gnupg/gpg.conf"
+
+        # See https://wilsonmar.github.io/git-signing/#verify-gpg-install-version
+        # and https://serverfault.com/questions/691120/how-to-generate-gpg-key-without-user-interaction
+        # No response is expected if the permissions command is successful.
+
+        h2 "STEP 18: Generate 4096-bit RSA GPG key for $MY_EMAIL_ADDRESS ..."
+        # Create a keydetails file containing commands used by 
+        cat >keydetails <<EOF
+        %echo Generating a basic OpenPGP key for $MY_EMAIL_ADDRESS
+        Key-Type: RSA
+        Key-Length: 4096
+        Subkey-Type: RSA
+        Subkey-Length: 4096
+        Name-Real: User 1
+        Name-Comment: User 1
+        Name-Email: $MY_EMAIL_ADDRESS
+        Expire-Date: 0
+        %no-ask-passphrase
+        %no-protection
+        %pubring pubring.kbx
+        %secring trustdb.gpg
+        # Do a commit here, so that we can later print "done" :-)
+        %commit
+        %echo done
+EOF
+
+        h2 "STEP 19: Generate key pair:"
+        gpg2 --verbose --batch --gen-key keydetails
+            # gpg --default-new-key-algo rsa4096 --gen-key
+
+            # gpg: Generating a basic OpenPGP key
+            # gpg: writing public key to 'pubring.kbx'
+            # gpg: writing self signature
+            # gpg: RSA/SHA256 signature from: "2807AFD6A08A9BD0 [?]"
+            # gpg: writing key binding signature
+            # gpg: RSA/SHA256 signature from: "2807AFD6A08A9BD0 [?]"
+            # gpg: RSA/SHA256 signature from: "A205B8C17D16A303 [?]"
+            # gpg: done
+            # gpg (GnuPG/MacGPG2) 2.2.34; Copyright (C) 2022 g10 Code GmbH
+            # This is free software: you are free to change and redistribute it.
+            # There is NO WARRANTY, to the extent permitted by law.
+
+            # gpg: key "johndoe@gmail.com" not found: No public key
+    echo "here"
+
+        # So we can encrypt without prompt, set trust to 5 for "I trust ultimately" the key :
+        echo -e "5\ny\n" |  gpg2 --command-fd 0 --expert --edit-key $MY_EMAIL_ADDRESS trust;
+
+        # TODO: Test whether the key can encrypt and decrypt:
+        # gpg2 -e -a -r $MY_EMAIL_ADDRESS keydetails
+        # TODO: Check failure
+            # gpg: error retrieving 'wilsonmar@gmail.com' via Local: Unusable public key
+            # gpg: error retrieving 'wilsonmar@gmail.com' via WKD: Server indicated a failure
+            # gpg: wilsonmar@gmail.com: skipped: Server indicated a failure
+            # gpg: keydetails: encryption failed: Server indicated a failure
+            # https://sites.lafayette.edu/newquisk/archives/504
+
+        # Remove:
+        rm keydetails
+        gpg2 -d keydetails.asc
+        rm keydetails.asc
+
+        h2 "STEP 20: Create a public GPG (.asc) file between BEGIN PGP PUBLIC KEY BLOCK-----"
+        gpg --armor --export $MY_EMAIL_ADDRESS > "$MY_EMAIL_ADDRESS.asc"
+        ls -alT "$MY_EMAIL_ADDRESS.asc"
+
+        echo "Please switch to browser window opened to https://github.com/settings/keys, then "
+        cat "$MY_EMAIL_ADDRESS.asc" | pbcopy
+        open https://github.com/settings/keys
+        echo "paste (command+V) the private GPG key from Clipboard, then switch back " 
+        read -e -p "here to press Enter to continue: " RESPONSE
+
+        # FIX: extract key fingerprint (123456789E91004D4C5D88CAE21961814AC0EF1B above) :
+        RESPONSE=$( gpg --show-keys "$MY_EMAIL_ADDRESS.asc" )
+        echo $RESPONSE
+
+        h2 "Verifying fingerprint ..."
+        # Extract 2nd line (containing fingerprint):
+        RESPONSE2=$( echo "$RESPONSE" | sed -n 2p ) 
+        # Remove spaces:
+        FINGERPRINT=$( echo "${RESPONSE2}" | xargs )
+        # Verify we want key ID 72D7468F and fingerprint C874 011F 0AB4 0511 0D02 1055 3436 5D94 72D7 468F. 
+        gpg --fingerprint "${FINGERPRINT}"
+
+    echo "DEBUGGING 1";exit
+
+        # Update the gpgconf file dynamically
+        # echo ‘default-key:0:”xxxxxxxxxxxxxxxxxxxx’ | gpgconf —change-options gpg
+            # note there is only ONE double-quote to signify a text string is about to begin.
+            # There is a pair of single-quote surrounding the entire echo statement.
+        h2 "$HOME/.gnupg/gpg.conf now contains ..."
+        cat "$HOME/.gnupg/gpg.conf"
+
+    echo "DEBUGGING 2";exit
+
+        h2 "STEP 21: "
+        gpg2 -d "$MY_EMAIL_ADDRESS.asc"
+        rm "$MY_EMAIL_ADDRESS.asc"
+
+        # TODO: Verify
+        # default-key "${RESPONSE}"  # contents = 123456789E91004D4C5D88CAE21961814AC0EF1B
+            # cat $HOME/.gnupg/gpg.conf should now contain:
+            # auto-key-retrieve
+            # no-emit-version
+            # use-agent
+            # default-key 123456789E91004D4C5D88CAE21961814AC0EF1B
+
+    fi  # MY_EMAIL_ADDRESS
+
 
     h2 "STEP 22. Get HashiCorp ASC key:"
     # See https://tinkerlog.dev/journal/verifying-gpg-signatures-history-terms-and-a-how-to-guide
@@ -569,14 +661,14 @@ if [ "${GET_ASC}" = true ]; then  # -asc
     export ASC_SHA="72D7468F"
     note "ASC_SHA=${ASC_SHA}"
 
-    if [ ! -f "hashicorp.asc" ]; then  # not found:
-        note "STEP 22. Downloading HashiCorp ASC key:"
+    if [ ! -f "hashicorp.asc:?" ]; then  # not found:
+        note "STEP 22. Downloading HashiCorp ASC key to $PWD:"
         # Get PGP Signature from a commonly trusted 3rd-party (Keybase) - asc file applicable to all HashiCorp products.
 
-        # This does not return a file:
-        # wget --no-check-certificate -q hashicorp.asc https://keybase.io/hashicorp/pgp_keys.asc
+        # This does not return a file anymore:
+        wget --no-check-certificate -q hashicorp.asc https://keybase.io/hashicorp/pgp_keys.asc || 
         # Alternately: 
-        curl -s "https://keybase.io/_/api/1.0/key/fetch.json?pgp_key_ids=34365D9472D7468F" | jq -r '.keys | .[0] | .bundle' > hashicorp.asc
+        sudo curl -s "https://keybase.io/_/api/1.0/key/fetch.json?pgp_key_ids=34365D9472D7468F" | jq -r '.keys | .[0] | .bundle' > "hashicorp.asc"
         # Get public key:
             # See https://discuss.hashicorp.com/t/hcsec-2021-12-codecov-security-event-and-hashicorp-gpg-key-exposure/23512
             # And https://www.securityweek.com/twilio-hashicorp-among-codecov-supply-chain-hack-victims
@@ -589,7 +681,7 @@ if [ "${GET_ASC}" = true ]; then  # -asc
             ls -alT hashicorp.asc
         fi
     else
-        note "Using existing hashicorp.asc file  (7717 bytes) ..."
+        note "Using existing hashicorp.asc file  (7717 bytes?) ..."
         ls -alT hashicorp.asc
     fi
 
@@ -630,6 +722,7 @@ if [ "${GET_ASC}" = true ]; then  # -asc
 
 fi # GET_ASC
 
+
 Install_terraform(){  # function
 
     h2 "STEP 29. Download version ${TF_VERSION_PARM} of Terraform ${ASC_SHA}:"
@@ -645,10 +738,12 @@ Install_terraform(){  # function
         wget "https://releases.hashicorp.com/terraform/${TF_VERSION_PARM}/terraform_${TF_VERSION_PARM}_SHA256SUMS"
         # terraform_1.3.6_SHA256SUMS   1.35K  --.-KB/s    in 0s
     fi
+
     if [ ! -f "terraform_${TF_VERSION_PARM}_SHA256SUMS.${ASC_SHA}.sig" ]; then  # not found:
         wget "https://releases.hashicorp.com/terraform/${TF_VERSION_PARM}/terraform_${TF_VERSION_PARM}_SHA256SUMS.${ASC_SHA}.sig"
         # terraform_1.3.6_SHA256SUMS.72D74   566  --.-KB/s    in 0s  
     fi
+
     if [ ! -f "terraform_${TF_VERSION_PARM}_SHA256SUMS.sig" ]; then  # not found:
         wget "https://releases.hashicorp.com/terraform/${TF_VERSION_PARM}/terraform_${TF_VERSION_PARM}_SHA256SUMS.sig"
         # terraform_1.3.6_SHA256SUMS.sig   566  --.-KB/s    in 0s
@@ -732,41 +827,7 @@ Install_terraform(){  # function
 
 } ## Function Install_TF()
 
-#if [ "${INSTALL_TF}" = true ]; then  # -tf
-
-    h2 "STEP 25. Lookup latest Terraform app version:"
-    TF_LATEST_VERSION=$( curl -sS https://api.releases.hashicorp.com/v1/releases/terraform/latest |jq -r .version )
-    # Example: "1.3.6"
-    if [[ "${TF_LATEST_VERSION}" == *"null"* ]]; then
-        fatal "null TF_VERSION_PARM"
-        exit 9
-    else
-        info "Latest Terraform version is \"${TF_LATEST_VERSION}\" ..."
-    fi
-
-    h2 "STEP 26. List app versions if requested by \"-vers\" parameter:"
-    if [ "${LIST_VERSIONS}" = true ]; then  # -vers
-        note "Look at browser for https://releases.hashicorp.com/terraform"
-        TF_VER_LIST="https://releases.hashicorp.com/terraform"
-        open "${TF_VER_LIST}"
-        # FIXME: Wait until it appears?
-
-        if [ "${RUN_VERBOSE}" = true ]; then  # -v
-            note "Look at browser for https://github.com/hashicorp/terraform/releases"
-            # show website with description of each release:
-            TF_VER_LIST="https://github.com/hashicorp/terraform/releases"
-            open "${TF_VER_LIST}"
-        fi
-        note "Exiting because attention switched to browser page."
-        exit
-    fi
-
-    h2 "STEP 27. Determine what version of Terraform to install:"
-    if [ -z "${TF_VERSION_PARM}" ]; then  # is NOT specified
-        note "-tf parameter not specified with a version."
-        export TF_VERSION_PARM="${TF_LATEST_VERSION}"
-        note "-tf ${TF_LATEST_VERSION} is assumed based on the latest version."
-    fi  # parameter specified:
+if [ "${INSTALL_TF}" = true ]; then  # -tf
 
     h2 "STEP 28. Determine what version of Terraform is already installed:"
     TF_INSTALLED_AT=$( command -v terraform )  # response: /opt/homebrew/bin//terraform
@@ -790,9 +851,9 @@ Install_terraform(){  # function
         Install_terraform  # function STEP 29-35
     fi
 
-    h2 "STEP 36. Confirm install of ${TF_VERSION_PARM}:"
+    h2 "STEP 36. Confirm install of Terraform ${TF_VERSION_PARM}:"
     TF_VERSION=$( terraform --version | head -1 | awk '{print $2}' )
-    TF_VERSION="${TF_VERSION:1}"
+    TF_VERSION="${TF_VERSION}"
     if [[ "${TF_VERSION_PARM}" != *"${TF_VERSION}"* ]]; then  # contains it:
        fatal "Terraform binary ${TF_VERSION} just installed is not the ${TF_LATEST_VERSION} requested."
        exit 9
@@ -820,37 +881,162 @@ Install_terraform(){  # function
         rm "${FILE_TO_DELETE}"
     fi
 
-# fi  # INSTALL_TF
+fi  # INSTALL_TF
 
-
-# TODO: Add install of more HashiCorp programs: vault, consul, consul-k8s, instruqt, etc.
 
 ######################
 
-AWS_REGION="us-east-1"
-K8S_CLUSTER_ID="eks-cluster-with-new-vpc"
-#git clone https://github.com/aws-ia/terraform-aws-eks-blueprints.git --depth 1
-#cd "examples/${K8S_CLUSTER_ID}"  # eks-cluster-with-new-vpc/
+note "Now at $PWD to start."
+
+h2 "STEP 38. Obtain GitHub repo (depending on parameters):"
+# See https://wilsonmar.github.io/mac-setup/#ObtainRepo
+# To ensure that we have a project folder (from GitHub):
+if [ -z "${GITHUB_FOLDER_PATH}" ]; then   # value not specified in parm
+    note "No -GFP (GITHUB_FOLDER_PATH) specified in run parameters"
+    GITHUB_FOLDER_PATH="$HOME/githubs"
+    warning "Default GFP \"$GITHUB_FOLDER_PATH\" being used."
+fi
+cd  # to root folder
+cd "${GITHUB_FOLDER_PATH}" || return # as suggested by SC2164
+info "Now at ${GITHUB_FOLDER_PATH}"
+
+# https://www.zshellcheck.net/wiki/SC2115 :
+# Use "${var:?}" to ensure this never expands to / .
+if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path already created.
+    note "Using existing folder at \"${GITHUB_FOLDER_PATH:?}\" to clone github"
+else
+    note "Creating folder path ${GITHUB_FOLDER_PATH:?} to clone github"
+    sudo mkdir -p "${GITHUB_FOLDER_PATH:?}"
+fi
+cd "${GITHUB_FOLDER_PATH:?}" || return # as suggested by SC2164
+note "Now at $PWD"
+
+Clone_GitHub_repo(){   # function
+    note "Obtaining repo \"${GITHUB_REPO_URL:?}\" at $PWD:"
+    sudo git clone "${GITHUB_REPO_URL}" --depth 1
+    ls -alT "${GITHUB_REPO_FOLDER}"
+    cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
+    note "At path $PWD"
+}
+if [ -d "${GITHUB_REPO_FOLDER:?}" ]; then  # directory already exists:
+    if [ "${DEL_GH_AT_BEG}" = true ]; then   # -DGB (Delete GitHub at Beginning)
+        h2 "Removing project folder $GITHUB_REPO_FOLDER:? ..."
+        ls -al "${GITHUB_REPO_FOLDER}"
+        sudo rm -rf "${GITHUB_REPO_FOLDER}"
+    fi
+    
+    if [ "${CLONE_GITHUB}" = true ]; then   # -c specified to clone again:
+        Clone_GitHub_repo  # function
+    else
+        warning "Using GitHub repo contents from previous run:"
+    fi
+else  # GITHUB_REPO_FOLDER does not exist
+    Clone_GitHub_repo  # function
+fi
+cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
+info "Now at $PWD"
+info "$( ls -alT .git/index )"
+    # .git/index holds all git history, so is changed on every git operation.
+
+cd "${GITHUB_PROJ_PATH}/${GITHUB_PROJ_FOLDER}" || return # as suggested by SC2164
+info "Now at $PWD"
+
+k8s_nodes_pods_list(){
+    # See https://wilsonmar.github.io/terraform/#k8s_nodes_pods_list
+
+    h2 "STEP 39. list worker nodes and pods (function k8s_nodes_pods_list):"
+    RESPONSE=$( { kubectl get nodes | sed s/Output/Useless/ > outfile; } 2>&1 ) ||
+       # See https://stackoverflow.com/questions/962255/how-to-store-standard-error-in-a-variable
+    if [[ "${RESPONSE}" == *"no such host"* ]]; then
+        # If nodes are no longer available:
+        # E1214 07:58:44.629220   46304 memcache.go:238] couldn't get current server API group list: Get "https://0E7188B181023B24E8C319BB2E31DACA.gr7.us-west-2.eks.amazonaws.com/api?timeout=32s": dial tcp: lookup 0E7188B181023B24E8C319BB2E31DACA.gr7.us-west-2.eks.amazonaws.com: no such host
+       warning "Command \"kubectl get nodes\" found no nodes!"
+       K8S_NODES_FOUND=false
+       # No need to display the error.
+    else
+       K8S_NODES_FOUND=true
+       info "${RESPONSE}"
+    fi
+
+    RESPONSE=$( { kubectl get pods -n ${KUBE_NAMESPACE} | sed s/Output/Useless/ > outfile; } 2>&1 ) ||
+    if [[ "${RESPONSE}" == *"no such host"* ]]; then
+       warning "Command \"kubectl get pods -n ${KUBE_NAMESPACE}\" found no hosts!"
+    else
+       info "${RESPONSE}"
+        # NAME                                                         READY
+        # aws-load-balancer-controller-854cb78798-p47sr                1/1
+        # aws-load-balancer-controller-854cb78798-qthql                1/1
+        # aws-node-nzvzq                                               1/1
+        # aws-node-pfbl2                                               1/1
+        # aws-node-qcv2m                                               1/1
+        # cluster-autoscaler-aws-cluster-autoscaler-7ccbf68bc9-bgzg2   1/1
+        # cluster-proportional-autoscaler-coredns-6fcfcd685f-lpkwl     1/1
+        # coredns-57ff979f67-mpkzg                                     1/1
+        # coredns-57ff979f67-nxn6v                                     1/1
+        # ebs-csi-controller-79998cddcc-67c4c                          6/6
+        # ebs-csi-controller-79998cddcc-vlfm4                          6/6
+        # ebs-csi-node-l8gxl                                           3/3
+        # ebs-csi-node-px26g                                           3/3
+        # ebs-csi-node-tbhb8                                           3/3
+        # kube-proxy-2bnb4                                             1/1
+        # kube-proxy-ghpm2                                             1/1
+        # kube-proxy-j5c9s                                             1/1
+        # metrics-server-7d76b744cd-vchnk                              1/1
+    fi
+}
 
 Cleanup_k8s() {
-    h2 "STEP 90. Destroy addons:"
-    terraform destroy -target="module.eks_blueprints_kubernetes_addons" \
-       -auto-approve >"${LOG_DATETIME}_90_destroy_addons.log"
 
-    h2 "STEP 91. Destroy blueprints:"
-    terraform destroy -target="module.eks_blueprints" \
-       -auto-approve >"${LOG_DATETIME}_91_destroy_eks_blueprints.log"
+    if [ "${DEL_TF_RESC_AT_BEG}" = true ]; then  # -DTB
 
-    h2 "STEP 92. Destroy vpc:"
-    terraform destroy -target="module.vpc" \
-       -auto-approve >"${LOG_DATETIME}_92_destroy_vpc.log"
+        h2 "STEP 90. Destroy addons:"
+        terraform destroy -target="module.eks_blueprints_kubernetes_addons" \
+           -auto-approve >"${LOG_DATETIME}_90_destroy_addons.log"
+        echo $?
 
-    h2 "STEP 93. Destroy additional:"
-    terraform destroy \
-       -auto-approve >"${LOG_DATETIME}_93_destroy_additional.log"
+        h2 "STEP 91. Destroy blueprints:"
+        terraform destroy -target="module.eks_blueprints" \
+           -auto-approve >"${LOG_DATETIME}_91_destroy_eks_blueprints.log"
+        echo $?
+
+        h2 "STEP 92. Destroy vpc:"
+        terraform destroy -target="module.vpc" \
+           -auto-approve >"${LOG_DATETIME}_92_destroy_vpc.log"
+        echo $?
+
+        h2 "STEP 93. Destroy additional:"
+        terraform destroy \
+           -auto-approve >"${LOG_DATETIME}_93_destroy_additional.log"
+            # Destroy complete! Resources: 93 destroyed.
+        echo $?
+
+        info "K8s resources cleaned up by function Cleanup_k8s."
+    else
+       info "K8s nodes may be live and -DTB not specified to recreate."
+       exit
+    fi
 
     # Manually check: https://aws.amazon.com/premiumsupport/knowledge-center/check-for-active-resources/
 }
+
+k8s_nodes_pods_list
+if [ "${K8S_NODES_FOUND}" = true ]; then
+    if [ "${DEL_TF_RESC_AT_BEG}" = true ]; then  # -DTB
+       h2 "STEP 40. Destroy at beginning:"
+       Cleanup_k8s || # function defined above. 90-93
+       info "K8s resources cleaned up."
+    else
+       info "K8s nodes are live and -DTB not specified to recreate."
+       exit
+    fi
+fi
+
+# Invoke upon non-0 exit in error from subsequent commands:
+trap "Cleanup_k8s" ERR
+
+# change ownership to avoid errors:
+sudo chown -R $(whoami) .
+sudo chmod -R +rwX .
 
 h2 "STEP 41. terraform init: ${LOG_DATETIME}_41_tf_init.log"
 terraform init >"${LOG_DATETIME}_41_tf_init.log"
@@ -879,56 +1065,41 @@ h2 "STEP 46. terraform apply: ${LOG_DATETIME}_46_tf_apply.log"
 terraform apply -auto-approve >"${LOG_DATETIME}_46_tf_apply.log"
 echo $?
 
-h2 "STEP 47. update-kubeconfig: ${K8S_CLUSTER_ID} to ${LOG_DATETIME}_47_tf_update_kubeconfig.log"
+if [ -z "${K8S_CLUSTER_ID}" ]; then  # not found:
+${K8S_CLUSTER_ID}
+
+h2 "STEP 47. kubeconfig ${AWS_REGION} ${K8S_CLUSTER_ID} to ${LOG_DATETIME}_47_tf_update_kubeconfig.log"
 aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}" \
    >"${LOG_DATETIME}_47_tf_update_kubeconfig.log"
    # OUTPUT: Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
 
-h2 "STEP 48. list worker nodes:"
-kubectl get nodes
-   # NAME                                        STATUS   ROLES    AGE   VERSION
-   # ip-10-0-10-135.us-west-2.compute.internal   Ready    <none>   10m   v1.23.13-eks-fb459a0
-   # ip-10-0-11-241.us-west-2.compute.internal   Ready    <none>   10m   v1.23.13-eks-fb459a0
-   # ip-10-0-12-240.us-west-2.compute.internal   Ready    <none>   10m   v1.23.13-eks-fb459a0
 
-h2 "STEP 49. list pods:"
-kubectl get pods -n kube-system
-   # NAME                                                         READY   STATUS    RESTARTS   AGE
-   # aws-load-balancer-controller-854cb78798-p47sr                1/1     Running   0          3m52s
-   # aws-load-balancer-controller-854cb78798-qthql                1/1     Running   0          3m52s
-   # aws-node-nzvzq                                               1/1     Running   0          3m17s
-   # aws-node-pfbl2                                               1/1     Running   0          3m56s
-   # aws-node-qcv2m                                               1/1     Running   0          3m34s
-   # cluster-autoscaler-aws-cluster-autoscaler-7ccbf68bc9-bgzg2   1/1     Running   0          3m56s
-   # cluster-proportional-autoscaler-coredns-6fcfcd685f-lpkwl     1/1     Running   0          4m14s
-   # coredns-57ff979f67-mpkzg                                     1/1     Running   0          16m
-   # coredns-57ff979f67-nxn6v                                     1/1     Running   0          16m
-   # ebs-csi-controller-79998cddcc-67c4c                          6/6     Running   0          4m5s
-   # ebs-csi-controller-79998cddcc-vlfm4                          6/6     Running   0          4m6s
-   # ebs-csi-node-l8gxl                                           3/3     Running   0          4m6s
-   # ebs-csi-node-px26g                                           3/3     Running   0          4m6s
-   # ebs-csi-node-tbhb8                                           3/3     Running   0          4m6s
-   # kube-proxy-2bnb4                                             1/1     Running   0          10m
-   # kube-proxy-ghpm2                                             1/1     Running   0          10m
-   # kube-proxy-j5c9s                                             1/1     Running   0          10m
-   # metrics-server-7d76b744cd-vchnk                              1/1     Running   0          4m14s
-
-h2 "STEP 50. List resources allocated:"
+#h2 "STEP 50. List resources allocated:"
 # See https://bobbyhadz.com/blog/aws-list-all-resources
 
-h2 "STEP 51. Diagram resources:"
+#h2 "STEP 51. Diagram resources: -graph"
 
-h2 "STEP 52. Get costs (by tags):"
+#h2 "STEP 52. Impose artificial load:"
+
+#h2 "STEP 53. Get costs by tags:"
    # Kubecost?
 
-if [ "${REMOVE_K8S_AT_END}" = true ]; then  # -DE
+####################
+
+h2 "STEP 95. List log files for ${LOG_DATETIME}...log "
+k8s_nodes_pods_list
+
+h2 "STEP 96. List log files for ${LOG_DATETIME}...log "
+ls -alT "${LOG_DATETIME}*"
+
+if [ "${DEL_TF_RESC_AT_END}" = true ]; then  # -DE
     Cleanup_k8s  # function defined above. 90-93
 
-    h2 "STEP 94. Remove run log files:"
-    rm "${LOG_DATETIME}*.log"
+    h2 "STEP 97. Remove run log files for ${LOG_DATETIME}...log "
+    # rm "${LOG_DATETIME}*"
     # Recover deleted files from your Mac Trash
    
-fi # REMOVE_K8S_AT_END
+fi # DEL_TF_RESC_AT_END
 
 
 ### STEP 99. End-of-run stats
