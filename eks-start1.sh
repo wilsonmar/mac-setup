@@ -37,7 +37,7 @@ args_prompt() {
    echo "   -x          #  set -x to display every console command"
    echo "   -q          # -quiet headings for each step"
    echo " "
-   echo "   -ni         # -no install of utilities brew, jq, etc. (default is install)"
+   echo "   -NI         # -No Install of utilities brew, etc. (default is install)"
    echo "   -DGB        # Delete GitHub at Beginning (download again)"
    echo "   -GFP \"$HOME/githubs\"   # Folder path to install repo from GitHub"
    echo "   -c          # -clone again from GitHub (default uses what exists)"
@@ -53,6 +53,8 @@ args_prompt() {
 #   echo "   -oss        #  Install Open Source instead of default Enterprise ed."
    echo "   -vers       #  list versions released"
    echo " "
+KUBE_TF_DEPLOY=false          # -KTD
+   echo "   -KTD        # Kubernetes Terraform Deploy
    echo "   -DTB        # Destroy Terraform-created resources at Beginning of run"
    echo "   -DTE        # Destroy Terraform-created resources at End of run"
    echo " "
@@ -61,8 +63,8 @@ args_prompt() {
    echo "chmod +x eks-start1.sh"
    echo ""
    echo "./eks-start1.sh -vers -v   # list versions & release details, then stop"
-   echo "./eks-start1.sh -email johndoe@gmail.com   # assumes -ent (enterprise edition) and latest version available"
-   echo "./eks-start1.sh -v -oss -consul 1.13.1  # specific open source version - prompt for email"
+   echo "./eks-start1.sh -email johndoe@gmail.com"
+   echo "timer ./eks-start1.sh -v -KTD"
 }  # args_prompt()
 
 if [ $# -eq 0 ]; then
@@ -83,7 +85,7 @@ exit_abnormal() {            # Function: Exit with error.
    SET_TRACE=false              # -x
    RUN_QUIET=false              # -q
    TARGET_FOLDER_PARM=""        # -installdir "/usr/local/bin"
-   INSTALL_UTILS=true           # -ni  # not install
+   INSTALL_UTILS=true           # -NI  # not install
    INSTALL_GPG=false            # -gpg
    GET_ASC=false                # -asc
    CONSUL_VERSION_PARM=""       # -consul 1.13.1
@@ -104,13 +106,14 @@ exit_abnormal() {            # Function: Exit with error.
    K8S_CLUSTER_ID="${GITHUB_PROJ_FOLDER}"
    REMOVE_GITHUB_AFTER=false    # -R
 
-   CLOUD_REGION=""              # -region us-east1
+   CLOUD_REGION=""              # -region us-west-2 default
    USE_AWS_CLOUD=false          # -aws
    # From AWS Management Console https://console.aws.amazon.com/iam/
    #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
    # EKS_CLUSTER_FILE=""   # cluster.yaml instead
    
    KUBE_NAMESPACE="kube-system"
+   KUBE_TF_DEPLOY=false          # -KTD
 
 # Post-processing:
    DEL_TF_RESC_AT_BEG=false     # -DTB
@@ -124,9 +127,10 @@ h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
    printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
    fi
 }
-info() {   # output on every run
+info() {   # output on every run to show values used in run:
    printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
+# Display only if -v parameter is specified:
 note() { if [ "${RUN_VERBOSE}" = true ]; then
    printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
    printf "\n"
@@ -135,15 +139,17 @@ note() { if [ "${RUN_VERBOSE}" = true ]; then
 success() {  # Green
    printf "\n\e[32m\e[1m✔ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
-error() {    # Red &#9747;
-   printf "\n\e[31m\e[1m✖ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
+# To warn about defaults applied:
 warning() {  # White bold &#9758; or &#9755;
    printf "\n\e[47m\e[1m☞ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
+error() {    # Red &#9747;
+   printf "\n\e[31m\e[1m✖ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+}
+# Unrecoverable errors that require abort for developer to fix:
 fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
    printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-   exit
+   exit 9
 }
 
 if [ "${RUN_DEBUG}" = true ]; then  # -vv
@@ -210,7 +216,11 @@ while test $# -gt 0; do
       TARGET_FOLDER_PARM=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
-    -ni)
+    -KTD)
+      export KUBE_TF_DEPLOY=true
+      shift
+      ;;
+    -NI)
       export INSTALL_UTILS=false
       shift
       ;;
@@ -366,7 +376,7 @@ fi
 
 
 h2 "STEP 10. Install base utilities (if parameter allows):"
-if [ "${INSTALL_UTILS}" = true ]; then  # not -nI
+if [ "${INSTALL_UTILS}" = true ]; then  # -NI NOT specified
 
     # Homebrew now runs xcode-select --install for command line tools for gcc, clang, git ..."
     # On Apple Silicon machines, there's one more step. Homebrew files are installed into the /opt/homebrew folder. 
@@ -450,8 +460,8 @@ fi  #INSTALL_UTILS
 
 h2 "STEP 14. Verify Region:"
 if [ -z "${CLOUD_REGION}" ]; then  # not found:
-   export AWS_REGION="us-east-1"
-   info "-region not specified in parameter, set to default \"$AWS_REGION\" "
+   export AWS_REGION="us-west-2"
+   warning "-region not specified in parameter, set to default \"$AWS_REGION\" "
 else
    export AWS_REGION="${CLOUD_REGION}"
    info "AWS region \"$AWS_REGION\" set from parameter."
@@ -941,11 +951,23 @@ info "$( ls -alT .git/index )"
 cd "${GITHUB_PROJ_PATH}/${GITHUB_PROJ_FOLDER}" || return # as suggested by SC2164
 info "Now at $PWD"
 
+
+h2 "STEP 40a. Verify AWS connectivity:"
+   # https://aws.amazon.com/blogs/security/an-easier-way-to-determine-the-presence-of-aws-account-access-keys/
+   RESPONSE=$( { aws iam get-account-summary | sed s/Output/Useless/ > outfile; } 2>&1 )
+      # An error occurred (ExpiredToken) when calling the GetAccountSummary operation: The security token included in the request is expired
+   if [[ "${RESPONSE}" == *"expired"* ]]; then
+      fatal "Keys in ~/.aws/credentials have expired! Aborting run."
+      exit 9
+   else
+      h2 "STEP 40b. Identify if resources were already created:"
+   fi
+
 k8s_nodes_pods_list(){
     # See https://wilsonmar.github.io/terraform/#k8s_nodes_pods_list
 
-    h2 "STEP 39. list worker nodes and pods (function k8s_nodes_pods_list):"
-    RESPONSE=$( { kubectl get nodes | sed s/Output/Useless/ > outfile; } 2>&1 ) ||
+    h2 "STEP 42a. list worker nodes and pods (function k8s_nodes_pods_list):"
+    RESPONSE=$( { kubectl get nodes | sed s/Output/Useless/ > outfile; } 2>&1 )
        # See https://stackoverflow.com/questions/962255/how-to-store-standard-error-in-a-variable
     if [[ "${RESPONSE}" == *"no such host"* ]]; then
         # If nodes are no longer available:
@@ -954,15 +976,22 @@ k8s_nodes_pods_list(){
        K8S_NODES_FOUND=false
        # No need to display the error.
     else
+       # Run again because precious command is bonkers:
        K8S_NODES_FOUND=true
-       info "${RESPONSE}"
+        if [ "${RUN_VERBOSE}" = true ]; then
+          kubectl get nodes
+        fi
     fi
 
-    RESPONSE=$( { kubectl get pods -n ${KUBE_NAMESPACE} | sed s/Output/Useless/ > outfile; } 2>&1 ) ||
+    h2 "STEP 42b. list 18 pods (function k8s_nodes_pods_list):"
+    RESPONSE=$( { kubectl get pods -n ${KUBE_NAMESPACE} | sed s/Output/Useless/ > outfile; } 2>&1 )
     if [[ "${RESPONSE}" == *"no such host"* ]]; then
        warning "Command \"kubectl get pods -n ${KUBE_NAMESPACE}\" found no hosts!"
     else
-       info "${RESPONSE}"
+       # Run again because precious command is bonkers:
+        if [ "${RUN_VERBOSE}" = true ]; then
+            kubectl get pods -n ${KUBE_NAMESPACE} 
+        fi
         # NAME                                                         READY
         # aws-load-balancer-controller-854cb78798-p47sr                1/1
         # aws-load-balancer-controller-854cb78798-qthql                1/1
@@ -983,6 +1012,8 @@ k8s_nodes_pods_list(){
         # kube-proxy-j5c9s                                             1/1
         # metrics-server-7d76b744cd-vchnk                              1/1
     fi
+
+    # TODO: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
 }
 
 Cleanup_k8s() {
@@ -1022,56 +1053,81 @@ Cleanup_k8s() {
 k8s_nodes_pods_list
 if [ "${K8S_NODES_FOUND}" = true ]; then
     if [ "${DEL_TF_RESC_AT_BEG}" = true ]; then  # -DTB
-       h2 "STEP 40. Destroy at beginning:"
+       h2 "STEP 41. Destroy at beginning:"
        Cleanup_k8s || # function defined above. 90-93
        info "K8s resources cleaned up."
     else
        info "K8s nodes are live and -DTB not specified to recreate."
-       exit
+       # https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/
+       # if -vv
+          # kubectl describe pod 
+
     fi
 fi
 
-# Invoke upon non-0 exit in error from subsequent commands:
-trap "Cleanup_k8s" ERR
 
-# change ownership to avoid errors:
-sudo chown -R $(whoami) .
-sudo chmod -R +rwX .
+if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
 
-h2 "STEP 41. terraform init: ${LOG_DATETIME}_41_tf_init.log"
-terraform init >"${LOG_DATETIME}_41_tf_init.log"
-echo $?
+    h2 "STEP 41. Provide password for sudo chown and chmod:"
+    # change ownership to avoid errors:
+    #sudo chown -R $(whoami) .
+    #sudo chmod -R +rwX .
 
-h2 "STEP 42. ${LOG_DATETIME}_42_tf_plan.log"
-terraform plan >"${LOG_DATETIME}_42_tf_plan.log"
-echo $?
+    # Invoke upon non-0 exit in error from subsequent commands:
+    trap "Cleanup_k8s" ERR
 
-h2 "STEP 43. ${LOG_DATETIME}_43_tfsec.log"
-# || true added to ignore error 1 returned if errors are found.
-tfsec >"${LOG_DATETIME}_43_tfsec.log" || true 
-echo $?
+    # Among Terraform commands: https://acloudguru.com/blog/engineering/the-ultimate-terraform-cheatsheet#h-the-10-most-common-terraform-commands
+    # https://k21academy.com/terraform-iac/terraform-cheat-sheet/
 
-h2 "STEP 44. terraform apply: ${LOG_DATETIME}_44_tf_apply_vpc.log"
-terraform apply -target="module.vpc" -auto-approve \
-   >"${LOG_DATETIME}_44_tf_apply_vpc.log"
-echo $?
+    # No need to check if terraform init has already been done because it is safe to run terraform init many times even if nothing changed.
+    # Install Terraform provider plugins: 
+    h2 "STEP 51. terraform init: ${LOG_DATETIME}_51_tf_init.log"
+    terraform init >"${LOG_DATETIME}_51_tf_init.log"
+    echo $?
 
-h2 "STEP 45. terraform apply: ${LOG_DATETIME}_45_tf_apply_eks_blueprints.log"
-terraform apply -target="module.eks_blueprints" -auto-approve \
-   >"${LOG_DATETIME}_45_tf_apply_eks_blueprints.log"
-echo $?
+    h2 "STEP 52. ${LOG_DATETIME}_52_tfsec.log"
+    # || true added to ignore error 1 returned if errors are found.
+    tfsec >"${LOG_DATETIME}_52_tfsec.log" || true 
+    echo $?
 
-h2 "STEP 46. terraform apply: ${LOG_DATETIME}_46_tf_apply.log"
-terraform apply -auto-approve >"${LOG_DATETIME}_46_tf_apply.log"
-echo $?
+    h2 "STEP 53. terraform apply: ${LOG_DATETIME}_53_tf_apply_vpc.log"
+    terraform apply -target="module.vpc" -auto-approve \
+    >"${LOG_DATETIME}_53_tf_apply_vpc.log"
+    echo $?
 
-if [ -z "${K8S_CLUSTER_ID}" ]; then  # not found:
-${K8S_CLUSTER_ID}
+    h2 "STEP 54. terraform apply: ${LOG_DATETIME}_54_tf_apply_eks_blueprints.log"
+    terraform apply -target="module.eks_blueprints" -auto-approve \
+    >"${LOG_DATETIME}_54_tf_apply_eks_blueprints.log"
+    echo $?
 
-h2 "STEP 47. kubeconfig ${AWS_REGION} ${K8S_CLUSTER_ID} to ${LOG_DATETIME}_47_tf_update_kubeconfig.log"
-aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}" \
-   >"${LOG_DATETIME}_47_tf_update_kubeconfig.log"
-   # OUTPUT: Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
+    h2 "STEP 55. terraform apply: ${LOG_DATETIME}_55_tf_apply.log"
+    terraform apply -auto-approve >"${LOG_DATETIME}_55_tf_apply.log"
+    echo $?
+
+    # K8S_CLUSTER_ID="eks-cluster-with-new-vpc"
+    h2 "STEP 56. kubeconfig ${AWS_REGION} ${K8S_CLUSTER_ID} to ${LOG_DATETIME}_56_tf_update_kubeconfig.log"
+    aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}" \
+    >"${LOG_DATETIME}_56_tf_update_kubeconfig.log"
+       # FIXME: An error occurred (ResourceNotFoundException) when calling the DescribeCluster operation: No cluster found for name: eks-cluster-with-new-vpc.
+    # OUTPUT: Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
+    echo $?
+
+    h2 "STEP 57. Show Kubernetes status:"
+    k8s_nodes_pods_list
+
+    h2 "STEP 58. List log files for ${LOG_DATETIME}...log "
+    ls -alT "${LOG_DATETIME}*"
+
+    if [ "${DEL_TF_RESC_AT_END}" = true ]; then  # -DE
+        Cleanup_k8s  # function defined above. 90-93
+
+        # h2 "STEP 97. Remove run log files for ${LOG_DATETIME}...log "
+        # rm "${LOG_DATETIME}*"
+        # Recover deleted files from your Mac Trash
+    
+    fi # DEL_TF_RESC_AT_END
+
+fi  # KUBE_TF_DEPLOY
 
 
 #h2 "STEP 50. List resources allocated:"
@@ -1086,24 +1142,8 @@ aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}" \
 
 ####################
 
-h2 "STEP 95. List log files for ${LOG_DATETIME}...log "
-k8s_nodes_pods_list
-
-h2 "STEP 96. List log files for ${LOG_DATETIME}...log "
-ls -alT "${LOG_DATETIME}*"
-
-if [ "${DEL_TF_RESC_AT_END}" = true ]; then  # -DE
-    Cleanup_k8s  # function defined above. 90-93
-
-    h2 "STEP 97. Remove run log files for ${LOG_DATETIME}...log "
-    # rm "${LOG_DATETIME}*"
-    # Recover deleted files from your Mac Trash
-   
-fi # DEL_TF_RESC_AT_END
-
 
 ### STEP 99. End-of-run stats
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
-
 
 # END
