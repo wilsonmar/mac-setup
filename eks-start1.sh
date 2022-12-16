@@ -17,11 +17,11 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.23 # add as described link"
+SCRIPT_VERSION="v0.24 # kubectl get pods --all-namespaces"
 LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
-EPOCH_START="$( date -u +%s )"  # such as 1572634619
+EPOCH_START="$( date -u +%s )"  # such as Linux Epoch 1572634619
 
 ### STEP 02. Display a menu if no parameter is specified in the command line
 # See https://wilsonmar.github.io/mac-setup/#Args
@@ -932,8 +932,9 @@ k8s_nodes_pods_list(){
         fi
     fi
 
-    h2 "STEP 42b. list 18 pods (function k8s_nodes_pods_list):"
-    RESPONSE=$( { kubectl get pods -n ${KUBE_NAMESPACE} | sed s/Output/Useless/ > outfile; } 2>&1 )
+    h2 "STEP 42b. list 18 pods (function k8s_nodes_pods_list):" 
+                                 # -n ${KUBE_NAMESPACE}
+    RESPONSE=$( { kubectl get pods --all-namespaces | sed s/Output/Useless/ > outfile; } 2>&1 )
     if [[ "${RESPONSE}" != *"NAMESPACE"* ]]; then
        warning "Command \"kubectl get pods -n ${KUBE_NAMESPACE}\" found no hosts!"
     else
@@ -1093,23 +1094,26 @@ if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
     echo $?
 
     h2 "STEP 52. terraform validate: ${LOG_DATETIME}_52_tf_validate.log"
-    terraform init >"${LOG_DATETIME}_52_tf_validate.log"
     echo $?
+    terraform init >"${LOG_DATETIME}_52_tf_validate.log"
 
     h2 "STEP 53. ${LOG_DATETIME}_53_tfsec.log"
     # || true added to ignore error 1 returned if errors are found.
     tfsec >"${LOG_DATETIME}_53_tfsec.log" || true 
     echo $?
+    # TODO: other scanners (Synk, Bridgecrew, etc.) integrated by TFC
 
     h2 "STEP 54. terraform apply: ${LOG_DATETIME}_54_tf_apply_vpc.log"
     terraform apply -target="module.vpc" -auto-approve \
-    >"${LOG_DATETIME}_54_tf_apply_vpc.log"
+       >"${LOG_DATETIME}_54_tf_apply_vpc.log"
     echo $?
 
     h2 "STEP 55. terraform apply: ${LOG_DATETIME}_55_tf_apply_eks_blueprints.log"
     terraform apply -target="module.eks_blueprints" -auto-approve \
-    >"${LOG_DATETIME}_55_tf_apply_eks_blueprints.log"
+       >"${LOG_DATETIME}_55_tf_apply_eks_blueprints.log"
     echo $?
+
+    # eks_blueprints_kubernetes_addons
 
     h2 "STEP 56. terraform apply: ${LOG_DATETIME}_56_tf_apply.log"
     terraform apply -auto-approve >"${LOG_DATETIME}_56_tf_apply.log"
@@ -1141,16 +1145,17 @@ if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
         ls -alT $LOG_DATETIME*
     fi # DEL_TF_LOGS_AT_END
 
-    h2 "STEP 62. tfstate file after terraform commands:"
+    h2 "STEP 62. List date of tfstate file after terraform commands:"
     ls -alT terraform.tfstate.backup
     ls -alT terraform.tfstate
 
 fi  # KUBE_TF_DEPLOY
 
 
-#h2 "STEP 70. List resources allocated:"
+#h2 "STEP 70. List resources actually allocated within AWS:"
    # For manual GUI, see https://bobbyhadz.com/blog/aws-list-all-resources
    # For CLI ??
+   # TODO: See Terraform Cloud (TFC) vs. state (drift detection)
 
 #h2 "STEP 71. Diagram resources: -graph"
    # See https://wilsonmar.github.io/terraform#DiagrammingTools
@@ -1169,5 +1174,6 @@ fi  # KUBE_TF_DEPLOY
 
 ### STEP 99. End-of-run stats
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
+EPOCH_END="$( date -u +%s )"  # such as 1572634619
 
 # END
