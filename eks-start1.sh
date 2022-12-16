@@ -19,7 +19,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.19"  # add region
+SCRIPT_VERSION="v0.21"  # add log delete
 LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -37,7 +37,7 @@ args_prompt() {
    echo "   -x          #  set -x to display every console command"
    echo "   -q          # -quiet headings for each step"
    echo " "
-   echo "   -NI         # -No Install of utilities brew, etc. (default is install)"
+   echo "   -I          # -Install utilities brew, etc. (default is install)"
    echo "   -DGB        # Delete GitHub at Beginning (download again)"
    echo "   -GFP \"$HOME/githubs\"   # Folder path to install repo from GitHub"
    echo "   -c          # -clone again from GitHub (default uses what exists)"
@@ -53,17 +53,17 @@ args_prompt() {
 #   echo "   -oss        #  Install Open Source instead of default Enterprise ed."
    echo "   -vers       #  list versions released"
    echo " "
-KUBE_TF_DEPLOY=false          # -KTD
-   echo "   -KTD        # Kubernetes Terraform Deploy
+   echo "   -KTD        # Kubernetes Terraform Deploy"
    echo "   -DTB        # Destroy Terraform-created resources at Beginning of run"
    echo "   -DTE        # Destroy Terraform-created resources at End of run"
+   echo "   -DLE        # Destroy Terraform-created Logs at End of run"
    echo " "
    echo "USAGE EXAMPLES:"
    echo "# (one time) change permission to enable run:"
    echo "chmod +x eks-start1.sh"
    echo ""
    echo "./eks-start1.sh -vers -v   # list versions & release details, then stop"
-   echo "./eks-start1.sh -email johndoe@gmail.com"
+   echo "./eks-start1.sh -v -I  # install"
    echo "timer ./eks-start1.sh -v -KTD"
 }  # args_prompt()
 
@@ -85,7 +85,7 @@ exit_abnormal() {            # Function: Exit with error.
    SET_TRACE=false              # -x
    RUN_QUIET=false              # -q
    TARGET_FOLDER_PARM=""        # -installdir "/usr/local/bin"
-   INSTALL_UTILS=true           # -NI  # not install
+   INSTALL_UTILS=false          # -I
    INSTALL_GPG=false            # -gpg
    GET_ASC=false                # -asc
    CONSUL_VERSION_PARM=""       # -consul 1.13.1
@@ -99,11 +99,7 @@ exit_abnormal() {            # Function: Exit with error.
    GITHUB_FOLDER_PATH=""        # -GFP (default "$HOME/githubs")
    DEL_GH_AT_BEG=false          # -DGB
    CLONE_GITHUB=false           # -c
-   GITHUB_REPO_FOLDER="terraform-aws-eks-blueprints"
-   GITHUB_REPO_URL="https://github.com/aws-ia/terraform-aws-eks-blueprints"
-   GITHUB_PROJ_PATH="examples"
-   GITHUB_PROJ_FOLDER="eks-cluster-with-new-vpc"
-   K8S_CLUSTER_ID="${GITHUB_PROJ_FOLDER}"
+
    REMOVE_GITHUB_AFTER=false    # -R
 
    CLOUD_REGION=""              # -region us-west-2 default
@@ -112,12 +108,13 @@ exit_abnormal() {            # Function: Exit with error.
    #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
    # EKS_CLUSTER_FILE=""   # cluster.yaml instead
    
-   KUBE_NAMESPACE="kube-system"
    KUBE_TF_DEPLOY=false          # -KTD
+   KUBE_NAMESPACE="kube-system"
 
 # Post-processing:
    DEL_TF_RESC_AT_BEG=false     # -DTB
    DEL_TF_RESC_AT_END=false     # -DTE
+   DEL_TF_LOGS_AT_END=false     # -DLE
 
 
 ### STEP 04. Custom functions to format echo text to screen
@@ -189,6 +186,10 @@ while test $# -gt 0; do
       export DEL_GH_AT_BEG=true
       shift
       ;;
+    -DLE)
+      export DEL_TF_LOGS_AT_END=true
+      shift
+      ;;
     -DTB)
       export DEL_TF_RESC_AT_BEG=true
       shift
@@ -218,10 +219,15 @@ while test $# -gt 0; do
       ;;
     -KTD)
       export KUBE_TF_DEPLOY=true
+        GITHUB_REPO_FOLDER="terraform-aws-eks-blueprints"
+        GITHUB_REPO_URL="https://github.com/aws-ia/terraform-aws-eks-blueprints"
+        GITHUB_PROJ_PATH="examples"
+        GITHUB_PROJ_FOLDER="eks-cluster-with-new-vpc"
+        K8S_CLUSTER_ID="${GITHUB_PROJ_FOLDER}"
       shift
       ;;
     -NI)
-      export INSTALL_UTILS=false
+      export INSTALL_UTILS=true
       shift
       ;;
     -N*)
@@ -428,6 +434,7 @@ if [ "${INSTALL_UTILS}" = true ]; then  # -NI NOT specified
        brew install awscli
        brew install eksctl
 
+       # h2 "aws version ..."  
        note "$( aws --version )"  
           # aws-cli/2.9.4 Python/3.11.0 Darwin/21.6.0 source/arm64 prompt/off
           # aws-cli/2.6.1 Python/3.9.12 Darwin/21.4.0 source/arm64 prompt/off
@@ -435,15 +442,7 @@ if [ "${INSTALL_UTILS}" = true ]; then  # -NI NOT specified
        note "which aws at $( which aws )"  
           # /opt/homebrew/bin//aws
           # /usr/local/bin/aws
-
-      # h2 "aws version ..."  
-      # SHELL TECHNIQUE: any error results in a long extraneous list, so send the err output to a file
-      # so the first lines are visible. That file is then deleted.
-      # TODO: Capture so not exit CLI
-      #aws version 2>aws-err-response.txt
-      #head -12 aws-err-response.txt
-      #rm aws-err-response.txt
-   fi
+    fi
 
     h2 "STEP 12. Install GPG2:"
     if ! command -v gpg >/dev/null; then
@@ -458,7 +457,9 @@ fi  #INSTALL_UTILS
 
 # "STEP 13. Saved for future use"
 
-h2 "STEP 14. Verify Region:"
+h2 "STEP 14. Verify Region in ~/.aws/config :"
+cat ~/.aws/config
+
 if [ -z "${CLOUD_REGION}" ]; then  # not found:
    export AWS_REGION="us-west-2"
    warning "-region not specified in parameter, set to default \"$AWS_REGION\" "
@@ -468,9 +469,27 @@ else
 fi
 
 
+h2 "STEP 25. List app versions if requested by \"-vers\" parameter:"
+if [ "${LIST_VERSIONS}" = true ]; then  # -vers
+    note "Look at browser for https://releases.hashicorp.com/terraform"
+    TF_VER_LIST="https://releases.hashicorp.com/terraform"
+    open "${TF_VER_LIST}"
+    # FIXME: Wait until it appears?
+
+    if [ "${RUN_VERBOSE}" = true ]; then  # -v
+        note "Look at browser for https://github.com/hashicorp/terraform/releases"
+        # show website with description of each release:
+        TF_VER_LIST="https://github.com/hashicorp/terraform/releases"
+        open "${TF_VER_LIST}"
+    fi
+    # note "Exiting because attention switched to browser page."
+    # exit
+fi
+
+
 if [ "${INSTALL_TF}" = true ]; then  # -tf
 
-    h2 "STEP 25. Lookup latest Terraform app version:"
+    h2 "STEP 26. Lookup latest Terraform app version:"
     TF_LATEST_VERSION=$( curl -sS https://api.releases.hashicorp.com/v1/releases/terraform/latest |jq -r .version )
     # Example: "1.3.6"
     if [[ "${TF_LATEST_VERSION}" == *"null"* ]]; then
@@ -478,23 +497,6 @@ if [ "${INSTALL_TF}" = true ]; then  # -tf
         exit 9
     else
         info "Latest Terraform version is \"${TF_LATEST_VERSION}\" ..."
-    fi
-
-    h2 "STEP 26. List app versions if requested by \"-vers\" parameter:"
-    if [ "${LIST_VERSIONS}" = true ]; then  # -vers
-        note "Look at browser for https://releases.hashicorp.com/terraform"
-        TF_VER_LIST="https://releases.hashicorp.com/terraform"
-        open "${TF_VER_LIST}"
-        # FIXME: Wait until it appears?
-
-        if [ "${RUN_VERBOSE}" = true ]; then  # -v
-            note "Look at browser for https://github.com/hashicorp/terraform/releases"
-            # show website with description of each release:
-            TF_VER_LIST="https://github.com/hashicorp/terraform/releases"
-            open "${TF_VER_LIST}"
-        fi
-        note "Exiting because attention switched to browser page."
-        exit
     fi
 
     h2 "STEP 27. Determine what version of Terraform to install:"
@@ -898,60 +900,6 @@ fi  # INSTALL_TF
 
 note "Now at $PWD to start."
 
-h2 "STEP 38. Obtain GitHub repo (depending on parameters):"
-# See https://wilsonmar.github.io/mac-setup/#ObtainRepo
-# To ensure that we have a project folder (from GitHub):
-if [ -z "${GITHUB_FOLDER_PATH}" ]; then   # value not specified in parm
-    note "No -GFP (GITHUB_FOLDER_PATH) specified in run parameters"
-    GITHUB_FOLDER_PATH="$HOME/githubs"
-    warning "Default GFP \"$GITHUB_FOLDER_PATH\" being used."
-fi
-cd  # to root folder
-cd "${GITHUB_FOLDER_PATH}" || return # as suggested by SC2164
-info "Now at ${GITHUB_FOLDER_PATH}"
-
-# https://www.zshellcheck.net/wiki/SC2115 :
-# Use "${var:?}" to ensure this never expands to / .
-if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path already created.
-    note "Using existing folder at \"${GITHUB_FOLDER_PATH:?}\" to clone github"
-else
-    note "Creating folder path ${GITHUB_FOLDER_PATH:?} to clone github"
-    sudo mkdir -p "${GITHUB_FOLDER_PATH:?}"
-fi
-cd "${GITHUB_FOLDER_PATH:?}" || return # as suggested by SC2164
-note "Now at $PWD"
-
-Clone_GitHub_repo(){   # function
-    note "Obtaining repo \"${GITHUB_REPO_URL:?}\" at $PWD:"
-    sudo git clone "${GITHUB_REPO_URL}" --depth 1
-    ls -alT "${GITHUB_REPO_FOLDER}"
-    cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
-    note "At path $PWD"
-}
-if [ -d "${GITHUB_REPO_FOLDER:?}" ]; then  # directory already exists:
-    if [ "${DEL_GH_AT_BEG}" = true ]; then   # -DGB (Delete GitHub at Beginning)
-        h2 "Removing project folder $GITHUB_REPO_FOLDER:? ..."
-        ls -al "${GITHUB_REPO_FOLDER}"
-        sudo rm -rf "${GITHUB_REPO_FOLDER}"
-    fi
-    
-    if [ "${CLONE_GITHUB}" = true ]; then   # -c specified to clone again:
-        Clone_GitHub_repo  # function
-    else
-        warning "Using GitHub repo contents from previous run:"
-    fi
-else  # GITHUB_REPO_FOLDER does not exist
-    Clone_GitHub_repo  # function
-fi
-cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
-info "Now at $PWD"
-info "$( ls -alT .git/index )"
-    # .git/index holds all git history, so is changed on every git operation.
-
-cd "${GITHUB_PROJ_PATH}/${GITHUB_PROJ_FOLDER}" || return # as suggested by SC2164
-info "Now at $PWD"
-
-
 h2 "STEP 40a. Verify AWS connectivity:"
    # https://aws.amazon.com/blogs/security/an-easier-way-to-determine-the-presence-of-aws-account-access-keys/
    RESPONSE=$( { aws iam get-account-summary | sed s/Output/Useless/ > outfile; } 2>&1 )
@@ -1043,7 +991,7 @@ Cleanup_k8s() {
 
         info "K8s resources cleaned up by function Cleanup_k8s."
     else
-       info "K8s nodes may be live and -DTB not specified to recreate."
+       info "K8s nodes may be live and -DTB parameter not specified to recreate."
        exit
     fi
 
@@ -1057,7 +1005,7 @@ if [ "${K8S_NODES_FOUND}" = true ]; then
        Cleanup_k8s || # function defined above. 90-93
        info "K8s resources cleaned up."
     else
-       info "K8s nodes are live and -DTB not specified to recreate."
+       info "K8s nodes are live and -DTB parameter not specified to recreate."
        # https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/
        # if -vv
           # kubectl describe pod 
@@ -1068,13 +1016,70 @@ fi
 
 if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
 
-    h2 "STEP 41. Provide password for sudo chown and chmod:"
+    h2 "STEP 42. Obtain GitHub repo (depending on parameters):"
+    # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
+    # To ensure that we have a project folder (from GitHub):
+    if [ -z "${GITHUB_FOLDER_PATH}" ]; then   # value not specified in parm
+        note "No -GFP (GITHUB_FOLDER_PATH) specified in run parameters"
+        GITHUB_FOLDER_PATH="$HOME/githubs"
+        warning "Default GFP \"$GITHUB_FOLDER_PATH\" being used."
+    fi
+    cd  # to root folder
+    cd "${GITHUB_FOLDER_PATH}" || return # as suggested by SC2164
+    info "Now at ${GITHUB_FOLDER_PATH}"
+
+    # https://www.zshellcheck.net/wiki/SC2115 :
+    # Use "${var:?}" to ensure this never expands to / .
+    if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path already created.
+        note "Using existing folder at \"${GITHUB_FOLDER_PATH:?}\" to clone github"
+    else
+        note "Creating folder path ${GITHUB_FOLDER_PATH:?} to clone github"
+        sudo mkdir -p "${GITHUB_FOLDER_PATH:?}"
+    fi
+    cd "${GITHUB_FOLDER_PATH:?}" || return # as suggested by SC2164
+    note "Now at $PWD"
+
+    Clone_GitHub_repo(){   # function
+        note "Obtaining repo \"${GITHUB_REPO_URL:?}\" at $PWD:"
+        sudo git clone "${GITHUB_REPO_URL}" --depth 1
+        ls -alT "${GITHUB_REPO_FOLDER}"
+        cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
+        note "At path $PWD"
+    }
+    if [ -d "${GITHUB_REPO_FOLDER:?}" ]; then  # directory already exists:
+        if [ "${DEL_GH_AT_BEG}" = true ]; then   # -DGB (Delete GitHub at Beginning)
+            h2 "Removing project folder $GITHUB_REPO_FOLDER:? ..."
+            ls -al "${GITHUB_REPO_FOLDER}"
+            sudo rm -rf "${GITHUB_REPO_FOLDER}"
+        fi
+        
+        if [ "${CLONE_GITHUB}" = true ]; then   # -c specified to clone again:
+            Clone_GitHub_repo  # function
+        else
+            warning "Using GitHub repo contents from previous run:"
+        fi
+    else  # GITHUB_REPO_FOLDER does not exist
+        Clone_GitHub_repo  # function
+    fi
+    cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
+    info "Now at $PWD"
+    info "$( ls -alT .git/index )"
+        # .git/index holds all git history, so is changed on every git operation.
+
+    cd "${GITHUB_PROJ_PATH}/${GITHUB_PROJ_FOLDER}" || return # as suggested by SC2164
+    info "Now at $PWD"
+
+
+    # h2 "STEP 43. Provide password for sudo chown and chmod:"
     # change ownership to avoid errors:
     #sudo chown -R $(whoami) .
     #sudo chmod -R +rwX .
 
     # Invoke upon non-0 exit in error from subsequent commands:
     trap "Cleanup_k8s" ERR
+
+    h2 "STEP 50. tfstate file before terraform commands:"
+    ls -alT terraform.tfstate
 
     # Among Terraform commands: https://acloudguru.com/blog/engineering/the-ultimate-terraform-cheatsheet#h-the-10-most-common-terraform-commands
     # https://k21academy.com/terraform-iac/terraform-cheat-sheet/
@@ -1115,29 +1120,40 @@ if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
     h2 "STEP 57. Show Kubernetes status:"
     k8s_nodes_pods_list
 
-    h2 "STEP 58. List log files for ${LOG_DATETIME}...log "
-    ls -alT "${LOG_DATETIME}*"
-
-    if [ "${DEL_TF_RESC_AT_END}" = true ]; then  # -DE
+    if [ "${DEL_TF_RESC_AT_END}" = true ]; then  # -DTE
+        h2 "STEP 58. -DTE = Delete TF Resources at End "
         Cleanup_k8s  # function defined above. 90-93
-
-        # h2 "STEP 97. Remove run log files for ${LOG_DATETIME}...log "
-        # rm "${LOG_DATETIME}*"
-        # Recover deleted files from your Mac Trash
-    
     fi # DEL_TF_RESC_AT_END
+
+    if [ "${DEL_TF_LOGS_AT_END}" = true ]; then  # -DLE
+        h2 "STEP 59. -DLE Delete TF Logs at End for ${LOG_DATETIME} "
+        ls -alT $LOG_DATETIME*
+        rm $LOG_DATETIME*
+           # Recover deleted files from your Mac Trash
+    else
+        h2 "STEP 60. -DLE Delete not specified for Logs at End for ${LOG_DATETIME} "
+        ls -alT $LOG_DATETIME*
+    fi # DEL_TF_LOGS_AT_END
+
+    h2 "STEP 61. tfstate file after terraform commands:"
+    ls -alT terraform.tfstate.backup
+    ls -alT terraform.tfstate
 
 fi  # KUBE_TF_DEPLOY
 
 
 #h2 "STEP 50. List resources allocated:"
-# See https://bobbyhadz.com/blog/aws-list-all-resources
+   # For manual GUI, see https://bobbyhadz.com/blog/aws-list-all-resources
+   # For CLI ??
 
 #h2 "STEP 51. Diagram resources: -graph"
+   # See https://wilsonmar.github.io/terraform#DiagrammingTools
 
 #h2 "STEP 52. Impose artificial load:"
 
-#h2 "STEP 53. Get costs by tags:"
+#h2 "STEP 53. Report metrics comparisons:"
+
+#h2 "STEP 54. Get costs by tags:"
    # Kubecost?
 
 ####################
