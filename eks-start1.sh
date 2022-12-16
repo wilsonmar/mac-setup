@@ -1,10 +1,8 @@
 #!/usr/bin/env sh
 # This is eks-start1.sh at https://github.com/wilsonmar/mac-setup/blob/master/eks-start1.sh
-# This automates manual instructions at https://aws-ia.github.io/terraform-aws-eks-blueprints/main/getting-started/
+# which automates manual steps at https://aws-ia.github.io/terraform-aws-eks-blueprints/main/getting-started/
+# as described at https://wilsonmar.github.io/terraform/#example-eks-cluster-with-new-vpc
 
-# Call:
-#    time ./eks-start1.sh -email wilsonmar@gmail.com -v -DE -tf 
-#
 # Copy and paste this:
 # curl -s "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-start1.sh" \
 # --output eks-start1.sh
@@ -19,7 +17,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.22"  # make k8s node list logic
+SCRIPT_VERSION="v0.23 # add as described link"
 LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -64,7 +62,7 @@ args_prompt() {
    echo ""
    echo "./eks-start1.sh -vers -v   # list versions & release details, then stop"
    echo "./eks-start1.sh -v -I  # install"
-   echo "timer ./eks-start1.sh -v -KTD"
+   echo "time ./eks-start1.sh -v -KTD"
 }  # args_prompt()
 
 if [ $# -eq 0 ]; then
@@ -222,6 +220,7 @@ while test $# -gt 0; do
         GITHUB_REPO_FOLDER="terraform-aws-eks-blueprints"
         GITHUB_REPO_URL="https://github.com/aws-ia/terraform-aws-eks-blueprints"
         GITHUB_PROJ_PATH="examples"
+        # From https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main/examples
         GITHUB_PROJ_FOLDER="eks-cluster-with-new-vpc"
         K8S_CLUSTER_ID="${GITHUB_PROJ_FOLDER}"
       shift
