@@ -19,7 +19,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.21"  # add log delete
+SCRIPT_VERSION="v0.22"  # make k8s node list logic
 LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -37,21 +37,21 @@ args_prompt() {
    echo "   -x          #  set -x to display every console command"
    echo "   -q          # -quiet headings for each step"
    echo " "
+   echo "   -vers       #  list versions released"
    echo "   -I          # -Install utilities brew, etc. (default is install)"
-   echo "   -DGB        # Delete GitHub at Beginning (download again)"
-   echo "   -GFP \"$HOME/githubs\"   # Folder path to install repo from GitHub"
-   echo "   -c          # -clone again from GitHub (default uses what exists)"
-#   echo "   -G          # -GitHub is the basis for program to run"
-   echo " "
-   echo "   -email \"johndoe@gmail.com\"     # to generate GPG keys for"
+   echo "   -tf \"1.3.6\"            # version of Terraform to install"
    echo "   -gpg        #  Install gpg2 utility and generate key if needed"
+   echo "   -email \"johndoe@gmail.com\"     # to generate GPG keys for"
+   echo " "
+   echo "   -DGB        # Delete GitHub at Beginning (to download again)"
+   echo "   -c          # -clone again from GitHub (default uses what exists)"
+   echo "   -GFP \"$HOME/githubs\"   # Folder path to install repo from GitHub"
+#   echo "   -G          # -GitHub is the basis for program to run"
    echo " "
    echo "   -aws        # -AWS cloud awscli"
    echo "   -region \"us-east-1\"    # region in the cloud awscli"
-   echo "   -tf \"1.3.6\"            # version of Terraform to install"
 #   echo "   -consul \"1.13.1\"  # Specify version of Consul to install"
 #   echo "   -oss        #  Install Open Source instead of default Enterprise ed."
-   echo "   -vers       #  list versions released"
    echo " "
    echo "   -KTD        # Kubernetes Terraform Deploy"
    echo "   -DTB        # Destroy Terraform-created resources at Beginning of run"
@@ -917,7 +917,9 @@ k8s_nodes_pods_list(){
     h2 "STEP 42a. list worker nodes and pods (function k8s_nodes_pods_list):"
     RESPONSE=$( { kubectl get nodes | sed s/Output/Useless/ > outfile; } 2>&1 )
        # See https://stackoverflow.com/questions/962255/how-to-store-standard-error-in-a-variable
-    if [[ "${RESPONSE}" == *"no such host"* ]]; then
+    if [[ "${RESPONSE}" != *"NAME"* ]]; then
+        # If AWS credentials are not valid:
+        # E1216 06:46:28.873204   93669 memcache.go:238] couldn't get current server API group list: the server has asked for the client to provide credentials
         # If nodes are no longer available:
         # E1214 07:58:44.629220   46304 memcache.go:238] couldn't get current server API group list: Get "https://0E7188B181023B24E8C319BB2E31DACA.gr7.us-west-2.eks.amazonaws.com/api?timeout=32s": dial tcp: lookup 0E7188B181023B24E8C319BB2E31DACA.gr7.us-west-2.eks.amazonaws.com: no such host
        warning "Command \"kubectl get nodes\" found no nodes!"
@@ -927,13 +929,13 @@ k8s_nodes_pods_list(){
        # Run again because precious command is bonkers:
        K8S_NODES_FOUND=true
         if [ "${RUN_VERBOSE}" = true ]; then
-          kubectl get nodes
+           kubectl get nodes
         fi
     fi
 
     h2 "STEP 42b. list 18 pods (function k8s_nodes_pods_list):"
     RESPONSE=$( { kubectl get pods -n ${KUBE_NAMESPACE} | sed s/Output/Useless/ > outfile; } 2>&1 )
-    if [[ "${RESPONSE}" == *"no such host"* ]]; then
+    if [[ "${RESPONSE}" != *"NAMESPACE"* ]]; then
        warning "Command \"kubectl get pods -n ${KUBE_NAMESPACE}\" found no hosts!"
     else
        # Run again because precious command is bonkers:
@@ -1085,75 +1087,82 @@ if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
     # https://k21academy.com/terraform-iac/terraform-cheat-sheet/
 
     # No need to check if terraform init has already been done because it is safe to run terraform init many times even if nothing changed.
-    # Install Terraform provider plugins: 
+
+    # Install Terraform provider plugins and modules that convert HCL to API calls: 
     h2 "STEP 51. terraform init: ${LOG_DATETIME}_51_tf_init.log"
     terraform init >"${LOG_DATETIME}_51_tf_init.log"
     echo $?
 
-    h2 "STEP 52. ${LOG_DATETIME}_52_tfsec.log"
+    h2 "STEP 52. terraform validate: ${LOG_DATETIME}_52_tf_validate.log"
+    terraform init >"${LOG_DATETIME}_52_tf_validate.log"
+    echo $?
+
+    h2 "STEP 53. ${LOG_DATETIME}_53_tfsec.log"
     # || true added to ignore error 1 returned if errors are found.
-    tfsec >"${LOG_DATETIME}_52_tfsec.log" || true 
+    tfsec >"${LOG_DATETIME}_53_tfsec.log" || true 
     echo $?
 
-    h2 "STEP 53. terraform apply: ${LOG_DATETIME}_53_tf_apply_vpc.log"
+    h2 "STEP 54. terraform apply: ${LOG_DATETIME}_54_tf_apply_vpc.log"
     terraform apply -target="module.vpc" -auto-approve \
-    >"${LOG_DATETIME}_53_tf_apply_vpc.log"
+    >"${LOG_DATETIME}_54_tf_apply_vpc.log"
     echo $?
 
-    h2 "STEP 54. terraform apply: ${LOG_DATETIME}_54_tf_apply_eks_blueprints.log"
+    h2 "STEP 55. terraform apply: ${LOG_DATETIME}_55_tf_apply_eks_blueprints.log"
     terraform apply -target="module.eks_blueprints" -auto-approve \
-    >"${LOG_DATETIME}_54_tf_apply_eks_blueprints.log"
+    >"${LOG_DATETIME}_55_tf_apply_eks_blueprints.log"
     echo $?
 
-    h2 "STEP 55. terraform apply: ${LOG_DATETIME}_55_tf_apply.log"
-    terraform apply -auto-approve >"${LOG_DATETIME}_55_tf_apply.log"
+    h2 "STEP 56. terraform apply: ${LOG_DATETIME}_56_tf_apply.log"
+    terraform apply -auto-approve >"${LOG_DATETIME}_56_tf_apply.log"
     echo $?
 
     # K8S_CLUSTER_ID="eks-cluster-with-new-vpc"
-    h2 "STEP 56. kubeconfig ${AWS_REGION} ${K8S_CLUSTER_ID} to ${LOG_DATETIME}_56_tf_update_kubeconfig.log"
+    h2 "STEP 57. kubeconfig ${AWS_REGION} ${K8S_CLUSTER_ID} to ${LOG_DATETIME}_57_tf_update_kubeconfig.log"
     aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}" \
-    >"${LOG_DATETIME}_56_tf_update_kubeconfig.log"
+    >"${LOG_DATETIME}_57_tf_update_kubeconfig.log"
        # FIXME: An error occurred (ResourceNotFoundException) when calling the DescribeCluster operation: No cluster found for name: eks-cluster-with-new-vpc.
     # OUTPUT: Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
     echo $?
 
-    h2 "STEP 57. Show Kubernetes status:"
+    h2 "STEP 58. Show Kubernetes status:"
     k8s_nodes_pods_list
 
     if [ "${DEL_TF_RESC_AT_END}" = true ]; then  # -DTE
-        h2 "STEP 58. -DTE = Delete TF Resources at End "
+        h2 "STEP 59. -DTE = Delete TF Resources at End "
         Cleanup_k8s  # function defined above. 90-93
     fi # DEL_TF_RESC_AT_END
 
     if [ "${DEL_TF_LOGS_AT_END}" = true ]; then  # -DLE
-        h2 "STEP 59. -DLE Delete TF Logs at End for ${LOG_DATETIME} "
+        h2 "STEP 60. -DLE Delete TF Logs at End for ${LOG_DATETIME} "
         ls -alT $LOG_DATETIME*
         rm $LOG_DATETIME*
            # Recover deleted files from your Mac Trash
     else
-        h2 "STEP 60. -DLE Delete not specified for Logs at End for ${LOG_DATETIME} "
+        h2 "STEP 61. -DLE Delete not specified for Logs at End for ${LOG_DATETIME} "
         ls -alT $LOG_DATETIME*
     fi # DEL_TF_LOGS_AT_END
 
-    h2 "STEP 61. tfstate file after terraform commands:"
+    h2 "STEP 62. tfstate file after terraform commands:"
     ls -alT terraform.tfstate.backup
     ls -alT terraform.tfstate
 
 fi  # KUBE_TF_DEPLOY
 
 
-#h2 "STEP 50. List resources allocated:"
+#h2 "STEP 70. List resources allocated:"
    # For manual GUI, see https://bobbyhadz.com/blog/aws-list-all-resources
    # For CLI ??
 
-#h2 "STEP 51. Diagram resources: -graph"
+#h2 "STEP 71. Diagram resources: -graph"
    # See https://wilsonmar.github.io/terraform#DiagrammingTools
 
-#h2 "STEP 52. Impose artificial load:"
+#h2 "STEP 72. Impose artificial load:"
 
-#h2 "STEP 53. Report metrics comparisons:"
+#h2 "STEP 73. Security findings from AWS Config"
 
-#h2 "STEP 54. Get costs by tags:"
+#h2 "STEP 74. Report metrics comparisons:"
+
+#h2 "STEP 75. Get costs by tags:"
    # Kubecost?
 
 ####################
