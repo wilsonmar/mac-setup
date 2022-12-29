@@ -156,6 +156,9 @@ if [ -d "${GRADLE_HOME}/bin" ]; then  # folder is there
    export PATH="$GRADLE_HOME/bin:${PATH}"  # contains gradle file.
 fi
 
+#### See https://wilsonmar.github.io/hashicorp-vault
+export VAULT_VERSION="$( vault --version | awk '{print $2}' )"
+
 #### See https://wilsonmar.github.io/hashicorp-consul
 # export PATH="$HOME/.func-e/versions/1.20.1/bin/:${PATH}"  # contains envoy
 
