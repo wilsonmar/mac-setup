@@ -23,7 +23,11 @@ alias l='ls -FalhGT | more'   # T for year
 alias p="pwd"        # present working directory
 alias x='exit'
 
+# User name keys:
 alias grep='grep --color=auto'
+USERNAME_ID=$( id -un )  # whoami has been deprecated
+export GITHUBDIR="github-$USERNAME_ID"
+# for  cd $HOME/$GITHUBDIR
 
 # See https://wilsonmar.github.io/mac-utilities/#top-processes
 alias ht="htop -t"        # processes in an indented tree - control+C to stop.
@@ -196,10 +200,11 @@ alias en0="ipconfig getifaddr en0"  # like 172.20.1.91 or 192.168.1.253
 alias pubip="curl -s ifconfig.me"  # public IP
 alias ipa="ip a"  # analyze networking
 alias ipinfo="curl ipinfo.io"  # more verbose JSON containing country and zip of IP
-alias wanip4='dig @resolver1.opendns.com ANY myip.opendns.com +short'
-alias wanip6='dig @resolver1.opendns.com AAAA myip.opendns.com +short -6'
-alias ports='lsof -i -n -P | grep TCP'
-alias listening='lsof -nP +c 15 | grep LISTEN'
+alias ipcity="curl -s ipinfo.io | jq -r .city"
+alias wanip4="dig @resolver1.opendns.com ANY myip.opendns.com +short"
+alias wanip6="dig @resolver1.opendns.com AAAA myip.opendns.com +short -6"
+alias ports="lsof -i -n -P | grep TCP"
+alias listening="lsof -nP +c 15 | grep LISTEN"
 
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
 alias spacefree="du -h | awk 'END{print $1}'"
@@ -318,7 +323,7 @@ alias dcd="docker compose down -v"
 
 #### See https://wilsonmar.github.io/kubernetes
 alias k="kubectl"
-alias kubec="$EDITOR ~/.kube/conf
+alias kubec="$EDITOR ~/.kube/conf"
 # FIXME: complete -F __start_kubectl k
 alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
 
@@ -328,10 +333,6 @@ alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
 #fi
 # See https://github.com/ysmike/dotfiles/blob/master/bash/.aliases
 # More: https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html
-
-USERNAME_ID=$( id -un )  # whoami has been deprecated
-export GITHUBDIR="github-$USERNAME_ID"
-# for  cd $HOME/$GITHUBDIR
 
 #     catn filename to show text file without comment (#) lines:
 alias catn="grep -Ev '''^(#|$)'''"

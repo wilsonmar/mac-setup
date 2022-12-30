@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
+# v0.22 # Add VAULT_VERSION
 # This is not provided by macOS by default.
 # This is explained in https://wilsonmar.github.io/zsh
 # This was migrated from ~/.bash_profile

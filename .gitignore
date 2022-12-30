@@ -1,9 +1,13 @@
 # .gitignore file
 
+outfile
+
 pubring.kbx
 keydetails
 *.asc
 pgpkeys*
+
+terraform.tfstate*
 
 *.log
 secrets.sh

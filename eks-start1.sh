@@ -17,7 +17,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.24 # kubectl get pods --all-namespaces"
+SCRIPT_VERSION="v0.25 # Add MTD beep"
 LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -31,7 +31,7 @@ args_prompt() {
    echo "   -h          #  show this help menu by running without any parameters"
    echo "   -cont       #  continue (NOT stop) on error"
    echo "   -v          # -verbose (list more details to console)"
-   echo "   -vv         # -very verbose diagnostics (tracing)"
+   echo "   -vv         # -very verbose (instance IDs, volumes, diagnostics, tracing)"
    echo "   -x          #  set -x to display every console command"
    echo "   -q          # -quiet headings for each step"
    echo " "
@@ -40,29 +40,33 @@ args_prompt() {
    echo "   -tf \"1.3.6\"            # version of Terraform to install"
    echo "   -gpg        #  Install gpg2 utility and generate key if needed"
    echo "   -email \"johndoe@gmail.com\"     # to generate GPG keys for"
+#   echo "   -tfc        # Terraform Cloud
    echo " "
    echo "   -DGB        # Delete GitHub at Beginning (to download again)"
    echo "   -c          # -clone again from GitHub (default uses what exists)"
    echo "   -GFP \"$HOME/githubs\"   # Folder path to install repo from GitHub"
 #   echo "   -G          # -GitHub is the basis for program to run"
    echo " "
-   echo "   -aws        # -AWS cloud awscli"
-   echo "   -region \"us-east-1\"    # region in the cloud awscli"
+#   echo "   -aws        # -AWS cloud awscli"
+   echo "   -region \"us-west-2\"    # region in cloud awscli"
 #   echo "   -consul \"1.13.1\"  # Specify version of Consul to install"
 #   echo "   -oss        #  Install Open Source instead of default Enterprise ed."
+   echo "   -MTD        # Month-to-date charges by service"
    echo " "
-   echo "   -KTD        # Kubernetes Terraform Deploy"
    echo "   -DTB        # Destroy Terraform-created resources at Beginning of run"
+   echo "   -KTD        # Kubernetes Terraform Deploy"
    echo "   -DTE        # Destroy Terraform-created resources at End of run"
    echo "   -DLE        # Destroy Terraform-created Logs at End of run"
+   echo "   -beep       # Play short sound at end of run"
    echo " "
    echo "USAGE EXAMPLES:"
    echo "# (one time) change permission to enable run:"
    echo "chmod +x eks-start1.sh"
    echo ""
    echo "./eks-start1.sh -vers -v   # list versions & release details, then stop"
-   echo "./eks-start1.sh -v -I  # install"
-   echo "time ./eks-start1.sh -v -KTD"
+   echo "./eks-start1.sh -v -I -KTD # Install run"
+   echo "./eks-start1.sh -v -KTD # Trial runs"
+   echo "time ./eks-start1.sh -v -DGB -DTB -KTD -beep  # Clear rerun"
 }  # args_prompt()
 
 if [ $# -eq 0 ]; then
@@ -101,19 +105,23 @@ exit_abnormal() {            # Function: Exit with error.
    REMOVE_GITHUB_AFTER=false    # -R
 
    CLOUD_REGION=""              # -region us-west-2 default
-   USE_AWS_CLOUD=false          # -aws
+   USE_AWS_CLOUD=true          # -aws
    # From AWS Management Console https://console.aws.amazon.com/iam/
    #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
    # EKS_CLUSTER_FILE=""   # cluster.yaml instead
    
    KUBE_TF_DEPLOY=false          # -KTD
    KUBE_NAMESPACE="kube-system"
+      # What K8s calls namespaces is called "workspaces" in AWS GUI.
+
+   RUN_MTD=false                 # -MTD
 
 # Post-processing:
    DEL_TF_RESC_AT_BEG=false     # -DTB
    DEL_TF_RESC_AT_END=false     # -DTE
    DEL_TF_LOGS_AT_END=false     # -DLE
 
+   PLAY_BEEP=false              # -beep
 
 ### STEP 04. Custom functions to format echo text to screen
 # See https://wilsonmar.github.io/mac-setup/#TextColors
@@ -164,6 +172,10 @@ while test $# -gt 0; do
   case "$1" in
     -aws)
       export USE_AWS_CLOUD=true
+      shift
+      ;;
+    -beep)
+      export PLAY_BEEP=true
       shift
       ;;
     -cont)
@@ -222,6 +234,7 @@ while test $# -gt 0; do
         GITHUB_PROJ_PATH="examples"
         # From https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main/examples
         GITHUB_PROJ_FOLDER="eks-cluster-with-new-vpc"
+        GITHUB_PROJ_FOLDER="eks-cluster-with-new-vpc"
         K8S_CLUSTER_ID="${GITHUB_PROJ_FOLDER}"
       shift
       ;;
@@ -256,12 +269,12 @@ while test $# -gt 0; do
       # GET_ASC=true
       shift
       ;;
-    -vv)
-      export RUN_DEBUG=true
-      shift
-      ;;
     -vers)
       export LIST_VERSIONS=true
+      shift
+      ;;
+    -vv)
+      export RUN_DEBUG=true
       shift
       ;;
     -v)
@@ -366,13 +379,13 @@ fi
 h2 "STEP 09. Set executable target folder based on call parameter:"
 if [ -n "${TARGET_FOLDER_PARM}" ]; then  # specified by parameter
    TARGET_FOLDER="${TARGET_FOLDER_PARM}"
-   echo "*** Using TARGET_FOLDER specified by parm -=\"$TARGET_FOLDER_PARM\" ..."
+   note "Using TARGET_FOLDER specified by parm -=\"$TARGET_FOLDER_PARM\" ..."
 elif [ -n "${TARGET_FOLDER_IN}" ]; then  # specified by parameter
    TARGET_FOLDER="${TARGET_FOLDER_IN}"
-   echo "*** Using TARGET_FOLDER_IN specified before invoke: \"$TARGET_FOLDER_IN\" ..."
+   note "Using TARGET_FOLDER_IN specified before invoke: \"$TARGET_FOLDER_IN\" ..."
 else
    TARGET_FOLDER="$BREW_PATH"  # from above.
-   echo "*** Using default TARGET_FOLDER=\"$TARGET_FOLDER\" ..."
+   note "Using default TARGET_FOLDER=\"$TARGET_FOLDER\" ..."
 fi
 
 if [[ ! ":$PATH:" == *":$TARGET_FOLDER:"* ]]; then
@@ -413,14 +426,20 @@ if [ "${INSTALL_UTILS}" = true ]; then  # -NI NOT specified
             | tar xz --strip 1 -C homebrew
         # brew upgrades itself later.
     fi
-    brew install jq  curl  wget  tree  git
+    # h2 "STEP 10f. Install kubectl, tfsec, and other scanners:"
+    brew install jq  curl  wget  tree  git  kubectl  tfsec  
+
     # STEP 10d. Installing Linux equivalents for MacOS ..."
     brew install gnu-getopt coreutils xz gzip bzip2 lzip zstd
     # STEP 10e. Install Visual Studio Code editor (if parameter allows):"
-    brew install --cask visual-studio-code
-    # h2 "STEP 10f. Install kubectl, tfsec, and other scanners:"
-    brew install kubectl
-    brew install tfsec
+    # brew install --cask visual-studio-code
+
+    # Use an array of string with type
+    #declare -a StringArray=("Linux Mint" "Fedora" "Red Hat Linux" "Ubuntu" "Debian" )
+    # Iterate the string array using for loop:
+    #for val in ${StringArray[@]}; do
+    #   echo $val
+    #done
 
     # TODO: STEP 10c. Add install of more utilities: python, shellcheck, go
     # TODO: Add install of more HashiCorp programs: vault, consul, consul-k8s, instruqt, etc.
@@ -456,15 +475,75 @@ fi  #INSTALL_UTILS
 
 # "STEP 13. Saved for future use"
 
-h2 "STEP 14. Verify Region in ~/.aws/config :"
-cat ~/.aws/config
+h2 "STEP 14. Verify AWS Region in ~/.aws/config :"
+if [ "${RUN_VERBOSE}" = true ]; then  # -v
+   cat ~/.aws/config
+   # [profile profile-name]
+   # mfa_serial = <MFAARN>
+   # output = text
+   # region = ap-southeast-2
+   # role_arn = <ROLE_ARN>
+   # s3 =
+   #   signature_version = s3v4
+   # source_profile = <CREDSPROFILE>
+fi
 
+if [ "${RUN_DEBUG}" = true ]; then  # -vv
+    h2 "STEP 14a. -vv = List AWS Regions allowed by your AWS account administrator :"
+    AWS_REGIONS=$( aws ec2 describe-regions --output text --query "Regions[].[RegionName]" | sort -r | tr "\\n" " " )
+    # PROTIP: sort -r does reverse sort so us- is on top.
+    # PROTIP: Use tr to turn one item per line into a string of many items, each separated by a space,
+        # for use by other commands later in this script.
+    # us-west-2  us-west-1  us-east-2  us-east-1
+    # eu-north-1 eu-west-3 eu-west-2 eu-west-1 eu-central-1
+    # ap-south-1 ap-northeast-3 ap-northeast-2 ap-northeast-1 ap-southeast-1 ap-southeast-2
+    # sa-east-1    
+    # ca-central-1
+    echo ${AWS_REGIONS}
+fi
+
+# h2 "STEP 14b. AWS Region ${CLOUD_REGION} among regions:"
 if [ -z "${CLOUD_REGION}" ]; then  # not found:
-   export AWS_REGION="us-west-2"
-   warning "-region not specified in parameter, set to default \"$AWS_REGION\" "
+   export AWS_REGION="us-west-2"  # default within AWS EKS Blueprints
+   warning "-region not specified among run parameters. Set to default \"$AWS_REGION\" "
 else
    export AWS_REGION="${CLOUD_REGION}"
-   info "AWS region \"$AWS_REGION\" set from parameter."
+   note "AWS region \"$AWS_REGION\" set from parameter."
+fi
+
+if [ "${RUN_DEBUG}" = true ]; then  # -vv
+    h2 "STEP 14c. Subnet vps for each availability zone in current region :"
+    aws ec2 describe-subnets --output text --query 'Subnets[*].[AvailabilityZone,VpcId,SubnetId] | sort_by(@, &[0])'
+       # PROTIP: Using JMESPATH sort of first column [0].
+        # us-west-2a      vpc-0fa24d74be3d9a852   subnet-0f0f071ba4bab6216
+        # us-west-2a      vpc-04331bc963ed3763d   subnet-0243ffb22a05656e2
+        # us-west-2a      vpc-04331bc963ed3763d   subnet-0c04c7794f6a3192b
+        # us-west-2b      vpc-04331bc963ed3763d   subnet-02e264e952fb89b78
+        # us-west-2b      vpc-0fa24d74be3d9a852   subnet-00179d6a484bfa6b5
+        # us-west-2b      vpc-04331bc963ed3763d   subnet-04d4b4c7b2d0ae47b
+        # us-west-2c      vpc-04331bc963ed3763d   subnet-093dbdd3211a01ded
+        # us-west-2c      vpc-0fa24d74be3d9a852   subnet-06f30b943133146d1
+        # us-west-2c      vpc-04331bc963ed3763d   subnet-0ba58338ce887dec8
+        # us-west-2d      vpc-0fa24d74be3d9a852   subnet-0872bb332f1aab798
+fi
+
+
+# For manual GUI, see https://bobbyhadz.com/blog/aws-list-all-resources
+if [ "${RUN_DEBUG}" = true ]; then  # -vv
+    h2 "STEP 15a. List EC2 EBS Volumes allocated within AWS:"
+    info "Browser openning for AWS Console for EC2 Volumes running in ${AWS_REGION} ..."
+    # AWS_URL="https://${AWS_REGION}.console.aws.amazon.com/ec2/home?region=${AWS_REGION}#Volumes:"
+    # open "${AWS_URL}"
+
+   aws ec2 describe-volumes \
+    --region "${AWS_REGION}" \
+    --output text \
+    --filters Name=status,Values=available \
+    --query 'sort_by(Volumes[], &CreateTime)[].{CreateTime: CreateTime, VolumeId: VolumeId, VolumeType: VolumeType}'
+       # Notice 2 volumes are created each run:
+       # 2022-12-09T10:58:14.495000+00:00        vol-06d21425de2c47dae   gp2
+       # 2022-12-09T10:58:14.504000+00:00        vol-0addbbd41d3f13511   gp2
+       # ...
 fi
 
 
@@ -592,7 +671,6 @@ EOF
             # There is NO WARRANTY, to the extent permitted by law.
 
             # gpg: key "johndoe@gmail.com" not found: No public key
-    echo "here"
 
         # So we can encrypt without prompt, set trust to 5 for "I trust ultimately" the key :
         echo -e "5\ny\n" |  gpg2 --command-fd 0 --expert --edit-key $MY_EMAIL_ADDRESS trust;
@@ -732,6 +810,62 @@ EOF
         # echo "*** The expires: 2026-04-20 date above must be in the future ..."
 
 fi # GET_ASC
+
+
+    h2 "STEP 42. Obtain GitHub repo (depending on parameters):"
+    # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
+    # Instead of gh repo fork acct/repo --clone  # so parms can affect behavior.
+    # To ensure that we have a project folder (from GitHub):
+    if [ -z "${GITHUB_FOLDER_PATH}" ]; then   # value not specified in parm
+        note "No -GFP (GITHUB_FOLDER_PATH) specified in run parameters"
+        GITHUB_FOLDER_PATH="$HOME/githubs"
+        warning "Default GFP \"$GITHUB_FOLDER_PATH\" being used."
+    fi
+    cd  # to root folder
+    cd "${GITHUB_FOLDER_PATH}" || return # as suggested by SC2164
+    info "Now at ${GITHUB_FOLDER_PATH}"
+
+    # https://www.zshellcheck.net/wiki/SC2115 :
+    # Use "${var:?}" to ensure this never expands to / .
+    if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path already created.
+        note "Using existing folder at \"${GITHUB_FOLDER_PATH:?}\" to clone github"
+    else
+        note "Creating folder path ${GITHUB_FOLDER_PATH:?} to clone github"
+        sudo mkdir -p "${GITHUB_FOLDER_PATH:?}"
+    fi
+    cd "${GITHUB_FOLDER_PATH:?}" || return # as suggested by SC2164
+    note "Now at $PWD"
+
+    Clone_GitHub_repo(){   # function
+        note "Obtaining repo \"${GITHUB_REPO_URL:?}\" at $PWD:"
+        sudo git clone "${GITHUB_REPO_URL}" --depth 1
+        ls -alT "${GITHUB_REPO_FOLDER}"
+        cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
+        note "At path $PWD"
+    }
+    if [ -d "${GITHUB_REPO_FOLDER:?}" ]; then  # directory already exists:
+        if [ "${DEL_GH_AT_BEG}" = true ]; then   # -DGB (Delete GitHub at Beginning)
+            h2 "Removing project folder $GITHUB_REPO_FOLDER:? ..."
+            ls -al "${GITHUB_REPO_FOLDER}"
+            sudo rm -rf "${GITHUB_REPO_FOLDER}"
+        fi
+        
+        if [ "${CLONE_GITHUB}" = true ]; then   # -c specified to clone again:
+            Clone_GitHub_repo  # function
+        else
+            warning "Using GitHub repo contents from previous run:"
+        fi
+    else  # GITHUB_REPO_FOLDER does not exist
+        Clone_GitHub_repo  # function
+    fi
+    cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
+    info "Now at $PWD"
+    info "$( ls -alT .git/index )"
+        # .git/index holds all git history, so is changed on every git operation.
+
+    cd "${GITHUB_PROJ_PATH}/${GITHUB_PROJ_FOLDER}" || return # as suggested by SC2164
+    info "Now at $PWD"
+
 
 
 Install_terraform(){  # function
@@ -899,49 +1033,58 @@ fi  # INSTALL_TF
 
 note "Now at $PWD to start."
 
-h2 "STEP 40a. Verify AWS connectivity:"
+h2 "STEP 31. Verifying AWS connectivity:"
    # https://aws.amazon.com/blogs/security/an-easier-way-to-determine-the-presence-of-aws-account-access-keys/
-   RESPONSE=$( { aws iam get-account-summary | sed s/Output/Useless/ > outfile; } 2>&1 )
+   # NOT WORKING: RESPONSE=$( { aws iam get-account-summary | sed s/Output/Useless/ > outfile; } 2>&1 )
+   RESPONSE=$( aws iam get-account-summary )
       # An error occurred (ExpiredToken) when calling the GetAccountSummary operation: The security token included in the request is expired
    if [[ "${RESPONSE}" == *"expired"* ]]; then
       fatal "Keys in ~/.aws/credentials have expired! Aborting run."
       exit 9
    else
-      h2 "STEP 40b. Identify if resources were already created:"
+      h2 "STEP 31b. SummaryMap of user:"
+      note "${RESPONSE}"
    fi
 
+
+if [ "${RUN_DEBUG}" = true ]; then  # -vv
+    info "Browser opening for AWS Console for EC2 instance ID Types in ${AWS_REGION} ..."
+    AWS_URL="https://${AWS_REGION}.console.aws.amazon.com/ec2/home?region=${AWS_REGION}#Instances:instanceState=running"
+    open "${AWS_URL}"
+fi
+
+
+k8s_nodes(){
+    RESPONSE=$( kubectl get nodes || true )
+}
 k8s_nodes_pods_list(){
     # See https://wilsonmar.github.io/terraform/#k8s_nodes_pods_list
-
-    h2 "STEP 42a. list worker nodes and pods (function k8s_nodes_pods_list):"
-    RESPONSE=$( { kubectl get nodes | sed s/Output/Useless/ > outfile; } 2>&1 )
+    h2 "STEP 42a. listing worker nodes and pods (function k8s_nodes_pods_list):"
+                  # Alternately:  2>&1 ) && exit_status=$? || exit_status=$?
+    RESPONSE=$( kubectl get nodes 2>&1 ) || true 
+       # KUBECONFIG="${KUBECONFIG_FILE}" kubectl get nodes --all-namespaces
        # See https://stackoverflow.com/questions/962255/how-to-store-standard-error-in-a-variable
-    if [[ "${RESPONSE}" != *"NAME"* ]]; then
-        # If AWS credentials are not valid:
-        # E1216 06:46:28.873204   93669 memcache.go:238] couldn't get current server API group list: the server has asked for the client to provide credentials
-        # If nodes are no longer available:
-        # E1214 07:58:44.629220   46304 memcache.go:238] couldn't get current server API group list: Get "https://0E7188B181023B24E8C319BB2E31DACA.gr7.us-west-2.eks.amazonaws.com/api?timeout=32s": dial tcp: lookup 0E7188B181023B24E8C319BB2E31DACA.gr7.us-west-2.eks.amazonaws.com: no such host
-       warning "Command \"kubectl get nodes\" found no nodes!"
-       K8S_NODES_FOUND=false
-       # No need to display the error.
-    else
-       # Run again because precious command is bonkers:
-       K8S_NODES_FOUND=true
-        if [ "${RUN_VERBOSE}" = true ]; then
-           kubectl get nodes
-        fi
+    if [[ "${RESPONSE}" == *"no such host"* ]]; then
+        warning "Command \"kubectl get nodes\" found no nodes!"
+        # Run again because previous command is bonkers:
+        K8S_NODES_FOUND=false
+    else  # hosts found:
+        note "Hosts found:"
+            # If AWS credentials are not valid:
+            # E1216 06:46:28.873204   93669 memcache.go:238] couldn't get current server API group list: the server has asked for the client to provide credentials
+            # If nodes are no longer available:
+            # E1214 07:58:44.629220   46304 memcache.go:238] couldn't get current server API group list: Get "https://0E7188B181023B24E8C319BB2E31DACA.gr7.us-west-2.eks.amazonaws.com/api?timeout=32s": dial tcp: lookup 0E7188B181023B24E8C319BB2E31DACA.gr7.us-west-2.eks.amazonaws.com: no such host
+        K8S_NODES_FOUND=true
     fi
+    note "${RESPONSE}"
 
-    h2 "STEP 42b. list 18 pods (function k8s_nodes_pods_list):" 
-                                 # -n ${KUBE_NAMESPACE}
-    RESPONSE=$( { kubectl get pods --all-namespaces | sed s/Output/Useless/ > outfile; } 2>&1 )
-    if [[ "${RESPONSE}" != *"NAMESPACE"* ]]; then
-       warning "Command \"kubectl get pods -n ${KUBE_NAMESPACE}\" found no hosts!"
+    h2 "STEP 42b. list all pods (function k8s_nodes_pods_list):" 
+    RESPONSE=$( kubectl get pods --all-namespaces 2>&1 ) || true 
+                               # -n ${KUBE_NAMESPACE}  -o wide # for IP, NODE, READINESS
+    if [[ "${RESPONSE}" == *"no such host"* ]]; then
+       warning "Command \"kubectl get pods\" found no hosts!"
     else
-       # Run again because precious command is bonkers:
-        if [ "${RUN_VERBOSE}" = true ]; then
-            kubectl get pods -n ${KUBE_NAMESPACE} 
-        fi
+       warning "Command \"kubectl get pods\" found hosts!"
         # NAME                                                         READY
         # aws-load-balancer-controller-854cb78798-p47sr                1/1
         # aws-load-balancer-controller-854cb78798-qthql                1/1
@@ -962,115 +1105,102 @@ k8s_nodes_pods_list(){
         # kube-proxy-j5c9s                                             1/1
         # metrics-server-7d76b744cd-vchnk                              1/1
     fi
-
+    note "${RESPONSE}"
+    
     # TODO: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
-}
+
+}  # k8s_nodes_pods_list()
 
 Cleanup_k8s() {
 
-    if [ "${DEL_TF_RESC_AT_BEG}" = true ]; then  # -DTB
+    info "Now at $PWD"
 
-        h2 "STEP 90. Destroy addons:"
-        terraform destroy -target="module.eks_blueprints_kubernetes_addons" \
-           -auto-approve >"${LOG_DATETIME}_90_destroy_addons.log"
-        echo $?
+    h2 "STEP 90. Destroy addons:"
+    terraform destroy -target="module.eks_blueprints_kubernetes_addons" \
+        -auto-approve >"${LOG_DATETIME}_90_destroy_addons.log"
+    echo $?
 
-        h2 "STEP 91. Destroy blueprints:"
-        terraform destroy -target="module.eks_blueprints" \
-           -auto-approve >"${LOG_DATETIME}_91_destroy_eks_blueprints.log"
-        echo $?
+    h2 "STEP 91. Destroy blueprints:"
+    terraform destroy -target="module.eks_blueprints" \
+        -auto-approve >"${LOG_DATETIME}_91_destroy_eks_blueprints.log"
+    echo $?
 
-        h2 "STEP 92. Destroy vpc:"
-        terraform destroy -target="module.vpc" \
-           -auto-approve >"${LOG_DATETIME}_92_destroy_vpc.log"
-        echo $?
+    h2 "STEP 92. Destroy vpc:"
+    terraform destroy -target="module.vpc" \
+        -auto-approve >"${LOG_DATETIME}_92_destroy_vpc.log"
+    echo $?
 
-        h2 "STEP 93. Destroy additional:"
-        terraform destroy \
-           -auto-approve >"${LOG_DATETIME}_93_destroy_additional.log"
-            # Destroy complete! Resources: 93 destroyed.
-        echo $?
+    h2 "STEP 93. Destroy additional:"
+    terraform destroy \
+        -auto-approve >"${LOG_DATETIME}_93_destroy_additional.log"
+        # Destroy complete! Resources: 93 destroyed.
+    echo $?
 
-        info "K8s resources cleaned up by function Cleanup_k8s."
-    else
-       info "K8s nodes may be live and -DTB parameter not specified to recreate."
-       exit
-    fi
 
+    h2 "STEP 94. Delete EBS volumes (not attached to EC2):"
+    # Collect volume-ids: https://aws.amazon.com/premiumsupport/knowledge-center/ebs-volume-snapshot-ec2-instance/
+    # See https://wilsonmar.github.io/jq  and https://wilsonmar.github.io/aws-cli
+    RESPONSE=$( aws ec2 describe-volumes --region "${AWS_REGION}" --output table \
+    --filters Name=status,Values=available \
+    --query "Volumes[*].VolumeId" || true )
+    note "${RESPONSE}"
+       # vol-0be808a8215fc5357   vol-0addbbd41d3f13511   vol-028160d2a87de4f67   vol-0b04ae55d123f3441   vol-0df4e6ae9ee831d8c   vol-0b0f7d5614b479dcb   vol-06d21425de2c47dae   vol-0ed1ee349500811c5      vol-005ba22909babdb12   vol-0d4d1246083ccb887   vol-0b6801ef966edce2c
+       # TODO: Does not list volumes with snapshots!
+       # "Volumes": [
+       #         {
+       #             "Attachments": [],
+       #             "AvailabilityZone": "us-west-2c",
+       #             "CreateTime": "2022-12-14T15:50:05.814000+00:00",
+       #             "Encrypted": false,
+       #             "Size": 32,
+       #             "SnapshotId": "",
+       #             "State": "available",
+       #             "VolumeId": "vol-04c47e35bbc05e3a8",
+
+       # VOLUMES us-west-2c      2022-12-14T15:50:05.814000+00:00        False   100     False   32              available       vol-04c47e35bbc05e3a8   gp2
+       # TAGS    kubernetes.io/created-for/pv/name       pvc-6f079579-06f5-4991-9aa3-960d19480f7c
+
+    # delete-volume --volume-id vol-04c47e35bbc05e3a8
+    # To confirm the selected EBS volume has been deleted, re-run the describe-volumes command while specifying the volume-id:
+    # aws ec2 describe-volumes --region "${AWS_REGION}" --output text \
+    #     --volume-id vol-04c47e35bbc05e3a8
+    # An error occurred (InvalidVolume.NotFound) when calling the DescribeVolumes operation: The volume 'vol-04c47e35bbc05e3a8' does not exist.
+    # See https://www.nops.io/unused-aws-ebs-volumes/
+    # https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/delete-volume.html
+    # See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-deleting-volume.html
     # Manually check: https://aws.amazon.com/premiumsupport/knowledge-center/check-for-active-resources/
-}
 
-k8s_nodes_pods_list
+
+    h2 "STEP 95. Deleting EC2 EBS Volumes :"
+    # See https://docs.aws.amazon.com/cli/latest/reference/ec2/delete-volume.html
+    RESPONSE=$( for vol in $( aws ec2 describe-volumes \
+        --region "${AWS_REGION}" \
+        --output text \
+        --filters Name=status,Values=available \
+        --query 'sort_by(Volumes[], &CreateTime)[].{VolumeId: VolumeId}'); \
+        do $( aws ec2 delete-volume --volume-id $vol --region "${AWS_REGION}" --no-dry-run ) ; done  || true )
+    note "${RESPONSE}"
+
+}  # Cleanup_k8s()
+
+
+k8s_nodes_pods_list  # function defined above.
 if [ "${K8S_NODES_FOUND}" = true ]; then
     if [ "${DEL_TF_RESC_AT_BEG}" = true ]; then  # -DTB
        h2 "STEP 41. Destroy at beginning:"
        Cleanup_k8s || # function defined above. 90-93
        info "K8s resources cleaned up."
     else
-       info "K8s nodes are live and -DTB parameter not specified to recreate."
-       # https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/
+       # h2 "STEP 89b. K8s nodes :"
+       k8s_nodes_pods_list  # function defined above.
+          # https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/
        # if -vv
-          # kubectl describe pod 
-
+          # kubectl describe pod "$K8S_POD_ID}"
     fi
 fi
 
 
 if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
-
-    h2 "STEP 42. Obtain GitHub repo (depending on parameters):"
-    # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
-    # To ensure that we have a project folder (from GitHub):
-    if [ -z "${GITHUB_FOLDER_PATH}" ]; then   # value not specified in parm
-        note "No -GFP (GITHUB_FOLDER_PATH) specified in run parameters"
-        GITHUB_FOLDER_PATH="$HOME/githubs"
-        warning "Default GFP \"$GITHUB_FOLDER_PATH\" being used."
-    fi
-    cd  # to root folder
-    cd "${GITHUB_FOLDER_PATH}" || return # as suggested by SC2164
-    info "Now at ${GITHUB_FOLDER_PATH}"
-
-    # https://www.zshellcheck.net/wiki/SC2115 :
-    # Use "${var:?}" to ensure this never expands to / .
-    if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path already created.
-        note "Using existing folder at \"${GITHUB_FOLDER_PATH:?}\" to clone github"
-    else
-        note "Creating folder path ${GITHUB_FOLDER_PATH:?} to clone github"
-        sudo mkdir -p "${GITHUB_FOLDER_PATH:?}"
-    fi
-    cd "${GITHUB_FOLDER_PATH:?}" || return # as suggested by SC2164
-    note "Now at $PWD"
-
-    Clone_GitHub_repo(){   # function
-        note "Obtaining repo \"${GITHUB_REPO_URL:?}\" at $PWD:"
-        sudo git clone "${GITHUB_REPO_URL}" --depth 1
-        ls -alT "${GITHUB_REPO_FOLDER}"
-        cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
-        note "At path $PWD"
-    }
-    if [ -d "${GITHUB_REPO_FOLDER:?}" ]; then  # directory already exists:
-        if [ "${DEL_GH_AT_BEG}" = true ]; then   # -DGB (Delete GitHub at Beginning)
-            h2 "Removing project folder $GITHUB_REPO_FOLDER:? ..."
-            ls -al "${GITHUB_REPO_FOLDER}"
-            sudo rm -rf "${GITHUB_REPO_FOLDER}"
-        fi
-        
-        if [ "${CLONE_GITHUB}" = true ]; then   # -c specified to clone again:
-            Clone_GitHub_repo  # function
-        else
-            warning "Using GitHub repo contents from previous run:"
-        fi
-    else  # GITHUB_REPO_FOLDER does not exist
-        Clone_GitHub_repo  # function
-    fi
-    cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
-    info "Now at $PWD"
-    info "$( ls -alT .git/index )"
-        # .git/index holds all git history, so is changed on every git operation.
-
-    cd "${GITHUB_PROJ_PATH}/${GITHUB_PROJ_FOLDER}" || return # as suggested by SC2164
-    info "Now at $PWD"
-
 
     # h2 "STEP 43. Provide password for sudo chown and chmod:"
     # change ownership to avoid errors:
@@ -1081,7 +1211,7 @@ if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
     trap "Cleanup_k8s" ERR
 
     h2 "STEP 50. tfstate file before terraform commands:"
-    ls -alT terraform.tfstate
+    ls -alT terraform.tfstate*
 
     # Among Terraform commands: https://acloudguru.com/blog/engineering/the-ultimate-terraform-cheatsheet#h-the-10-most-common-terraform-commands
     # https://k21academy.com/terraform-iac/terraform-cheat-sheet/
@@ -1097,7 +1227,7 @@ if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
     echo $?
     terraform init >"${LOG_DATETIME}_52_tf_validate.log"
 
-    h2 "STEP 53. ${LOG_DATETIME}_53_tfsec.log"
+    h2 "STEP 53. tfsec ${LOG_DATETIME}_53_tfsec.log"
     # || true added to ignore error 1 returned if errors are found.
     tfsec >"${LOG_DATETIME}_53_tfsec.log" || true 
     echo $?
@@ -1127,47 +1257,77 @@ if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
     # OUTPUT: Updated context arn:aws:eks:us-west-2:670394095681:cluster/eks-cluster-with-new-vpc in /Users/wilsonmar/.kube/config
     echo $?
 
-    h2 "STEP 58. Show Kubernetes status:"
+    h2 "STEP 60. Show Kubernetes status:"
     k8s_nodes_pods_list
 
-    if [ "${DEL_TF_RESC_AT_END}" = true ]; then  # -DTE
-        h2 "STEP 59. -DTE = Delete TF Resources at End "
-        Cleanup_k8s  # function defined above. 90-93
-    fi # DEL_TF_RESC_AT_END
-
     if [ "${DEL_TF_LOGS_AT_END}" = true ]; then  # -DLE
-        h2 "STEP 60. -DLE Delete TF Logs at End for ${LOG_DATETIME} "
+        h2 "STEP 61a. -DLE Delete TF Logs at End for ${LOG_DATETIME} "
         ls -alT $LOG_DATETIME*
-        rm $LOG_DATETIME*
+        rm "${LOG_DATETIME}*"
            # Recover deleted files from your Mac Trash
     else
-        h2 "STEP 61. -DLE Delete not specified for Logs at End for ${LOG_DATETIME} "
+        h2 "STEP 61b. -DLE (Delete Logs at End) not specified for ${LOG_DATETIME} "
         ls -alT $LOG_DATETIME*
     fi # DEL_TF_LOGS_AT_END
 
-    h2 "STEP 62. List date of tfstate file after terraform commands:"
-    ls -alT terraform.tfstate.backup
-    ls -alT terraform.tfstate
+    if [ "${DEL_TF_RESC_AT_END}" = true ]; then  # -DTE
+        h2 "STEP 61a. -DTE = (Delete Terraform Resources at End) "
+        Cleanup_k8s  # function defined above. 90-93
+        h2 "STEP 61b. -DTE = Deleting terraform.tfstate at End"
+        ls -alT terraform.tfstate*
+        rm terraform.tfstate
+    fi # DEL_TF_RESC_AT_END
 
+    h2 "STEP 62. List date of tfstate file after terraform commands:"
+    ls -alT terraform.tfstate*
+    
+    
 fi  # KUBE_TF_DEPLOY
 
 
-#h2 "STEP 70. List resources actually allocated within AWS:"
    # For manual GUI, see https://bobbyhadz.com/blog/aws-list-all-resources
-   # For CLI ??
+    if [ "${RUN_DEBUG}" = true ]; then  # -vv
+        h2 "STEP 70. List resources actually allocated within AWS:"
+        info "Browser openning for AWS Console for EC2 Volumes running in ${AWS_REGION} ..."
+        AWS_URL="https://${AWS_REGION}.console.aws.amazon.com/ec2/home?region=${AWS_REGION}#Volumes:"
+        open "${AWS_URL}"
+    fi
    # TODO: See Terraform Cloud (TFC) vs. state (drift detection)
+   # From https://stackoverflow.com/questions/57092150/how-to-list-out-all-the-ebs-volumes-in-cli
+   # aws ec2 describe-volumes --query "Volumes[*].{VolumeID:Attachments[0].VolumeId,InstanceID:Attachments[0].InstanceId,State:Attachments[0].State,Environment:Tags[?Key=='Environment']|[0].Value}"
+   # aws ec2 delete-volume --volume-id vol-09f50bafcf9a8da83
 
 #h2 "STEP 71. Diagram resources: -graph"
    # See https://wilsonmar.github.io/terraform#DiagrammingTools
+   # See https://github.com/hjacobs/kube-ops-view (archived Nov 2022)
 
 #h2 "STEP 72. Impose artificial load:"
 
-#h2 "STEP 73. Security findings from AWS Config"
+    # https://us-west-2.console.aws.amazon.com/config/home?region=us-west-2#
+    # Use/Deploy sample template "Security Best Practices for EKS"
+if [ "${RUN_DEBUG}" = true ]; then  # -vv
+   h2 "STEP 73. -vv Security findings from AWS Config"
+   aws configservice describe-config-rules --output json | grep ConfigRuleName | cut -d":" -f2 | cut -d"," -f1 
+       # grep to remove "ConfigRuleName", cut commas from:
+       # "ConfigRuleName": "eks-cluster-oldest-supported-version-conformance-pack-qmmhw2vhu",
+       # For:
+        # "eks-cluster-oldest-supported-version-conformance-pack-qmmhw2vhu"
+        # "eks-cluster-supported-version-conformance-pack-qmmhw2vhu"
+        # "eks-endpoint-no-public-access-conformance-pack-qmmhw2vhu"
+        # "eks-secrets-encrypted-conformance-pack-qmmhw2vhu"
+
+fi
 
 #h2 "STEP 74. Report metrics comparisons:"
 
-#h2 "STEP 75. Get costs by tags:"
+#h2 "STEP 75. Get -MTD costs by service (and by tag):"
    # Kubecost?
+if [ "${RUN_MTD}" = true ]; then  # -MTD
+    echo "See https://github.com/wilsonmar/awsinfo.sh"
+fi
+
+#h2 "STEP 76. Optimize costs:"
+   # See https://cast.ai/blog/how-to-reduce-your-amazon-eks-costs-by-half-in-15-minutes/
 
 ####################
 
@@ -1175,5 +1335,22 @@ fi  # KUBE_TF_DEPLOY
 ### STEP 99. End-of-run stats
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
 EPOCH_END="$( date -u +%s )"  # such as 1572634619
+
+if [ "${PLAY_BEEP}" = true ]; then  # -beep
+    # There are several ways to sound the short sound:
+    if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
+        osascript -e beep  # single "knock" as in system sound
+        afplay /System/Library/Sounds/Funk.aiff  # double "dollop"
+        # say done
+    else  # Multi-platform system sound: 
+        print \\a
+        # echo ^G
+        tput bel
+    fi
+fi
+
+# https://medium.com/towardsdev/how-to-fully-clean-a-kubernetes-cluster-in-1-line-of-bash-c0d89eafb894
+#   kubectl delete cm,secret,pod,deployment -A --all
+# Alternately, use etcdctl after SSH inside a control plane node.
 
 # END
