@@ -7,7 +7,7 @@
 
 # In .zshenv
 # Colons separate items in $PATH (semicolons as in Windows will cause error):
-export PATH="/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
+export PATH="/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:/bin/bash:${PATH}"
    # /usr/local/bin contains user-installed (using brew) so should be first to override libraries
    # /bin contains macOS bash, zsh, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, conda, ...
    # /usr/bin contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.

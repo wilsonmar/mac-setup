@@ -417,8 +417,11 @@ if [ "${INSTALL_UTILS}" = true ]; then  # -NI NOT specified
         # TODO: Input password:
     #fi
     note "$( gcc --version )"  #  note "$(  cc --version )"
+       # Apple clang version 14.0.0 (clang-1400.0.29.202)
+       # Target: arm64-apple-darwin21.6.0
+       # Thread model: posix
+       # InstalledDir: /Library/Developer/CommandLineTools/usr/bin
     note "$( xcode-select --version )"  # Example output: xcode-select version 2395 (as of 23APR2022).
-
 
     if ! command -v brew >/dev/null; then
         h2 "STEP 10b. Installing brew package manager on macOS using Ruby ..."
@@ -490,7 +493,8 @@ fi
 
 if [ "${RUN_DEBUG}" = true ]; then  # -vv
     h2 "STEP 14a. -vv = List AWS Regions allowed by your AWS account administrator :"
-    AWS_REGIONS=$( aws ec2 describe-regions --output text --query "Regions[].[RegionName]" | sort -r | tr "\\n" " " )
+    AWS_REGIONS=$( aws ec2 describe-regions --output text --query "Regions[].[RegionName]" | sort -r | tr "\\n" "\n" )
+    # | tr "\\n" " " # removes line break for all regions in a single string
     # PROTIP: sort -r does reverse sort so us- is on top.
     # PROTIP: Use tr to turn one item per line into a string of many items, each separated by a space,
         # for use by other commands later in this script.

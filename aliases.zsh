@@ -116,7 +116,6 @@ alias safari='open -a "/Applications/Safari.app"'
 alias tor='open -a "$HOME/Applications/Tor Browser.app"'
 # alias opera='open -a "$HOME/Applications/Opera.app"'
 
-
 ### built-in Apple apps:
 alias appstore='open -a "/System/Applications/App Store.app"'
 alias calc='open -a "/System/Applications/Calculator.app"'
@@ -322,10 +321,12 @@ alias dcd="docker compose down -v"
 # docker inspect $CONTAINER_NAME
 
 #### See https://wilsonmar.github.io/kubernetes
-alias k="kubectl"
 alias kubec="$EDITOR ~/.kube/conf"
 # FIXME: complete -F __start_kubectl k
 alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
+alias k="kubectl"
+# See https://wilsonmar.github.io/kubernetes-operators/#KeyboardAlias
+alias o="operator-sdk"
 
 #if command -v docker >/dev/null; then  # installed in /usr/local/bin/docker
 #   echo "Docker installed, so ..."

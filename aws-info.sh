@@ -13,7 +13,7 @@
 
 # SETUP STEP 01 - Capture starting timestamp and display no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.1.9"
+SCRIPT_VERSION="v0.1.10" # "feature: ec2 instance"
 # clear  # screen (but not history)
 
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
@@ -573,19 +573,45 @@ fi #
 if [ "${EC2_INFO}" = true ] || [ "${ALL_INFO}" = true ]; then   # -ec2info
 h2 "============= EC2 "
 
+#note "How many EC2 instances of each type running/stopped?"
+#aws ec2 describe-instances | jq -r '[[.Reservations[].Instances[]|{ state: .State.Name, type: .InstanceType }]|group_by(.state)|.[]|{state: .[0].state, types: [.[].type]|[group_by(.)|.[]|{type: .[0], count: ([.[]]|length)}] }]'
+   # [ { "state": "running", "types": [ { "type": "t3.medium", "count": 1    } ] } ]
+
+# See https://www.slideshare.net/AmazonWebServices/deep-dive-advanced-usage-of-the-aws-cli
+# for ec2-instances-running and waiting given an image-id.
+
+
+export AWS_INSTANCE_TYPE="mac*.metal"
+note "What AZs have \"$AWS_INSTANCE_TYPE\" instance types?"
+function aws_list_macs {
+   export AWS_PAGER=""
+   for i in `aws ec2 describe-regions --query "Regions[].{Name:RegionName}" --output text | sort -r`
+   do
+      export AWS_REGION="${i}"
+      if [ `echo "$@"|grep -i '\-\-region'|wc -l` -eq 1 ]; then
+         echo "ERROR: -–region flag cannot be used while using awsall"
+         break
+      fi
+      echo -e "${AWS_REGION}  -------"
+      aws ec2 describe-instance-type-offerings \
+         --region "${AWS_REGION}" \
+         --location-type "availability-zone" \
+         --query "InstanceTypeOfferings[*].[Location, InstanceType]" \
+         --filters "Name=instance-type,Values=${AWS_INSTANCE_TYPE}" \
+         --output text  | sort
+   done
+   trap "break" INT TERM
+}
+aws_list_macs
+
+exit
+
+
 note "Which of my EC2 Security Groups are being used?"
 MY_SEC_GROUPS="$( aws ec2 describe-network-interfaces \
       | jq '[.NetworkInterfaces[].Groups[]|.]|map({ (.GroupId|tostring): true }) | add'; aws ec2 describe-security-groups | jq '[.SecurityGroups[].GroupId]|map({ (.|tostring): false })|add'; )"
 # echo "MY_SEC_GROUPS=$MY_SEC_GROUPS"
 echo "$MY_SEC_GROUPS" | jq -s '[.[1], .[0]]|add|to_entries|[group_by(.value)[]|{ (.[0].value|if . then "in-use" else "unused" end): [.[].key] }]|add' 
-
-
-note "How many EC2 instances of each type running/stopped?"
-aws ec2 describe-instances | jq -r "[[.Reservations[].Instances[]|{ state: .State.Name, type: .InstanceType }]|group_by(.state)|.[]|{state: .[0].state, types: [.[].type]|[group_by(.)|.[]|{type: .[0], count: ([.[]]|length)}] }]"
-   # [ { "state": "running", "types": [ { "type": "t3.medium", "count": 1    } ] } ]
-
-# See https://www.slideshare.net/AmazonWebServices/deep-dive-advanced-usage-of-the-aws-cli
-# for ec2-instances-running and waiting given an image-id.
 
 
 note "EC2 parentage: Which EC2 Instances were created by Stacks?"
