@@ -1237,6 +1237,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       brew install hashicorp/tap/sentinel
       which sentinel
 
+      h2 "brew install kubernetes:"
+      brew install openshift-cli
       brew install hashicorp/tap/consul-k8s
       which consul-k8s
       # https://learning.oreilly.com/library/view/consul-up-and/9781098106133/ch03.html
