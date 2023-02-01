@@ -13,7 +13,7 @@
 
 # SETUP STEP 01 - Capture starting timestamp and display no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.1.11" # "feature: describe-host (dedicated)"
+SCRIPT_VERSION="v0.1.12" # "feature: list acm certs"
 # clear  # screen (but not history)
 
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
@@ -685,9 +685,28 @@ fi  #
 if [ "${CERT_INFO}" = true ] || [ "${ALL_INFO}" = true ]; then   # -certinfo
 h2 "============= Certificates "
 
-# https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html
-note "aws iam list-server-certificates"
-aws iam list-server-certificates
+note "aws acm list-certificates [across all regions]"
+function aws_list_certs {
+   export AWS_PAGER=""
+   for i in `aws ec2 describe-regions --query "Regions[].{Name:RegionName}" --output text | sort -r`
+   do
+      export AWS_REGION="${i}"
+      if [ `echo "$@"|grep -i '\-\-region'|wc -l` -eq 1 ]; then
+         echo "ERROR: -–region flag cannot be used while using awsall"
+         break
+      fi
+      echo -e "${AWS_REGION}  -------"
+      aws --region="${AWS_REGION}" acm list-certificates
+      # NO   --output table  # | sort
+   done
+   trap "break" INT TERM
+   }
+   aws_list_certs
+
+
+   # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html
+   note "aws iam list-server-certificates"
+   aws iam list-server-certificates
 
 fi #
 
