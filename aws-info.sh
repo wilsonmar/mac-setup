@@ -13,7 +13,7 @@
 
 # SETUP STEP 01 - Capture starting timestamp and display no matter how it ends:
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.1.10" # "feature: ec2 instance"
+SCRIPT_VERSION="v0.1.11" # "feature: describe-host (dedicated)"
 # clear  # screen (but not history)
 
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
@@ -41,6 +41,7 @@ args_prompt() {
    echo "   -lambdainfo  to show Lambda info."
    echo "   -amiinfo     to show AMI info."
    echo "   -ec2info     to show EC2 info."
+   echo "   -ec2hosts    to show EC2 Dedicated Hosts"
    echo " "
    echo "   -s3info      to show S3 info."
    echo "   -diskinfo    to show Disk info."

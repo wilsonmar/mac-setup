@@ -181,5 +181,12 @@ if [ "$VAULT_ENT" == "enabled" ];then
     transformations=masked-card-number
 fi
 
+
 # After SSH into a Vault server:
 # tail -f /var/log/tf-user-data.log
+   # When you see a message like the following one, the setup is complete:
+   # 20##/12/11 22:05:38 /var/lib/cloud/instance/scripts/part-001: Complete
+   # Exit tail command.
+# vault status
+# The Vault server's configuration is in /etc/vault.d/vault.hcl
+# It uses the Filesystem storage backend and is listening on port 8200. 

@@ -73,6 +73,7 @@ alias ebp="$EDITOR ~/.bash_profile && source ~/.bash_profile"
 alias sbp='source ~/.bash_profile'
 alias ezs="$EDITOR ~/.zshrc"   # for Zsh
 alias szs='source ~/.zshrc'
+alias sshconf="$EDITOR ~/.ssh/config"
 #alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 alias awscreds="$EDITOR ~/.aws/credentials"
 # From https://stackoverflow.com/questions/31331788/using-aws-cli-what-is-best-way-to-determine-the-current-region
