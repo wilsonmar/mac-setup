@@ -46,14 +46,20 @@ alias amon='open -a "/System//Applications/Utilities/Activity Monitor.app"'  # S
 alias sysinfo='open -a "/System/Applications/Utilities/System Information.app"'
 alias syspref='open -a "/System//Applications/System Preferences.app"'
 
+### built-in Apple apps:
+alias appstore='open -a "/System/Applications/App Store.app"'
+alias calc='open -a "/System/Applications/Calculator.app"'
+# cal = calendar 
+
 ##### Terminal 
 # terminal.app
 # hyper is in /usr/local/bin 
-alias iterm='open -a "/Applications/iTerm.app"'
+# alias iterm='open -a "/Applications/iTerm.app"'
 # alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
 
 #### System utilities:
-alias automator='open -a "/System/Applications/Automator.app"'   # https://support.apple.com/guide/automator/welcome/mac
+alias automator='open -a "/System/Applications/Automator.app"'   
+   # https://support.apple.com/guide/automator/welcome/mac
    # https://macosxautomation.com/automator/
    # https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
 #alias alfred='open -a "$HOME/Applications/Alfred 3.app"'
@@ -65,8 +71,8 @@ alias automator='open -a "/System/Applications/Automator.app"'   # https://suppo
 if [ -d "/Applications/Visual Studio Code.app" ]; then
    alias code='open -a "/Applications/Visual Studio Code.app"'
    alias vscode='open -a "/Applications/Visual Studio Code.app"'
+   export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
 fi
-export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
    # export EDITOR="/usr/local/bin/mate -w" 
 alias edit="$EDITOR"   # make a habit of using this instead program name (such as code), so you can switch default editor easier 
 alias ebp="$EDITOR ~/.bash_profile && source ~/.bash_profile"
@@ -78,9 +84,8 @@ alias sshconf="$EDITOR ~/.ssh/config"
 alias awscreds="$EDITOR ~/.aws/credentials"
 # From https://stackoverflow.com/questions/31331788/using-aws-cli-what-is-best-way-to-determine-the-current-region
 alias awsregion="aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'"
-alias atom='open -a "$HOME/Applications/Atom.app"'
+# alias atom was removed from market by GitHub.
 # alias brackets='open -a "/Applications/Brackets.app"'
-alias code='open -a "/Applications/Visual Studio Code.app"'
 # alias eclipse='open "/Applications/Eclipse.app"'
 # alias electron='open -a "$HOME/Applications/Electron.app"'
 #alias pycharm='open -a "$HOME/Applications/Pycharm.app"'
@@ -90,11 +95,11 @@ alias code='open -a "/Applications/Visual Studio Code.app"'
 
 # See https://wilsonmar.github.io/dotfiles/#SublimeText.app
 alias subl='open -a "/Applications/Sublime Text.app"'
-alias textedit='open -a "/Applications/TextEdit.app"'
-alias xcode='open -a /Applications/Xcode.app'
-alias nvim='open "$HOME/Applications/Neovim.app"'
-alias vi="nvim"
-alias vim="nvim"
+# alias textedit='open -a "/Applications/TextEdit.app"'
+# alias xcode='open -a /Applications/Xcode.app'
+# alias nvim='open "$HOME/Applications/Neovim.app"'
+# alias vi="nvim"
+# alias vim="nvim"
 # alias macvim='open -a "/Applications/MacVim.app"'
 # alias idea='open -a "/Applications/IntelliJ IDEA CE.app"'
 
@@ -116,10 +121,6 @@ alias firefox='open -a "/Applications/Firefox.app"'
 alias safari='open -a "/Applications/Safari.app"'
 alias tor='open -a "$HOME/Applications/Tor Browser.app"'
 # alias opera='open -a "$HOME/Applications/Opera.app"'
-
-### built-in Apple apps:
-alias appstore='open -a "/System/Applications/App Store.app"'
-alias calc='open -a "/System/Applications/Calculator.app"'
 
 
 #### See https://wilsonmar.github.io/1password/
@@ -203,6 +204,8 @@ alias ipinfo="curl ipinfo.io"  # more verbose JSON containing country and zip of
 alias ipcity="curl -s ipinfo.io | jq -r .city"
 alias wanip4="dig @resolver1.opendns.com ANY myip.opendns.com +short"
 alias wanip6="dig @resolver1.opendns.com AAAA myip.opendns.com +short -6"
+# https://ipv6.icanhazip.com/
+# https://ipv4.icanhazip.com/
 alias ports="lsof -i -n -P | grep TCP"
 alias listening="lsof -nP +c 15 | grep LISTEN"
 
@@ -270,16 +273,17 @@ alias cr="cargo run --verbose"  # Rust .rs program file in folder
 
 #### See https://wilsonmar.github.io/terraform#KeyboardAliases
 alias tf="terraform $1"  # provide a parameter
-alias tfa="terraform apply -auto-approve"
-alias tfd="terraform destroy"
 alias tffd="terraform fmt -diff"
+alias tfv="terraform validate"
 alias tfi="terraform init"
 alias tfp="terraform plan"
-alias tfr="terraform refresh"
+alias tfsd="tfsec | sed -r 's/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g'"
+alias tfa="time terraform apply -auto-approve"
 alias tfs="terraform show"
+alias tfr="terraform refresh"
 alias tfsl="terraform state list"
 alias tfsp="terraform state pull"
-alias tfv="terraform validate"
+alias tfd="time terraform destroy -auto-approve"
 
 #### See https://wilsonmar.github.io/hashicorp-consul#Shortcuts
 alias csl="curl http://127.0.0.1:8500/v1/status/leader"

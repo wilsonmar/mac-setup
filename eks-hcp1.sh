@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
-# This is eks-start1.sh at https://github.com/wilsonmar/mac-setup/blob/master/eks-start1.sh
-# which automates manual steps at https://aws-ia.github.io/terraform-aws-eks-blueprints/main/getting-started/
+# This is eks-hcp1.sh at https://github.com/wilsonmar/mac-setup/blob/master/eks-hcp1.sh
+# which automates manual steps 
 # as described at https://wilsonmar.github.io/terraform/#example-eks-cluster-with-new-vpc
 
 # Copy and paste this:
-# curl -s "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-start1.sh" \
-# --output eks-start1.sh
-# sh -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-start1.sh)"
+# curl -s "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-hcp1.sh" \
+# --output eks-hcp1.sh
+# bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-hcp1.sh)"
 
 # shellcheck disable=SC3010,SC2155,SC2005,SC2046
    # SC3010 POSIX compatibility per http://mywiki.wooledge.org/BashFAQ/031 where [[ ]] is undefined.
@@ -55,19 +55,18 @@ args_prompt() {
    echo "   -MTD        # Month-to-date charges by service"
    echo " "
    echo "   -DTB        # Destroy Terraform-created resources at Beginning of run"
-   echo "   -KTD        # Kubernetes Terraform Deploy"
    echo "   -DTE        # Destroy Terraform-created resources at End of run"
    echo "   -DLE        # Destroy Terraform-created Logs at End of run"
    echo "   -beep       # Play short sound at end of run"
    echo " "
    echo "USAGE EXAMPLES:"
    echo "# (one time) change permission to enable run:"
-   echo "chmod +x eks-start1.sh"
+   echo "chmod +x eks-hcp1.sh"
    echo ""
-   echo "./eks-start1.sh -vers -v   # list versions & release details, then stop"
-   echo "./eks-start1.sh -v -I   # Install only"
-   echo "./eks-start1.sh -v -KTD # Trial runs"
-   echo "time ./eks-start1.sh -v -DGB -DTB -KTD -beep  # Clear and rerun"
+   echo "./eks-hcp1.sh -vers -v   # list versions & release details, then stop"
+   echo "./eks-hcp1.sh -v -I   # Install only"
+   echo "./eks-hcp1.sh -v -HCP # Trial runs"
+   echo "time ./eks-hcp1.sh -v -DGB -DTB -HCP -beep  # Clear and rerun"
 }  # args_prompt()
 
 if [ $# -eq 0 ]; then
@@ -112,7 +111,6 @@ exit_abnormal() {            # Function: Exit with error.
    # EKS_CLUSTER_FILE=""   # cluster.yaml instead
    
    HCP_DEPLOY=false              # -HCP
-   KUBE_TF_DEPLOY=false          # -KTD
    KUBE_NAMESPACE="kube-system"
       # What K8s calls namespaces is called "workspaces" in AWS GUI.
 
@@ -237,17 +235,6 @@ while test $# -gt 0; do
     -installdir*)
       shift
       TARGET_FOLDER_PARM=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      shift
-      ;;
-    -KTD)
-      export KUBE_TF_DEPLOY=true
-        GITHUB_REPO_FOLDER="terraform-aws-eks-blueprints"
-        GITHUB_REPO_URL="https://github.com/aws-ia/terraform-aws-eks-blueprints"
-        GITHUB_PROJ_PATH="examples"
-        # From https://github.com/aws-ia/terraform-aws-eks-blueprints/tree/main/examples
-        GITHUB_PROJ_FOLDER="eks-cluster-with-new-vpc"
-        GITHUB_PROJ_FOLDER="eks-cluster-with-new-vpc"
-        K8S_CLUSTER_ID="${GITHUB_PROJ_FOLDER}"
       shift
       ;;
     -NI)
@@ -1131,6 +1118,17 @@ Cleanup_k8s() {
 
     info "Now at $PWD"
 
+    h2 "STEP 90. Destroy:"
+    terraform destroy \
+        -auto-approve >"${LOG_DATETIME}_90_destroy_addons.log"
+    echo $?
+
+} # normal
+
+Cleanup_k8s_blueprints() {
+
+    info "Now at $PWD"
+
     h2 "STEP 90. Destroy addons:"
     terraform destroy -target="module.eks_blueprints_kubernetes_addons" \
         -auto-approve >"${LOG_DATETIME}_90_destroy_addons.log"
@@ -1216,7 +1214,7 @@ if [ "${K8S_NODES_FOUND}" = true ]; then
 fi
 
 
-if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
+if [ "${HCP_DEPLOY}" = true ]; then  # -HCP
 
     # h2 "STEP 43. Provide password for sudo chown and chmod:"
     # change ownership to avoid errors:
@@ -1251,22 +1249,10 @@ if [ "${KUBE_TF_DEPLOY}" = true ]; then  # -KTD
     # TODO: other scanners (Synk, Bridgecrew, etc.) integrated by TFC
 
     h2 "STEP 54. terraform apply: ${LOG_DATETIME}_54_tf_apply_vpc.log"
-    terraform apply -target="module.vpc" -auto-approve \
+    terraform apply -auto-approve \
        >"${LOG_DATETIME}_54_tf_apply_vpc.log"
     echo $?
 
-    h2 "STEP 55. terraform apply: ${LOG_DATETIME}_55_tf_apply_eks_blueprints.log"
-    terraform apply -target="module.eks_blueprints" -auto-approve \
-       >"${LOG_DATETIME}_55_tf_apply_eks_blueprints.log"
-    echo $?
-
-    # eks_blueprints_kubernetes_addons
-
-    h2 "STEP 56. terraform apply: ${LOG_DATETIME}_56_tf_apply.log"
-    terraform apply -auto-approve >"${LOG_DATETIME}_56_tf_apply.log"
-    echo $?
-
-    # K8S_CLUSTER_ID="eks-cluster-with-new-vpc"
     h2 "STEP 57. kubeconfig ${AWS_REGION} ${K8S_CLUSTER_ID} to ${LOG_DATETIME}_57_tf_update_kubeconfig.log"
     aws eks --region "${AWS_REGION}" update-kubeconfig --name "${K8S_CLUSTER_ID}" \
     >"${LOG_DATETIME}_57_tf_update_kubeconfig.log"

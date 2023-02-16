@@ -590,7 +590,7 @@ function aws_list_macs {
    do
       export AWS_REGION="${i}"
       if [ `echo "$@"|grep -i '\-\-region'|wc -l` -eq 1 ]; then
-         echo "ERROR: -–region flag cannot be used while using awsall"
+         echo "ERROR: -–region flag cannot be used while using this function"
          break
       fi
       echo -e "${AWS_REGION}  -------"
