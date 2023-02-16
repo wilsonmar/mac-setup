@@ -237,7 +237,7 @@ while test $# -gt 0; do
       TARGET_FOLDER_PARM=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
-    -NI)
+    -I)
       export INSTALL_UTILS=true
       shift
       ;;
