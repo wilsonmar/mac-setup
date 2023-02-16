@@ -17,7 +17,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.26 # Add sed to tfsec"
+SCRIPT_VERSION="v0.27" # Fix Install parm"
 LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%Z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
