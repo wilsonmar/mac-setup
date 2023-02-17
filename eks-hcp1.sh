@@ -6,7 +6,7 @@
 # Copy and paste this:
 # curl -s "https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-hcp1.sh" \
 # --output eks-hcp1.sh
-# bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-hcp1.sh)"
+# bash -c "$(curl -fsSL https://raw.githubusercontent.com/wilsonmar/mac-setup/master/eks-hcp1.sh)" -v
 
 # shellcheck disable=SC3010,SC2155,SC2005,SC2046
    # SC3010 POSIX compatibility per http://mywiki.wooledge.org/BashFAQ/031 where [[ ]] is undefined.
@@ -37,7 +37,7 @@ args_prompt() {
    echo " "
    echo "   -vers       #  list versions released"
    echo "   -I          # -Install utilities brew, awscli, vault, kubectl, etc."
-   echo "   -tf \"1.3.6\"            # version of Terraform to install"
+   echo "   -tf \"1.3.6\"    # (back) version of Terraform to install"
    echo "   -gpg        #  Install gpg2 utility and generate key if needed"
    echo "   -email \"johndoe@gmail.com\"     # to generate GPG keys for"
 #   echo "   -tfc        # Terraform Cloud
@@ -222,9 +222,9 @@ while test $# -gt 0; do
         GITHUB_REPO_ACCT="stoffee"
         GITHUB_REPO_FOLDER="terraform-hcp-vault-eks"
         GITHUB_REPO_URL="https://github.com/stoffee/terraform-hcp-vault-eks"
-        GITHUB_PROJ_PATH="examples/full-deploy"
-        GITHUB_PROJ_FOLDER="dev-eks"
-        K8S_CLUSTER_ID="${GITHUB_PROJ_FOLDER}"
+        GITHUB_PROJ_PATH="examples/"
+        GITHUB_PROJ_FOLDER="full-deploy"
+        K8S_CLUSTER_ID="dev-blazer"
       shift
       ;;
     -h)
@@ -862,10 +862,11 @@ fi # GET_ASC
         Clone_GitHub_repo  # function
     fi
     cd "${GITHUB_REPO_FOLDER}" || return # as suggested by SC2164
-    info "Now at $PWD"
+    info "Git index at $PWD"
     info "$( ls -alT .git/index )"
         # .git/index holds all git history, so is changed on every git operation.
 
+    info "cd to ${GITHUB_PROJ_PATH}/${GITHUB_PROJ_FOLDER}"
     cd "${GITHUB_PROJ_PATH}/${GITHUB_PROJ_FOLDER}" || return # as suggested by SC2164
     info "Now at $PWD"
 
