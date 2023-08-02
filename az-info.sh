@@ -454,7 +454,7 @@ note "Trusted Advisor"
 CHECK_ID=$(az --region us-east-1 support describe-trusted-advisor-checks --language en --query 'checks[?name==`Service Limits`].{id:id}[0].id' --output text)
 echo $CHECK_ID
 
-fi   # if [ USER_INFO=true
+# fi   # if [ USER_INFO=true
 
 
 if [ "${NET_INFO}" = true ] || [ "${ALL_INFO}" = true ]; then   # -netinfo
