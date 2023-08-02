@@ -399,28 +399,30 @@ fi
 # set -o nounset
 
 
-# brew install azcli
+echo "USER_INFO=${USER_INFO} ALL_INFO=${ALL_INFO}"
 
 ##############################################################################
-divider
 
-if [ "${USER_INFO}" = true ] || [ "${ALL_INFO}" = true ]; then   # -userinfo
-h2 "============= az ad user list"
+if [ "${USER_INFO}" = true ]; then   # -userinfo
+   h2 "============= az ad user list"
+   echo "inside"
 
-# https://learn.microsoft.com/en-us/cli/azure/ad/user?view=azure-cli-latest
-# https://learn.microsoft.com/en-us/cli/azure/devops/user?view=azure-cli-latest
-# https://learn.microsoft.com/en-us/cli/azure/ad/signed-in-user?view=azure-cli-latest
-# if --id $AZ_USER
-{ az ad user list --output json }
-   # [--display-name]
-   # [--filter]
-   # [--upn]
-retVal=$?
-if [ $retVal -ne 0 ]; then
-   exit -1 
-fi
+    # https://learn.microsoft.com/en-us/cli/azure/ad/user?view=azure-cli-latest
+    # https://learn.microsoft.com/en-us/cli/azure/devops/user?view=azure-cli-latest
+    # https://learn.microsoft.com/en-us/cli/azure/ad/signed-in-user?view=azure-cli-latest
+    # if --id $AZ_USER
+    az ad user list --output json
+        # [--display-name]
+        # [--filter]
+        # [--upn]
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+    exit -1 
+    fi
+fi  # "${USER_INFO}"
 
-exit
+echo "here";exit
+
 
 # https://learn.microsoft.com/en-us/cli/azure/ad/group/member?view=azure-cli-latest
 # https://vinijmoura.medium.com/how-to-list-all-users-and-group-permissions-on-azure-devops-using-azure-devops-cli-54f73a20a4c7
