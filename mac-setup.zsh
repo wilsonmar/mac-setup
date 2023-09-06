@@ -19,7 +19,9 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.90"  # Add exa
+SCRIPT_VERSION="v0.91" # After update 
+# TODO: Remove circleci from this script.
+
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -44,21 +46,22 @@ args_prompt() {
    echo "   -sd          -sd card initialize"
    echo " "
    echo "   -nenv        Do not run mac-setup.env file"
-   echo "   -env \"~/alt-mac-setup.env\"   (alternate env file)"
+   echo "   -env \"~/mac-setup.env\"   (change to alternate env file)"
    echo " "
    echo "   -N  \"Proj\"            Alternative name of Projects folder"
    echo "   -fn \"John Doe\"            user full name"
    echo "   -n  \"john-doe\"            GitHub account -name"
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
    echo " "
-   echo "   -circleci    Use CircleCI SaaS"
    echo "   -aws         -AWS cloud"
    echo "   -eks         -eks (Elastic Kubernetes Service) in AWS cloud"
+   #echo "   -azure       -Azure cloud"
+   #echo "   -gcp         -Google cloud"
    echo "   -g \"abcdef...89\" -gcloud API credentials for calls"
    echo "   -p \"cp100\"   -project in cloud"
    echo " "
    echo "   -Consul       Install Hashicorp Consul in Docker"
-   echo "   -Doormat      install/use Hashicorp's doormat-cli & hcloud"
+#  echo "   -Doormat      install/use Hashicorp's doormat-cli & hcloud"
    echo "   -Envoy        install/use Hashicorp's Envoy client"
    echo "   -HV           install/use -Hashicorp Vault secret manager"
    echo "   -m            Setup Vault SSH CA cert"
@@ -71,6 +74,9 @@ args_prompt() {
    echo "   -f \"a9y.py\"  -file (program) to run"
    echo "   -P \"-v -x\"   -Parameters controlling program called"
    echo "   -u           -update GitHub (scan for secrets)"
+   echo " "
+   echo "   -docsify      Install docsify locally"
+   #echo "   -circleci    Use CircleCI SaaS"
    echo " "
    echo "   -podman       Install and use Podman (instead of Docker)"
    echo "   -k            Install and use Docker"
@@ -246,7 +252,7 @@ SECRETS_FILE=".secrets.env.sample"
 
    USE_ENVOY=false              # -Envoy
    USE_DOORMAT=false            # -Doormat
-   USE RUN_CONSUL=false         # -Consul
+   USE_RUN_CONSUL=false         # -Consul
    USE_VAULT=false              # -HV
        VAULT_HOST="localhost"  # default value
       #VAULT_ADDR="https://${VAULT_HOST}:8200"  # assembled in code below.
@@ -283,7 +289,7 @@ SECRETS_FILE=".secrets.env.sample"
    #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
    # EKS_CLUSTER_FILE=""   # cluster.yaml instead
    USE_YUBIKEY=false            # -Y
-
+   USE_DOCSIFY=false            # -docsify
    USE_K8S=false                # -k8s
    USE_AZURE_CLOUD=false        # -z
    USE_GOOGLE_CLOUD=false       # -g
@@ -302,7 +308,7 @@ SECRETS_FILE=".secrets.env.sample"
    IMAGE_SD_CARD=false          # -sd
 
 # Pre-processing:
-   USE_QEMU                     # -qemu
+   USE_QEMU=false               # -qemu
    RESTART_DOCKER=false         # -r
    DOCKER_IMAGE_FILE=""  # custom specified
    DOCKER_PS_NAME="dev1"        # -dps
@@ -448,8 +454,17 @@ while test $# -gt 0; do
       export REMOVE_GITHUB_AFTER=true
       shift
       ;;
+    -d)
+      export DELETE_BEFORE=true
+      shift
+      ;;
     -dc)
       export USE_DOCKER_COMPOSE=true
+      shift
+      ;;
+    -docsify)
+      export USE_DOCSIFY=true
+      PROJECT_FOLDER_NAME="docsify"
       shift
       ;;
     -Doormat)
@@ -460,10 +475,6 @@ while test $# -gt 0; do
       shift
              DOCKER_PS_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       export DOCKER_PS_NAME
-      shift
-      ;;
-    -d)
-      export DELETE_BEFORE=true
       shift
       ;;
     -D)
@@ -2486,6 +2497,72 @@ if [ "${RUN_EKS}" = true ]; then  # -EKS
 
 fi  # EKS
 
+
+### 29. Use Docsify to create a website from Markdown files
+# See https://wilsonmar.github.io/mac-setup/#Docsify
+if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
+   # See https://docsify.js.org/#/quickstart
+   # Using variables from env file:
+   if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+      h2 "Installing Docsify to npm global folder ..."
+      npm i docsify-cli -g
+         # RESPONSE: added 205 packages in 10s
+   fi
+   
+   note "Checking if docsify is already running -d=${DELETE_BEFORE} ..."
+   if [ "${DELETE_BEFORE}" = false ]; then  # NOT -d
+      # Based on https://stackoverflow.com/questions/16807876/how-to-check-if-another-instance-of-my-shell-script-is-running
+      for pid in $(pidof -x docsify); do  # in case of multiple instances:
+         if [ $pid != $$ ]; then
+            warning "docsify process is already running as PID $pid. Using it..."
+            if [ "${OPEN_APP}" = true ]; then   # -o
+               warning "Opening http://localhost:3000 ..."
+               break  # out of for loop
+            fi
+         fi
+      done
+      note "Opening http://localhost:3000 ..."
+      open http://localhost:3000
+   else  # -delete before:
+      for pid in $(pidof -x docsify); do
+         if [ $pid != $$ ]; then
+            warning "docsify process is already running as PID $pid, so killing it ..."
+            pidof -k docsify
+            break  # out of for loop
+         fi
+      done
+      cd "${PROJECTS_CONTAINER_PATH}"
+      PROJECT_FOLDER_FULL_PATH="${PROJECTS_CONTAINER_PATH}/${PROJECT_FOLDER_NAME}"
+      if [ "${DELETE_BEFORE}" = true ]; then  # -d
+         note "Removing project folder \"${PROJECT_FOLDER_FULL_PATH}\" ..."
+         rm -rf "${PROJECT_FOLDER_NAME}"
+         note "Making project folder \"${PROJECT_FOLDER_NAME}\" ..."
+         mkdir "${PROJECT_FOLDER_NAME}"
+      fi
+      cd "${PROJECT_FOLDER_FULL_PATH}"
+      if [ ! -d "${PROJECT_FOLDER_FULL_PATH}/docs" ]; then   # folder NOT there
+         note "Initializing Docsify default folder ..."
+         yes | docsify init
+            # Initialization succeeded! Please run docsify serve ./docs
+            # including: .nojekyll
+         note "After init at $( pwd )"  # within docs
+         yes | docsify init ./docs
+         ls
+            # docs       index.html sw.js 
+      fi
+
+      # TODO: clone docs from github repo
+
+      open http://localhost:3000
+
+      # TODO: Switch to another terminal window to run
+
+      note "Initializing Docsify server ..."
+      docsify serve docs
+
+   fi  # DELETE_BEFORE
+
+fi  # USE_DOCIFY
 
 
 ### 29. Use CircleCI SaaS
