@@ -1,20 +1,30 @@
 #!/usr/bin/env zsh
+# v0.23 # Add VSCode in PATH
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
-# v0.22 # Add VAULT_VERSION
 # This is not provided by macOS by default.
 # This is explained in https://wilsonmar.github.io/zsh
+# This sets the environment for interactive shells2. 
+# This gets loaded after .zprofile. 
+# It's typically a place where you "set it and forget it" type of parameters like 
+# $PATH, $PROMPT, aliases, and functions you would like to have in both login and interactive shells.
 # This was migrated from ~/.bash_profile
 
 # In .zshenv
 # Colons separate items in $PATH (semicolons as in Windows will cause error):
-export PATH="/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:/bin/bash:${PATH}"
-   # /usr/local/bin contains user-installed (using brew) so should be first to override libraries
+export PATH="/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
+   # /usr/local/bin contains user-installed pgms (using brew) so should be first to override libraries
    # /bin contains macOS bash, zsh, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, conda, ...
    # /usr/bin contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.
    # /usr/sbin contains macOS chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.
    # /sbin contains macOS fsck, mount, etc.
 
 export PATH="/Applications:$HOME/Applications:$HOME/Applications/Utilities:${PATH}"  # for apps
+
+# Per https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line
+if [ -f "$HOME/Applications/Visual Studio Code.app" ]; then  # installed:
+   export PATH="$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin:${PATH}"
+      # contains folder code and code-tunnel
+fi
 
 #### See https://wilsonmar.github.io/homebrew
 # Provide a separate folder to install additional apps:
@@ -158,7 +168,11 @@ if [ -d "${GRADLE_HOME}/bin" ]; then  # folder is there
 fi
 
 #### See https://wilsonmar.github.io/hashicorp-vault
-export VAULT_VERSION="$( vault --version | awk '{print $2}' )"
+# Or vault-ent
+if command -v kubectl >/dev/null; then  # found:
+   export VAULT_VERSION="$( vault --version | awk '{print $2}' )"
+   # v.13.2
+fi
 
 #### See https://wilsonmar.github.io/hashicorp-consul
 # export PATH="$HOME/.func-e/versions/1.20.1/bin/:${PATH}"  # contains envoy
@@ -176,7 +190,6 @@ export VAULT_VERSION="$( vault --version | awk '{print $2}' )"
 #   fi
 #fi
 
-
 #### See https://wilsonmar.github.io/aws-onboarding/
 if [ -d "$HOME/aws" ]; then  # folder was created for AWS cloud, so:
    complete -C aws_completer aws
@@ -186,10 +199,19 @@ if [ -d "$HOME/aws" ]; then  # folder was created for AWS cloud, so:
 fi
 
 #### See https://wilsonmar.github.io/gcp
-source "/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
-GOOGLE_BIN_PATH="$HOME/.google-cloud-sdk/bin"
-if [ -d "$GOOGLE_BIN_PATH" ]; then  # folder was created for GCP cloud, so:
-   export PATH="$PATH:$GOOGLE_BIN_PATH"
+if command -v gcloud >/dev/null; then  # found:
+   # gcloud version
+   source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
+   source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+fi
+# After brew install -cask google-cloud-sdk
+# See  https://cloud.google.com/sdk/docs/quickstarts
+if [ -d "$HOME/.google-cloud-sdk" ]; then  # folder created:
+   source "/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
+   GOOGLE_BIN_PATH="$HOME/.google-cloud-sdk/bin"
+   if [ -d "$GOOGLE_BIN_PATH" ]; then  # folder was created for GCP cloud, so:
+      export PATH="$PATH:$GOOGLE_BIN_PATH"
+   fi
 fi
 
 #### See https://wilsonmar.github.io/azure
@@ -233,14 +255,14 @@ fi
 export PATH="$HOME/.cargo/bin:$PATH"
 
 
-#### See https://wilsonmar.github.io/python-install
+#### See https://wilsonmar.github.io/python-install/#pyenv-install
 export PYENV_ROOT="$HOME/.pyenv"
 if [ -d "$PYENV_ROOT" ]; then  # folder was created for Python3, so:
    export PATH="$PYENV_ROOT/bin:$PATH"
    export PYTHON_CONFIGURE_OPTS="--enable-unicode=ucs2"
    # export PYTHONPATH="/usr/local/Cellar/python/3.6.5/bin/python3:$PYTHONPATH"
    # python=/usr/local/bin/python3
-   #alias python=python3
+   # alias python=python3
    # export PATH="$PATH:$HOME/Library/Caches/AmlWorkbench/Python/bin"
    # export PATH="$PATH:/usr/local/anaconda3/bin"  # for conda
    if command -v pyenv 1>/dev/null 2>&1; then
@@ -249,6 +271,7 @@ if [ -d "$PYENV_ROOT" ]; then  # folder was created for Python3, so:
 fi
 
 # >>> Python conda initialize >>>
+# See https://wilsonmar.github.io/python-install/#miniconda-install
 if [ -d "$HOME/miniconda3" ]; then  # folder was created for Python3, so:
    # !! Contents within this block are managed by 'conda init' !!
    __conda_setup="$('$HOME/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"

@@ -17,7 +17,7 @@
 ### STEP 01. Capture starting information for display later:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.27" # Fix Install parm"
+SCRIPT_VERSION="v0.28" # Fix GITHUB_PROJ_FOLDER"
 LOG_DATETIME=$( date +%Y-%m-%dT%H.%M.%S%Z)
 # clear  # Terminal screen (but not history)
 echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
@@ -47,7 +47,7 @@ args_prompt() {
    echo "   -GFP \"$HOME/githubs\"   # Folder path to install repo from GitHub"
 #   echo "   -G          # -GitHub is the basis for program to run"
    echo " "
-#   echo "   -aws        # -AWS cloud awscli"
+   echo "   -aws \"12345678\"       # -AWS acct num."
    echo "   -region \"us-west-2\"    # region in cloud awscli"
 #   echo "   -consul \"1.13.1\"  # Specify version of Consul to install"
 #   echo "   -oss        #  Install Open Source instead of default Enterprise ed."
@@ -105,7 +105,8 @@ exit_abnormal() {            # Function: Exit with error.
    REMOVE_GITHUB_AFTER=false    # -R
 
    CLOUD_REGION=""              # -region us-west-2 default
-   USE_AWS_CLOUD=true           # -aws
+   AWS_ACCT=""
+   USE_AWS_CLOUD=false          # -aws
    # From AWS Management Console https://console.aws.amazon.com/iam/
    #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
    # EKS_CLUSTER_FILE=""   # cluster.yaml instead
@@ -170,8 +171,13 @@ h2 "STEP 05. Set variables dynamically based on each parameter flag:"
 # See https://wilsonmar.github.io/mac-setup/#VariablesSet
 while test $# -gt 0; do
   case "$1" in
-    -aws)
-      export USE_AWS_CLOUD=true
+    -aws*)
+      shift
+      AWS_ACCT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      USE_AWS_CLOUD=true
+      TF_ORG_NAME="cdunlap" # "wm-org"    # --tf-organization "$TF_ORG_NAME"
+      # https://app.terraform.io/app/cdunlap/workspaces/terraform-hcp-vault-eks_eks-only-deploy
+      TF_WORKSPACE="terraform-hcp-vault-eks_eks-only-deploy"   # --tf-workspace "TF_WORKSPACE"
       shift
       ;;
     -beep)
@@ -219,12 +225,12 @@ while test $# -gt 0; do
       ;;
     -HCP)
       export HCP_DEPLOY=true
-        GITHUB_REPO_ACCT="stoffee"
-        GITHUB_REPO_FOLDER="terraform-hcp-vault-eks"
-        GITHUB_REPO_URL="https://github.com/stoffee/terraform-hcp-vault-eks"
-        GITHUB_PROJ_PATH="examples/"
-        GITHUB_PROJ_FOLDER="full-deploy"
-        K8S_CLUSTER_ID="dev-blazer"
+      export GITHUB_REPO_ACCT="stoffee"
+      export GITHUB_REPO_FOLDER="terraform-hcp-vault-eks"
+      export GITHUB_REPO_URL="https://github.com/stoffee/terraform-hcp-vault-eks"
+      export GITHUB_PROJ_PATH="examples/"
+      export GITHUB_PROJ_FOLDER="full-deploy"
+      export K8S_CLUSTER_ID="dev1-eks"
       shift
       ;;
     -h)
@@ -1225,6 +1231,7 @@ if [ "${HCP_DEPLOY}" = true ]; then  # -HCP
     # Invoke upon non-0 exit in error from subsequent commands:
     trap "Cleanup_k8s" ERR
 
+    # TODO: Depending on parameter:
     h2 "STEP 50. tfstate file before terraform commands:"
     ls -alT terraform.tfstate*
 
@@ -1232,6 +1239,10 @@ if [ "${HCP_DEPLOY}" = true ]; then  # -HCP
     # https://k21academy.com/terraform-iac/terraform-cheat-sheet/
 
     # No need to check if terraform init has already been done because it is safe to run terraform init many times even if nothing changed.
+
+    # Doormap is HashCorp's internal system to generate temp. cloud credentials:
+    doormat aws --account "$AWS_ACCT" --tf-push \
+    --tf-workspace workspace_name --tf-organization ORG_name
 
     # Install Terraform provider plugins and modules that convert HCL to API calls: 
     h2 "STEP 51. terraform init: ${LOG_DATETIME}_51_tf_init.log"

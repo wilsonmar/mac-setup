@@ -1127,6 +1127,10 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # version: 0.7.0
             # license: GNU General Public License, version 3
             # website: https://www.zshellcheck.net
+
+         # https://snark.github.io/jumpcut/ for more cut-and-paste features:
+         brew install --cask jumpcut
+
    fi  # PACKAGE_MANAGER
 fi  # DOWNLOAD_INSTALL
 
@@ -1185,6 +1189,9 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       brew install ncdu  # linux disk usage
          # Pouring ncdu--2.1.2.arm64_monterey.bottle.tar.gz
          # /opt/homebrew/Cellar/ncdu/2.1.2: 6 files, 485.5KB
+
+      # Lint : hadolint Dockerfile
+      # brew install hadolint
 
      ### Unzip:
      #brew install --cask keka
@@ -4534,10 +4541,6 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
          # You have to remove (or rename) that container to be able to reuse that name.
       export CONSUL_SERVER_NODE1_IP="172.17.0.2"
 
-echo "DEBUGGING";exit
-
-
-
       # Run Consul Client to the Server IP:
       note "docker run client node ${CONSUL_CLIENT_NODE1_NAME} ... "
       docker run --name="${CONSUL_CLIENT_NODE1_NAME}" \
@@ -4587,7 +4590,6 @@ echo "DEBUGGING";exit
 
    fi
 
-echo "DEBUGGING 2";exit
 
    ### 49b. Docker RUN_EGGPLANT or container
    if [ "${RUN_EGGPLANT}" = true ]; then  # -O
