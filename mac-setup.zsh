@@ -1166,17 +1166,11 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          rm -rf "/Applications/Keynote.app"
       fi
 
-      if [ -d "/Applications/Numbers.app" ]; then   # file NOT found:
-         rm -rf "/Applications/Numbers.app"
-      fi
-
-      if [ -d "/Applications/Pages.app" ]; then   # file NOT found:
-         rm -rf "/Applications/Pages.app"
-      fi
-
       if [ -d "/Applications/GarageBand.app" ]; then   # file NOT found:
          rm -rf "/Applications/Garage Band.app"
       fi
+
+      # Apple's own apps cannot be removed: Numbers, Pages, etc.
 
       # If you have Microsoft O365, download from https://www.office.com/?auth=2&home=1
 
@@ -2554,13 +2548,16 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
       # TODO: clone docs from github repo
 
       open http://localhost:3000
-
-      # TODO: Switch to another terminal window to run
-
+      # Browser will refresh when the server starts:
       note "Initializing Docsify server ..."
       docsify serve docs
 
    fi  # DELETE_BEFORE
+
+   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+      note "Removing project folder \"${PROJECT_FOLDER_FULL_PATH}\" ..."
+      rm -rf "${PROJECT_FOLDER_FULL_PATH}"   
+   fi
 
 fi  # USE_DOCIFY
 
