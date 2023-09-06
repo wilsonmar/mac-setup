@@ -2547,7 +2547,7 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
             # including: .nojekyll
          note "After init at $( pwd )"  # within docs
          yes | docsify init ./docs
-         ls
+         note $(ls)
             # docs       index.html sw.js 
       fi
 
