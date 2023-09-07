@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.94" # Split usage examples in mac-setup.zsh"
+SCRIPT_VERSION="v0.97" # List softed date of brew apps in mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
 
@@ -1169,6 +1169,8 @@ fi  # DOWNLOAD_INSTALL
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # CAUTION: Install only packages that you actually use and trust!
 
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
+  
       h2 "Removing apps pre-installed by Apple, taking up space if they are not used:"
       # set comma as internal field separator for the string list
       Field_Separator=$IFS
@@ -1185,9 +1187,10 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          fi
       done
 
-      h2 "Apps installed by Apple App Store:"
-      find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
-
+      if [ "${RUN_VERBOSE}" = true ]; then
+         h2 "Apps installed by Apple App Store:"
+         find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
+      fi
       # Excludes apps installed using Apple's App Store app: Amazon Prime Video, Textual, 
          # 1Password, Flash Player, "Grammerly Desktop.app", "Google Chrome", github, Kindle Classic, 
          # Hotkey, HP Easy Scan, Speedtest, Strongbox, Telegram, Whatsapp Desktop
@@ -1204,11 +1207,18 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       done
       # For those with different brew names than app name:
          # "GPG Keychain.app"
+         # Anki flashcard player
          # sublime-text to "Sublime Text.app"
          # microsoft-edge to "Microsoft Edge.app"
          # Microsoft Remote Desktop, 
          # Microsoft Office, Microsoft PowerShell, Microsoft Teams, Microsoft Remote Desktop,
       # Installed from vendor website: Keka, Adobe, Camtasia, DiffMerge, p4merge
+      if [ "${RUN_VERBOSE}" = true ]; then
+         h2 "Apps in /Applications ..."
+         ls -ltaT /Applications/
+            # drwxr-xr-x   3 wilsonmar  staff       96 Aug  7 19:32:02 2018 iTerm.app
+      fi
+
 
       h2 "Install/upgrade apps using brew --cask into $HOME/Applications/:"
       # HomeAppsBrewList within "$HOME/Applications/%1.app" 
@@ -1222,7 +1232,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # No longer supported? the-unarchiver
       # Installed separately: 1password (1Password7.app),
          # Docker, licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
-      for appname in Atom Firefox google-cloud-sdk Hyper Jumpcut Macvim OBS Sketch VLC
+      for appname in Atom Docker Firefox google-cloud-sdk Hyper Jumpcut Macvim OBS Sketch VLC
       do
          note "brew install --cask $appname into $HOME/Applications/ ..."
          brew install --cask $appname
@@ -1230,6 +1240,12 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # Exceptions:
          # Keybase has error
          # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
+      # TODO: Install Chrome Add-ons
+      if [ "${RUN_VERBOSE}" = true ]; then
+         h2 "Apps in $HOME/Applications ..."
+         ls -ltaT $HOME/Applications/
+      fi
+
 
       # For those with different brew names than app name:
       for appname in miniconda microsoft-teams google-chrome elgato-stream-deck iterm2
@@ -1247,12 +1263,11 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # tor-browser to "Tor Browser.app"
       #brew install --cask visual-studio-code  # to "Visual Studio Code.app"
 
-      h2 "brew list --cask ..."
-      brew list --cask
+      if [ "${RUN_VERBOSE}" = true ]; then
+         h2 "brew list --cask ..."
+         brew list --cask
+      fi
 
-
-   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
- 
       h2 "brew install CLI utilities:"
 
       brew install curl
@@ -1362,34 +1377,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
       brew install tree
 
-     ### Browsers: see https://wilsonmar.github.io/browser-extensions
-      if [ ! -d "/Applications/Google Chrome.app" ]; then   # file NOT found:
-         brew install --cask google-chrome
-      else
-         if [ "${UPDATE_PKGS}" = true ]; then
-            # CAUTION: Chrome requires deletion for some reason:
-            # Password will be required here:
-            sudo rm -rf "/Applications/Google Chrome.app"
-            brew install --cask google-chrome
-         else
-            note "Google Chrome.app already installed."
-         fi
-      fi
-      # TODO: Install Chrome Add-ons
-
    fi  # PACKAGE_MANAGER
-
-   if [ "${RUN_DEBUG}" = true ]; then  # -vv
-
-      h2 "Brew list ..."
-      brew list 
-      
-      h2 "brew list --cask"
-      brew list --cask
-
-      h2 "List /Applications"
-      ls /Applications
-   fi
 
 fi  # DOWNLOAD_INSTALL
 
