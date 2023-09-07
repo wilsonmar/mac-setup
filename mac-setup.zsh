@@ -1155,9 +1155,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # license: GNU General Public License, version 3
             # website: https://www.zshellcheck.net
 
-         # https://snark.github.io/jumpcut/ for more cut-and-paste features:
-         brew install --cask jumpcut
-
    fi  # PACKAGE_MANAGER
 fi  # DOWNLOAD_INSTALL
 
@@ -1173,29 +1170,86 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # CAUTION: Install only packages that you actually use and trust!
 
       h2 "Removing apps pre-installed by Apple, taking up space if they are not used:"
+      # set comma as internal field separator for the string list
+      Field_Separator=$IFS
+      IFS=,
+      
+      ########## DOTHIS: remove apps you don't want removed: ##########
+      h2 "Remove unwanted apps installed by Apple App Store:"
+      AppleAppsRemoveList=' iMovie, GarageBand, Keynote, Numbers '
+         # Apple's own apps cannot be removed: Numbers, Pages, etc.
+      for appname in $AppleAppsRemoveList;do
+         if [ -d "/Applications/$appname.app" ]; then   # file found:
+            debug "$appname being removed..."
+            rm -rf "/Applications/$appname.app"  # remove app folder
+         fi
+      done
 
-      if [ -d "/Applications/iMovie.app" ]; then   # file NOT found:
-         rm -rf "/Applications/iMovie.app"
-      fi
-
-      if [ -d "/Applications/Keynote.app" ]; then   # file NOT found:
-         rm -rf "/Applications/Keynote.app"
-      fi
-
-      if [ -d "/Applications/GarageBand.app" ]; then   # file NOT found:
-         rm -rf "/Applications/Garage Band.app"
-      fi
-
-      # Apple's own apps cannot be removed: Numbers, Pages, etc.
-
-      # If you have Microsoft O365, download from https://www.office.com/?auth=2&home=1
-
-      h2 "Remaining apps installed by Apple App Store:"
+      h2 "Apps installed by Apple App Store:"
       find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
 
+      # Excludes apps installed using Apple's App Store app: Amazon Prime Video, Textual, 
+         # 1Password, Flash Player, "Grammerly Desktop.app", "Google Chrome", github, Kindle Classic, 
+         # Hotkey, HP Easy Scan, Speedtest, Strongbox, Telegram, Whatsapp Desktop
+         # Okta Verify, p4merge, TextEdit, XCode, zoom.us.app
       # Response: The Unarchiver.app, Pixelmator.app, 
-      # TextWrangler.app, WriteRoom.app,
-      # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
+          # TextWrangler.app, WriteRoom.app,
+          # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
+
+      h2 "Install/upgrade apps using brew --cask into /Applications/:"
+      for appname in DiffMerge  NordVPN  Postman  PowerShell 
+      do
+         note "brew install --cask $appname within /Applications/ ..."
+         brew install --cask $appname
+      done
+      # For those with different brew names than app name:
+         # "GPG Keychain.app"
+         # sublime-text to "Sublime Text.app"
+         # microsoft-edge to "Microsoft Edge.app"
+         # Microsoft Remote Desktop, 
+         # Microsoft Office, Microsoft PowerShell, Microsoft Teams, Microsoft Remote Desktop,
+      # Installed from vendor website: Keka, Adobe, Camtasia, DiffMerge, p4merge
+
+      h2 "Install/upgrade apps using brew --cask into $HOME/Applications/:"
+      # HomeAppsBrewList within "$HOME/Applications/%1.app" 
+      #HomeAppsBrewList=' Atom, DiffMerge, Firefox, google-cloud-sdk, Hyper, Jumpcut, Keybase, Macvim, OBS, Sketch, VLC '
+      # Exceptions: google-cloud-sdk does not create a "Google Cloud SDK.app"
+         # See https://snark.github.io/jumpcut/ for more cut-and-paste.
+         # NOTE: # hyper install stores a file in /usr/local/bin on ARM machines.
+      # Not on my list but may be in yours: cakebrew, snowflake-snowsql, geekbench, spotify, 
+         # pycharm, textmate, 
+         # brave, opera, 
+      # No longer supported? the-unarchiver
+      # Installed separately: 1password (1Password7.app),
+         # Docker, licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
+      for appname in Atom Firefox google-cloud-sdk Hyper Jumpcut Macvim OBS Sketch VLC
+      do
+         note "brew install --cask $appname into $HOME/Applications/ ..."
+         brew install --cask $appname
+      done
+      # Exceptions:
+         # Keybase has error
+         # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
+
+      # For those with different brew names than app name:
+      for appname in miniconda microsoft-teams google-chrome elgato-stream-deck iterm2
+      do
+         note "brew install --cask $appname into $HOME/Applications/ ..."
+         brew install --cask $appname
+      done
+      # miniconda ( to '/usr/local/bin/conda') does not create a "Miniconda3.app"
+      # If you have Microsoft O365, download from https://www.office.com/?auth=2&home=1
+      #brew install --cask microsoft-teams  # to "Microsoft Teams.app"
+      #brew install --cask google-chrome  # to "Google Chrome.app"
+      #brew install --cask elgato-stream-deck  # does not create a "StreamDeck.app"
+      #brew install --cask github  # to "GitHub Desktop.app"
+      #brew install --cask iterm2  # to "iTerm.app"
+      # tor-browser to "Tor Browser.app"
+      #brew install --cask visual-studio-code  # to "Visual Studio Code.app"
+
+      h2 "brew list --cask ..."
+      brew list --cask
+
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
  
@@ -1215,9 +1269,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # brew install hadolint
 
      ### Unzip:
-     #brew install --cask keka
       brew install xz
-     #brew install --cask the-unarchiver
+      brew install p7zip
 
       brew install git
       note "$( git --version )"
@@ -1226,20 +1279,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       #note "$( hub --version )"
          # git version 2.27.0
          # hub version 2.14.2
-      brew install --cask github
-      
-     #Crypto for Security:
-      brew install --cask 1password
-
-      #if [ ! -d "/Applications/Keybase.app" ]; then   # file NOT found:
-      #   brew install --cask keybase
-      #else
-      #   if [ "${UPDATE_PKGS}" = true ]; then
-      #      rm -rf "/Applications/Keybase.app"
-      #      brew upgrade --cask keybase
-      #   fi
-      #fi
-   
+  
      #https://www.hashicorp.com/blog/announcing-hashicorp-homebrew-tap referencing https://github.com/hashicorp/homebrew-tap
       if [ "${USE_VAULT}" = true ]; then   # -HV
          brew install hashicorp/tap/vault
@@ -1297,11 +1337,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          which nomad
       fi
 
-     # Terminal enhancements:
-      brew install --cask hyper
-         # hyper stores a file in /usr/local/bin on ARM machines.
-
-      brew install --cask iterm2   # for use by .oh-my-zsh
+      # brew install --cask iterm2   # for use by .oh-my-zsh
       # Path to your oh-my-zsh installation:
       # export ZSH="$HOME/.oh-my-zsh"
       #if [ ! -d "$ZSH" ]; then # install:
@@ -1340,60 +1376,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          fi
       fi
       # TODO: Install Chrome Add-ons
-
-      # TODO: Before install apps check if already installed and remove current version.
-
-     #brew install --cask brave
-      brew install --cask firefox
-      
-      # Requires password:
-      brew install --cask microsoft-edge
-      
-      brew install --cask tor-browser
-     #brew install --cask opera
-
-     #See https://wilsonmar.github.io/text-editors
-      brew install --cask atom
-         # on use, atom stores files atom & apm in /usr/local/bin on ARM machines.
-
-     #brew install --cask electron
-        # Results in “is damaged and can’t be opened. You should move it to the Trash” Error by mac Gatekeeper.
-
-      brew install --cask visual-studio-code
-     #brew install --cask sublime-text
-     # Licensed Python IDE from ___:
-     #brew install --cask pycharm
-     #brew install --cask macvim
-      brew install neovim    # https://github.com/neovim/neovim
-
-     #brew install --cask anki
-      brew install --cask diffmerge  # https://sourcegear.com/diffmerge/
-     #brew install --cask geekbench
-
-     #Media editing:
-      brew install --cask sketch
-     #Open Broadcaster Software (for recording sound & video)
-      brew install --cask obs
-     #brew install --cask micro-video-converter
-     #brew install --cask vlc
-     #brew install --cash imageoptim
-
-     #Installs as zoom.us.app
-      brew install --cask zoom
-     #Can't if [ ! -d "/Applications/Slack.app" ]; then   # file NOT found:
-     #brew install --cask skype
-
-      brew install --cask kindle
-
-     #Software development tools:
-     # REST API editor (like Postman):
-     #brew install --cask postman
-     #brew install --cask insomnia
-     #brew install --cask sdkman      # for use with Java
-
-     # GUI Unicode .keylayout file editor for macOS at https://software.sil.org/ukelele/
-     # Precursor to https://keyman.com/
-     #brew install --cask ukelele     
 
    fi  # PACKAGE_MANAGER
 
