@@ -19,9 +19,10 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.97" # List softed date of brew apps in mac-setup.zsh"
+SCRIPT_VERSION="v0.99" # Remove Apple app without IFS in mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
+# TODO: Add encryption of log output.
 
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
 # clear  # screen (but not history)
@@ -1171,39 +1172,43 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
   
-      h2 "Removing apps pre-installed by Apple, taking up space if they are not used:"
+      ########## DOTHIS: remove apps you don't want removed: ##########
+      h2 "Removing apps pre-installed by Apple, taking up space if they are not used ..."
       # set comma as internal field separator for the string list
       Field_Separator=$IFS
       IFS=,
-      
-      ########## DOTHIS: remove apps you don't want removed: ##########
-      h2 "Remove unwanted apps installed by Apple App Store:"
-      AppleAppsRemoveList=' iMovie, GarageBand, Keynote, Numbers '
-         # Apple's own apps cannot be removed: Numbers, Pages, etc.
-      for appname in $AppleAppsRemoveList;do
-         if [ -d "/Applications/$appname.app" ]; then   # file found:
-            debug "$appname being removed..."
-            rm -rf "/Applications/$appname.app"  # remove app folder
-         fi
-      done
-
+ 
       if [ "${RUN_VERBOSE}" = true ]; then
-         h2 "Apps installed by Apple App Store:"
+         h2 "Apps installed by Apple App Store ..."
          find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
       fi
       # Excludes apps installed using Apple's App Store app: Amazon Prime Video, Textual, 
          # 1Password, Flash Player, "Grammerly Desktop.app", "Google Chrome", github, Kindle Classic, 
-         # Hotkey, HP Easy Scan, Speedtest, Strongbox, Telegram, Whatsapp Desktop
+         # "Hidden Bar", "Home Assistant", HP Easy Scan, "Hotkey App",
+         # Speedtest, Strongbox, Telegram, Whatsapp Desktop
          # Okta Verify, p4merge, TextEdit, XCode, zoom.us.app
-      # Response: The Unarchiver.app, Pixelmator.app, 
+      # Response: "Lensa AI: photo editor, video", The Unarchiver.app, Pixelmator.app, "Save to Pocket", 
           # TextWrangler.app, WriteRoom.app,
           # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
+
+      h2 "Removing Apple-created apps installed from Apple Store into /Applications/ ..."
+      for appname in iMovie  GarageBand  Keynote  Numbers  Pages 
+      do
+         if [ -d "/Applications/$appname.app" ]; then   # file found:
+            h2 "/Applications/$appname.app being removed..."
+            sudo rm -rf "/Applications/$appname.app"  # remove app folder 
+            # Sudo and password needed to remove Numbers, Pages
+            # TODO: Remove iMovie and others using the built-in uninstaller.
+            # TODO: Also remove app data in "/Library/Application Support" and other folders
+         fi
+      done
 
       h2 "Install/upgrade apps using brew --cask into /Applications/:"
       for appname in DiffMerge  NordVPN  Postman  PowerShell 
       do
-         note "brew install --cask $appname within /Applications/ ..."
+         h2 "Brew install --cask $appname within /Applications/ ..."
          brew install --cask $appname
+         # Freeform.app not recognized
       done
       # For those with different brew names than app name:
          # "GPG Keychain.app"
@@ -2501,6 +2506,7 @@ fi  # EKS
 ### 31. Use Docsify to create a website from Markdown files
 # See https://wilsonmar.github.io/mac-setup/#Docsify
 if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
+   # Video of run at https://drive.google.com/file/d/17-mV8Q_cyIKDj9aNm8wXXYHm6yuwITqi/view?usp=drive_link
    # See https://docsify.js.org/#/quickstart
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       h2 "Installing Docsify to npm global folder ..."
@@ -2520,7 +2526,7 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
             fi
          fi
       done
-   else  # -delete before:
+   else  # -delete process before run:
       for pid in $(pidof -x docsify); do
          if [ $pid != $$ ]; then
             warning "docsify process is already running as PID $pid, so killing it ..."
@@ -2532,6 +2538,7 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
 
    if [ "${OPEN_APP}" = true ]; then   # -o
       note "Opening http://localhost:3000 before starting server ..."
+      # because the Terminal window will be locked up by the server in the next command
       open http://localhost:3000
    fi
    PROJECT_FOLDER_FULL_PATH="${PROJECTS_CONTAINER_PATH}/${PROJECT_FOLDER_NAME}"
@@ -2549,7 +2556,7 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
    note "npm start docsify ..."
    npm start
 
-   # Browser will refresh when the server starts:
+   # Browser will refresh when the server starts?
 
    if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
       note "Removing project folder \"${PROJECT_FOLDER_FULL_PATH}\" ..."
