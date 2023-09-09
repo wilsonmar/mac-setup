@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 # This is mac-setup.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.zsh
 # Coding of this shell script is explained in https://wilsonmar.github.io/mac-setup
-# Coding of shell scripting is explained in https://wilsonmar.github.io/shell-scripts
+# Shell scripting techniques are explained in https://wilsonmar.github.io/shell-scripts
 
 # shellcheck does not work on zsh, but 
 # shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.99" # Remove Apple app without IFS in mac-setup.zsh"
+SCRIPT_VERSION="v0.100" # ls -ltaT Remove Apple app without IFS in mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
 # TODO: Add encryption of log output.
@@ -387,7 +387,7 @@ else  # use .mck-setup.env file:
       exit 9
    else  # Read from default file name mac-setup.env :
       h2 "Reading default config file $HOME/mac-setup.env ..."
-      note "$(ls -al "${CONFIG_FILEPATH}" )"
+      note "$(ls -ltaT "${CONFIG_FILEPATH}" )"
       chmod +x "${CONFIG_FILEPATH}"
       source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.
       if [ ! -n "$GITHUB_ACCOUNT" ]; then
@@ -1173,7 +1173,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
   
       ########## DOTHIS: remove apps you don't want removed: ##########
-      h2 "Removing apps pre-installed by Apple, taking up space if they are not used ..."
+      h2 "Remove apps pre-installed by Apple, taking up space if they are not used ..."
       # set comma as internal field separator for the string list
       Field_Separator=$IFS
       IFS=,
@@ -1211,12 +1211,15 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # Freeform.app not recognized
       done
       # For those with different brew names than app name:
-         # "GPG Keychain.app"
          # Anki flashcard player
-         # sublime-text to "Sublime Text.app"
+         # "GPG Keychain.app"
+         # Karabiner-Elements to "Karabiner-Elements.app"
+         # Karabiner-EventViewer to "Karabiner-EventViewer.app"
+             # https://www.youtube.com/watch?v=j4b_uQX3Vu0
          # microsoft-edge to "Microsoft Edge.app"
          # Microsoft Remote Desktop, 
          # Microsoft Office, Microsoft PowerShell, Microsoft Teams, Microsoft Remote Desktop,
+         # sublime-text to "Sublime Text.app"
       # Installed from vendor website: Keka, Adobe, Camtasia, DiffMerge, p4merge
       if [ "${RUN_VERBOSE}" = true ]; then
          h2 "Apps in /Applications ..."
@@ -1237,11 +1240,12 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # No longer supported? the-unarchiver
       # Installed separately: 1password (1Password7.app),
          # Docker, licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
-      for appname in Atom Docker Firefox google-cloud-sdk Hyper Jumpcut Macvim OBS Sketch VLC
+      for appname in Atom Docker Firefox google-cloud-sdk Hyper Macvim OBS Sketch VLC
       do
          note "brew install --cask $appname into $HOME/Applications/ ..."
          brew install --cask $appname
       done
+      # Not specified: Jumpcut
       # Exceptions:
          # Keybase has error
          # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
@@ -1594,7 +1598,7 @@ if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
    if [ ! -f "$IMAGE_XZ_FILENAME" ]; then   # file NOT found, so download from github:
       error "Download of $IMAGE_XZ_FILENAME failed!"
    else
-      ls -al "${IMAGE_XZ_FILENAME}"
+      ls -ltaT "${IMAGE_XZ_FILENAME}"
       if [ ! -f "$IMAGE_FILENAME" ]; then   # file NOT found, so download from github:
          note "Decompressing ${IMAGE_XZ_FILENAME} using xz ..."
          xz "${IMAGE_XZ_FILENAME}"  # to "$IMAGE_FILENAME"
@@ -1605,7 +1609,7 @@ if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
       error "xz de-compress of $IMAGE_XZ_FILENAME to $IMAGE_FILENAME failed!"
    else
       note "Verify ${IMAGE_FILENAME} ..."
-      ls -al "${IMAGE_FILENAME}"
+      ls -ltaT "${IMAGE_FILENAME}"
       # TODO: Verify MD5?
    fi 
 
@@ -1645,7 +1649,7 @@ else
 fi
 
 if [ "${RUN_DEBUG}" = true ]; then  # -vv
-   note "$( ls "${PROJECTS_CONTAINER_PATH}" )"
+   note "$( ls -ltaT "${PROJECTS_CONTAINER_PATH}" )"
 fi
 
 
@@ -1662,7 +1666,7 @@ if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
       PROJECT_FOLDER_FULL_PATH="${PROJECTS_CONTAINER_PATH}/${PROJECT_FOLDER_NAME}"
       if [ -d "${PROJECT_FOLDER_FULL_PATH:?}" ]; then  # path available.
          h2 "Removing project folder $PROJECT_FOLDER_FULL_PATH ..."
-         ls -al "${PROJECT_FOLDER_FULL_PATH}"
+         lls -ltaT "${PROJECT_FOLDER_FULL_PATH}"
          rm -rf "${PROJECT_FOLDER_FULL_PATH}"
       fi
       }
@@ -2545,15 +2549,16 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
    cd "${PROJECT_FOLDER_FULL_PATH}"
    if [ "${RUN_VERBOSE}" = true ]; then
       note "At $(pwd)"
-      note "$( ls -al )"
+      note "$( ls -ltaT )"
+
       note "${PROJECT_FOLDER_FULL_PATH}/docs"
-      note "$( ls -al docs )"
+      note "$( ls -ltaT docs )"
    fi
 
-   note "npm install docsify ..."
+   h2 "npm install docsify ..."
    npm install
    
-   note "npm start docsify ..."
+   h2 "npm start docsify ..."
    npm start
 
    # Browser will refresh when the server starts?
@@ -2615,7 +2620,7 @@ if [ "${USE_CIRCLECI}" = true ]; then   # -L
    fi
 
    if [ ! -f "$HOME/.circleci/config.yml" ]; then 
-      ls -al "$HOME/.circleci/config.yml"
+      ls -ltaT "$HOME/.circleci/config.yml"
       fatal "$HOME/.circleci/config.yml not found. Aborting ..."
       exit 9
    fi
@@ -2726,7 +2731,7 @@ if [ "${MOVE_SECURELY}" = true ]; then   # -m
 #      else 
 #         h2 "Using existing SSH key pair \"${LOCAL_SSH_KEYFILE}\" "
 #      fi
-      note "$( ls -al "${LOCAL_SSH_KEYFILE}" )"
+      note "$( ls -ltaT "${LOCAL_SSH_KEYFILE}" )"
    fi  # LOCAL_SSH_KEYFILE
 
 fi  # MOVE_SECURELY
@@ -2762,7 +2767,7 @@ if [ USE_ALWAYS = true ]; then
       else
          info "Using existing CA key file $VAULT_CA_KEY_FULLPATH ..."
       fi  # VAULT_CA_KEY_FULLPATH
-      note "$( ls -al "${VAULT_CA_KEY_FULLPATH}" )"
+      note "$( ls -ltaT "${VAULT_CA_KEY_FULLPATH}" )"
 
   else  # USE_VAULT = true
 
@@ -2782,7 +2787,7 @@ if [ USE_ALWAYS = true ]; then
          error "File ${SSH_CERT_PUB_KEYFILE} not found ..."
       else
          note "File ${SSH_CERT_PUB_KEYFILE} found ..."
-         note "$( ls -al ${SSH_CERT_PUB_KEYFILE} )"
+         note "$( ls -ltaT ${SSH_CERT_PUB_KEYFILE} )"
       fi
       # According to https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/about-ssh-certificate-authorities
       # To issue a certificate for someone who has different usernames for GitHub Enterprise Server and GitHub Enterprise Cloud, 
@@ -3073,7 +3078,7 @@ EOD
       pushd  "$HOME/.ssh"
       h2 "At temporary $PWD ..."
       if [ "${RUN_DEBUG}" = true ]; then  # -vv
-         note "$( ls -al )"
+         note "$( ls -ltaT )"
       fi
 
          # TODO: [10:47] by Roman
@@ -3760,7 +3765,7 @@ if [ "${RUN_TENSORFLOW}" = true ]; then  # -tsf
          # RESPONSE: Signing notebook: section_2/2-3.ipynb
       else
          echo "$PWD/${MY_FOLDER}/${MY_FILE} not found among ..."
-         ls   "$PWD/${MY_FOLDER}"
+         ls -ltaT "$PWD/${MY_FOLDER}"
          exit 9
       fi
 
