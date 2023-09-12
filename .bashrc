@@ -46,3 +46,4 @@ export NVM_DIR="$HOME/.nvm"
 # uninstall by removing these lines or running `tabtab uninstall electron-forge`
 # [ -f /Users/wilsonmar/gits/coffitivity-offline/node_modules/tabtab/.completions/electron-forge.bash ] && . /Users/wilsonmar/gits/coffitivity-offline/node_modules/tabtab/.completions/electron-forge.bash
 complete -C aws_completer aws
+complete -C /usr/local/bin/consul consul
