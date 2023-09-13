@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# "v0.24 # Remove /usr/local/bin from initial PATH"
+# gas "v0.25 # Fix command err for complete - .zshrc"
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
 # This is explained in https://wilsonmar.github.io/zsh
 # This file is not provided by macOS by default.

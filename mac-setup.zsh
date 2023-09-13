@@ -356,6 +356,8 @@ if command -v curl ; then
       cp "$HOME/mac-setup.zsh" "$HOME"
    fi
 fi
+
+# See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 if [ -f "$HOME/mac-setup.env" ]; then
    h2 "Loading \$HOME/mac-setup.env ..."
    source "$HOME/mac-setup.env"
@@ -1204,7 +1206,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       done
 
       h2 "Install/upgrade apps using brew --cask into /Applications/:"
-      for appname in DiffMerge  NordVPN  Postman  PowerShell 
+      for appname in DiffMerge  NordVPN  Postman  PowerShell  GIMP
       do
          h2 "Brew install --cask $appname within /Applications/ ..."
          brew install --cask $appname
@@ -1240,14 +1242,14 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # No longer supported? the-unarchiver
       # Installed separately: 1password (1Password7.app),
          # Docker, licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
-      for appname in Atom Docker Firefox google-cloud-sdk Hyper Macvim OBS Sketch VLC
+      for appname in Atom Docker Firefox google-cloud-sdk Hyper Macvim OBS VLC
       do
          note "brew install --cask $appname into $HOME/Applications/ ..."
          brew install --cask $appname
       done
-      # Not specified: Jumpcut
+      # Not specified: Jumpcut  Sketch (licensed)
       # Exceptions:
-         # Keybase has error
+         # Keybase (licensed) has error
          # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
       # TODO: Install Chrome Add-ons
       if [ "${RUN_VERBOSE}" = true ]; then
