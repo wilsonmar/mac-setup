@@ -1,0 +1,13 @@
+--title "Homebrew Ruby API"
+--main README.md
+--markup markdown
+--no-private
+--plugin sorbet
+--load yard/ignore_directives.rb
+--template-path yard/templates
+--exclude test/
+--exclude vendor/
+extend/os/**/*.rb
+**/*.rb
+-
+*.md

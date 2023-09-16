@@ -1,0 +1,257 @@
+# frozen_string_literal: true
+
+require "open3"
+
+require "formula_installer"
+
+RSpec::Matchers.define_negated_matcher :be_a_failure, :be_a_success
+
+RSpec.shared_context "integration test" do # rubocop:disable RSpec/ContextWording
+  extend RSpec::Matchers::DSL
+
+  matcher :be_a_success do
+    match do |actual|
+      status = actual.is_a?(Proc) ? actual.call : actual
+      expect(status).to respond_to(:success?)
+      status.success?
+    end
+
+    def supports_block_expectations?
+      true
+    end
+
+    # It needs to be nested like this:
+    #
+    #   expect {
+    #     expect {
+    #       # command
+    #     }.to be_a_success
+    #   }.to output(something).to_stdout
+    #
+    # rather than this:
+    #
+    #   expect {
+    #     expect {
+    #       # command
+    #     }.to output(something).to_stdout
+    #   }.to be_a_success
+    #
+    def expects_call_stack_jump?
+      true
+    end
+  end
+
+  around do |example|
+    ENV["HOMEBREW_INTEGRATION_TEST"] = "1"
+    (HOMEBREW_PREFIX/"bin").mkpath
+    FileUtils.touch HOMEBREW_PREFIX/"bin/brew"
+
+    example.run
+  ensure
+    FileUtils.rm_rf HOMEBREW_PREFIX/"bin"
+    ENV.delete("HOMEBREW_INTEGRATION_TEST")
+  end
+
+  # Generate unique ID to be able to
+  # properly merge coverage results.
+  def command_id_from_args(args)
+    @command_count ||= 0
+    pretty_args = args.join(" ").gsub(TEST_TMPDIR, "@TMPDIR@")
+    file_and_line = caller.second
+                          .sub(/(.*\d+):.*/, '\1')
+                          .sub("#{HOMEBREW_LIBRARY_PATH}/test/", "")
+    "#{file_and_line}:brew #{pretty_args}:#{@command_count += 1}"
+  end
+
+  # Runs a `brew` command with the test configuration
+  # and with coverage reporting enabled.
+  def brew(*args)
+    env = args.last.is_a?(Hash) ? args.pop : {}
+
+    # Avoid warnings when HOMEBREW_PREFIX/bin is not in PATH.
+    # Also include our extra commands directory.
+    path = [
+      env["PATH"],
+      (HOMEBREW_LIBRARY_PATH/"test/support/helper/cmd").realpath.to_s,
+      (HOMEBREW_PREFIX/"bin").realpath.to_s,
+      ENV.fetch("PATH"),
+    ].compact.join(File::PATH_SEPARATOR)
+
+    env.merge!(
+      "PATH"                      => path,
+      "HOMEBREW_PATH"             => path,
+      "HOMEBREW_BREW_FILE"        => HOMEBREW_PREFIX/"bin/brew",
+      "HOMEBREW_INTEGRATION_TEST" => command_id_from_args(args),
+      "HOMEBREW_TEST_TMPDIR"      => TEST_TMPDIR,
+      "HOMEBREW_DEV_CMD_RUN"      => "true",
+      "GEM_HOME"                  => nil,
+    )
+
+    @ruby_args ||= begin
+      ruby_args = HOMEBREW_RUBY_EXEC_ARGS.dup
+      if ENV["HOMEBREW_TESTS_COVERAGE"]
+        simplecov_spec = Gem.loaded_specs["simplecov"]
+        parallel_tests_spec = Gem.loaded_specs["parallel_tests"]
+        specs = []
+        [simplecov_spec, parallel_tests_spec].each do |spec|
+          specs << spec
+          spec.runtime_dependencies.each do |dep|
+            specs += dep.to_specs
+          rescue Gem::LoadError => e
+            onoe e
+          end
+        end
+        libs = specs.flat_map do |spec|
+          full_gem_path = spec.full_gem_path
+          # full_require_paths isn't available in RubyGems < 2.2.
+          spec.require_paths.map do |lib|
+            next lib if lib.include?(full_gem_path)
+
+            "#{full_gem_path}/#{lib}"
+          end
+        end
+        libs.each { |lib| ruby_args << "-I" << lib }
+        ruby_args << "-rsimplecov"
+      end
+      ruby_args << "-r#{HOMEBREW_LIBRARY_PATH}/test/support/helper/integration_mocks"
+      ruby_args << (HOMEBREW_LIBRARY_PATH/"brew.rb").resolved_path.to_s
+    end
+
+    Bundler.with_unbundled_env do
+      # Allow instance variable here to improve performance through memoization.
+      # rubocop:disable RSpec/InstanceVariable
+      stdout, stderr, status = Open3.capture3(env, *@ruby_args, *args)
+      # rubocop:enable RSpec/InstanceVariable
+      $stdout.print stdout
+      $stderr.print stderr
+      status
+    end
+  end
+
+  def brew_sh(*args)
+    Bundler.with_unbundled_env do
+      stdout, stderr, status = Open3.capture3("#{ENV.fetch("HOMEBREW_PREFIX")}/bin/brew", *args)
+      $stdout.print stdout
+      $stderr.print stderr
+      status
+    end
+  end
+
+  def setup_test_formula(name, content = nil, bottle_block: nil)
+    case name
+    when /^testball/
+      tarball = if OS.linux?
+        TEST_FIXTURE_DIR/"tarballs/testball-0.1-linux.tbz"
+      else
+        TEST_FIXTURE_DIR/"tarballs/testball-0.1.tbz"
+      end
+      content = <<~RUBY
+        desc "Some test"
+        homepage "https://brew.sh/#{name}"
+        url "file://#{tarball}"
+        sha256 "#{tarball.sha256}"
+
+        option "with-foo", "Build with foo"
+        #{bottle_block}
+        def install
+          (prefix/"foo"/"test").write("test") if build.with? "foo"
+          prefix.install Dir["*"]
+          (buildpath/"test.c").write \
+            "#include <stdio.h>\\nint main(){printf(\\"test\\");return 0;}"
+          bin.mkpath
+          system ENV.cc, "test.c", "-o", bin/"test"
+        end
+
+        #{content}
+
+        # something here
+      RUBY
+    when "bar"
+      content = <<~RUBY
+        url "https://brew.sh/#{name}-1.0"
+        depends_on "foo"
+      RUBY
+    when "package_license"
+      content = <<~RUBY
+        url "https://brew.sh/#patchelf-1.0"
+        license "0BSD"
+      RUBY
+    else
+      content ||= <<~RUBY
+        url "https://brew.sh/#{name}-1.0"
+      RUBY
+    end
+
+    Formulary.core_path(name).tap do |formula_path|
+      formula_path.write <<~RUBY
+        class #{Formulary.class_s(name)} < Formula
+        #{content.indent(2)}
+        end
+      RUBY
+    end
+  end
+
+  def install_test_formula(name, content = nil, build_bottle: false)
+    setup_test_formula(name, content)
+    fi = FormulaInstaller.new(Formula[name], build_bottle: build_bottle)
+    fi.prelude
+    fi.fetch
+    fi.install
+    fi.finish
+  end
+
+  def setup_test_tap
+    path = Tap::TAP_DIRECTORY/"homebrew/homebrew-foo"
+    path.mkpath
+    path.cd do
+      system "git", "init"
+      system "git", "remote", "add", "origin", "https://github.com/Homebrew/homebrew-foo"
+      FileUtils.touch "readme"
+      system "git", "add", "--all"
+      system "git", "commit", "-m", "init"
+    end
+    path
+  end
+
+  def setup_remote_tap(name)
+    Tap.fetch(name).tap do |tap|
+      next if tap.installed?
+
+      full_name = Tap.fetch(name).full_name
+      # Check to see if the original Homebrew process has taps we can use.
+      system_tap_path = Pathname("#{ENV.fetch("HOMEBREW_LIBRARY")}/Taps/#{full_name}")
+      if system_tap_path.exist?
+        system "git", "clone", "--shared", system_tap_path, tap.path
+        system "git", "-C", tap.path, "checkout", "master"
+      else
+        tap.install(quiet: true)
+      end
+    end
+  end
+
+  def install_and_rename_coretap_formula(old_name, new_name)
+    CoreTap.instance.path.cd do |tap_path|
+      system "git", "init"
+      system "git", "add", "--all"
+      system "git", "commit", "-m",
+             "#{old_name.capitalize} has not yet been renamed"
+
+      brew "install", old_name
+
+      (tap_path/"Formula/#{old_name}.rb").unlink
+      (tap_path/"formula_renames.json").write JSON.pretty_generate(old_name => new_name)
+
+      system "git", "add", "--all"
+      system "git", "commit", "-m",
+             "#{old_name.capitalize} has been renamed to #{new_name.capitalize}"
+    end
+  end
+
+  def testball
+    "#{TEST_FIXTURE_DIR}/testball.rb"
+  end
+end
+
+RSpec.configure do |config|
+  config.include_context "integration test", :integration_test
+end

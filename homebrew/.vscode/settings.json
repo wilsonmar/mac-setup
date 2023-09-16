@@ -1,0 +1,28 @@
+{
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "ruby.useLanguageServer": true,
+  "ruby.rubocop.executePath": "Library/Homebrew/shims/gems/",
+  "shellcheck.customArgs": [
+    "--shell=bash",
+    "--enable=all",
+    "--external-sources",
+    "--source-path=${workspaceFolder}/Library"
+  ],
+  "shellformat.effectLanguages": [
+    "shellscript"
+  ],
+  "shellformat.path": "${workspaceFolder}/Library/Homebrew/utils/shfmt.sh",
+  "shellformat.flag": "-i 2 -ci -ln bash",
+  "[shellscript]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.shellcheck": true,
+    }
+  }
+}

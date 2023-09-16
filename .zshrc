@@ -17,7 +17,9 @@ echo "At ~/.zshrc to set environment variables for interactive shells."
 # Colons separate items in $PATH (semicolons as in Windows will cause error):
    # /usr/local/bin contains user-installed pgms (using brew) so should be first to override libraries
    # but only on Intel Macs. 
-export PATH="/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
+export PATH="/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
+   # /opt/homebrew is added in front of /usr/local/bin by brew on Apple M1/2 machines.
+   # /usr/local/bin contains pgms installed using brew, so should be first to override libraries
    # /bin contains macOS bash, zsh, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, conda, ...
    # /usr/bin contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.
    # /usr/sbin contains macOS chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.

@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.100" # ls -ltaT Remove Apple app without IFS in mac-setup.zsh"
+SCRIPT_VERSION="v0.103" # Move apps installed to -v : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
 # TODO: Add encryption of log output.
@@ -36,8 +36,8 @@ EPOCH_START="$( date -u +%s )"  # such as 1572634619
 args_prompt() {
    echo "OPTIONS:"
    echo "   -cont         continue (NOT stop) on error"
-   echo "   -v            run -verbose (list space use and each image to console)"
-   echo "   -vv           run -very verbose diagnostics"
+   echo "   -v            run -verbose (list space use and images)"
+   echo "   -vv           run -very verbose diagnostics (brew upgrade, update, doctor)"
    echo "   -x            set -x to trace command lines"
 #  echo "   -x            set sudoers -e to stop on error"
    echo "   -q           -quiet headings for each step"
@@ -45,7 +45,6 @@ args_prompt() {
    echo "   -I           -Install brew utilities, apps"
    echo "   -U           -Upgrade installed packages if already installed"
    echo "   -zsh         Convert from bash to Zsh"
-   echo "   -sd          -sd card initialize"
    echo " "
    echo "   -nenv        Do not run mac-setup.env file"
    echo "   -env \"~/mac-setup.env\"   (change to alternate env file)"
@@ -54,6 +53,8 @@ args_prompt() {
    echo "   -fn \"John Doe\"            user full name"
    echo "   -n  \"john-doe\"            GitHub account -name"
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
+   echo " "
+   echo "   -sd          -sd card initialize locally"
    echo " "
    echo "   -aws         -AWS cloud"
    echo "   -eks         -eks (Elastic Kubernetes Service) in AWS cloud"
@@ -86,7 +87,7 @@ args_prompt() {
    echo "   -dps \"dev1\"   override default name of a docker process"
    echo "   -dc           use docker-compose.yml file"
    echo "   -w           -write image to DockerHub"
-   echo "   -k8s         -k8s (Kubernetes) minikube"
+   echo "   -k8s         -k8s (Kubernetes) minikube & OpenShift CLI"
    echo "   -r           -restart (Docker) before run"
    echo " "
    echo "   -Golang       Install Golang language"
@@ -114,7 +115,6 @@ args_prompt() {
    echo "# USAGE EXAMPLES:"
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
-   echo "./mac-setup.zsh -docsify -d -c -v"
 }  # args_prompt()
 
 usage_examples() {
@@ -693,11 +693,11 @@ while test $# -gt 0; do
       ;;
     -tf)
       export RUN_TERRAFORM=true
-      PROJECTS_CONTAINER_PATH="$HOME/mck_acct"  # -P
-      PROJECT_FOLDER_NAME="onefirmgithub-vault"
-      GITHUB_REPO_URL="https://github.com/Mck-Enterprise-Automation/onefirmgithub-vault"
-      export APPNAME="onefirmgithub-vault"
-      GITHUB_BRANCH="GC-348-provision-vault-infra"
+      PROJECTS_CONTAINER_PATH="$HOME/tf1"  # -P
+      # PROJECT_FOLDER_NAME="tf-"
+      # GITHUB_REPO_URL="https://github.com/Mck-Enterprise-Automation/onefirmgithub-vault"
+      # GITHUB_BRANCH="main"
+      # export APPNAME="onefirmgithub-vault"
       shift
       ;;
     -tsf)
@@ -892,7 +892,7 @@ fi
 # set -o nounset
 
 
-### 11. Print run Operating environment information 
+### 11a. Print run Operating environment information 
 note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
 note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
 
@@ -921,6 +921,36 @@ if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    fi  # MACHINE_TYPE
 fi
 
+### 11b. Backup using macOS Time Machine via tmutil
+
+if [ "${RUN_VERBOSE}" = true ]; then
+   h2 "Before changes, backup using macOS Time Machine via tmutil ..."
+   # tmutil version
+      # tmutil version 4.0.0 (built Jul  5 2023)
+   # See https://www.hexnode.com/mobile-device-management/help/script-for-time-machine-backup-in-mac/
+   #tmutil status
+      #    ClientID = "com.apple.backupd";
+      #    Running = 0;
+   #tmutil destinationinfo
+      # ====================================================
+      # Name          : One Touch
+      # Kind          : Local
+      # ID            : D370D806-D01D-4600-AFD1-5F8E75C92D17   
+   #sudo tmutil listlocalsnapshots /
+      #com.apple.TimeMachine.2023-09-15-184333.local
+      # x4
+   # Identify backup_folder
+   #BACKUP_FOLDER=$(tmutil machinedirectory)
+   #echo "$BACKUP_FOLDER"
+   #if NOT "No machine directory found for host."
+      # Check if backup is needed:
+      #tmutil calculatedrift "${BACKUP_FOLDER}"
+      #tmutil listbackups
+      #sudo tmutil enable 
+   #echo "Plug in external backup drive and enter password to continue ..."
+   #sudo tmutil startbackup
+   # pause
+fi
 
 ### 12. Upgrade Bash to Zsh
 # Apple Directory Services database Command Line utility:
@@ -956,6 +986,7 @@ if [ "${CONVERT_TO_ZSH}" = true ]; then
    note "which zsh at $( which zsh )"  # Answer: "/opt/homebrew/bin/zsh"  (using homebrew or default one from Apple?)
                              # Answer: "/usr/local/bin/zsh" if still running Bash.
 fi  # CONVERT_TO_ZSH
+
 
 ### 13. Define utility functions: kill process by name, etc.
 ### 13. Keep-alive: update existing `sudo` time stamp until `.osx` has finished
@@ -1009,7 +1040,7 @@ function BASHFILE_EXPORT() {
 
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
-   h2 "-Install package managers ..."
+   h2 "-Install package managers ${PACKAGE_MANAGER} ..."
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
 
       # See https://stackoverflow.com/questions/20559255/error-while-installing-json-gem-mkmf-rb-cant-find-header-files-for-ruby/20561594
@@ -1048,14 +1079,17 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # Tools_Executables | grep version
          # version: 9.2.0.0.1.1510905681
       # TODO: https://gist.github.com/tylergets/90f7e61314821864951e58d57dfc9acd
+      # To uninstall Homebrew: 
+         # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)"
 
-      if ! command -v brew ; then   # brew not recognized:
+      if ! command -v brew >/dev/null; then  # NOT installed:
          if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
             # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-            h2 "Installing brew package manager on macOS using Ruby ..."
-            mkdir homebrew && curl -L https://GitHub.com/Homebrew/brew/tarball/master \
-               | tar xz --strip 1 -C homebrew
+            h2 "Installing brew package manager ..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+            # mkdir homebrew && curl -L https://GitHub.com/Homebrew/brew/tarball/master \
+            #   | tar xz --strip 1 -C homebrew
             # if PATH for brew available:
 
          elif [ "$OS_TYPE" = "WSL" ]; then
@@ -1136,6 +1170,15 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    fi # PACKAGE_MANAGER
 
 fi # if [ "${DOWNLOAD_INSTALL}"
+if [ "${RUN_VERBOSE}" = true ]; then  # -v
+  if command -v brew >/dev/null; then  # command found, so:
+      h2 "brew doctor for -v ..."
+      brew doctor
+         # "Your system is ready to brew."
+      h2 "brew cleanup from previous install ..."
+      brew cleanup
+   fi
+fi
 
 
 ### 15. Install ShellCheck 
@@ -1169,21 +1212,32 @@ fi  # DOWNLOAD_INSTALL
 
 ### 16. Install basic utilities (git, jq, tree, etc.) used by many:
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
+if [ "${RUN_VERBOSE}" = true ]; then
+   h2 "Apps installed by Apple App Store ..."
+   find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
+
+   h2 "Apps in /Applications ..."
+   ls -ltaT /Applications/
+      # drwxr-xr-x   3 wilsonmar  staff       96 Aug  7 19:32:02 2018 iTerm.app
+
+   h2 "Apps in $HOME/Applications ..."
+   ls -ltaT $HOME/Applications/
+
+   h2 "brew list --cask ..."
+   brew list --cask
+fi
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # CAUTION: Install only packages that you actually use and trust!
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
   
       ########## DOTHIS: remove apps you don't want removed: ##########
+      # See https://wilsonmar.github.io/macos-homebrew/
       h2 "Remove apps pre-installed by Apple, taking up space if they are not used ..."
       # set comma as internal field separator for the string list
       Field_Separator=$IFS
       IFS=,
  
-      if [ "${RUN_VERBOSE}" = true ]; then
-         h2 "Apps installed by Apple App Store ..."
-         find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
-      fi
       # Excludes apps installed using Apple's App Store app: Amazon Prime Video, Textual, 
          # 1Password, Flash Player, "Grammerly Desktop.app", "Google Chrome", github, Kindle Classic, 
          # "Hidden Bar", "Home Assistant", HP Easy Scan, "Hotkey App",
@@ -1208,9 +1262,19 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       h2 "Install/upgrade apps using brew --cask into /Applications/:"
       for appname in DiffMerge  NordVPN  Postman  PowerShell  GIMP
       do
-         h2 "Brew install --cask $appname within /Applications/ ..."
-         brew install --cask $appname
-         # Freeform.app not recognized
+         if [ -d "/Applications/$appname.app" ]; then   # app found:
+            if [ "${UPDATE_PKGS}" = true ]; then
+               note "brew reinstall --cask $appname.app within /Applications/ ..."
+               brew uninstall --cask $appname --force
+               brew install --cask $appname
+                  # Gimp Error: Directory not empty @ dir_s_rmdir - /private/tmp/d20230916-90678-14otypx
+            # else ignore
+            fi
+         else  # app not found:
+            h2 "brew install --cask $appname within /Applications/ ..."
+            brew install --cask $appname
+            # Freeform.app not recognized
+         fi
       done
       # For those with different brew names than app name:
          # Anki flashcard player
@@ -1223,12 +1287,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # Microsoft Office, Microsoft PowerShell, Microsoft Teams, Microsoft Remote Desktop,
          # sublime-text to "Sublime Text.app"
       # Installed from vendor website: Keka, Adobe, Camtasia, DiffMerge, p4merge
-      if [ "${RUN_VERBOSE}" = true ]; then
-         h2 "Apps in /Applications ..."
-         ls -ltaT /Applications/
-            # drwxr-xr-x   3 wilsonmar  staff       96 Aug  7 19:32:02 2018 iTerm.app
-      fi
-
 
       h2 "Install/upgrade apps using brew --cask into $HOME/Applications/:"
       # HomeAppsBrewList within "$HOME/Applications/%1.app" 
@@ -1252,11 +1310,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # Keybase (licensed) has error
          # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
       # TODO: Install Chrome Add-ons
-      if [ "${RUN_VERBOSE}" = true ]; then
-         h2 "Apps in $HOME/Applications ..."
-         ls -ltaT $HOME/Applications/
-      fi
-
 
       # For those with different brew names than app name:
       for appname in miniconda microsoft-teams google-chrome elgato-stream-deck iterm2
@@ -1274,18 +1327,15 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # tor-browser to "Tor Browser.app"
       #brew install --cask visual-studio-code  # to "Visual Studio Code.app"
 
-      if [ "${RUN_VERBOSE}" = true ]; then
-         h2 "brew list --cask ..."
-         brew list --cask
-      fi
-
       h2 "brew install CLI utilities:"
 
       brew install curl
       brew install wget
+      brew install jmespath/jmespath/jp
+       # https://github.com/jmespath/jp
 
       # Replacement for ls - see https://the.exa.website/#installation
-      brew install exa
+      # brew install exa
       
       brew install ncdu  # linux disk usage
          # Pouring ncdu--2.1.2.arm64_monterey.bottle.tar.gz
@@ -1320,25 +1370,25 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       fi
 
       if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
-         h2 "brew install Terraform:"
+         h2 "brew install Terraform with tfenv:"
          which terraform
             # /opt/homebrew/bin//terraform
-         terraform version
+         TF_VERSION=$( terraform version )
             # Terraform v1.2.5
             # on darwin_arm64
       
          brew install tfenv
          # NO brew install hashicorp/tap/terraform
          brew install tfenv
+         
          tfenv install latest
-         tfenv use 1.2.5
+         tfenv use "${TF_VERSION}"
 
-         brew install hashicorp/tap/sentinel
-         which sentinel
+         # brew install hashicorp/tap/sentinel
+         # which sentinel
       fi
 
-      h2 "brew install kubernetes:"
-      brew install openshift-cli
+      h2 "brew install HashiCorp Consul:"
       if [ "${RUN_CONSUL}" = true ]; then  # -tf
          brew install hashicorp/tap/consul-k8s
          which consul-k8s
@@ -1383,10 +1433,15 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
       # For htop -t (tree of processes), alias ht:
       brew install htop
+      note "$( htop --version )"  # htop 3.2.2
+
       brew install jq
       note "$( jq --version )"  # jq-1.6
 
       brew install tree
+      note "$( tree --version )"  # exa - list files on the command-line
+         # v0.10.1 [+git]
+         # https://the.exa.website/
 
    fi  # PACKAGE_MANAGER
 
@@ -2076,6 +2131,9 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
       #aws version 2>aws-err-response.txt
       #head -12 aws-err-response.txt
       #rm aws-err-response.txt
+      if [ "${USE_K8S}" = true ]; then   # -k8s
+         brew install eksctl
+      fi
    fi
 
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -2179,6 +2237,9 @@ fi
 ### 29. Install K8S minikube
 # See https://wilsonmar.github.io/mac-setup/#Minikube
 if [ "${USE_K8S}" = true ]; then  # -k8s
+   h2 "brew install Kubernetes IBM/RedHat OpenShift:"
+   brew install openshift-cli
+
    h2 "-k8s means minkube locally ..."
 
    # See https://kubernetes.io/docs/tasks/tools/install-minikube/
@@ -3717,6 +3778,12 @@ if [ "${RUN_PYTHON}" = true ]; then  # -python
          open "/Applications/PyCharm.app"
       fi
    fi
+
+   #if [ "${RUN_PYTHON}" = true ]; then  # -python
+      # Install image management CLI for https://www.youtube.com/watch?v=bNbN9yoEOdU
+      # Instead of https://www.ffmpeg.org/download.html
+      brew install FFMpeg
+   #fi
 
 fi  # RUN_PYTHON
 
