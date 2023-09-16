@@ -72,7 +72,7 @@ args_prompt() {
    echo "   -d           -delete GitHub and pyenv from previous run"
    echo "   -c           -clone from GitHub"
    echo "   -G           -GitHub is the basis for program to run"
-   echo "   -gcb \"v0.5\"     git checkout branch or tag"
+   echo "   -ghb \"v0.5\"     git checkout branch or tag"
    echo "   -F \"abc\"     -Folder inside repo"
    echo "   -f \"a9y.py\"  -file (program) to run"
    echo "   -P \"-v -x\"   -Parameters controlling program called"
@@ -143,6 +143,7 @@ usage_examples() {
    echo "./mac-setup.zsh -v -venv -c -circleci -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
    echo "./mac-setup.zsh -v -docsify -d -c "
+   echo "./mac-setup.zsh -tf -zzzz  -v"
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -236,7 +237,7 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
 
    GITHUB_REPO_URL="https://github.com/wilsonmar/WebGoat.git"
    GITHUB_FOLDER=""
-   GITHUB_BRANCH=""             # -gcb
+   GITHUB_BRANCH="main"         # -ghb
 
    CLONE_GITHUB=false           # -c
 
@@ -453,7 +454,7 @@ while test $# -gt 0; do
       # When -tf set:
       GITHUB_REPO_URL="git@github.com:hashicorp/learn-consul-terraform.git"
       GITHUB_FOLDER="datacenter-deploy-ecs-hcp"
-      GITHUB_BRANCH="v0.5"             # -gcb
+      GITHUB_BRANCH="v0.5"             # -ghb
       shift
       ;;
     -cont)
@@ -693,10 +694,11 @@ while test $# -gt 0; do
       ;;
     -tf)
       export RUN_TERRAFORM=true
-      PROJECTS_CONTAINER_PATH="$HOME/tf1"  # -P
-      # PROJECT_FOLDER_NAME="tf-"
-      # GITHUB_REPO_URL="https://github.com/Mck-Enterprise-Automation/onefirmgithub-vault"
-      # GITHUB_BRANCH="main"
+      PROJECTS_CONTAINER_PATH="$HOME/Projects"  # -P
+      PROJECT_FOLDER_NAME="tf-module1"
+      #GITHUB_REPO_URL="https://github.com/wilsonmar/mac-setup"
+      #GITHUB_FOLDER
+      GITHUB_BRANCH="main"
       # export APPNAME="onefirmgithub-vault"
       shift
       ;;
@@ -1260,14 +1262,14 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       done
 
       h2 "Install/upgrade apps using brew --cask into /Applications/:"
-      for appname in DiffMerge  NordVPN  Postman  PowerShell  GIMP
+      for appname in DiffMerge  NordVPN  Postman  PowerShell  
       do
          if [ -d "/Applications/$appname.app" ]; then   # app found:
             if [ "${UPDATE_PKGS}" = true ]; then
                note "brew reinstall --cask $appname.app within /Applications/ ..."
                brew uninstall --cask $appname --force
                brew install --cask $appname
-                  # Gimp Error: Directory not empty @ dir_s_rmdir - /private/tmp/d20230916-90678-14otypx
+                  # GIMP Error: Directory not empty @ dir_s_rmdir - /private/tmp/d20230916-90678-14otypx
             # else ignore
             fi
          else  # app not found:
@@ -1314,8 +1316,17 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # For those with different brew names than app name:
       for appname in miniconda microsoft-teams google-chrome elgato-stream-deck iterm2
       do
-         note "brew install --cask $appname into $HOME/Applications/ ..."
-         brew install --cask $appname
+         if [ -d "$HOME/Applications/$appname.app" ]; then   # app found:
+            if [ "${UPDATE_PKGS}" = true ]; then
+               note "brew reinstall --cask $appname.app within $HOME/Applications/ ..."
+               brew uninstall --cask $appname --force
+               brew install --cask $appname
+            # else ignore
+            fi
+         else  # app not found:
+            h2 "brew install --cask $appname within $HOME/Applications/ ..."
+            brew install --cask $appname
+         fi
       done
       # miniconda ( to '/usr/local/bin/conda') does not create a "Miniconda3.app"
       # If you have Microsoft O365, download from https://www.office.com/?auth=2&home=1
