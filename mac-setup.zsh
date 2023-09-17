@@ -19,7 +19,8 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.105" # Restruc github vars : mac-setup.zsh"
+SCRIPT_VERSION="v0.107" # use GitHub in mac-setup.zsh"
+# Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
 # TODO: Add encryption of log output.
@@ -58,14 +59,15 @@ args_prompt() {
    echo " "
    echo "   -aws         -AWS cloud"
    echo "   -eks         -eks (Elastic Kubernetes Service) in AWS cloud"
-   #echo "   -azure       -Azure cloud"
-   #echo "   -gcp         -Google cloud"
+   echo "   -azure       -Azure cloud"
+   echo " "
+   echo "   -gcp         -Google cloud"
    echo "   -g \"abcdef...89\" -gcloud API credentials for calls"
    echo "   -p \"cp100\"   -project in gcloud"
    echo " "
 #  echo "   -Consul       Install Hashicorp Consul in Docker"
 #  echo "   -Doormat      install/use Hashicorp's doormat-cli & hcloud"
-   echo "   -Envoy        install/use Hashicorp's Envoy client"
+#  echo "   -Envoy        install/use Hashicorp's Envoy client"
    echo "   -HV           install/use -Hashicorp Vault secret manager"
    echo "   -m            Setup Vault SSH CA cert"
    echo " "
@@ -207,6 +209,7 @@ fi
    RUN_DEBUG=false              # -vv
    RUN_PARMS=""                 # -P
    RUN_VERBOSE=false            # -v
+   VERIFY_ENV=false             # -V
    RUN_QUIET=false              # -q
 
    CONVERT_TO_ZSH=false         # -zsh
@@ -225,6 +228,7 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    PROJECT_FOLDER_NAME=""                    # specify -N
    PROJECT_NAME=""                           # -p
 
+   USE_GITHUB=false                          # -G
    GITHUB_PATH="$HOME/github-wilsonmar"
    GITHUB_REPO="wilsonmar.github.io"
    GITHUB_ACCOUNT="wilsonmar"
@@ -236,8 +240,9 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    GIT_NAME="Wilson Mar"
    GIT_USERNAME="wilsonmar"
    GITHUB_REPO_URL=""           # -ghr in https://github.com/wilsonmar/xxx.git
+   GITHUB_ACCOUNT_FOLDER="github-wilsonmar" # -gaf
    GITHUB_FOLDER=""             # -ghf  (within repo)
-   GITHUB_BRANCH="main"         # -ghb
+   GITHUB_BRANCH=""             # -ghb
 
    CLONE_GITHUB=false           # -c
 
@@ -543,9 +548,8 @@ while test $# -gt 0; do
       MY_FOLDER=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
-    -ga*)
-      shift
-      GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+    -G)
+      export USE_GITHUB=true
       shift
       ;;
     -Golang)
@@ -559,14 +563,24 @@ while test $# -gt 0; do
       export GOOGLE_API_KEY
       shift
       ;;
-    -ghf)
+    -gaf*)
+      shift
+      export GITHUB_ACCOUNT_FOLDER=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -ga*)
+      shift
+      export GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -ghf*)
       shift
       export GITHUB_FOLDER=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
-    -ghr)
+    -ghr*)
       shift
-      export GITHUB_REPO_URL=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export GITHUB_REPO=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -HV)
@@ -711,7 +725,7 @@ while test $# -gt 0; do
       export RUN_TERRAFORM=true
       #GITHUB_REPO_URL="https://github.com/wilsonmar/mac-setup"
       PROJECT_FOLDER_NAME="tf-module1"
-      #GITHUB_FOLDER
+      GITHUB_FOLDER="tf-module1"
       GITHUB_BRANCH="main"
       # export APPNAME="onefirmgithub-vault"
       shift
@@ -736,6 +750,10 @@ while test $# -gt 0; do
       ;;
     -U)
       export UPDATE_PKGS=true
+      shift
+      ;;
+    -V)
+      export VERIFY_ENV=true
       shift
       ;;
     -vv)
@@ -1149,6 +1167,9 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # Homebrew/homebrew-core (git revision e103; last commit 2020-01-07)
          # Homebrew/homebrew-cask (git revision bbf0e; last commit 2020-01-07)
 
+      brew install rbenv
+
+
    elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then  # (Advanced Packaging Tool) for Debian/Ubuntu
 
       if ! command -v apt-get ; then
@@ -1188,7 +1209,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    fi # PACKAGE_MANAGER
 
 fi # if [ "${DOWNLOAD_INSTALL}"
-if [ "${RUN_VERBOSE}" = true ]; then  # -v
+
+if [ "${VERIFY_ENV}" = true ]; then  # -V
   if command -v brew >/dev/null; then  # command found, so:
       h2 "brew doctor for -v ..."
       brew doctor
@@ -1236,7 +1258,7 @@ fi  # DOWNLOAD_INSTALL
 
 ### 16. Install basic utilities (git, jq, tree, etc.) used by many:
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
-if [ "${RUN_VERBOSE}" = true ]; then
+if [ "${RUN_DEBUG}" = true ]; then
    h2 "Apps installed using Apple App Store ..."
    find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
 
@@ -1393,24 +1415,24 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
       # For GitHub Voice:
       brew install openjdk@11
-      java -version
-         # Acoording to https://stackoverflow.com/questions/65601196/how-to-brew-install-java
+         # According to https://stackoverflow.com/questions/65601196/how-to-brew-install-java
          # symlink it:
-      if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
-         # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
-         sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk \
-            /Library/Java/JavaVirtualMachines/openjdk-11.jdk
-         # Password required.
-      elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
-         sudo ln -sfn /usr/local/opt/openjdk@11/libexec/openjdk.jdk \
-            /Library/Java/JavaVirtualMachines/openjdk-11.jdk
-         # Password required.
-      else
-         fatal "MACHINE_TYPE=$MACHINE_TYPE not recognized."
-         exit
-      fi
+      #if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
+      #   # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
+      #   sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk \
+      #      /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+      #   # Password required.
+      #elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
+      #   sudo ln -sfn /usr/local/opt/openjdk@11/libexec/openjdk.jdk \
+      #      /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+      #   # Password required.
+      #else
+      #   fatal "MACHINE_TYPE=$MACHINE_TYPE not recognized."
+      #   exit
+      #fi
       # See all versions installed:
       /usr/libexec/java_home -V
+         # Password required.
          # Matching Java Virtual Machines (4):
          # 11.0.20.1 (x86_64) "Homebrew" - "OpenJDK 11.0.20.1" /usr/local/Cellar/openjdk@11/11.0.20.1/libexec/openjdk.jdk/Contents/Home
          # Comes default with macOS:
@@ -1470,21 +1492,27 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       fi
 
       if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
-         h2 "brew install Terraform with tfenv ..."
+         h2 "brew install latest Terraform with tfenv ..."
+         brew install tfenv
+         # NO brew install hashicorp/tap/terraform
+         brew install tfenv      
+         tfenv install latest
+            # https://releases.hashicorp.com/terraform/
+         TF_VERSION=$( tfenv version-name )
+            # Terraform v1.5.7
+         note "TF_VERSION=$TF_VERSION"
+         tfenv use "${TF_VERSION}"
+
          which terraform
             # On Apple Silicon: /opt/homebrew/bin//terraform
             # On Intel: /usr/local/bin/terraform
-         TF_VERSION=$( terraform version )
-            # Terraform v1.2.5
-            # on darwin_arm64
-            note "TF_VERSION=$TF_VERSION"
 
-            brew install tfenv
-            # NO brew install hashicorp/tap/terraform
-            brew install tfenv      
-            tfenv install latest
-            tfenv use "${TF_VERSION}"
-
+         brew install terraform-docs
+         brew install tfsec
+         brew install tflint
+         brew install terragrunt
+         brew install terrascan
+         
          # brew install hashicorp/tap/sentinel
          # which sentinel
       fi
@@ -1803,8 +1831,19 @@ fi
 # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
 # To ensure that we have a project folder (from GitHub clone or not):
 if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
-
+   if [ -z "${GITHUB_REPO_URL}" ]; then   # variable is blank
+      if [ -z "${GITHUB_REPO}" ]; then   # variable is blank
+         fatal "GITHUB_REPO not specified ..."
+         exit
+      fi
+      if [ -z "${GITHUB_ACCOUNT}" ]; then   # variable is blank
+         fatal "GITHUB_ACCOUNT not specified ..."
+         exit
+      fi
+      GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT}/${GITHUB_REPO}"
+   fi
    note "GITHUB_REPO_URL=${GITHUB_REPO_URL}"
+echo "exit here";exit
    if [ -n "${GITHUB_REPO_URL}" ]; then   # variable is NOT blank
 
       Delete_GitHub_clone(){
@@ -1881,7 +1920,8 @@ else   # -clone not specified:
       git checkout "${GITHUB_BRANCH}"
       note "Using branch \"$GITHUB_BRANCH\" ..."
    else
-      note "GITHUB_BRANCH not specified. Using master branch ..."
+      export GITHUB_BRANCH="main"
+      note "GITHUB_BRANCH not specified. Using branch \"${GITHUB_BRANCH}\" ..."
    fi
 
 fi   # GITHUB_REPO_URL
@@ -3887,26 +3927,55 @@ if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
       fi
       h2 "Running Terraform with TF_LOG=DEBUG to ${TF_LOG_PATH} ..."
       # https://www.khalidjhosein.net/2018/12/terraform-tips-and-tricks/
-      export TF_LOG=DEBUG
+      export TF_LOG="DEBUG"
    else
       h2 "Running Terraform with TF_LOG file unset ..."
       unset TF_LOG
    fi
+
+   if [ "${USE_GITHUB}" = true ]; then   # -G
+      # git clone git@github.com:hashicorp/learn-consul-terraform.git
+      # git checkout v0.5
+
+      #echo "-gaf GITHUB_ACCOUNT_FOLDER=$GITHUB_ACCOUNT_FOLDER"
+      #echo "-ghf GITHUB_FOLDER=$GITHUB_FOLDER"
+      #echo "-ghb GITHUB_BRANCH=$GITHUB_BRANCH"
+      GITHUB_PATH="$HOME/${GITHUB_ACCOUNT_FOLDER}/${GITHUB_FOLDER}"
+      h2 "-G = Running Terraform from $GITHUB_PATH ..."
+      cd "${GITHUB_PATH}"
+      note $( pwd )
+
+      #See if init was already done: https://www.env0.com/blog/terraform-init
+      if [ ! -f ".terraform.lock.hcl" ]; then  # file NOT exists:
+         terraform init
+      fi
+
+      h2 "terraform validate - syntax is good?"
+      terraform validate
+      
+      h2 "terraform plan "
+      terraform plan 
+      
+      #h2 "Scan using NOT tfsec ..."
+      #tfsec   # scan static tf code for security issues
+      
+      h2 "Generate docs (Markdown or JSON) from comments and variables in tf code..."
+      terraform-docs
+      
+      h2 "terraform apply ..."
+      terraform apply -auto-approve
+   fi
 echo "DEBUGGING TF"; exit
-   # git clone git@github.com:hashicorp/learn-consul-terraform.git
-   # git checkout v0.5
 
-   # terraform init
-   # terraform validate  # syntax is good
-   # terraform plan
-   # tfsec   # scan static tf code for security issues
-   # terraform-docs  # generates documentation (Markdown or JSON) from the comments and the variables in tf code.
-
-   # terraform apply
-   # terraform destroy
    if [ "${SET_TRACE}" = true ]; then   # -x
-      if [ -f "${TF_LOG_PATH}" ]; then  # file created:
-         rm -rf "${TF_LOG_PATH}"
+      if [ "$DELETE_CONTAINER_AFTER" = true ]; then
+         h2 "Terraform -Destroy ..."
+         terraform destroy
+
+         if [ -f "${TF_LOG_PATH}" ]; then  # file created:
+            note "-D Deleting Logs at ${TF_LOG_PATH} ..."
+            rm -rf "${TF_LOG_PATH}"
+         fi
       fi
    fi
 fi    # RUN_TERRAFORM

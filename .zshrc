@@ -155,16 +155,21 @@ export ARCHFLAGS="-arch $(uname -m)"
 
 #### See https://wilsonmar.github.io/ruby-on-apple-mac-osx/
 # No command checking since Ruby was installed by default on Apple macOS:
-if [ -d "$HOME/.rbenv" ]; then  # Ruby environment manager
-   export PATH="$HOME/.rbenv/bin:${PATH}"
-   eval "$(rbenv init -)"   # at the end of the file
-   echo "$( ruby --version) with .rbenv"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
+if ! command -v rbenv >/dev/null; then
+   if [ -d "$HOME/.rbenv" ]; then  # Ruby environment manager (shims    version  versions)
+      export PATH="$HOME/.rbenv/bin:${PATH}"
+      eval "$(rbenv init -)"   # at the end of the file
+      echo "$( ruby --version) with .rbenv"  
+         # Default is ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
+   fi
+
+   if [ -d "$HOME/.rvm" ]; then  # Ruby version manager
+      #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin:${PATH}"
+      #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+      echo "$( ruby --version) with .rvm"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
+   fi
 fi
-if [ -d "$HOME/.rvm" ]; then  # Ruby version manager
-   #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin:${PATH}"
-   #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-   echo "$( ruby --version) with .rvm"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
-fi
+
 
 # https://github.com/asdf-vm/asdf
 
@@ -179,7 +184,7 @@ fi
 
 #### See https://wilsonmar.github.io/hashicorp-vault
 # Or vault-ent
-if command -v kubectl >/dev/null; then  # found:
+if command -v vault >/dev/null; then  # found:
    export VAULT_VERSION="$( vault --version | awk '{print $2}' )"
       # v.13.2
 fi
@@ -207,7 +212,8 @@ fi
 if [ -d "/usr/libexec/java_home" ]; then
    # TODO: Determine version of Java installed
       export CPPFLAGS="-I/usr/local/opt/openjdk@11/include"
-      export JAVA_HOME=`/usr/libexec/java_home -v 11`
+      export JAVA_HOME=$(/usr/libexec/java_home -v 11)
+         # /usr/local/Cellar/openjdk@11/11.0.20.1/libexec/openjdk.jdk/Contents/Home
 fi
 
 if [ -d "$HOME/jmeter" ]; then
