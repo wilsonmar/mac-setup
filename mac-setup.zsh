@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.103" # Move apps installed to -v : mac-setup.zsh"
+SCRIPT_VERSION="v0.105" # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
 # TODO: Add encryption of log output.
@@ -93,6 +93,7 @@ args_prompt() {
    echo "   -Golang       Install Golang language"
    echo "   -ruby         Install Ruby and Refinery"
    echo "   -js           Install JavaScript (NodeJs) app (no MongoDB/PostgreSQL)"
+   echo "   -java         Install Java and __"
    echo " "
    echo "   -conda        Install Miniconda to run Python (instead of VirtualEnv)"
    echo "   -venv         Install Python to run within conda VirtualEnv (pipenv is default)"
@@ -221,7 +222,7 @@ USE_CONFIG_FILE=false            # -nenv
 CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    # Contents of ~/mac-setup.env overrides these defaults:
    PROJECTS_CONTAINER_PATH="$HOME/Projects"  # -P
-   PROJECT_FOLDER_NAME="webgoat"
+   PROJECT_FOLDER_NAME=""                    # specify -N
    PROJECT_NAME=""                           # -p
 
    GITHUB_PATH="$HOME/github-wilsonmar"
@@ -234,9 +235,8 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    GIT_EMAIL="WilsonMar+GitHub@gmail.com"
    GIT_NAME="Wilson Mar"
    GIT_USERNAME="wilsonmar"
-
-   GITHUB_REPO_URL="https://github.com/wilsonmar/WebGoat.git"
-   GITHUB_FOLDER=""
+   GITHUB_REPO_URL=""           # -ghr in https://github.com/wilsonmar/xxx.git
+   GITHUB_FOLDER=""             # -ghf  (within repo)
    GITHUB_BRANCH="main"         # -ghb
 
    CLONE_GITHUB=false           # -c
@@ -281,6 +281,7 @@ SECRETS_FILE=".secrets.env.sample"
    RUN_CONDA=false              # -conda
    RUN_PYTHON=false             # -python
    RUN_GOLANG=false             # -Golang
+   RUN_JAVA=false               # -java
    RUN_EKS=false                # -eks
        EKS_CRED_IS_LOCAL=true
    RUN_EGGPLANT=false           # -eggplant
@@ -558,6 +559,16 @@ while test $# -gt 0; do
       export GOOGLE_API_KEY
       shift
       ;;
+    -ghf)
+      shift
+      export GITHUB_FOLDER=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -ghr)
+      shift
+      export GITHUB_REPO_URL=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
     -HV)
       export USE_VAULT=true
       DOCKER_IMAGE_FILE="vault"
@@ -579,6 +590,10 @@ while test $# -gt 0; do
       ;;
     -I)
       export DOWNLOAD_INSTALL=true
+      shift
+      ;;
+    -java)
+      export RUN_JAVA=true
       shift
       ;;
     -js)
@@ -694,9 +709,8 @@ while test $# -gt 0; do
       ;;
     -tf)
       export RUN_TERRAFORM=true
-      PROJECTS_CONTAINER_PATH="$HOME/Projects"  # -P
-      PROJECT_FOLDER_NAME="tf-module1"
       #GITHUB_REPO_URL="https://github.com/wilsonmar/mac-setup"
+      PROJECT_FOLDER_NAME="tf-module1"
       #GITHUB_FOLDER
       GITHUB_BRANCH="main"
       # export APPNAME="onefirmgithub-vault"
@@ -913,9 +927,11 @@ if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
       # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
       export BREW_PATH="/opt/homebrew"
+      export BREW_PATH_OPT="/opt/homebrew/opt"
       eval $( "${BREW_PATH}/bin/brew" shellenv)
    elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
       export BREW_PATH="/usr/local/bin"
+      export BREW_PATH_OPT="/usr/local/opt"
       # BASHFILE=~/.bash_profile ..."
       # BASHFILE="$HOME/.bash_profile"  # on Macs
       #note "BASHFILE=~/.bashrc ..."
@@ -1178,7 +1194,13 @@ if [ "${RUN_VERBOSE}" = true ]; then  # -v
       brew doctor
          # "Your system is ready to brew."
       h2 "brew cleanup from previous install ..."
+      
+      # https://superuser.com/questions/1759738/error-could-not-cleanup-old-kegs-fix-your-permissions-on
+      #sudo chown -R $(whoami) $(brew --prefix)/*
+         # Above command takes minutes to run.
+      
       brew cleanup
+         # RESPONSE: Pruned 4 symbolic links from /usr/local
    fi
 fi
 
@@ -1215,7 +1237,7 @@ fi  # DOWNLOAD_INSTALL
 ### 16. Install basic utilities (git, jq, tree, etc.) used by many:
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
 if [ "${RUN_VERBOSE}" = true ]; then
-   h2 "Apps installed by Apple App Store ..."
+   h2 "Apps installed using Apple App Store ..."
    find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
 
    h2 "Apps in /Applications ..."
@@ -1227,6 +1249,9 @@ if [ "${RUN_VERBOSE}" = true ]; then
 
    h2 "brew list --cask ..."
    brew list --cask
+
+   h2 "brew list ..."
+   brew list
 fi
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # CAUTION: Install only packages that you actually use and trust!
@@ -1278,6 +1303,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # Freeform.app not recognized
          fi
       done
+
       # For those with different brew names than app name:
          # Anki flashcard player
          # "GPG Keychain.app"
@@ -1302,49 +1328,112 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # No longer supported? the-unarchiver
       # Installed separately: 1password (1Password7.app),
          # Docker, licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
-      for appname in Atom Docker Firefox google-cloud-sdk Hyper Macvim OBS VLC
-      do
-         note "brew install --cask $appname into $HOME/Applications/ ..."
-         brew install --cask $appname
-      done
-      # Not specified: Jumpcut  Sketch (licensed)
-      # Exceptions:
-         # Keybase (licensed) has error
-         # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
-      # TODO: Install Chrome Add-ons
-
-      # For those with different brew names than app name:
-      for appname in miniconda microsoft-teams google-chrome elgato-stream-deck iterm2
-      do
+      brew_update_app() {
+         brewname=$1
+         appname=$2
          if [ -d "$HOME/Applications/$appname.app" ]; then   # app found:
             if [ "${UPDATE_PKGS}" = true ]; then
-               note "brew reinstall --cask $appname.app within $HOME/Applications/ ..."
-               brew uninstall --cask $appname --force
-               brew install --cask $appname
+               note "brew reinstall --cask $brewname.app within $HOME/Applications/ ..."
+               brew uninstall --cask $brewname --force
+               brew install --cask $brewname
             # else ignore
             fi
          else  # app not found:
-            h2 "brew install --cask $appname within $HOME/Applications/ ..."
-            brew install --cask $appname
+            h2 "brew install --cask $brewname within $HOME/Applications/ ..."
+            brew install --cask $brewname
          fi
-      done
-      # miniconda ( to '/usr/local/bin/conda') does not create a "Miniconda3.app"
-      # If you have Microsoft O365, download from https://www.office.com/?auth=2&home=1
-      #brew install --cask microsoft-teams  # to "Microsoft Teams.app"
-      #brew install --cask google-chrome  # to "Google Chrome.app"
-      #brew install --cask elgato-stream-deck  # does not create a "StreamDeck.app"
-      #brew install --cask github  # to "GitHub Desktop.app"
-      #brew install --cask iterm2  # to "iTerm.app"
-      # tor-browser to "Tor Browser.app"
-      #brew install --cask visual-studio-code  # to "Visual Studio Code.app"
+         # PROTIP: On Error: Directory not empty @ dir_s_rmdir - , sudo chown -R $(whoami) $(brew --prefix)/*
+         # Then reboot the system
+      }
 
-      h2 "brew install CLI utilities:"
+      for appname in Docker Firefox google-cloud-sdk Hyper Macvim OBS VLC
+      do
+         brew_update_app $appname $appname
+      done
+      
+      # Not specified: Jumpcut  Sketch (licensed)
+      # Exceptions:
+         # Atom has been discontinued. Use VSCode instead.
+         # Keybase (licensed) has error
+         # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
+         # Microsoft O365, download from https://www.office.com/?auth=2&home=1
+         
+         brew install --cask elgato-stream-deck  # does not create a "StreamDeck.app"
+         brew install --cask miniconda
+            # miniconda ( to '/usr/local/bin/conda') does not create a "Miniconda3.app"
+
+      # TODO: Until an array for those with different brew names than app name:
+         brew_update_app "google-chrome" "Google Chrome"
+         brew_update_app "github" "GitHub Desktop"
+         # brew_update_app "iterm2" "iTerm"
+         brew_update_app "microsoft-teams" "Microsoft Teams"
+         brew_update_app "visual-studio-code" "Visual Studio Code"
+         #brew_update_app "tor-browser" "Tor Browser"
+
+      # TODO: Install Chrome Add-ons
+
+
+      h2 "brew install CLI utilities ..."
+      # Brew not updates if already installed:
 
       brew install curl
       brew install wget
       brew install jmespath/jmespath/jp
        # https://github.com/jmespath/jp
+        brew install jq
+      note "$( jq --version )"  # jq-1.6
 
+      # For htop -t (tree of processes), alias ht:
+      brew install htop
+      note "$( htop --version )"  # htop 3.2.2
+
+      brew install tree
+      note "$( tree --version )"  # exa - list files on the command-line
+         # v0.10.1 [+git]
+
+      # For GitHub Voice:
+      brew install openjdk@11
+      java -version
+         # Acoording to https://stackoverflow.com/questions/65601196/how-to-brew-install-java
+         # symlink it:
+      if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
+         # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
+         sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk \
+            /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+         # Password required.
+      elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
+         sudo ln -sfn /usr/local/opt/openjdk@11/libexec/openjdk.jdk \
+            /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+         # Password required.
+      else
+         fatal "MACHINE_TYPE=$MACHINE_TYPE not recognized."
+         exit
+      fi
+      # See all versions installed:
+      /usr/libexec/java_home -V
+         # Matching Java Virtual Machines (4):
+         # 11.0.20.1 (x86_64) "Homebrew" - "OpenJDK 11.0.20.1" /usr/local/Cellar/openjdk@11/11.0.20.1/libexec/openjdk.jdk/Contents/Home
+         # Comes default with macOS:
+         # 1.8.202.08 (x86_64) "Oracle Corporation" - "Java" /Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home
+         # 1.8.0_202 (x86_64) "Oracle Corporation" - "Java SE 8" /Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
+         # 1.8.0_162 (x86_64) "Oracle Corporation" - "Java SE 8" /Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home
+         # /usr/local/Cellar/openjdk@11/11.0.20.1/libexec/openjdk.jdk/Contents/Home
+
+      java -version
+         # openjdk version "11.0.20.1" 2023-08-24
+         # OpenJDK Runtime Environment Homebrew (build 11.0.20.1+0)
+         # OpenJDK 64-Bit Server VM Homebrew (build 11.0.20.1+0, mixed mode)
+      
+
+      # DEPRECATED: brew install docker-compose
+         # Until Jul 2023 Compose was part of Docker Desktop on Mac. However,
+            # See https://docs.docker.com/compose/install/
+         # See https://www.upwork.com/resources/how-to-install-docker-compose
+      # Verify:
+         # docker compose version
+            # Docker Compose version v2.2.3
+
+      # https://the.exa.website/
       # Replacement for ls - see https://the.exa.website/#installation
       # brew install exa
       
@@ -1355,7 +1444,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # Lint : hadolint Dockerfile
       # brew install hadolint
 
-     ### Unzip:
+      ### Unzip:
       brew install xz
       brew install p7zip
 
@@ -1381,19 +1470,20 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       fi
 
       if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
-         h2 "brew install Terraform with tfenv:"
+         h2 "brew install Terraform with tfenv ..."
          which terraform
-            # /opt/homebrew/bin//terraform
+            # On Apple Silicon: /opt/homebrew/bin//terraform
+            # On Intel: /usr/local/bin/terraform
          TF_VERSION=$( terraform version )
             # Terraform v1.2.5
             # on darwin_arm64
-      
-         brew install tfenv
-         # NO brew install hashicorp/tap/terraform
-         brew install tfenv
-         
-         tfenv install latest
-         tfenv use "${TF_VERSION}"
+            note "TF_VERSION=$TF_VERSION"
+
+            brew install tfenv
+            # NO brew install hashicorp/tap/terraform
+            brew install tfenv      
+            tfenv install latest
+            tfenv use "${TF_VERSION}"
 
          # brew install hashicorp/tap/sentinel
          # which sentinel
@@ -1441,18 +1531,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # Custom theme from : git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
       # ZSH_THEME="powerlevel9k/powerlevel9k"
       # source ~/.zhrc  # source $ZSH/oh-my-zsh.sh
-
-      # For htop -t (tree of processes), alias ht:
-      brew install htop
-      note "$( htop --version )"  # htop 3.2.2
-
-      brew install jq
-      note "$( jq --version )"  # jq-1.6
-
-      brew install tree
-      note "$( tree --version )"  # exa - list files on the command-line
-         # v0.10.1 [+git]
-         # https://the.exa.website/
 
    fi  # PACKAGE_MANAGER
 
