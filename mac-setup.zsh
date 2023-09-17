@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.107" # use GitHub in mac-setup.zsh"
+SCRIPT_VERSION="v0.107" # use TF in GitHub : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
@@ -60,7 +60,6 @@ args_prompt() {
    echo "   -aws         -AWS cloud"
    echo "   -eks         -eks (Elastic Kubernetes Service) in AWS cloud"
    echo "   -azure       -Azure cloud"
-   echo " "
    echo "   -gcp         -Google cloud"
    echo "   -g \"abcdef...89\" -gcloud API credentials for calls"
    echo "   -p \"cp100\"   -project in gcloud"
@@ -92,7 +91,7 @@ args_prompt() {
    echo "   -k8s         -k8s (Kubernetes) minikube & OpenShift CLI"
    echo "   -r           -restart (Docker) before run"
    echo " "
-   echo "   -Golang       Install Golang language"
+   echo "   -golang       Install Golang language"
    echo "   -ruby         Install Ruby and Refinery"
    echo "   -js           Install JavaScript (NodeJs) app (no MongoDB/PostgreSQL)"
    echo "   -java         Install Java and __"
@@ -124,7 +123,7 @@ usage_examples() {
    echo "# USAGE EXAMPLES:"
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
-   echo "./mac-setup.zsh -v -I -U -Golang  # Install brew, plus golang"
+   echo "./mac-setup.zsh -v -I -U -golang  # Install brew, plus golang"
    echo "./mac-setup.zsh -v -Consul -k -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
    echo "./mac-setup.zsh -v -Consul -podman -a -K   # Use HashicorpVault in Podman for localhost Kept alive"
    echo "./mac-setup.zsh -v -k -HV -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
@@ -146,7 +145,7 @@ usage_examples() {
    echo "./mac-setup.zsh -v -venv -c -circleci -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
    echo "./mac-setup.zsh -v -docsify -d -c "
-   echo "./mac-setup.zsh -tf -zzzz  -v"
+   echo "./mac-setup.zsh -tf -G -F \"tf-module1\" -I -U -v "
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -241,11 +240,8 @@ CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
    GIT_USERNAME="wilsonmar"
    GITHUB_REPO_URL=""           # -ghr in https://github.com/wilsonmar/xxx.git
    GITHUB_ACCOUNT_FOLDER="github-wilsonmar" # -gaf
-   GITHUB_FOLDER=""             # -ghf  (within repo)
    GITHUB_BRANCH=""             # -ghb
-
    CLONE_GITHUB=false           # -c
-
 # Different for each app:
    MY_FOLDER=""                 # -F folder
    MY_FILE=""
@@ -285,7 +281,7 @@ SECRETS_FILE=".secrets.env.sample"
    RUN_VIRTUALENV=false         # -venv
    RUN_CONDA=false              # -conda
    RUN_PYTHON=false             # -python
-   RUN_GOLANG=false             # -Golang
+   RUN_GOLANG=false             # -golang
    RUN_JAVA=false               # -java
    RUN_EKS=false                # -eks
        EKS_CRED_IS_LOCAL=true
@@ -459,7 +455,7 @@ while test $# -gt 0; do
          # https://github.com/hashicorp/docker-consul
       # When -tf set:
       GITHUB_REPO_URL="git@github.com:hashicorp/learn-consul-terraform.git"
-      GITHUB_FOLDER="datacenter-deploy-ecs-hcp"
+      MY_FOLDER="datacenter-deploy-ecs-hcp"
       GITHUB_BRANCH="v0.5"             # -ghb
       shift
       ;;
@@ -552,7 +548,7 @@ while test $# -gt 0; do
       export USE_GITHUB=true
       shift
       ;;
-    -Golang)
+    -golang)
       export RUN_GOLANG=true
       shift
       ;;
@@ -571,11 +567,6 @@ while test $# -gt 0; do
     -ga*)
       shift
       export GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      shift
-      ;;
-    -ghf*)
-      shift
-      export GITHUB_FOLDER=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -ghr*)
@@ -724,9 +715,8 @@ while test $# -gt 0; do
     -tf)
       export RUN_TERRAFORM=true
       #GITHUB_REPO_URL="https://github.com/wilsonmar/mac-setup"
-      PROJECT_FOLDER_NAME="tf-module1"
-      GITHUB_FOLDER="tf-module1"
-      GITHUB_BRANCH="main"
+      # -F "tf-module1"
+      # GITHUB_BRANCH="main"
       # export APPNAME="onefirmgithub-vault"
       shift
       ;;
@@ -1512,7 +1502,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          brew install tflint
          brew install terragrunt
          brew install terrascan
-         
+
          # brew install hashicorp/tap/sentinel
          # which sentinel
       fi
@@ -3056,8 +3046,8 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    note "VAULT_VERSION=$VAULT_VERSION"   # Example: 1.10.1
    # Shell file .zshrc will load CLI completion for Vault
 
-   ### 33b. -Golang RUN_GOLANG
-   if [ "${RUN_GOLANG}" = true ]; then  # -Golang
+   ### 33b. -golang RUN_GOLANG
+   if [ "${RUN_GOLANG}" = true ]; then  # -golang
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          h2 "Installing govaultenv ..."
          # https://github.com/jamhed/govaultenv  RUN_GOLANG
@@ -3938,10 +3928,11 @@ if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
       # git checkout v0.5
 
       #echo "-gaf GITHUB_ACCOUNT_FOLDER=$GITHUB_ACCOUNT_FOLDER"
-      #echo "-ghf GITHUB_FOLDER=$GITHUB_FOLDER"
       #echo "-ghb GITHUB_BRANCH=$GITHUB_BRANCH"
-      GITHUB_PATH="$HOME/${GITHUB_ACCOUNT_FOLDER}/${GITHUB_FOLDER}"
-      h2 "-G = Running Terraform from $GITHUB_PATH ..."
+      GITHUB_PATH="$HOME/${GITHUB_ACCOUNT_FOLDER}/${MY_FOLDER}"
+      TF_VERSION=$( terraform -version | head -1 | awk '{print $2}' | cut -c2- )
+         # "1.5.7" from "Terraform v1.5.7"
+      h2 "-G = Run Terraform TF_VERSION from $GITHUB_PATH ..."
       cd "${GITHUB_PATH}"
       note $( pwd )
 
