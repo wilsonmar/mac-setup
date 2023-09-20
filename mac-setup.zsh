@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v0.107" # use TF in GitHub : mac-setup.zsh"
+SCRIPT_VERSION="v2.001" # use TF in GitHub : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
@@ -41,14 +41,14 @@ args_prompt() {
    echo "   -vv           run -very verbose diagnostics (brew upgrade, update, doctor)"
    echo "   -x            set -x to trace command lines"
 #  echo "   -x            set sudoers -e to stop on error"
-   echo "   -q           -quiet headings for each step"
+   echo "   -q           -quiet heading h2 for each step"
    echo " "
    echo "   -I           -Install brew utilities, apps"
    echo "   -U           -Upgrade installed packages if already installed"
    echo "   -zsh         Convert from bash to Zsh"
    echo " "
-   echo "   -nenv        Do not run mac-setup.env file"
-   echo "   -env \"~/mac-setup.env\"   (change to alternate env file)"
+   echo "   -envf \"~/mac-setup.env\"   (change to alternate env file)"
+   echo "   -nenv        Do -not run env file"
    echo " "
    echo "   -N  \"Proj\"            Alternative name of Projects folder"
    echo "   -fn \"John Doe\"            user full name"
@@ -79,11 +79,11 @@ args_prompt() {
    echo "   -P \"-v -x\"   -Parameters controlling program called"
    echo "   -u           -update GitHub (scan for secrets)"
    echo " "
-   echo "   -docsify      Install docsify locally"
+   echo "   -docsify      install docsify locally"
    #echo "   -circleci    Use CircleCI SaaS"
    echo " "
-   echo "   -podman       Install and use Podman (instead of Docker)"
-   echo "   -k            Install and use Docker"
+   echo "   -podman       install and use Podman (instead of Docker)"
+   echo "   -k            install and use Docker"
    echo "   -b           -build Docker image"
    echo "   -dps \"dev1\"   override default name of a docker process"
    echo "   -dc           use docker-compose.yml file"
@@ -91,16 +91,16 @@ args_prompt() {
    echo "   -k8s         -k8s (Kubernetes) minikube & OpenShift CLI"
    echo "   -r           -restart (Docker) before run"
    echo " "
-   echo "   -golang       Install Golang language"
-   echo "   -ruby         Install Ruby and Refinery"
-   echo "   -js           Install JavaScript (NodeJs) app (no MongoDB/PostgreSQL)"
-   echo "   -java         Install Java and __"
+   echo "   -golang       install Golang language"
+   echo "   -ruby         install Ruby and Refinery"
+   echo "   -js           install JavaScript (NodeJs) app (no MongoDB/PostgreSQL)"
+   echo "   -java         install Java and __"
    echo " "
-   echo "   -conda        Install Miniconda to run Python (instead of VirtualEnv)"
-   echo "   -venv         Install Python to run within conda VirtualEnv (pipenv is default)"
-   echo "   -pyenv        Install Python to run with Pyenv"
-   echo "   -python       Install Python interpreter stand-alone (no pyenv or conda)"
-   echo "   -y            Install Python Flask"
+   echo "   -conda        install Miniconda to run Python (instead of VirtualEnv)"
+   echo "   -venv         install Python to run within conda VirtualEnv (pipenv is default)"
+   echo "   -pyenv        install Python to run with Pyenv"
+   echo "   -python       install Python interpreter stand-alone (no pyenv or conda)"
+   echo "   -y            install Python Flask"
    echo "   -A            run with Python -Anaconda "
    echo "   -tsf         -tensorflow"
    echo " "
@@ -220,26 +220,25 @@ fi
 
 USE_CONFIG_FILE=false            # -nenv
 
-# To be overridden by values defined within:
-CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
-   # Contents of ~/mac-setup.env overrides these defaults:
-   PROJECTS_CONTAINER_PATH="$HOME/Projects"  # -P
+# To be overridden by values defined within mac-setup.env:
+   CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
+#  PROJECTS_CONTAINER_PATH="$HOME/Projects"  # -P
    PROJECT_FOLDER_NAME=""                    # specify -N
    PROJECT_NAME=""                           # -p
 
-   USE_GITHUB=false                          # -G
-   GITHUB_PATH="$HOME/github-wilsonmar"
-   GITHUB_REPO="wilsonmar.github.io"
-   GITHUB_ACCOUNT="wilsonmar"
-   GITHUB_USER_NAME="Wilson Mar"             # -n
-   GITHUB_USER_EMAIL="wilson_mar@gmail.com"  # -e
+#   GITHUB_ACCOUNT_FOLDER="github-wilsonmar" # -gaf
+#   GITHUB_REPO_PATH="$HOME/github-wilsonmar"
+#   GITHUB_REPO="wilsonmar.github.io"
+#   GITHUB_ACCOUNT="wilsonmar"
+#   GITHUB_USER_NAME="Wilson Mar"             # -n
+#   GITHUB_USER_EMAIL="wilson_mar@gmail.com"  # -e
 
-   GIT_ID="WilsonMar@gmail.com"
-   GIT_EMAIL="WilsonMar+GitHub@gmail.com"
-   GIT_NAME="Wilson Mar"
-   GIT_USERNAME="wilsonmar"
+#   GIT_ID="WilsonMar@gmail.com"
+#   GIT_EMAIL="WilsonMar+GitHub@gmail.com"
+#   GIT_NAME="Wilson Mar"
+#   GIT_USERNAME="wilsonmar"
+
    GITHUB_REPO_URL=""           # -ghr in https://github.com/wilsonmar/xxx.git
-   GITHUB_ACCOUNT_FOLDER="github-wilsonmar" # -gaf
    GITHUB_BRANCH=""             # -ghb
    CLONE_GITHUB=false           # -c
 # Different for each app:
@@ -341,31 +340,32 @@ SECRETS_FILE=".secrets.env.sample"
 
 ### 05. Download config settings file to \$HOME/mac-setup.env (away from GitHub)
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
+download_mac-setup_home(){
+   # filename = $1
+   if [ -f "$HOME/$1" ]; then
+      h2 "-envd file $HOME/$1 already exists. Not downloaded..."
+   else
+      h2 "-envd downloading to $HOME/$1 ..."
+      curl --create-dirs -O --output-dir $HOME \
+         "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
+      chmod +x "$HOME/$1"
+      ls -ltaT "$HOME/$1"
+   fi
+}
 if command -v curl ; then
    pwd
-   if [ ! -f "$HOME/mac-setup.env" ]; then
-      h2 "Downloading mac-setup.env to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.env)"
-      cp "$HOME/mac-setup.env" "$HOME"
-   fi
-   if [ ! -f "$HOME/.zshrc" ]; then
-      h2 "Downloading .zshrc to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/.zshrc)"  # to
-      cp "$HOME/.zshrc" "$HOME"
-   fi
-   if [ ! -f "$HOME/mac-setup.zsh" ]; then
-      h2 "Downloading mac-setup.zsh to \$HOME folder"
-      curl -LO "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/mac-setup.zsh)"
-      cp "$HOME/mac-setup.zsh" "$HOME"
-   fi
+   download_mac-setup_home  "mac-setup.env"
+   download_mac-setup_home  "mac-setup.zsh"
+   download_mac-setup_home  "aliases.zsh"
+   download_mac-setup_home  ".zshrc"
 fi
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 if [ -f "$HOME/mac-setup.env" ]; then
-   h2 "Loading \$HOME/mac-setup.env ..."
+   h2 "-envd Loading $HOME/mac-setup.env ..."
    source "$HOME/mac-setup.env"
+      # ENV=v2
 fi
-
 
 Input_GitHub_User_Info(){
       # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
@@ -385,7 +385,7 @@ else  # use .mck-setup.env file:
       curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env
       warning "Downloading default config file mac-setup.env file to $HOME ... "
       if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
-         fatal "File mac-setup.env not found after download ..."
+         fatal "File \"$CONFIG_FILEPATH\" not found after download ..."
          exit 9
       fi
       note "Please edit values in file $HOME/mac-setup.env and run this again ..."
@@ -518,7 +518,7 @@ while test $# -gt 0; do
       APP1_PORT="80"
       shift
       ;;
-    -env*)
+    -envf*)
       export USE_CONFIG_FILE=true
       shift
              CONFIG_FILEPATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
@@ -542,10 +542,6 @@ while test $# -gt 0; do
     -F*)
       shift
       MY_FOLDER=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      shift
-      ;;
-    -G)
-      export USE_GITHUB=true
       shift
       ;;
     -golang)
@@ -714,10 +710,9 @@ while test $# -gt 0; do
       ;;
     -tf)
       export RUN_TERRAFORM=true
-      #GITHUB_REPO_URL="https://github.com/wilsonmar/mac-setup"
-      # -F "tf-module1"
+      GITHUB_REPO_URL="https://github.com/wilsonmar/tf-module1"
       # GITHUB_BRANCH="main"
-      # export APPNAME="onefirmgithub-vault"
+      # -F "tf-module1"
       shift
       ;;
     -tsf)
@@ -3923,39 +3918,44 @@ if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
       unset TF_LOG
    fi
 
-   if [ "${USE_GITHUB}" = true ]; then   # -G
-      # git clone git@github.com:hashicorp/learn-consul-terraform.git
-      # git checkout v0.5
-
-      #echo "-gaf GITHUB_ACCOUNT_FOLDER=$GITHUB_ACCOUNT_FOLDER"
-      #echo "-ghb GITHUB_BRANCH=$GITHUB_BRANCH"
-      GITHUB_PATH="$HOME/${GITHUB_ACCOUNT_FOLDER}/${MY_FOLDER}"
-      TF_VERSION=$( terraform -version | head -1 | awk '{print $2}' | cut -c2- )
-         # "1.5.7" from "Terraform v1.5.7"
-      h2 "-G = Run Terraform TF_VERSION from $GITHUB_PATH ..."
-      cd "${GITHUB_PATH}"
-      note $( pwd )
-
-      #See if init was already done: https://www.env0.com/blog/terraform-init
-      if [ ! -f ".terraform.lock.hcl" ]; then  # file NOT exists:
-         terraform init
-      fi
-
-      h2 "terraform validate - syntax is good?"
-      terraform validate
-      
-      h2 "terraform plan "
-      terraform plan 
-      
-      #h2 "Scan using NOT tfsec ..."
-      #tfsec   # scan static tf code for security issues
-      
-      h2 "Generate docs (Markdown or JSON) from comments and variables in tf code..."
-      terraform-docs
-      
-      h2 "terraform apply ..."
-      terraform apply -auto-approve
+   # git clone git@github.com:hashicorp/learn-consul-terraform.git
+   # git checkout v0.5
+   if [ -d "/Applications/$appname.app" ]; then   # file found:     
+   #echo "-gaf GITHUB_ACCOUNT_FOLDER=$GITHUB_ACCOUNT_FOLDER"
+   #echo "-ghb GITHUB_BRANCH=$GITHUB_BRANCH"
+   if [ -z "${MY_FOLDER}" ]; then  # not defined:
+      fatal "-f MY_FOLDER not specified. Exiting ..."
+      exit
    fi
+   GITHUB_REPO_PATH="$HOME/${GITHUB_ACCOUNT_FOLDER}/${MY_FOLDER}"
+   TF_VERSION=$( terraform -version | head -1 | awk '{print $2}' | cut -c2- )
+      # "1.5.7" from "Terraform v1.5.7"
+   h2 "-G = Run Terraform TF_VERSION from $GITHUB_REPO_PATH ..."
+   cd "${GITHUB_REPO_PATH}"
+   note $( At: $pwd )
+
+   #See if init was already done: https://www.env0.com/blog/terraform-init
+   if [ ! -f ".terraform.lock.hcl" ]; then  # file NOT exists:
+      if find "$PWD" -mindepth 1 -maxdepth 1 | read; then  # not empty:
+          terraform init
+      fi
+   fi
+
+   h2 "terraform validate - syntax is good?"
+   terraform validate
+   
+   h2 "terraform plan "
+   terraform plan 
+   
+   #h2 "Scan using NOT tfsec ..."
+   #tfsec   # scan static tf code for security issues
+   
+   h2 "Generate docs (Markdown or JSON) from comments and variables in tf code..."
+   terraform-docs
+   
+   h2 "terraform apply ..."
+   terraform apply -auto-approve
+
 echo "DEBUGGING TF"; exit
 
    if [ "${SET_TRACE}" = true ]; then   # -x
