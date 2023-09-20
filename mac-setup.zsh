@@ -19,7 +19,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v2.001" # use TF in GitHub : mac-setup.zsh"
+SCRIPT_VERSION="v1.114" # -tf hello-world in GitHub & Projects : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
@@ -52,7 +52,7 @@ args_prompt() {
    echo " "
    echo "   -N  \"Proj\"            Alternative name of Projects folder"
    echo "   -fn \"John Doe\"            user full name"
-   echo "   -n  \"john-doe\"            GitHub account -name"
+   echo "   -n  \"weirdo\"           -github.com account name"
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
    echo " "
    echo "   -sd          -sd card initialize locally"
@@ -72,7 +72,10 @@ args_prompt() {
    echo " "
    echo "   -d           -delete GitHub and pyenv from previous run"
    echo "   -c           -clone from GitHub"
-   echo "   -G           -GitHub is the basis for program to run"
+   echo "   -gru         GITHUB_REPO_URL to download from GitHub"
+   echo "   -ssh         use SSH to construct GITHUB_REPO_URL to download"
+   echo "   -pfn         PROJECT_FOLDER_NAME folder to clone locally"
+   echo "   -gfn         GITHUB_FOLDER_NAME folder to clone locally"
    echo "   -ghb \"v0.5\"     git checkout branch or tag"
    echo "   -F \"abc\"     -Folder inside repo"
    echo "   -f \"a9y.py\"  -file (program) to run"
@@ -116,7 +119,6 @@ args_prompt() {
    echo "   -usage       usage commands"
    echo "# USAGE EXAMPLES:"
    echo "chmod +x mac-setup.zsh   # change permissions"
-   echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
 }  # args_prompt()
 
 usage_examples() {
@@ -218,39 +220,7 @@ fi
    USE_TEST_SERVER=false        # -ts
    USE_PROD_ENV=false           # -prod
 
-USE_CONFIG_FILE=false            # -nenv
-
-# To be overridden by values defined within mac-setup.env:
-   CONFIG_FILEPATH="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
-#  PROJECTS_CONTAINER_PATH="$HOME/Projects"  # -P
-   PROJECT_FOLDER_NAME=""                    # specify -N
-   PROJECT_NAME=""                           # -p
-
-#   GITHUB_ACCOUNT_FOLDER="github-wilsonmar" # -gaf
-#   GITHUB_REPO_PATH="$HOME/github-wilsonmar"
-#   GITHUB_REPO="wilsonmar.github.io"
-#   GITHUB_ACCOUNT="wilsonmar"
-#   GITHUB_USER_NAME="Wilson Mar"             # -n
-#   GITHUB_USER_EMAIL="wilson_mar@gmail.com"  # -e
-
-#   GIT_ID="WilsonMar@gmail.com"
-#   GIT_EMAIL="WilsonMar+GitHub@gmail.com"
-#   GIT_NAME="Wilson Mar"
-#   GIT_USERNAME="wilsonmar"
-
-   GITHUB_REPO_URL=""           # -ghr in https://github.com/wilsonmar/xxx.git
-   GITHUB_BRANCH=""             # -ghb
-   CLONE_GITHUB=false           # -c
-# Different for each app:
-   MY_FOLDER=""                 # -F folder
-   MY_FILE=""
-     #MY_FILE="2-3.ipynb"
-   APP1_HOST="127.0.0.1"   # default
-   APP1_PORT="8200"        # default
-   APP1_FOLDER=""          # custom specified
-   OPEN_APP=false               # -o
-
-# From secrets file:
+# From secrets file mac-setup.env
 SECRETS_FILE=".secrets.env.sample"
    #   AWS_ACCESS_KEY_ID=""
    #   AWS_SECRET_ACCESS_KEY=""
@@ -261,6 +231,40 @@ SECRETS_FILE=".secrets.env.sample"
       EKS_KEY_FILE_PREFIX="eksctl-1"
       EKS_NODES="2"
       EKS_NODE_TYPE="m5.large"
+
+# To be overridden by values defined within mac-setup.env:
+   USE_CONFIG_FILE=false        # -nenv
+   CONFIG_FILEPATH_BASE="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
+   CONFIG_FILEPATH=""                        # -env
+
+   PROJECT_FOLDER_BASE="$HOME/Projects"       # -P
+   PROJECT_FOLDER_NAME=""                    # specify -N
+   PROJECT_NAME=""                           # -p
+
+#   GITHUB_REPO_PATH="$HOME/github-wilsonmar"  
+#   GITHUB_REPO="wilsonmar.github.io"f
+#   GITHUB_ACCOUNT_NAME="weirdo"              # -gan
+#   GITHUB_USER_NAME="Wilson Mar"             # -n
+#   GITHUB_USER_EMAIL="wilson_mar@gmail.com"  # -e
+   #GITHUB_USER_EMAIL="WilsonMar+GitHub@gmail.com"
+
+   USE_GITHUB_SSH=false         # -ssh
+   GITHUB_REPO_URL=""           # -gru in https://github.com/wilsonmar/xxx.git
+
+   CLONE_GITHUB=false           # -c
+   DELETE_BEFORE=false          # -d
+   GITHUB_FOLDER_BASE="$HOME/github-wilsonmar" # -gfb
+  #GITHUB_FOLDER_NAME=""        # -gfn
+   GITHUB_BRANCH=""             # -ghb
+
+# Different for each app:
+   MY_FOLDER=""                 # -F folder
+   MY_FILE=""
+     #MY_FILE="2-3.ipynb"
+   APP1_HOST="127.0.0.1"   # default
+   APP1_PORT="8200"        # default
+   APP1_FOLDER=""          # custom specified
+   OPEN_APP=false               # -o
 
    USE_ENVOY=false              # -Envoy
    USE_DOORMAT=false            # -Doormat
@@ -315,6 +319,7 @@ SECRETS_FILE=".secrets.env.sample"
 
    RUBY_INSTALL=false           # -ruby
    NODE_INSTALL=false           # -js
+   
    MONGO_DB_NAME=""
 
 # Install?
@@ -361,21 +366,35 @@ if command -v curl ; then
 fi
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
-if [ -f "$HOME/mac-setup.env" ]; then
-   h2 "-envd Loading $HOME/mac-setup.env ..."
-   source "$HOME/mac-setup.env"
+if [ ! -f "$CONFIG_FILEPATH" ]; then
+   CONFIG_FILEPATH="$CONFIG_FILEPATH_BASE"
+fi   
+if [ ! -f "$CONFIG_FILEPATH" ]; then
+   fatal "File \"$CONFIG_FILEPATH\" not found. Exiting ..."
+   exit 9
+else
+   h2 "-envd Loading $CONFIG_FILEPATH ..."
+   chmod +x "$CONFIG_FILEPATH"
+   source "$CONFIG_FILEPATH"
       # ENV=v2
 fi
 
 Input_GitHub_User_Info(){
-      # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
-      read -r -p "Enter your GitHub user name [John Doe]: " GITHUB_USER_NAME
-      GITHUB_USER_NAME=${GITHUB_USER_NAME:-"John Doe"}
-      GitHub_ACCOUNT=${GitHub_ACCOUNT:-"john-doe"}
+   # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
+   read -r -p "Enter your GitHub user name [John Doe]: " GITHUB_USER_NAME
+   GITHUB_USER_NAME=${GITHUB_USER_NAME:-"John Doe"}
+   GITHUB_ACCOUNT_NAME=${GITHUB_ACCOUNT_NAME:-"john-doe"}
 
-      read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GITHUB_USER_EMAIL
-      GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL:-"johb_doe@gmail.com"}
+   read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GITHUB_USER_EMAIL
+   GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL:-"johb_doe@gmail.com"}
 }
+   if [ -z "${GITHUB_USER_EMAIL}" ]; then   # variable is blank
+      Input_GitHub_User_Info  # function defined above.
+   else
+      note "Using -u \"${GITHUB_USER_NAME}\" -e \"${GITHUB_USER_EMAIL}\" ..."
+      # since this is hard coded as "John Doe" above
+   fi
+
 if [ "${USE_CONFIG_FILE}" = true ]; then  # -nenv
    warning "Using default values hard-coded in this bash script ..."
    # PIPENV_DOTENV_LOCATION=/path/to/.env or =1 to not load.
@@ -383,20 +402,20 @@ else  # use .mck-setup.env file:
    # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
    if [ ! -f "$CONFIG_FILEPATH" ]; then   # file NOT found, then copy from github:
       curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env
-      warning "Downloading default config file mac-setup.env file to $HOME ... "
+      warning "Downloading default config file $CONFIG_FILEPATH file to $HOME ... "
       if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
          fatal "File \"$CONFIG_FILEPATH\" not found after download ..."
          exit 9
       fi
-      note "Please edit values in file $HOME/mac-setup.env and run this again ..."
+      note "Please edit values in file $CONFIG_FILEPATH and run this again ..."
       exit 9
    else  # Read from default file name mac-setup.env :
-      h2 "Reading default config file $HOME/mac-setup.env ..."
+      h2 "Reading default config file $CONFIG_FILEPATH ..."
       note "$(ls -ltaT "${CONFIG_FILEPATH}" )"
       chmod +x "${CONFIG_FILEPATH}"
       source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.
-      if [ ! -n "$GITHUB_ACCOUNT" ]; then
-         fatal "GITHUB_ACCOUNT variable not defined ..."
+      if [ ! -n "$GITHUB_ACCOUNT_NAME" ]; then
+         fatal "GITHUB_ACCOUNT_NAME variable not defined ..."
          exit 9
       fi
       #if [ "${CIRCLECI_API_TOKEN}" = "xxx" ]; then 
@@ -435,9 +454,9 @@ while test $# -gt 0; do
       ;;
     -circleci)
       export USE_CIRCLECI=true
-      #GITHUB_REPO_URL="https://github.com/wilsonmar/circleci_demo.git"
       export PROJECT_FOLDER_NAME="circleci_demo"
       export GITHUB_REPO_URL="https://github.com/fedekau/terraform-with-circleci-example"
+      #GITHUB_REPO_URL="https://github.com/wilsonmar/circleci_demo.git"
       shift
       ;;
     -conda)
@@ -548,16 +567,10 @@ while test $# -gt 0; do
       export RUN_GOLANG=true
       shift
       ;;
-    -g*)
+    -gan*)
       shift
-      export USE_GOOGLE_CLOUD=true
-             GOOGLE_API_KEY=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      export GOOGLE_API_KEY
-      shift
-      ;;
-    -gaf*)
-      shift
-      export GITHUB_ACCOUNT_FOLDER=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+             GITHUB_ACCOUNT_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export GITHUB_ACCOUNT_NAME
       shift
       ;;
     -ga*)
@@ -565,9 +578,33 @@ while test $# -gt 0; do
       export GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
-    -ghr*)
+    -gfb*)
       shift
-      export GITHUB_REPO=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+             GITHUB_FOLDER_BASE=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export GITHUB_FOLDER_BASE
+      shift
+      ;;
+    -gfn*)
+      shift
+             GITHUB_FOLDER_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export GITHUB_FOLDER_NAME
+      shift
+      ;;
+    -grn*)
+      shift
+      export GITHUB_REPO_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -gru*)
+      shift
+      export GITHUB_REPO_URL=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -g*)
+      shift
+      export USE_GOOGLE_CLOUD=true
+             GOOGLE_API_KEY=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export GOOGLE_API_KEY
       shift
       ;;
     -HV)
@@ -652,6 +689,11 @@ while test $# -gt 0; do
       export OPEN_APP=true
       shift
       ;;
+    -pfn*)
+      shift
+      export PROJECT_FOLDER_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
     -podman)
       export USE_PODMAN=true
       shift
@@ -660,14 +702,14 @@ while test $# -gt 0; do
       export USE_PROD_ENV=true
       shift
       ;;
+    -pyenv)
+      export USE_PYENV=true
+      shift
+      ;;
     -python)
       export RUN_PYTHON=true
       GITHUB_REPO_URL="https://github.com/wilsonmar/python-samples.git"
       PROJECT_FOLDER_NAME="python-samples"
-      shift
-      ;;
-    -pyenv)
-      export USE_PYENV=true
       shift
       ;;
     -p*)
@@ -708,11 +750,16 @@ while test $# -gt 0; do
       export IMAGE_SD_CARD=true
       shift
       ;;
+    -ssh)
+      export USE_GITHUB_SSH=true
+      shift
+      ;;
     -tf)
       export RUN_TERRAFORM=true
       GITHUB_REPO_URL="https://github.com/wilsonmar/tf-module1"
       # GITHUB_BRANCH="main"
-      # -F "tf-module1"
+      # -gfn GITHUB_FOLDER_NAME "tf-module1"
+      # -pfn PROJECT_FOLDER_NAME "tf-module1"
       shift
       ;;
     -tsf)
@@ -1269,8 +1316,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # See https://wilsonmar.github.io/macos-homebrew/
       h2 "Remove apps pre-installed by Apple, taking up space if they are not used ..."
       # set comma as internal field separator for the string list
-      Field_Separator=$IFS
-      IFS=,
+      #Field_Separator=$IFS
+      #IFS=,
  
       # Excludes apps installed using Apple's App Store app: Amazon Prime Video, Textual, 
          # 1Password, Flash Player, "Grammerly Desktop.app", "Google Chrome", github, Kindle Classic, 
@@ -1281,21 +1328,28 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
           # TextWrangler.app, WriteRoom.app,
           # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
 
-      h2 "Removing Apple-created apps installed from Apple Store into /Applications/ ..."
-      for appname in iMovie  GarageBand  Keynote  Numbers  Pages 
-      do
+      h2 "-I removing Apple-created apps installed from Apple Store into /Applications/ ..."
+      # APPLE_APPS_TO_REMOVE="iMovie GarageBand Keynote Numbers Pages"
+      # convert to array space-separated string from mac-setup.env file:
+      ARRAY=( $APPLE_APPS_TO_REMOVE )  
+      ARRAY=(`echo ${APPLE_APPS_TO_REMOVE}`);
+      for appname in "${ARRAY[@]}"; do
          if [ -d "/Applications/$appname.app" ]; then   # file found:
+            echo "$appname.app being removed..."
             h2 "/Applications/$appname.app being removed..."
             sudo rm -rf "/Applications/$appname.app"  # remove app folder 
             # Sudo and password needed to remove Numbers, Pages
             # TODO: Remove iMovie and others using the built-in uninstaller.
             # TODO: Also remove app data in "/Library/Application Support" and other folders
+         else  # file not found:
+            note "/Applications/$appname.app not found to remove ..."
          fi
       done
 
-      h2 "Install/upgrade apps using brew --cask into /Applications/:"
-      for appname in DiffMerge  NordVPN  Postman  PowerShell  
-      do
+      h2 "-I install/upgrade apps using brew --cask into /Applications/:"
+      # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  Postman  PowerShell"
+      ARRAY=(`echo ${ROOT_APPS_TO_INSTALL}`);
+      for appname in "${ARRAY[@]}"; do
          if [ -d "/Applications/$appname.app" ]; then   # app found:
             if [ "${UPDATE_PKGS}" = true ]; then
                note "brew reinstall --cask $appname.app within /Applications/ ..."
@@ -1305,7 +1359,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # else ignore
             fi
          else  # app not found:
-            h2 "brew install --cask $appname within /Applications/ ..."
+            note "-I install brew --cask $appname within /Applications/ ..."
             brew install --cask $appname
             # Freeform.app not recognized
          fi
@@ -1323,18 +1377,17 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # sublime-text to "Sublime Text.app"
       # Installed from vendor website: Keka, Adobe, Camtasia, DiffMerge, p4merge
 
-      h2 "Install/upgrade apps using brew --cask into $HOME/Applications/:"
-      # HomeAppsBrewList within "$HOME/Applications/%1.app" 
-      #HomeAppsBrewList=' Atom, DiffMerge, Firefox, google-cloud-sdk, Hyper, Jumpcut, Keybase, Macvim, OBS, Sketch, VLC '
-      # Exceptions: google-cloud-sdk does not create a "Google Cloud SDK.app"
-         # See https://snark.github.io/jumpcut/ for more cut-and-paste.
-         # NOTE: # hyper install stores a file in /usr/local/bin on ARM machines.
+      h2 "-I install/upgrade apps using brew --cask into $HOME/Applications/:"
+      # HOME_APPS_TO_INSTALL="1Password  Docker Firefox google-cloud-sdk Hyper Macvim"
+      # Exceptions: 
+         # google-cloud-sdk does not create a "Google Cloud SDK.app"
+            # See https://snark.github.io/jumpcut/ for more cut-and-paste.
+         # hyper install stores a file in /usr/local/bin on ARM machines.
+         # No longer supported? the-unarchiver
       # Not on my list but may be in yours: cakebrew, snowflake-snowsql, geekbench, spotify, 
-         # pycharm, textmate, 
-         # brave, opera, 
-      # No longer supported? the-unarchiver
+         # pycharm, textmate, brave, opera, 
       # Installed separately: 1password (1Password7.app),
-         # Docker, licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
+         # licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
       brew_update_app() {
          brewname=$1
          appname=$2
@@ -1346,15 +1399,15 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # else ignore
             fi
          else  # app not found:
-            h2 "brew install --cask $brewname within $HOME/Applications/ ..."
+            note "-I install brew --cask $brewname within $HOME/Applications/ ..."
             brew install --cask $brewname
          fi
          # PROTIP: On Error: Directory not empty @ dir_s_rmdir - , sudo chown -R $(whoami) $(brew --prefix)/*
          # Then reboot the system
       }
-
-      for appname in Docker Firefox google-cloud-sdk Hyper Macvim OBS VLC
-      do
+      # HOME_APPS_TO_INSTALL="1Password  Docker Firefox google-cloud-sdk Hyper Macvim"
+      ARRAY=(`echo ${HOME_APPS_TO_INSTALL}`);
+      for appname in "${ARRAY[@]}"; do
          brew_update_app $appname $appname
       done
       
@@ -1380,58 +1433,19 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # TODO: Install Chrome Add-ons
 
 
-      h2 "brew install CLI utilities ..."
-      # Brew not updates if already installed:
+      h2 "-I install brew CLI utilities ..."
+      # TODO: CLI_APPS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
+      # CLI_APPS_TO_INSTALL="curl wget jp jq htop tree git hub ncdu docker-compose hadolint 1password-cli"
+      ARRAY=(`echo ${CLI_APPS_TO_INSTALL}`);
+      for brewname in "${ARRAY[@]}"; do
+         brew install $brewname
+         # NOTE: Brew updates if already installed.
+      done
 
-      brew install curl
-      brew install wget
+      # Exceptions:
       brew install jmespath/jmespath/jp
        # https://github.com/jmespath/jp
-        brew install jq
-      note "$( jq --version )"  # jq-1.6
-
-      # For htop -t (tree of processes), alias ht:
-      brew install htop
-      note "$( htop --version )"  # htop 3.2.2
-
-      brew install tree
-      note "$( tree --version )"  # exa - list files on the command-line
-         # v0.10.1 [+git]
-
-      # For GitHub Voice:
-      brew install openjdk@11
-         # According to https://stackoverflow.com/questions/65601196/how-to-brew-install-java
-         # symlink it:
-      #if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
-      #   # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
-      #   sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk \
-      #      /Library/Java/JavaVirtualMachines/openjdk-11.jdk
-      #   # Password required.
-      #elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
-      #   sudo ln -sfn /usr/local/opt/openjdk@11/libexec/openjdk.jdk \
-      #      /Library/Java/JavaVirtualMachines/openjdk-11.jdk
-      #   # Password required.
-      #else
-      #   fatal "MACHINE_TYPE=$MACHINE_TYPE not recognized."
-      #   exit
-      #fi
-      # See all versions installed:
-      /usr/libexec/java_home -V
-         # Password required.
-         # Matching Java Virtual Machines (4):
-         # 11.0.20.1 (x86_64) "Homebrew" - "OpenJDK 11.0.20.1" /usr/local/Cellar/openjdk@11/11.0.20.1/libexec/openjdk.jdk/Contents/Home
-         # Comes default with macOS:
-         # 1.8.202.08 (x86_64) "Oracle Corporation" - "Java" /Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home
-         # 1.8.0_202 (x86_64) "Oracle Corporation" - "Java SE 8" /Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
-         # 1.8.0_162 (x86_64) "Oracle Corporation" - "Java SE 8" /Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home
-         # /usr/local/Cellar/openjdk@11/11.0.20.1/libexec/openjdk.jdk/Contents/Home
-
-      java -version
-         # openjdk version "11.0.20.1" 2023-08-24
-         # OpenJDK Runtime Environment Homebrew (build 11.0.20.1+0)
-         # OpenJDK 64-Bit Server VM Homebrew (build 11.0.20.1+0, mixed mode)
       
-
       # DEPRECATED: brew install docker-compose
          # Until Jul 2023 Compose was part of Docker Desktop on Mac. However,
             # See https://docs.docker.com/compose/install/
@@ -1444,25 +1458,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # Replacement for ls - see https://the.exa.website/#installation
       # brew install exa
       
-      brew install ncdu  # linux disk usage
-         # Pouring ncdu--2.1.2.arm64_monterey.bottle.tar.gz
-         # /opt/homebrew/Cellar/ncdu/2.1.2: 6 files, 485.5KB
-
-      # Lint : hadolint Dockerfile
-      # brew install hadolint
-
-      ### Unzip:
-      brew install xz
-      brew install p7zip
-
-      brew install git
-      note "$( git --version )"
-         # git, version 2018.11.26
-      brew install hub   # github CLI
-      #note "$( hub --version )"
-         # git version 2.27.0
-         # hub version 2.14.2
-  
      #https://www.hashicorp.com/blog/announcing-hashicorp-homebrew-tap referencing https://github.com/hashicorp/homebrew-tap
       if [ "${USE_VAULT}" = true ]; then   # -HV
          brew install hashicorp/tap/vault
@@ -1791,126 +1786,132 @@ if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
 fi  # IMAGE_SD_CARD
 
 
-### 21. Configure project folder location where files are created by the run
-# See https://wilsonmar.github.io/mac-setup/#ProjFolder
-
-if [ -z "${PROJECTS_CONTAINER_PATH}" ]; then  # -p ""  override blank (the default)
-   h2 "Using current folder \"${PROJECTS_CONTAINER_PATH}\" as project folder path ..."
-   pwd
-else
-   if [ ! -d "$PROJECTS_CONTAINER_PATH" ]; then  # path not available.
-      note "Creating folder ${PROJECTS_CONTAINER_PATH} as -project folder path ..."
-      mkdir -p "$PROJECTS_CONTAINER_PATH"
-   fi
-   cd "${PROJECTS_CONTAINER_PATH}" || return # as suggested by SC2164
-   note "cd into path $PWD ..."
-   # pwd
-fi
-
-if [ "${RUN_DEBUG}" = true ]; then  # -vv
-   note "$( ls -ltaT "${PROJECTS_CONTAINER_PATH}" )"
-fi
-
-
-### 22. Clone repository from GitHub
+### 21. Clone repository from GitHub
 # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
+h2 "-c (clone) GitHub repo with DELETE_BEFORE=$DELETE_BEFORE ..."
 # To ensure that we have a project folder (from GitHub clone or not):
+
+Delete_GITHUB_folder(){
+   # https://www.zshellcheck.net/wiki/SC2115 Use "${var:?}" to ensure this never expands to / .
+   GITHUB_FOLDER_PATH="${GITHUB_FOLDER_BASE}/${GITHUB_FOLDER_NAME}"
+   if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path available.
+      warning "Removing GITHUB_FOLDER_PATH ..."
+      lls -ltaT "${GITHUB_FOLDER_PATH}"
+      rm -rf "${GITHUB_FOLDER_PATH}"
+   fi
+}
+Delete_PROJECT_folder(){
+   PROJECT_FOLDER_PATH="${PROJECT_FOLDER_BASE}/${PROJECT_FOLDER_NAME}"
+   if [ -d "${PROJECT_FOLDER_PATH:?}" ]; then  # path available.
+      warning "Removing project folder $PROJECT_FOLDER_PATH ..."
+      lls -ltaT "${PROJECT_FOLDER_PATH}"
+      rm -rf "${PROJECT_FOLDER_PATH}"
+   fi
+}
+Clone_to_PROJECT_folder(){
+   note "-c cloning repo \"$GITHUB_REPO_URL\" into \"$PROJECT_FOLDER_PATH\" ..."
+   cd "${PROJECT_FOLDER_BASE}"
+   git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
+   cd "${PROJECT_FOLDER_NAME}"
+   note "At $PWD"
+}
+
 if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
    if [ -z "${GITHUB_REPO_URL}" ]; then   # variable is blank
-      if [ -z "${GITHUB_REPO}" ]; then   # variable is blank
-         fatal "GITHUB_REPO not specified ..."
+      # See of we have known variables to build it:
+      if [ -z "${GITHUB_ACCOUNT_NAME}" ]; then   # variable is blank
+         fatal "GITHUB_ACCOUNT_NAME not specified ..."
          exit
       fi
-      if [ -z "${GITHUB_ACCOUNT}" ]; then   # variable is blank
-         fatal "GITHUB_ACCOUNT not specified ..."
+      if [ -z "${GITHUB_REPO_NAME}" ]; then   # variable is blank
+         fatal "GITHUB_REPO_NAME not specified ..."
          exit
       fi
-      GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT}/${GITHUB_REPO}"
-   fi
-   note "GITHUB_REPO_URL=${GITHUB_REPO_URL}"
-echo "exit here";exit
-   if [ -n "${GITHUB_REPO_URL}" ]; then   # variable is NOT blank
-
-      Delete_GitHub_clone(){
-      # https://www.zshellcheck.net/wiki/SC2115 Use "${var:?}" to ensure this never expands to / .
-      PROJECT_FOLDER_FULL_PATH="${PROJECTS_CONTAINER_PATH}/${PROJECT_FOLDER_NAME}"
-      if [ -d "${PROJECT_FOLDER_FULL_PATH:?}" ]; then  # path available.
-         h2 "Removing project folder $PROJECT_FOLDER_FULL_PATH ..."
-         lls -ltaT "${PROJECT_FOLDER_FULL_PATH}"
-         rm -rf "${PROJECT_FOLDER_FULL_PATH}"
+      if [ "${USE_GITHUB_SSH}" = true ]; then   # -ssh specified:
+         GITHUB_REPO_URL="git@github.com:${GITHUB_ACCOUNT_NAME}/${GITHUB_REPO_NAME}.git"
+      else
+         GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT_NAME}/${GITHUB_REPO_NAME}.git"
       fi
-      }
-      Clone_GitHub_repo(){
-         h2 "Cloning repo \"$GITHUB_REPO_URL\" into \"$PROJECT_FOLDER_NAME\" ..."
-         git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
-         cd "${PROJECT_FOLDER_NAME}"
-         note "At $PWD"
-      }
    fi
+   note " clone from GITHUB_REPO_URL=${GITHUB_REPO_URL}"
 
-   PROJECT_FOLDER_FULL_PATH="${PROJECTS_CONTAINER_PATH}/${PROJECT_FOLDER_NAME}"
-   if [ -z "${PROJECT_FOLDER_FULL_PATH}" ]; then   # name not specified:
-      fatal "PROJECT_FOLDER_NAME not specified for git cloning ..."
-      exit
-   fi
-   if [ -d "${PROJECT_FOLDER_FULL_PATH:?}" ]; then  # path available.
-      h2 "Remove folder \"$PROJECT_FOLDER_NAME\" from URL=$GITHUB_REPO_URL ..."
-      rm -rf "$PROJECT_FOLDER_NAME" 
-      Delete_GitHub_clone    # defined above in this file.
-   fi
-   # folder should now be blank.
+   ### 22a. Clone into local GITHUB_REPO_BASE if a -grn GITHUB_REPO_NAME was specified:
 
-   Clone_GitHub_repo      # defined above in this file.
-   # curl -s -O https://raw.GitHubusercontent.com/wilsonmar/build-a-saas-app-with-flask/master/mac-setup.zsh
-   # git remote add upstream https://github.com/nickjj/build-a-saas-app-with-flask
-   # git pull upstream master
-
-else   # -clone not specified:
-
-   if [ -z "${PROJECT_FOLDER_NAME}" ]; then   # value not defined
-      PROJECT_FOLDER_NAME="work"
-      note "\"work\" folder is the default name."
-   fi
-
-   if [ -z "${PROJECT_FOLDER_NAME}" ]; then   # variable found:
-      fatal "PROJECT_FOLDER_NAME not specified in script ..."
-      exit
-   else  # no project folder specified:
-      if [ ! -d "${PROJECT_FOLDER_NAME}" ]; then   # directory not found
-         note "Create blank project folder \"${PROJECT_FOLDER_NAME}\" since no GitHub is specified..."
-         mkdir "${PROJECT_FOLDER_NAME}"
-            cd "${PROJECT_FOLDER_NAME}"
-      else  # folder exists:
-         if [ "${DELETE_BEFORE}" = true ]; then  # -d 
-            note "Removing project folder \"${PROJECT_FOLDER_NAME}\" ..."
-            rm -rf "${PROJECT_FOLDER_NAME}"
-            note "Making project folder \"${PROJECT_FOLDER_NAME}\" ..."
-            mkdir "${PROJECT_FOLDER_NAME}"
+   if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # -gfn not specified 
+      warning "-gfn GITHUB_FOLDER_NAME not specified. Not downloaded ..."
+      # TODO: Extract from GITHUB_REPO_URL?
+      if [ -z "${GITHUB_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
+         fatal "Base GITHUB_FOLDER_PATH not specified in $CONFIG_FILEPATH. Please fix ..."
+         exit
+      fi
+   else
+      if [ ! -d "${GITHUB_FOLDER_BASE:?}" ]; then  # base NOT available.
+         fatal "Base GITHUB_FOLDER_BASE not specified in $CONFIG_FILEPATH. Please fix ..."
+         exit
+      fi
+      cd "${GITHUB_FOLDER_BASE}"
+      GITHUB_FOLDER_PATH="$GITHUB_FOLDER_BASE/$GITHUB_FOLDER_NAME"
+      if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path available.
+         if [ "${DELETE_BEFORE}" = true ]; then
+            Delete_GITHUB_folder  # defined above in this file.
+            git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
+            cd "${GITHUB_FOLDER_NAME}"
          else
-            #note "cd into $PWD since -delete GitHub not specified..."
-            cd "${PROJECT_FOLDER_NAME}"
-            note "At $( pwd )"
-         fi         
+            warning "${GITHUB_FOLDER_PATH} not replaced ..."
+            cd "${GITHUB_FOLDER_PATH}"
+            note "At $PWD"
+            if [ "${RUN_VERBOSE}" = true ]; then
+               ls -ltaT "${GITHUB_FOLDER_PATH}"
+            fi
+         fi
       fi
+      note "At $PWD"
    fi
 
-   if [ -z "${GITHUB_USER_EMAIL}" ]; then   # variable is blank
-      Input_GitHub_User_Info  # function defined above.
+   ### 22b. Clone to local Projects folder
+
+   # See https://wilsonmar.github.io/mac-setup/#ProjFolder
+
+   if [ -z "${PROJECT_FOLDER_NAME}" ]; then   # -pfn not specified 
+      warning "-pfn PROJECT_FOLDER_NAME not specified. Not downloaded ..."
+      # TODO: Extract from PROJECT_REPO_URL?
+      if [ -z "${PROJECT_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
+         fatal "Base PROJECT_FOLDER_PATH not specified in $CONFIG_FILEPATH. Please fix ..."
+         exit
+      fi
    else
-      note "Using -u \"${GITHUB_USER_NAME}\" -e \"${GITHUB_USER_EMAIL}\" ..."
-      # since this is hard coded as "John Doe" above
+      if [ ! -d "${PROJECT_FOLDER_BASE:?}" ]; then  # base NOT available.
+         fatal "Base PROJECT_FOLDER_BASE not specified in $CONFIG_FILEPATH. Please fix ..."
+         exit
+      fi
+      cd "${PROJECT_FOLDER_BASE}"
+      PROJECT_FOLDER_PATH="$PROJECT_FOLDER_BASE/$PROJECT_FOLDER_NAME"
+      if [ -d "${PROJECT_FOLDER_PATH:?}" ]; then  # path available.
+         if [ "${DELETE_BEFORE}" = true ]; then
+            Delete_PROJECT_folder  # defined above in this file.
+            git clone "${PROJECT_REPO_URL}" "${PROJECT_FOLDER_NAME}"
+            cd "${PROJECT_FOLDER_NAME}"
+         else
+            warning "${PROJECT_FOLDER_PATH} not replaced ..."
+            cd "${PROJECT_FOLDER_PATH}"
+            note "At $PWD"
+            if [ "${RUN_VERBOSE}" = true ]; then
+               ls -ltaT "${PROJECT_FOLDER_PATH}"
+            fi
+         fi
+      fi
+      note "At $PWD"
    fi
+fi
 
-   if [ -z "${GITHUB_BRANCH}" ]; then   # variable is blank
-      git checkout "${GITHUB_BRANCH}"
-      note "Using branch \"$GITHUB_BRANCH\" ..."
-   else
-      export GITHUB_BRANCH="main"
-      note "GITHUB_BRANCH not specified. Using branch \"${GITHUB_BRANCH}\" ..."
-   fi
 
-fi   # GITHUB_REPO_URL
-
+if [ -z "${GITHUB_BRANCH}" ]; then   # variable is blank
+   git checkout "${GITHUB_BRANCH}"
+   note "Using branch \"$GITHUB_BRANCH\" ..."
+else
+   export GITHUB_BRANCH="main"
+   note "GITHUB_BRANCH not specified. Using branch \"${GITHUB_BRANCH}\" ..."
+fi
 
 
 ### 23. Reveal secrets stored within .gitsecret folder 
@@ -2039,6 +2040,7 @@ pipenv_install() {
          # where "-gTkdon9O" adds the leading part of a hash of the full path to the project’s root.
       fi
 }  # pipenv_install()
+# pipenv_install # call function defined above.
 
 
 ### 25. Connect to Google Cloud, if requested:
@@ -2722,13 +2724,13 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
       # because the Terminal window will be locked up by the server in the next command
       open http://localhost:3000
    fi
-   PROJECT_FOLDER_FULL_PATH="${PROJECTS_CONTAINER_PATH}/${PROJECT_FOLDER_NAME}"
-   cd "${PROJECT_FOLDER_FULL_PATH}"
+   PROJECT_FOLDER_PATH="${PROJECT_FOLDER_PATH}/${PROJECT_FOLDER_NAME}"
+   cd "${PROJECT_FOLDER_PATH}"
    if [ "${RUN_VERBOSE}" = true ]; then
       note "At $(pwd)"
       note "$( ls -ltaT )"
 
-      note "${PROJECT_FOLDER_FULL_PATH}/docs"
+      note "${PROJECT_FOLDER_PATH}/docs"
       note "$( ls -ltaT docs )"
    fi
 
@@ -2954,9 +2956,9 @@ if [ USE_ALWAYS = true ]; then
       fi
       
       ### STEP: Call Vault to sign public key and return it as a cert:
-      h2 "Signing user ${GITHUB_ACCOUNT} public key file ${LOCAL_SSH_KEYFILE} ..."
-      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT}" \
-         -O "extension:login@github.com=${GITHUB_ACCOUNT}" "${LOCAL_SSH_KEYFILE}.pub"
+      h2 "Signing user ${GITHUB_ACCOUNT_NAME} public key file ${LOCAL_SSH_KEYFILE} ..."
+      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT_NAME}" \
+         -O "extension:login@github.com=${GITHUB_ACCOUNT_NAME}" "${LOCAL_SSH_KEYFILE}.pub"
          # RESPONSE: Signed user key test-ssh-cert.pub: id "wilson-mar" serial 0 valid forever
 
       SSH_CERT_PUB_KEYFILE="${LOCAL_SSH_KEYFILE}-cert.pub"
@@ -2974,9 +2976,9 @@ if [ USE_ALWAYS = true ]; then
    fi  # USE_VAULT
 
    if [ "${USE_VAULT}" = false ]; then   # -HV
-      h2 "Use GitHub extension to sign user public key with 1d Validity for ${GITHUB_ACCOUNT} ..."
-      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT}" \
-         -O "extension:login@github.com=${GITHUB_ACCOUNT}" -V '+1d' "${LOCAL_SSH_KEYFILE}.pub"
+      h2 "Use GitHub extension to sign user public key with 1d Validity for ${GITHUB_ACCOUNT_NAME} ..."
+      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT_NAME}" \
+         -O "extension:login@github.com=${GITHUB_ACCOUNT_NAME}" -V '+1d' "${LOCAL_SSH_KEYFILE}.pub"
          # 1m = 1minute, 1d = 1day
          # -n user1 user1.pub
          # RESPONSE: Signed user key test-ssh-cert.pub: id "wilsonmar" serial 0 valid from 2020-05-23T12:59:00 to 2020-05-24T13:00:46
@@ -3490,55 +3492,56 @@ fi # if [ "${NODE_INSTALL}
 
 
 ### 39. Install Virtualenv
-# See https://wilsonmar.github.io/mac-setup/#Virtualenv
-# See https://wilsonmar.github.io/pyenv/
-if [ "${RUN_VIRTUALENV}" = true ]; then  # -V  (not the default pipenv)
 
-   if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
-      h2 "brew install -python"
-      if ! command -v python3 ; then
-         h2 "Installing python3 ..."
-         brew install python3
+   # See https://wilsonmar.github.io/mac-setup/#Virtualenv
+   # See https://wilsonmar.github.io/pyenv/
+   if [ "${RUN_VIRTUALENV}" = true ]; then  # -V  (not the default pipenv)
+
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
+         h2 "brew install -python"
+         if ! command -v python3 ; then
+            h2 "Installing python3 ..."
+            brew install python3
+         fi
+
+         # See https://wilsonmar.github.io/pyenv/
+         # to create isolated Python environments.
+         #pipenv install virtualenvwrapper
+         if ! command -v virtualenv ; then
+            h2 "brew install virtualenv"  # https://levipy.com/virtualenv-and-virtualenvwrapper-tutorial
+            brew install virtualenv
+         fi
+
+      elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
+         silent-apt-get-install "python3"
+      fi
+      note "$( python3 --version )"    # Python 3.8.9
+      note "$( virtualenv --version )" # virtualenv 20.14.1 from /opt/homebrew/Cellar/virtualenv/20.14.1/libexec/lib/python3.10/site-packages/virtualenv/__init__.py
+      note "$( pip3 --version )"       # pip 19.3.1 from /Library/Python/2.7/site-packages/pip (python 2.7)
+
+         if [ -d "venv" ]; then   # venv folder already there:
+            note "venv folder being re-used ..."
+         else
+            h2 "virtualenv venv ..."
+         fi
+
+         h2 "source venv/bin/activate"
+         # shellcheck disable=SC1091 # Not following: venv/bin/activate was not specified as input (see shellcheck -x).
+         source venv/bin/activate
+
+         # RESPONSE=$( python3 -c "import sys; print(sys.version)" )
+         RESPONSE=$( python3 -c "import sys, os; is_conda = os.path.exists(os.path.join(sys.prefix, 'conda-meta'))" )
+         h2 "Within (venv) Python3: "
+         # echo "${RESPONSE}"
+      
+      if [ -f "requirements.txt" ]; then
+         # Created by command pip freeze > requirements.txt previously.
+         # see https://medium.com/@boscacci/why-and-how-to-make-a-requirements-txt-f329c685181e
+         # Install the latest versions, which may not be backward-compatible:
+         pip3 install -r requirements.txt
       fi
 
-      # See https://wilsonmar.github.io/pyenv/
-      # to create isolated Python environments.
-      #pipenv install virtualenvwrapper
-      if ! command -v virtualenv ; then
-         h2 "brew install virtualenv"  # https://levipy.com/virtualenv-and-virtualenvwrapper-tutorial
-         brew install virtualenv
-      fi
-
-   elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then
-      silent-apt-get-install "python3"
-   fi
-   note "$( python3 --version )"    # Python 3.8.9
-   note "$( virtualenv --version )" # virtualenv 20.14.1 from /opt/homebrew/Cellar/virtualenv/20.14.1/libexec/lib/python3.10/site-packages/virtualenv/__init__.py
-   note "$( pip3 --version )"       # pip 19.3.1 from /Library/Python/2.7/site-packages/pip (python 2.7)
-
-      if [ -d "venv" ]; then   # venv folder already there:
-         note "venv folder being re-used ..."
-      else
-         h2 "virtualenv venv ..."
-      fi
-
-      h2 "source venv/bin/activate"
-      # shellcheck disable=SC1091 # Not following: venv/bin/activate was not specified as input (see shellcheck -x).
-      source venv/bin/activate
-
-      # RESPONSE=$( python3 -c "import sys; print(sys.version)" )
-      RESPONSE=$( python3 -c "import sys, os; is_conda = os.path.exists(os.path.join(sys.prefix, 'conda-meta'))" )
-      h2 "Within (venv) Python3: "
-      # echo "${RESPONSE}"
-     
-   if [ -f "requirements.txt" ]; then
-      # Created by command pip freeze > requirements.txt previously.
-      # see https://medium.com/@boscacci/why-and-how-to-make-a-requirements-txt-f329c685181e
-      # Install the latest versions, which may not be backward-compatible:
-      pip3 install -r requirements.txt
-   fi
-
-fi   # RUN_VIRTUALENV means Pipenv default
+   fi   # RUN_VIRTUALENV means Pipenv default
 
 
 ### 40. Configure Pyenv with virtualenv
@@ -3594,6 +3597,8 @@ fi    # USE_PYENV
 
 
 ### 41. Install MiniConda (Anaconda has too many unknown vulnerabilities)
+
+install_miniconda(){
 # See https://wilsonmar.github.io/mac-setup/#Conda
 # See https://betterprogramming.pub/how-to-use-miniconda-with-python-and-jupyterlab-5ce07845e818
 if [ "${RUN_CONDA}" = true ]; then  # -conda
@@ -3675,6 +3680,51 @@ if [ "${RUN_CONDA}" = true ]; then  # -conda
    # conda env remove --name "${CONDA_ENV}"
 
 fi  # RUN_CONDA
+}
+install_miniconda
+
+
+### 42. RUN_JAVA
+# See https://wilsonmar.github.io/java
+# See https://wilsonmar.github.io/mac-setup/#Java
+if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+   if [ "${RUN_JAVA}" = true ]; then  # -java
+      h2 "-Installing Java JDK openjdk@11 using brew ..."
+
+      # For GitHub Voice:
+      brew install openjdk@11
+         # According to https://stackoverflow.com/questions/65601196/how-to-brew-install-java
+         # symlink it:
+      #if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
+      #   # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
+      #   sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk \
+      #      /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+      #   # Password required.
+      #elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
+      #   sudo ln -sfn /usr/local/opt/openjdk@11/libexec/openjdk.jdk \
+      #      /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+      #   # Password required.
+      #else
+      #   fatal "MACHINE_TYPE=$MACHINE_TYPE not recognized."
+      #   exit
+      #fi
+      # See all versions installed:
+      /usr/libexec/java_home -V
+         # Password required.
+         # Matching Java Virtual Machines (4):
+         # 11.0.20.1 (x86_64) "Homebrew" - "OpenJDK 11.0.20.1" /usr/local/Cellar/openjdk@11/11.0.20.1/libexec/openjdk.jdk/Contents/Home
+         # Comes default with macOS:
+         # 1.8.202.08 (x86_64) "Oracle Corporation" - "Java" /Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home
+         # 1.8.0_202 (x86_64) "Oracle Corporation" - "Java SE 8" /Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
+         # 1.8.0_162 (x86_64) "Oracle Corporation" - "Java SE 8" /Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home
+         # /usr/local/Cellar/openjdk@11/11.0.20.1/libexec/openjdk.jdk/Contents/Home
+
+      java -version
+         # openjdk version "11.0.20.1" 2023-08-24
+         # OpenJDK Runtime Environment Homebrew (build 11.0.20.1+0)
+         # OpenJDK 64-Bit Server VM Homebrew (build 11.0.20.1+0, mixed mode)
+   fi  # RUN_JAVA
+fi  # DOWNLOAD_INSTALL   
 
 
 ### 42. RUN_GOLANG  
@@ -3902,6 +3952,7 @@ if [ "${RUN_PYTHON}" = true ]; then  # -python
 fi  # RUN_PYTHON
 
 
+
 ### 44. RUN_TERRAFORM
 # See https://wilsonmar.github.io/mac-setup/#Terraform
 if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
@@ -3918,45 +3969,25 @@ if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
       unset TF_LOG
    fi
 
-   # git clone git@github.com:hashicorp/learn-consul-terraform.git
-   # git checkout v0.5
-   if [ -d "/Applications/$appname.app" ]; then   # file found:     
-   #echo "-gaf GITHUB_ACCOUNT_FOLDER=$GITHUB_ACCOUNT_FOLDER"
-   #echo "-ghb GITHUB_BRANCH=$GITHUB_BRANCH"
-   if [ -z "${MY_FOLDER}" ]; then  # not defined:
-      fatal "-f MY_FOLDER not specified. Exiting ..."
-      exit
-   fi
-   GITHUB_REPO_PATH="$HOME/${GITHUB_ACCOUNT_FOLDER}/${MY_FOLDER}"
-   TF_VERSION=$( terraform -version | head -1 | awk '{print $2}' | cut -c2- )
-      # "1.5.7" from "Terraform v1.5.7"
-   h2 "-G = Run Terraform TF_VERSION from $GITHUB_REPO_PATH ..."
-   cd "${GITHUB_REPO_PATH}"
-   note $( At: $pwd )
-
-   #See if init was already done: https://www.env0.com/blog/terraform-init
-   if [ ! -f ".terraform.lock.hcl" ]; then  # file NOT exists:
-      if find "$PWD" -mindepth 1 -maxdepth 1 | read; then  # not empty:
-          terraform init
-      fi
-   fi
+   echo $PWD
 
    h2 "terraform validate - syntax is good?"
    terraform validate
-   
+      # Success! The configuration is valid.
+      # Error: Invalid resource type
+
    h2 "terraform plan "
-   terraform plan 
+   # See https://developer.hashicorp.com/terraform/cli/commands/apply
+   terraform plan -no-color
    
    #h2 "Scan using NOT tfsec ..."
    #tfsec   # scan static tf code for security issues
-   
+
    h2 "Generate docs (Markdown or JSON) from comments and variables in tf code..."
    terraform-docs
    
    h2 "terraform apply ..."
    terraform apply -auto-approve
-
-echo "DEBUGGING TF"; exit
 
    if [ "${SET_TRACE}" = true ]; then   # -x
       if [ "$DELETE_CONTAINER_AFTER" = true ]; then
