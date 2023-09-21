@@ -1967,7 +1967,6 @@ if [ "${CLONE_GITHUB}" = true ]; then   # -c (clone) specified:
    fi
 fi  # CLONE_GITHUB
 
-echo "arewetheryet";exit
 
 ### 27. Reveal secrets stored within .gitsecret folder 
 # See https://wilsonmar.github.io/mac-setup/#UnencryptGitSecret
@@ -2398,85 +2397,142 @@ fi  # USE_AWS_CLOUD
 ### 31. Install Azure
 # See https://wilsonmar.github.io/mac-setup/#Azure
 if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
-   # https://hossted.com/knowledge-base/using-homebrew-to-set-up-your-environment-kubectl-azure-cli/
 
-   if command -v az >/dev/null; then  # found:
-      az upgrade
-      brew upgrade azure-cli
-      az config set auto-upgrade.enable=yes
-   else
-      # https://docs.microsoft.com/cli/azure/overview
-      # https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos
-      brew install azure-cli
-         # Creates  ~/.azure
-         # Installs python@3.10, gdbm, openssl@1.1, readline, sqlite, xz, zlib
-      # On Apple Silicon add to ~/.zshrc :
-      # autoload bashcompinit && bashcompinit
-      # source $(brew --prefix)/etc/bash_completion.d/az
-      # See https://docs.microsoft.com/en-us/cli/azure/keyvault/secret?view=azure-cli-latest
-      #note "TODO: Add Azure cloud coding ..."
-      brew install --cask azure-data-studio
-         # ==> Moving App 'Azure Data Studio.app' to '/Users/wilsonmar/Applications/Azure Data Studio.app'.
-         # ==> Linking Binary 'code' to '/usr/local/bin/azuredatastudio'
+   do_install_azure(){
+      # https://hossted.com/knowledge-base/using-homebrew-to-set-up-your-environment-kubectl-azure-cli/
+     if [ "${DOWNLOAD_INSTALL}" = true ]; then   # -azure
 
-      # https://docs.microsoft.com/en-us/azure/key-vault/about-keys-secrets-and-certificates
+         # TODO: Create in a function:
+         AZURE_RESC_GROUP="rg-name"
+         AZURE_RESC_NAME="rg-name"
+         AZURE_WORKSPACE="my-workspace"
+         AZURE_LOCATION="my-location"
 
-      # https://github.com/Azure/homebrew-functions
-      brew tap azure/functions
-      brew install azure-functions-core-tools
+         if [ "${PACKAGE_MANAGER}" = "brew" ]; then
+            if command -v az >/dev/null; then  # found:
+               az upgrade
+               brew upgrade azure-cli
+               az config set auto-upgrade.enable=yes
+            else
+               # https://docs.microsoft.com/cli/azure/overview
+               # https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos
+               brew install azure-cli
+                  # Creates  ~/.azure
+                  # Installs python@3.10, gdbm, openssl@1.1, readline, sqlite, xz, zlib
+               # On Apple Silicon add to ~/.zshrc :
+               # autoload bashcompinit && bashcompinit
+               # source $(brew --prefix)/etc/bash_completion.d/az
+               # See https://docs.microsoft.com/en-us/cli/azure/keyvault/secret?view=azure-cli-latest
+               #note "TODO: Add Azure cloud coding ..."
+               brew install --cask azure-data-studio
+                  # ==> Moving App 'Azure Data Studio.app' to '/Users/wilsonmar/Applications/Azure Data Studio.app'.
+                  # ==> Linking Binary 'code' to '/usr/local/bin/azuredatastudio'
 
-      # See https://wilsonmar.github.io/quantum
-      if [ "${RUN_QUANTUM}" = true ]; then  # -quantum
-         az extension add --upgrade -n quantum
-         # CLI described at https://learn.microsoft.com/en-us/azure/quantum/install-overview-qdk?tabs=tabid-vscode%2Ctabid-conda#azure-cli
+               # https://docs.microsoft.com/en-us/azure/key-vault/about-keys-secrets-and-certificates
 
-         pip install --upgrade azure-quantum
-         # For submitting a circuit with Qiskit
-         pip install --upgrade azure-quantum[qiskit]
-         pip install --upgrade azure-quantum[cirq]
+               # https://github.com/Azure/homebrew-functions
+               brew tap azure/functions
+               brew install azure-functions-core-tools
 
-         az quantum workspace list
-            # The command requires the extension quantum. It will be installed first.
-         # https://learn.microsoft.com/en-us/azure/quantum/how-to-submit-jobs?pivots=ide-azurecli
-         az quantum workspace show -g MyResourceGroup \
-            -w MyWorkspace -l MyLocation -o table
-            #   Provider      Target-id    Current Availability  Average Queue Time (seconds)
-            # ------------  -------------  --------------------  ------------------------------
-            # ionq          ionq.qpu       Available             510467
+               # See https://wilsonmar.github.io/quantum
+               if [ "${RUN_QUANTUM}" = true ]; then  # -quantum
+                  note "az extension add --upgrade -n quantum ..."
+                  az extension add --upgrade -n quantum
+                  # CLI described at https://learn.microsoft.com/en-us/azure/quantum/install-overview-qdk?tabs=tabid-vscode%2Ctabid-conda#azure-cli
 
-         az quantum workspace set -g MyResourceGroup \
-            -w MyWorkspace -l MyLocation -o table
+                  note "pip install ..."
+                  pip install --upgrade azure-quantum
+                  # For submitting a circuit with Qiskit
+                  pip install --upgrade azure-quantum[qiskit]
+                  pip install --upgrade azure-quantum[cirq]
+               fi
+            fi  # command -v az
+         fi  # PACKAGE_MANAGER
+      fi  # DOWNLOAD_INSTALL
+   }
+   # do_install_azure
+
+   azure_login(){
+      # Pop up web page to login:
+      az login
+
+      if [ -n "${AZURE_SUBSCRIPTION_ID}" ]; then  # not found or blank
+         fatal "-azure AZURE_SUBSCRIPTION_ID not defined. Exiting..."
+         exit 9
       fi
-   fi  # az found
+      note "-azure account set to ${AZURE_SUBSCRIPTION_ID} ..."
+      az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
+   }
+   # azure_login
 
-   # Pop up web page to login:
-   az login
+   build_azure_location(){
+      mylocation=$1
+      # TODO:
+      export AZURE_LOCATION=$mylocation
+      note "AZURE_LOCATION=$AZURE_LOCATION ..."
+   }
+   # build_azure_location
 
-   if [ ! -z "${AZURE_SUBSCRIPTION_ID}" ]; then 
-      fatal "-azure account not defined. Exiting..."
-      exit 9
-   fi
-   note "-azure account set to ${AZURE_SUBSCRIPTION_ID} ..."
-   az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
-echo "wowza";exit   
-   AZURE_RESC_GROUP="rg-name"
-   AZURE_RESC_NAME="rg-name"
-   if [ -z "${AZURE_RESC_GROUP}" ]; then 
-      if [ -z "${AZURE_RESC_NAME}" ]; then 
-         az aks get-credentials --resource-group "$AZURE_RESC_GROUP" --name "$AZURE_RESC_NAME"
-         # cli for each service: https://learn.microsoft.com/en-us/cli/azure/reference-index?view=azure-cli-latest&source=post_page-----610556521--------------------------------
-      
-         note List virtual machines:
-         az resource list --resource-group "$AZ_RESC_GROUP" \
-            --resource-type microsoft.compute/virtualmachines
-      fi
-   fi
+   build_azure_resc_group(){
+      mygroup=$1
+      h2 "build az resc $1 ..."
+      # TODO:
+      export AZURE_RESC_GROUP=$mygroup
+      note "AZURE_RESC_GROUP=$AZURE_RESC_GROUP ..."
+   }
+   # build_azure_resc_group
 
-#  zzz
-   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+   build_azure_resc(){
+      myresource3=$1
+      h2 "build az resc $1 ..."
+      # TODO:
+      export AZURE_RESC_NAME=$myresource
+      note "AZURE_RESC_NAME=$AZURE_RESC_NAME ..."
+   }
+   # build_azure_resc
+
+   build_azure_workspace(){
+      myworkspace=$1
+      # https://hossted.com/knowledge-base/using-homebrew-to-set-up-your-environment-kubectl-azure-cli/
+      h2 "build az workspace $1 ..."
+
+      note "AZURE_WORKSPACE=$AZURE_WORKSPACE ..."
+      note "AZURE_RESC_GROUP=$AZURE_RESC_GROUP ..."
+      note "AZURE_WORKSPACE=$AZURE_WORKSPACE ..."
+      note "AZURE_LOCATION=$AZURE_LOCATION ..."
+
+      # TODO:
+      export AZURE_WORKSPACE=$myworkspace
+
+      note "az quantum workspace list ..."
+      az quantum workspace list
+         # The command requires the extension quantum. It will be installed first.
+      # https://learn.microsoft.com/en-us/azure/quantum/how-to-submit-jobs?pivots=ide-azurecli
+
+      note "az quantum workspace show ..."
+      az quantum workspace show -g "${AZURE_RESC_GROUP}" \
+         -w "${AZURE_WORKSPACE}" -l "${AZURE_LOCATION}" -o table
+         #   Provider      Target-id    Current Availability  Average Queue Time (seconds)
+         # ------------  -------------  --------------------  ------------------------------
+         # ionq          ionq.qpu       Available             510467
+
+      note "az quantum workspace set ..."
+      az quantum workspace set -g "${AZURE_RESC_GROUP}" \
+         -w "${AZURE_WORKSPACE}" -l "${AZURE_LOCATION}" -o table
+   }
+   # build_azure_workspace 
+
+   logout_azure(){
+      if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+         h2 "az logout ..."
          az logout
-   fi
-fi
+      fi
+   }
+   # logout_azure
+
+fi  # USE_AZURE_CLOUD
+
+echo "therethere";exit 9
 
 
 ### 32. Install K8S minikube
