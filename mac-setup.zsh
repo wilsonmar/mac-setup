@@ -2,6 +2,7 @@
 # This is mac-setup.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.zsh
 # Coding of this shell script is explained in https://wilsonmar.github.io/mac-setup
 # Shell scripting techniques are explained in https://wilsonmar.github.io/shell-scripts
+# Like https://medium.com/@maxy_ermayank/developer-environment-setup-script-5fcb7b854acc
 
 # shellcheck does not work on zsh, but 
 # shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
@@ -19,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="$0"
-SCRIPT_VERSION="v1.114" # -tf hello-world in GitHub & Projects : mac-setup.zsh"
+SCRIPT_VERSION="v1.116" # -azure added : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
@@ -42,6 +43,7 @@ args_prompt() {
    echo "   -x            set -x to trace command lines"
 #  echo "   -x            set sudoers -e to stop on error"
    echo "   -q           -quiet heading h2 for each step"
+   echo "   -trace       Trace using OpenTelemtry (Jaeger)"
    echo " "
    echo "   -I           -Install brew utilities, apps"
    echo "   -U           -Upgrade installed packages if already installed"
@@ -60,6 +62,7 @@ args_prompt() {
    echo "   -aws         -AWS cloud"
    echo "   -eks         -eks (Elastic Kubernetes Service) in AWS cloud"
    echo "   -azure       -Azure cloud"
+   echo "   -quantum      Quantum computing within each cloud"
    echo "   -gcp         -Google cloud"
    echo "   -g \"abcdef...89\" -gcloud API credentials for calls"
    echo "   -p \"cp100\"   -project in gcloud"
@@ -147,7 +150,7 @@ usage_examples() {
    echo "./mac-setup.zsh -v -venv -c -circleci -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
    echo "./mac-setup.zsh -v -docsify -d -c "
-   echo "./mac-setup.zsh -tf -G -F \"tf-module1\" -I -U -v "
+   echo "./mac-setup.zsh -tf -F \"tf-module1\" -c -v -I -U "
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -215,6 +218,7 @@ fi
 
    CONVERT_TO_ZSH=false         # -zsh
    SET_TRACE=false              # -x
+   RUN_TRACE=false              # -trace
 
    OPEN_CONSOLE=false           # -console
    USE_TEST_SERVER=false        # -ts
@@ -231,7 +235,8 @@ SECRETS_FILE=".secrets.env.sample"
       EKS_KEY_FILE_PREFIX="eksctl-1"
       EKS_NODES="2"
       EKS_NODE_TYPE="m5.large"
-
+   RUN_QUANTUM=false        # -quantum
+   
 # To be overridden by values defined within mac-setup.env:
    USE_CONFIG_FILE=false        # -nenv
    CONFIG_FILEPATH_BASE="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
@@ -241,6 +246,7 @@ SECRETS_FILE=".secrets.env.sample"
    PROJECT_FOLDER_NAME=""                    # specify -N
    PROJECT_NAME=""                           # -p
 
+   GITHUB_REPO_NAME=""                       # -grn
 #   GITHUB_REPO_PATH="$HOME/github-wilsonmar"  
 #   GITHUB_REPO="wilsonmar.github.io"f
 #   GITHUB_ACCOUNT_NAME="weirdo"              # -gan
@@ -309,7 +315,7 @@ SECRETS_FILE=".secrets.env.sample"
    USE_YUBIKEY=false            # -Y
    USE_DOCSIFY=false            # -docsify
    USE_K8S=false                # -k8s
-   USE_AZURE_CLOUD=false        # -z
+   USE_AZURE_CLOUD=false        # -azure
    USE_GOOGLE_CLOUD=false       # -g
        GOOGLE_API_KEY=""  # manually copied from APIs & services > Credentials
 
@@ -360,7 +366,6 @@ download_mac-setup_home(){
 if command -v curl ; then
    pwd
    download_mac-setup_home  "mac-setup.env"
-   download_mac-setup_home  "mac-setup.zsh"
    download_mac-setup_home  "aliases.zsh"
    download_mac-setup_home  ".zshrc"
 fi
@@ -410,7 +415,7 @@ else  # use .mck-setup.env file:
       note "Please edit values in file $CONFIG_FILEPATH and run this again ..."
       exit 9
    else  # Read from default file name mac-setup.env :
-      h2 "Reading default config file $CONFIG_FILEPATH ..."
+      h2 "-env = Reading env config file $CONFIG_FILEPATH ..."
       note "$(ls -ltaT "${CONFIG_FILEPATH}" )"
       chmod +x "${CONFIG_FILEPATH}"
       source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.
@@ -434,7 +439,7 @@ else  # use .mck-setup.env file:
    #      -o username=$USER,password="$szPassword"
 
 fi  # if [ "${USE_CONFIG_FILE}" = false ]; then  # -s
-
+   
 
 ### 06. Set variables dynamically based on each parameter flag
 # See https://wilsonmar.github.io/mac-setup/#VariablesSet
@@ -446,6 +451,10 @@ while test $# -gt 0; do
       ;;
     -aws)
       export USE_AWS_CLOUD=true
+      shift
+      ;;
+    -azure)
+      export USE_AZURE_CLOUD=true
       shift
       ;;
     -b)
@@ -731,6 +740,10 @@ while test $# -gt 0; do
       shift
       ;;
     -q)
+      export RUN_QUANTUM=true
+      shift
+      ;;
+    -q)
       export RUN_QUIET=true
       shift
       ;;
@@ -830,10 +843,6 @@ while test $# -gt 0; do
       ;;
     -zsh)
       export CONVERT_TO_ZSH=true
-      shift
-      ;;
-    -z)
-      export USE_AZURE_CLOUD=true
       shift
       ;;
     *)
@@ -958,7 +967,55 @@ fi
 # set -o nounset
 
 
-### 11a. Print run Operating environment information 
+### 11. Trace execution of this script
+
+if [ "${RUN_TRACE}" = true ]; then  # -trace
+   # Python-based alternative to https://github.com/dell/opentelemetry-cli
+   # See Go-based otel-cli https://github.com/equinix-labs/otel-cli#getting-started
+      # https://deploy.equinix.com/labs/otel-cli/
+      # https://blog.howardjohn.info/posts/shell-tracing/
+   if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
+         h2 "-I (install) otel-cli client for OpenTelemetry in CLI ..."
+         # https://gist.github.com/howardjohn/60ed0a3ef4d7a79b043c153631bfb18f
+         brew tap equinix-labs/otel-cli
+         brew install otel-cli
+         # Similar to System.Runtime.Metrics API in .NET
+      fi
+   fi
+   # Use Docker container as OpenTelementry server:
+      # https://dev.to/ashokan/otel-cli-push-otel-traces-with-ease-29al simple intuitive flexible
+   # Alternatively
+   if ! command -v otel-cli ; then
+   else
+      # Run a trace receiver simple demo server using https://github.com/equinix-labs/otel-cli
+      otel-cli server tui &
+      if [ -z "$OTEL_EXPORTER_OTLP_ENDPOINT" ]; then  # variable is found:
+         warning "-trace using $OTEL_EXPORTER_OTLP_ENDPOINT ..."
+         # dotnet tool install -g dotnet-monitor
+         # Docker image: mcr.microsoft.com/dotnet/monitor:6.0.0
+      else
+         export OTEL_EXPORTER_OTLP_ENDPOINT="localhost:4317"
+         warning "-trace using otel-cli on $OTEL_EXPORTER_OTLP_ENDPOINT ..."
+
+         # Run a trace receiver simple local demo server in background:
+         otel-cli server tui &
+         
+         # run a program inside a span:
+         otel-cli exec --service my-service --name "curl google" curl https://google.com
+            # The `server tui` shows traces:
+            # Trace ID     | Span ID          | Parent | Name        | Kind   | Start | End | Elapsed
+            # ddb...a5687c | f35df40a78a4d9a3 |        | curl google | client | 0     | 134 | 134
+      fi
+   fi
+#   # Place at end of script:
+#   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+#      # kill otel-cli server background process.
+#   fi
+fi  # RUN_TRACE
+
+
+### 12. Print run Operating environment information 
 note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
 note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
 
@@ -989,7 +1046,7 @@ if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    fi  # MACHINE_TYPE
 fi
 
-### 11b. Backup using macOS Time Machine via tmutil
+### 13. Backup using macOS Time Machine via tmutil
 
 if [ "${RUN_VERBOSE}" = true ]; then
    h2 "Before changes, backup using macOS Time Machine via tmutil ..."
@@ -1020,7 +1077,9 @@ if [ "${RUN_VERBOSE}" = true ]; then
    # pause
 fi
 
-### 12. Upgrade Bash to Zsh
+
+### 14. Upgrade Bash to Zsh
+
 # Apple Directory Services database Command Line utility:
 USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
 if [ "${RUN_VERBOSE}" = true ]; then
@@ -1056,8 +1115,8 @@ if [ "${CONVERT_TO_ZSH}" = true ]; then
 fi  # CONVERT_TO_ZSH
 
 
-### 13. Define utility functions: kill process by name, etc.
-### 13. Keep-alive: update existing `sudo` time stamp until `.osx` has finished
+### 15. Define utility functions: kill process by name, etc.
+### 16. Keep-alive: update existing `sudo` time stamp until `.osx` has finished
 # See https://wilsonmar.github.io/mac-setup/#KeepAlive
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
@@ -1071,7 +1130,7 @@ ps_kill(){  # $1=process name
 }
 
 
-### 14. Install installers (brew, apt-get), depending on operating system
+### 17. Install installers (brew, apt-get), depending on operating system
 # See https://wilsonmar.github.io/mac-setup/#InstallInstallers
 
 # Bashism Internal Field Separator used by echo, read for word splitting to lines newline or tab (not spaces).
@@ -1259,7 +1318,7 @@ if [ "${VERIFY_ENV}" = true ]; then  # -V
 fi
 
 
-### 15. Install ShellCheck 
+### 18. Install ShellCheck 
 # See https://wilsonmar.github.io/mac-setup/#ShellCheck
 # CAUTION: shellcheck does not work on zsh files (only bash files)
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
@@ -1288,7 +1347,7 @@ fi  # DOWNLOAD_INSTALL
 #fi
 
 
-### 16. Install basic utilities (git, jq, tree, etc.) used by many:
+### 19. Install basic utilities (git, jq, tree, etc.) used by many:
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
 if [ "${RUN_DEBUG}" = true ]; then
    h2 "Apps installed using Apple App Store ..."
@@ -1545,7 +1604,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi  # DOWNLOAD_INSTALL
 
 
-#### 17. Override defaults in Apple macOS System Preferences:"
+#### 20. Override defaults in Apple macOS System Preferences:"
 # See https://wilsonmar.github.io/mac-setup/#SysPrefs
 # See https://wilsonmar.github.io/dotfiles/
 
@@ -1642,7 +1701,7 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
 fi  # SET_MACOS_SYSPREFS
 
 
-### 18. Hashicorp Cloud using Doormat
+### 21. Hashicorp Cloud using Doormat
 # Command-line interface for https://github.com/hetznercloud/cli
 
 if [ "${USE_DOORMAT}" = true ]; then  # -Doormat
@@ -1691,7 +1750,7 @@ if [ "${USE_DOORMAT}" = true ]; then  # -Doormat
 fi  # USE_DOORMAT
 
 
-### 19. Hashicorp Consul using Envoy
+### 22. Hashicorp Consul using Envoy
 # https://learn.hashicorp.com/tutorials/consul/service-mesh-with-envoy-proxy
 if [ "${USE_ENVOY}" = true ]; then  # -Envoy
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -1724,7 +1783,7 @@ if [ "${USE_ENVOY}" = true ]; then  # -Envoy
 fi  # USE_ENVOY
 
 
-### 20. Image SD card 
+### 23. Image SD card 
 # See https://wilsonmar.github.io/mac-setup/#ImageSDCard
 # See https://wilsonmar.github.io/iot-raspberry-install/
 # To avoid selecting a hard drive and wiping it out,
@@ -1786,56 +1845,53 @@ if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
 fi  # IMAGE_SD_CARD
 
 
-### 21. Clone repository from GitHub
+### 24. Clone repository from GitHub
+
 # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
-h2 "-c (clone) GitHub repo with DELETE_BEFORE=$DELETE_BEFORE ..."
-# To ensure that we have a project folder (from GitHub clone or not):
-
-Delete_GITHUB_folder(){
-   # https://www.zshellcheck.net/wiki/SC2115 Use "${var:?}" to ensure this never expands to / .
-   GITHUB_FOLDER_PATH="${GITHUB_FOLDER_BASE}/${GITHUB_FOLDER_NAME}"
-   if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path available.
-      warning "Removing GITHUB_FOLDER_PATH ..."
-      lls -ltaT "${GITHUB_FOLDER_PATH}"
-      rm -rf "${GITHUB_FOLDER_PATH}"
-   fi
-}
-Delete_PROJECT_folder(){
-   PROJECT_FOLDER_PATH="${PROJECT_FOLDER_BASE}/${PROJECT_FOLDER_NAME}"
-   if [ -d "${PROJECT_FOLDER_PATH:?}" ]; then  # path available.
-      warning "Removing project folder $PROJECT_FOLDER_PATH ..."
-      lls -ltaT "${PROJECT_FOLDER_PATH}"
-      rm -rf "${PROJECT_FOLDER_PATH}"
-   fi
-}
-Clone_to_PROJECT_folder(){
-   note "-c cloning repo \"$GITHUB_REPO_URL\" into \"$PROJECT_FOLDER_PATH\" ..."
-   cd "${PROJECT_FOLDER_BASE}"
-   git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
-   cd "${PROJECT_FOLDER_NAME}"
-   note "At $PWD"
-}
-
-if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
+if [ "${CLONE_GITHUB}" = true ]; then   # -c (clone) specified:
+   Delete_GITHUB_folder(){
+      # https://www.zshellcheck.net/wiki/SC2115 Use "${var:?}" to ensure this never expands to / .
+      GITHUB_FOLDER_PATH="${GITHUB_FOLDER_BASE}/${GITHUB_FOLDER_NAME}"
+      if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path available.
+         warning "Removing GITHUB_FOLDER_PATH ..."
+         lls -ltaT "${GITHUB_FOLDER_PATH}"
+         rm -rf "${GITHUB_FOLDER_PATH}"
+      fi
+   }
+   Delete_PROJECT_folder(){
+      PROJECT_FOLDER_PATH="${PROJECT_FOLDER_BASE}/${PROJECT_FOLDER_NAME}"
+      if [ -d "${PROJECT_FOLDER_PATH:?}" ]; then  # path available.
+         warning "Removing project folder $PROJECT_FOLDER_PATH ..."
+         lls -ltaT "${PROJECT_FOLDER_PATH}"
+         rm -rf "${PROJECT_FOLDER_PATH}"
+      fi
+   }
+   Clone_to_PROJECT_folder(){
+      note "-c cloning repo \"$GITHUB_REPO_URL\" into \"$PROJECT_FOLDER_PATH\" ..."
+      cd "${PROJECT_FOLDER_BASE}"
+      git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
+      cd "${PROJECT_FOLDER_NAME}"
+      note "At $PWD"
+   }
    if [ -z "${GITHUB_REPO_URL}" ]; then   # variable is blank
       # See of we have known variables to build it:
       if [ -z "${GITHUB_ACCOUNT_NAME}" ]; then   # variable is blank
-         fatal "GITHUB_ACCOUNT_NAME not specified ..."
+         fatal "-gan GITHUB_ACCOUNT_NAME needs to be specified ..."
          exit
       fi
-      if [ -z "${GITHUB_REPO_NAME}" ]; then   # variable is blank
-         fatal "GITHUB_REPO_NAME not specified ..."
+      if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # variable is blank
+         fatal "-gfn GITHUB_FOLDER_NAME needs to be specified ..."
          exit
       fi
       if [ "${USE_GITHUB_SSH}" = true ]; then   # -ssh specified:
-         GITHUB_REPO_URL="git@github.com:${GITHUB_ACCOUNT_NAME}/${GITHUB_REPO_NAME}.git"
+         GITHUB_REPO_URL="git@github.com:${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
       else
-         GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT_NAME}/${GITHUB_REPO_NAME}.git"
+         GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
       fi
    fi
    note " clone from GITHUB_REPO_URL=${GITHUB_REPO_URL}"
 
-   ### 22a. Clone into local GITHUB_REPO_BASE if a -grn GITHUB_REPO_NAME was specified:
+   ### 25. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
 
    if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # -gfn not specified 
       warning "-gfn GITHUB_FOLDER_NAME not specified. Not downloaded ..."
@@ -1850,7 +1906,7 @@ if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
          exit
       fi
       cd "${GITHUB_FOLDER_BASE}"
-      GITHUB_FOLDER_PATH="$GITHUB_FOLDER_BASE/$GITHUB_FOLDER_NAME"
+      GITHUB_FOLDER_PATH="${GITHUB_FOLDER_BASE}/${GITHUB_FOLDER_NAME}"
       if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path available.
          if [ "${DELETE_BEFORE}" = true ]; then
             Delete_GITHUB_folder  # defined above in this file.
@@ -1868,7 +1924,14 @@ if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
       note "At $PWD"
    fi
 
-   ### 22b. Clone to local Projects folder
+   if [ -z "${GITHUB_BRANCH}" ]; then   # variable is defined and not blank
+      git checkout "${GITHUB_BRANCH}"
+      note "-ghb GITHUB_BRANCH \"${GITHUB_BRANCH}\" checkout done ..."
+   else
+      note "-ghb GITHUB_BRANCH not specified. Using branch \"${GITHUB_BRANCH_DEFAULT}\" ..."
+   fi
+
+   ### 26. Clone to local Projects folder
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
 
@@ -1902,19 +1965,11 @@ if [ "${CLONE_GITHUB}" = true ]; then   # -clone specified:
       fi
       note "At $PWD"
    fi
-fi
+fi  # CLONE_GITHUB
 
+echo "arewetheryet";exit
 
-if [ -z "${GITHUB_BRANCH}" ]; then   # variable is blank
-   git checkout "${GITHUB_BRANCH}"
-   note "Using branch \"$GITHUB_BRANCH\" ..."
-else
-   export GITHUB_BRANCH="main"
-   note "GITHUB_BRANCH not specified. Using branch \"${GITHUB_BRANCH}\" ..."
-fi
-
-
-### 23. Reveal secrets stored within .gitsecret folder 
+### 27. Reveal secrets stored within .gitsecret folder 
 # See https://wilsonmar.github.io/mac-setup/#UnencryptGitSecret
 # within repo from GitHub (after installing gnupg and git-secret)
 # See https://wilsonmar.github.io/mac-setup/#GitSecret
@@ -1923,7 +1978,7 @@ fi
    # This is https://github.com/AGWA/git-crypt      has 4,500 stars.
    # Whereas https://github.com/sobolevn/git-secret has 1,700 stars.
 
-if false; then  # [ -d "$HOME/.gitsecret" ]; then   # found directory folder in repo
+if [ -d "$HOME/.gitsecret" ]; then   # found directory folder in repo
    # This script detects whether https://github.com/sobolevn/git-secret was used to store secrets inside a local git repo.
    # This looks in the repo .gitsecret folder created by the "git secret init" command on this repo (under DevSecOps).
    # "git secret tell" stores the public key of the current git user email.
@@ -1982,7 +2037,7 @@ if false; then  # [ -d "$HOME/.gitsecret" ]; then   # found directory folder in 
 fi
 
 
-### 24. Pipenv and Pyenv to install Python and its modules
+### 28. Pipenv and Pyenv to install Python and its modules
 # See https://wilsonmar.github.io/mac-setup/#Pipenv
 pipenv_install() {
    # Pipenv is a dependency manager for Python projects like Node.js’ npm or Ruby’s bundler.
@@ -2043,7 +2098,7 @@ pipenv_install() {
 # pipenv_install # call function defined above.
 
 
-### 25. Connect to Google Cloud, if requested:
+### 29. Connect to Google Cloud, if requested:
 # See https://wilsonmar.github.io/mac-setup/#GCP
 if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
    # Perhaps in https://console.cloud.google.com/cloudshell  (use on Chromebooks with no Terminal)
@@ -2225,7 +2280,7 @@ if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
 fi  # USE_GOOGLE_CLOUD
 
 
-### 27. Connect to AWS
+### 30. Connect to AWS
 # See https://wilsonmar.github.io/mac-setup/#AWS
 if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
@@ -2340,17 +2395,91 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 fi  # USE_AWS_CLOUD
 
 
-### 28. Install Azure
+### 31. Install Azure
 # See https://wilsonmar.github.io/mac-setup/#Azure
-if [ "${USE_AZURE_CLOUD}" = true ]; then   # -z
-    # See https://docs.microsoft.com/en-us/cli/azure/keyvault/secret?view=azure-cli-latest
-    note "TODO: Add Azure cloud coding ..."
-    brew install --cask azure-vault
-    # https://docs.microsoft.com/en-us/azure/key-vault/about-keys-secrets-and-certificates
+if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
+   # https://hossted.com/knowledge-base/using-homebrew-to-set-up-your-environment-kubectl-azure-cli/
+
+   if command -v az >/dev/null; then  # found:
+      az upgrade
+      brew upgrade azure-cli
+      az config set auto-upgrade.enable=yes
+   else
+      # https://docs.microsoft.com/cli/azure/overview
+      # https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos
+      brew install azure-cli
+         # Creates  ~/.azure
+         # Installs python@3.10, gdbm, openssl@1.1, readline, sqlite, xz, zlib
+      # On Apple Silicon add to ~/.zshrc :
+      # autoload bashcompinit && bashcompinit
+      # source $(brew --prefix)/etc/bash_completion.d/az
+      # See https://docs.microsoft.com/en-us/cli/azure/keyvault/secret?view=azure-cli-latest
+      #note "TODO: Add Azure cloud coding ..."
+      brew install --cask azure-data-studio
+         # ==> Moving App 'Azure Data Studio.app' to '/Users/wilsonmar/Applications/Azure Data Studio.app'.
+         # ==> Linking Binary 'code' to '/usr/local/bin/azuredatastudio'
+
+      # https://docs.microsoft.com/en-us/azure/key-vault/about-keys-secrets-and-certificates
+
+      # https://github.com/Azure/homebrew-functions
+      brew tap azure/functions
+      brew install azure-functions-core-tools
+
+      # See https://wilsonmar.github.io/quantum
+      if [ "${RUN_QUANTUM}" = true ]; then  # -quantum
+         az extension add --upgrade -n quantum
+         # CLI described at https://learn.microsoft.com/en-us/azure/quantum/install-overview-qdk?tabs=tabid-vscode%2Ctabid-conda#azure-cli
+
+         pip install --upgrade azure-quantum
+         # For submitting a circuit with Qiskit
+         pip install --upgrade azure-quantum[qiskit]
+         pip install --upgrade azure-quantum[cirq]
+
+         az quantum workspace list
+            # The command requires the extension quantum. It will be installed first.
+         # https://learn.microsoft.com/en-us/azure/quantum/how-to-submit-jobs?pivots=ide-azurecli
+         az quantum workspace show -g MyResourceGroup \
+            -w MyWorkspace -l MyLocation -o table
+            #   Provider      Target-id    Current Availability  Average Queue Time (seconds)
+            # ------------  -------------  --------------------  ------------------------------
+            # ionq          ionq.qpu       Available             510467
+
+         az quantum workspace set -g MyResourceGroup \
+            -w MyWorkspace -l MyLocation -o table
+      fi
+   fi  # az found
+
+   # Pop up web page to login:
+   az login
+
+   if [ ! -z "${AZURE_SUBSCRIPTION_ID}" ]; then 
+      fatal "-azure account not defined. Exiting..."
+      exit 9
+   fi
+   note "-azure account set to ${AZURE_SUBSCRIPTION_ID} ..."
+   az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
+echo "wowza";exit   
+   AZURE_RESC_GROUP="rg-name"
+   AZURE_RESC_NAME="rg-name"
+   if [ -z "${AZURE_RESC_GROUP}" ]; then 
+      if [ -z "${AZURE_RESC_NAME}" ]; then 
+         az aks get-credentials --resource-group "$AZURE_RESC_GROUP" --name "$AZURE_RESC_NAME"
+         # cli for each service: https://learn.microsoft.com/en-us/cli/azure/reference-index?view=azure-cli-latest&source=post_page-----610556521--------------------------------
+      
+         note List virtual machines:
+         az resource list --resource-group "$AZ_RESC_GROUP" \
+            --resource-type microsoft.compute/virtualmachines
+      fi
+   fi
+
+#  zzz
+   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+         az logout
+   fi
 fi
 
 
-### 29. Install K8S minikube
+### 32. Install K8S minikube
 # See https://wilsonmar.github.io/mac-setup/#Minikube
 if [ "${USE_K8S}" = true ]; then  # -k8s
    h2 "brew install Kubernetes IBM/RedHat OpenShift:"
@@ -2476,7 +2605,7 @@ if [ "${USE_K8S}" = true ]; then  # -k8s
 fi  # USE_K8S
 
 
-### 30. Install EKS using eksctl
+### 33. Install EKS using eksctl
 # See https://wilsonmar.github.io/mac-setup/#EKS
 if [ "${RUN_EKS}" = true ]; then  # -EKS
 
@@ -2686,7 +2815,7 @@ if [ "${RUN_EKS}" = true ]; then  # -EKS
 fi  # EKS
 
 
-### 31. Use Docsify to create a website from Markdown files
+### 34. Use Docsify to create a website from Markdown files
 # See https://wilsonmar.github.io/mac-setup/#Docsify
 if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
    # Video of run at https://drive.google.com/file/d/17-mV8Q_cyIKDj9aNm8wXXYHm6yuwITqi/view?usp=drive_link
@@ -2750,7 +2879,7 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
 fi  # USE_DOCIFY
 
 
-### 32. Use CircleCI SaaS
+### 35. Use CircleCI SaaS
 # See https://wilsonmar.github.io/mac-setup/#CircleCI
 if [ "${USE_CIRCLECI}" = true ]; then   # -L
    # https://circleci.com/docs/2.0/getting-started/#setting-up-circleci
@@ -2818,7 +2947,7 @@ if [ "${USE_CIRCLECI}" = true ]; then   # -L
 fi  # USE_CIRCLECI
 
 
-### 33. Use Yubikey
+### 36. Use Yubikey
 # See https://wilsonmar.github.io/mac-setup/#Yubikey
 if [ "${USE_YUBIKEY}" = true ]; then   # -Y
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -2891,7 +3020,7 @@ if [ "${USE_YUBIKEY}" = true ]; then   # -Y
 fi  # USE_YUBIKEY
 
 
-#### 34. Use GitHub
+#### 37. Use GitHub
 # See https://wilsonmar.github.io/mac-setup/#UseGitHub
 if [ "${MOVE_SECURELY}" = true ]; then   # -m
    # See https://github.com/settings/keys 
@@ -2917,7 +3046,7 @@ fi  # MOVE_SECURELY
 
 
 
-#### 35. Use Hashicorp Vault
+### 39. Use Hashicorp Vault
 # See https://wilsonmar.github.io/mac-setup/#HashiVault
 export USE_ALWAYS=false  # DEBUGGING
 if [ USE_ALWAYS = true ]; then
@@ -2925,7 +3054,7 @@ if [ USE_ALWAYS = true ]; then
 
    if [ "${USE_VAULT}" = false ]; then   # -HV
 
-      ### STEP: Paste locally generated public key in GitHub UI:
+      # STEP: Paste locally generated public key in GitHub UI:
       if [ ! -f "${VAULT_CA_KEY_FULLPATH}" ]; then  # not exists
          h2 "CA key file ${VAULT_CA_KEY_FULLPATH} not found, so generating for ADMIN ..."
          ssh-keygen -t rsa -f "${VAULT_CA_KEY_FULLPATH}" -N ""
@@ -2955,7 +3084,7 @@ if [ USE_ALWAYS = true ]; then
          VAULT_CA_KEY_FULLPATH="./ca_key"  # "~/.ssh/ca_key"  # "./ca_key" for current (project) folder  
       fi
       
-      ### STEP: Call Vault to sign public key and return it as a cert:
+      # STEP: Call Vault to sign public key and return it as a cert:
       h2 "Signing user ${GITHUB_ACCOUNT_NAME} public key file ${LOCAL_SSH_KEYFILE} ..."
       ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT_NAME}" \
          -O "extension:login@github.com=${GITHUB_ACCOUNT_NAME}" "${LOCAL_SSH_KEYFILE}.pub"
@@ -3003,7 +3132,7 @@ fi  # USE_ALWAYS, USE_VAULT
 
 
 
-### 36. Install Hashicorp Vault
+### 40. Install Hashicorp Vault
 # See https://wilsonmar.github.io/hashicorp-vault
 # See https://wilsonmar.github.io/mac-setup/#UseHashiVault
 if [ "${USE_VAULT}" = true ]; then   # -HV
@@ -3043,7 +3172,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    note "VAULT_VERSION=$VAULT_VERSION"   # Example: 1.10.1
    # Shell file .zshrc will load CLI completion for Vault
 
-   ### 33b. -golang RUN_GOLANG
+   # 40b. -golang RUN_GOLANG
    if [ "${RUN_GOLANG}" = true ]; then  # -golang
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          h2 "Installing govaultenv ..."
@@ -3075,7 +3204,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    fi  # RUN_GOLANG
 
    
-   ### 33c. Define VAULT_ADDR from VAULT_HOST
+   # 40c. Define VAULT_ADDR from VAULT_HOST
    if [ -z "${VAULT_HOST}" ]; then  # it's blank:
       export VAULT_HOST="localhost"
       note "VAULT_HOST=localhost by default (not specified) ..."
@@ -3096,7 +3225,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    fi  # VAULT_HOST
 
 
-   ### 33d. Obtain Vault Status
+   ### 40d. Obtain Vault Status
    # TODO: use production ADDR from secrets
    export VAULT_ADDR="https://${VAULT_HOST}:8200"
    note "VAULT_ADDR=${VAULT_ADDR} ..."
@@ -3134,7 +3263,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    fi  # RUN_VERBOSE
 
 
-   ### 33e. Run Test Vault server
+   # 40e. Run Test Vault server
    if [ "${USE_TEST_SERVER}" = true ]; then   # -ts
 
       # If vault process is already running, use it:
@@ -3209,7 +3338,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    fi  # USE_TEST_SERVER
 
 
-   ### 33f. Vault Server Username
+   # 40f. Vault Server Username
    # on either test or prod Vault instance:
    # export VAULT_USERNAME="devservermode"  # custom specified
    if [ -n "${VAULT_USERNAME}" ]; then  # is not empty
@@ -3309,7 +3438,7 @@ EOD
 fi  # USE_VAULT
 
 
-#### TODO: 37. Put secret in Hashicorp Vault
+### TODO: 41. Put secret in Hashicorp Vault
 # See https://wilsonmar.github.io/mac-setup/#PutInHashiVault
 if [ "${VAULT_PUT}" = true ]; then  # -n
 
@@ -3338,7 +3467,7 @@ fi  # USE_VAULT
 
 
 
-### 38. Install NodeJs
+### 50. Install NodeJs
 # See https://wilsonmar.github.io/mac-setup/#InstallNode
 if [ "${NODE_INSTALL}" = true ]; then  # -js
 
@@ -3491,7 +3620,7 @@ fi # if [ "${NODE_INSTALL}
 
 
 
-### 39. Install Virtualenv
+### 52. Install Virtualenv
 
    # See https://wilsonmar.github.io/mac-setup/#Virtualenv
    # See https://wilsonmar.github.io/pyenv/
@@ -3544,7 +3673,7 @@ fi # if [ "${NODE_INSTALL}
    fi   # RUN_VIRTUALENV means Pipenv default
 
 
-### 40. Configure Pyenv with virtualenv
+### 53. Configure Pyenv with virtualenv
 # See https://wilsonmar.github.io/mac-setup/#VirtualPyenv
 if [ "${USE_PYENV}" = true ]; then  # -pyenv
 
@@ -3596,7 +3725,7 @@ if [ "${USE_PYENV}" = true ]; then  # -pyenv
 fi    # USE_PYENV
 
 
-### 41. Install MiniConda (Anaconda has too many unknown vulnerabilities)
+### 54. Install MiniConda (Anaconda has too many unknown vulnerabilities)
 
 install_miniconda(){
 # See https://wilsonmar.github.io/mac-setup/#Conda
@@ -3684,7 +3813,7 @@ fi  # RUN_CONDA
 install_miniconda
 
 
-### 42. RUN_JAVA
+### 55. RUN_JAVA
 # See https://wilsonmar.github.io/java
 # See https://wilsonmar.github.io/mac-setup/#Java
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
@@ -3727,7 +3856,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi  # DOWNLOAD_INSTALL   
 
 
-### 42. RUN_GOLANG  
+### 56. RUN_GOLANG  
 # See https://wilsonmar.github.io/golang
 # See https://wilsonmar.github.io/mac-setup/#Golang
 if [ "${RUN_GOLANG}" = true ]; then  # -Golang
@@ -3795,7 +3924,7 @@ fi   # RUN_GOLANG
 
 
 
-### 43. Install Python
+### 57. Install Python
 # See https://wilsonmar.github.io/mac-setup/#InstallPython
 if [ "${RUN_PYTHON}" = true ]; then  # -python
 
@@ -3953,7 +4082,7 @@ fi  # RUN_PYTHON
 
 
 
-### 44. RUN_TERRAFORM
+### 58. RUN_TERRAFORM
 # See https://wilsonmar.github.io/mac-setup/#Terraform
 if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
    if [ "${SET_TRACE}" = true ]; then   # -x
@@ -3969,12 +4098,16 @@ if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
       unset TF_LOG
    fi
 
-   echo $PWD
+   note "At $PWD ..."
 
    h2 "terraform validate - syntax is good?"
    terraform validate
       # Success! The configuration is valid.
       # Error: Invalid resource type
+
+   h2 "terraform fmt"
+   # https://developer.hashicorp.com/terraform/cli/commands/fmt 
+   terraform fmt -write=false -recursive -diff
 
    h2 "terraform plan "
    # See https://developer.hashicorp.com/terraform/cli/commands/apply
@@ -4003,7 +4136,7 @@ if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
 fi    # RUN_TERRAFORM
 
 
-### 45. RUN_TENSORFLOW
+### 59. RUN_TENSORFLOW
 # See https://wilsonmar.github.io/mac-setup/#Tensorflow
 if [ "${RUN_TENSORFLOW}" = true ]; then  # -tsf
 
@@ -4056,7 +4189,7 @@ if [ "${RUN_TENSORFLOW}" = true ]; then  # -tsf
 fi  # if [ "${RUN_TENSORFLOW}"
 
 
-#### 46. Finish RUN_VIRTUALENV
+### 60. Finish RUN_VIRTUALENV
 # See https://wilsonmar.github.io/mac-setup/#RunVirtualenv
 if [ "${RUN_VIRTUALENV}" = true ]; then  # -V
       h2 "Execute deactivate if the function exists (i.e. has been created by sourcing activate):"
@@ -4067,7 +4200,7 @@ if [ "${RUN_VIRTUALENV}" = true ]; then  # -V
 fi
 
 
-#### 47. USE_TEST_SERVER
+### 61. USE_TEST_SERVER
 # See https://wilsonmar.github.io/mac-setup/#Testenv
 if [ "${USE_TEST_SERVER}" = true ]; then  # -t
 
@@ -4111,7 +4244,7 @@ if [ "${USE_TEST_SERVER}" = true ]; then  # -t
 fi # if [ "${USE_TEST_SERVER}"
 
 
-### 48. RUBY_INSTALL
+### 62. RUBY_INSTALL
 # See https://wilsonmar.github.io/mac-setup/#InstallRuby
 if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
 
@@ -4363,7 +4496,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
 fi # RUBY_INSTALL
 
 
-### 49. RUN_EGGPLANT
+### 63. RUN_EGGPLANT
 # See https://wilsonmar.github.io/mac-setup/#Eggplant
 if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 
@@ -4425,7 +4558,7 @@ if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 fi    # RUN_EGGPLANT
 
 
-### 50. Podman 
+### 64. Use QEMU Podman 
 if [ "${USE_QEMU}" = true ]; then   # -qemu
    RESPONSE="$(podman ps -a)"
    if [[ "${RESPONSE}" == *"${/bin/qemu-system-aarch64}"* ]]; then  # contains it:
@@ -4436,7 +4569,7 @@ if [ "${USE_QEMU}" = true ]; then   # -qemu
 fi  # USE_PODMAN
 
 
-### 51. USE_DOCKER or USE_PODMAN (from RedHat, instead of Docker)
+### 65. USE_DOCKER or USE_PODMAN (from RedHat, instead of Docker)
 # See https://wilsonmar.github.io/mac-setup/#UseDocker
 
    #if [ ! -f "docker-compose.override.yml" ]; then
@@ -4711,7 +4844,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    # Error response from daemon: dial unix docker.raw.sock: connect: connection refused
 
 
-   ### 48. RUN_ACTUAL
+   ### 66. RUN_ACTUAL
    if [ "${RUN_ACTUAL}" = true ]; then  # -a for actual usage
 
       h2 "Remove dangling docker ..."
@@ -4785,7 +4918,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
 
       # TODO: Add run in local Kubernetes.
-      ### 48. RUN_ACTUAL within Docker
+      ### 67. RUN_ACTUAL within Docker
       # See https://wilsonmar.github.io/mac-setup/#RunDocker
       h2 "-a  RUN_ACTUAL ... (not dry run)"
       if [ -z "${MY_FOLDER}" ]; then  # not defined:
@@ -4819,7 +4952,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
       fi  # MY_FOLDER
 
 
-   ### 52. Docker RUN_CONSUL
+   ### 68. Docker RUN_CONSUL
    if [ "${RUN_CONSUL}" = true ]; then  # -Consul
 
       # See https://learn.hashicorp.com/tutorials/consul/docker-container-agents 
@@ -4922,7 +5055,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    fi
 
 
-   ### 53. Docker RUN_EGGPLANT or container
+   ### 69. Docker RUN_EGGPLANT or container
    if [ "${RUN_EGGPLANT}" = true ]; then  # -O
       # Connect target browser to Eggplant license server: 
       if [ -z "${EGGPLANT_USERNAME}" ]; then
@@ -5015,7 +5148,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 fi  # USE_DOCKER
 
 
-### 54. UPDATE_GITHUB
+### 70. UPDATE_GITHUB
 # See https://wilsonmar.github.io/mac-setup/#UpdateGitHub
 # Alternative: https://github.com/anshumanbh/git-all-secrets
 if [ "${UPDATE_GITHUB}" = true ]; then  # -u
@@ -5065,7 +5198,7 @@ if [ "${UPDATE_GITHUB}" = true ]; then  # -u
 fi   # UPDATE_GITHUB
 
 
-### 55. REMOVE_GITHUB_AFTER folder after run
+### 71. REMOVE_GITHUB_AFTER folder after run
 # See https://wilsonmar.github.io/mac-setup/#RemoveGitHub
 if [ "$REMOVE_GITHUB_AFTER" = true ]; then  # -C
    h2 "Delete cloned GitHub at end ..."
@@ -5081,7 +5214,7 @@ if [ "$REMOVE_GITHUB_AFTER" = true ]; then  # -C
 fi
 
 
-### 56. KEEP_PROCESSES after run
+### 72. KEEP_PROCESSES after run
 # See https://wilsonmar.github.io/mac-setup/#KeepPS
 if [ "${KEEP_PROCESSES}" = false ]; then  # -K
 
@@ -5094,6 +5227,7 @@ if [ "${KEEP_PROCESSES}" = false ]; then  # -K
 fi
 
 
+### 76. Use Docker
 if [ "${USE_DOCKER}" = true ]; then   # -k
    if [ "${KEEP_PROCESSES}" = true ]; then  # -K
       RESPONSE="$( docker images -qf dangling=true )"
@@ -5108,7 +5242,6 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    fi
 
 
-   ### 57. Delete Docker containers in memory after run ...
    # See https://wilsonmar.github.io/mac-setup/#DeleteDocker
    if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
 
@@ -5147,7 +5280,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    fi
 
 
-   ### 58. REMOVE_DOCKER_IMAGES downloaded
+   ### 77. REMOVE_DOCKER_IMAGES downloaded
    # See https://wilsonmar.github.io/mac-setup/#RemoveImages
    if [ "${REMOVE_DOCKER_IMAGES}" = true ]; then  # -M
 
@@ -5180,7 +5313,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 fi    # USE_DOCKER
 
 
-### 59. Report Timings
+### 78. Report Timings
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
 
 
