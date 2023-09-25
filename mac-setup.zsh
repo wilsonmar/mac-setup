@@ -20,7 +20,8 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.119" # working github -aiac : mac-setup.zsh"
+SCRIPT_VERSION="v1.119" # add -d1 depth : mac-setup.zsh"
+# working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
@@ -76,6 +77,7 @@ args_prompt() {
    echo "   -d           -delete GitHub and pyenv from previous run"
    echo "   -c           -clone from GitHub"
    echo "   -gru \"acct/repo\"   GITHUB_REPO_URL to download from GitHub"
+   echo "   -d1          --depth 1 during GitHub clone for main branch only"
    echo "   -ssh         use SSH to construct GITHUB_REPO_URL to download"
    echo "   -pfn         PROJECT_FOLDER_NAME folder to clone locally"
    echo "   -gfn         GITHUB_FOLDER_NAME folder to clone locally"
@@ -151,7 +153,7 @@ usage_examples() {
    echo "./mac-setup.zsh -v -venv -c -circleci -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
    echo "./mac-setup.zsh -v -docsify -d -c "
-   echo "./mac-setup.zsh -tf -F \"tf-module1\" -c -v -I -U "
+   echo "./mac-setup.zsh -tf -F \"tf-module1\" -d1 -c -v -I -U"
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -260,6 +262,7 @@ SECRETS_FILE=".secrets.env.sample"
 
    CLONE_GITHUB=false           # -c
    DELETE_BEFORE=false          # -d
+   GITHUB_DEPTH_1=false         # -d1
    GITHUB_FOLDER_BASE="$HOME/github-wilsonmar" # -gfb
   #GITHUB_FOLDER_NAME=""        # -gfn
    GITHUB_BRANCH=""             # -ghb
@@ -509,8 +512,8 @@ while test $# -gt 0; do
       export REMOVE_GITHUB_AFTER=true
       shift
       ;;
-    -d)
-      export DELETE_BEFORE=true
+    -d1)
+      export GITHUB_DEPTH_1=true
       shift
       ;;
     -dc)
@@ -531,6 +534,10 @@ while test $# -gt 0; do
       shift
              DOCKER_PS_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       export DOCKER_PS_NAME
+      shift
+      ;;
+    -d)
+      export DELETE_BEFORE=true
       shift
       ;;
     -D)
@@ -2040,7 +2047,11 @@ Clone_into_GITHUB_OR_PROJECT(){
             note "-gru \"$GITHUB_REPO_URL\" being cloned ..."
             cd /
             cd "${PROJECT_FOLDER_BASE}"
-            git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
+            if [ -z "${GITHUB_DEPTH_1}" ]; then  # not specified
+               git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
+            else
+               git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}" --depth 1
+            fi
          fi
       fi
       cd /
