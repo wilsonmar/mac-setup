@@ -19,16 +19,16 @@
 
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
-THIS_PROGRAM="$0"
-SCRIPT_VERSION="v1.116" # -azure added : mac-setup.zsh"
+THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
+SCRIPT_VERSION="v1.118" # create projects folder -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
 # TODO: Add encryption of log output.
 
-LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
+LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
 # clear  # screen (but not history)
-echo "=========================== ${LOG_DATETIME} ${THIS_PROGRAM} ${SCRIPT_VERSION}"
+echo "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 
@@ -75,7 +75,7 @@ args_prompt() {
    echo " "
    echo "   -d           -delete GitHub and pyenv from previous run"
    echo "   -c           -clone from GitHub"
-   echo "   -gru         GITHUB_REPO_URL to download from GitHub"
+   echo "   -gru \"acct/repo\"   GITHUB_REPO_URL to download from GitHub"
    echo "   -ssh         use SSH to construct GITHUB_REPO_URL to download"
    echo "   -pfn         PROJECT_FOLDER_NAME folder to clone locally"
    echo "   -gfn         GITHUB_FOLDER_NAME folder to clone locally"
@@ -110,6 +110,7 @@ args_prompt() {
    echo "   -A            run with Python -Anaconda "
    echo "   -tsf         -tensorflow"
    echo " "
+   echo "   -aiac \"ec2\"  - AI to create Terraform Infra as Code"
    echo "   -tf          -terraform"
    echo "   -a           -actually run server (not dry run)"
    echo "   -ts           setup -testserver to run tests"
@@ -296,6 +297,8 @@ SECRETS_FILE=".secrets.env.sample"
        EKS_CRED_IS_LOCAL=true
    RUN_EGGPLANT=false           # -eggplant
    RUN_TENSORFLOW=false         # -tsf
+   USE_AIAC=false               # -aiac  prompt
+       AIAC_PROMPT=""
    RUN_TERRAFORM=false          # -tf
    RUN_WEBGOAT=false            # -W
 
@@ -449,6 +452,13 @@ while test $# -gt 0; do
       export RUN_ACTUAL=true
       shift
       ;;
+    -aiac)
+      export USE_AIAC=true
+      shift
+             AIAC_PROMPT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export AIAC_PROMPT
+      shift
+      ;;
     -aws)
       export USE_AWS_CLOUD=true
       shift
@@ -597,6 +607,11 @@ while test $# -gt 0; do
       shift
              GITHUB_FOLDER_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       export GITHUB_FOLDER_NAME
+      shift
+      ;;
+    -ghb*)
+      shift
+      export GITHUB_BRANCH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -grn*)
@@ -941,6 +956,7 @@ this_ending() {
    FREE_DIFF=$(((FREE_DISKBLOCKS_END-FREE_DISKBLOCKS_START)))
    MSG="End of script $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds. and $((FREE_DIFF*512)) bytes on disk"
    # echo 'Elapsed HH:MM:SS: ' $( awk -v t=$beg-seconds 'BEGIN{t=int(t*1000); printf "%d:%02d:%02d\n", t/3600000, t/60000%60, t/1000%60}' )
+   # TODO: Delete stuff?
    success "$MSG"
    # note "Disk $FREE_DISKBLOCKS_START to $FREE_DISKBLOCKS_END"
 }
@@ -1045,6 +1061,7 @@ if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
       #BASHFILE="$HOME/.bashrc"  # on Linux
    fi  # MACHINE_TYPE
 fi
+
 
 ### 13. Backup using macOS Time Machine via tmutil
 
@@ -1317,6 +1334,19 @@ if [ "${VERIFY_ENV}" = true ]; then  # -V
    fi
 fi
 
+# use curl installed above:
+is_url_reachable(){
+   # target_url=$1  # such as "https://google.com"
+   if curl -I "$1" 2>&1 | grep -w "200\|301" ; then
+      # echo "$1 is up"
+      return 0
+   else  # error
+      # echo "$1 is down"
+      return 1
+   fi
+}
+# is_url_reachable "$URL" #  to call function
+
 
 ### 18. Install ShellCheck 
 # See https://wilsonmar.github.io/mac-setup/#ShellCheck
@@ -1487,6 +1517,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # brew_update_app "iterm2" "iTerm"
          brew_update_app "microsoft-teams" "Microsoft Teams"
          brew_update_app "visual-studio-code" "Visual Studio Code"
+         brew_update_app "zoom" "zoom.us"
          #brew_update_app "tor-browser" "Tor Browser"
 
       # TODO: Install Chrome Add-ons
@@ -1784,13 +1815,13 @@ fi  # USE_ENVOY
 
 
 ### 23. Image SD card 
+image_sd_card(){
 # See https://wilsonmar.github.io/mac-setup/#ImageSDCard
 # See https://wilsonmar.github.io/iot-raspberry-install/
 # To avoid selecting a hard drive and wiping it out,
 # it's best to manually use https://www.sdcard.org/downloads/formatter/
 # But this automation is meant for use in a production line creating many copies.
 # Download image, format new SD chip, and flash the image, all in a single command.
-if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
    # Figure out device for 128GB sd card:
    diskutil list
    # TODO: Use a utility to sepect the disk
@@ -1841,134 +1872,218 @@ if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
 
    # TODO: Confirm on mac
    # Next, Put sd in Pi and reboot it (Talos needs to be on ethernet network, not wi-fi):
-
+}
+if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
+   image_sd_card
 fi  # IMAGE_SD_CARD
 
 
-### 24. Clone repository from GitHub
+### 24. Clone repository from GitHub into local folder
 
-# See https://wilsonmar.github.io/mac-setup/#ObtainRepo
-if [ "${CLONE_GITHUB}" = true ]; then   # -c (clone) specified:
-   Delete_GITHUB_folder(){
-      # https://www.zshellcheck.net/wiki/SC2115 Use "${var:?}" to ensure this never expands to / .
-      GITHUB_FOLDER_PATH="${GITHUB_FOLDER_BASE}/${GITHUB_FOLDER_NAME}"
+# For use at end of processing as well, regardless of -c CLONE
+Delete_GITHUB_folder(){
+   # https://www.zshellcheck.net/wiki/SC2115 Use "${var:?}" to ensure this never expands to / .
+   if [ -z "${GITHUB_FOLDER_PATH}" ]; then   # path specified in function below
       if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path available.
          warning "Removing GITHUB_FOLDER_PATH ..."
          lls -ltaT "${GITHUB_FOLDER_PATH}"
          rm -rf "${GITHUB_FOLDER_PATH}"
       fi
-   }
-   Delete_PROJECT_folder(){
-      PROJECT_FOLDER_PATH="${PROJECT_FOLDER_BASE}/${PROJECT_FOLDER_NAME}"
+   fi
+}
+Delete_PROJECT_folder(){
+   if [ -z "${PROJECT_FOLDER_PATH}" ]; then   # path specified in function below
       if [ -d "${PROJECT_FOLDER_PATH:?}" ]; then  # path available.
          warning "Removing project folder $PROJECT_FOLDER_PATH ..."
          lls -ltaT "${PROJECT_FOLDER_PATH}"
          rm -rf "${PROJECT_FOLDER_PATH}"
       fi
-   }
-   Clone_to_PROJECT_folder(){
-      note "-c cloning repo \"$GITHUB_REPO_URL\" into \"$PROJECT_FOLDER_PATH\" ..."
-      cd "${PROJECT_FOLDER_BASE}"
-      git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
-      cd "${PROJECT_FOLDER_NAME}"
-      note "At $PWD"
-   }
-   if [ -z "${GITHUB_REPO_URL}" ]; then   # variable is blank
-      # See of we have known variables to build it:
-      if [ -z "${GITHUB_ACCOUNT_NAME}" ]; then   # variable is blank
-         fatal "-gan GITHUB_ACCOUNT_NAME needs to be specified ..."
-         exit
-      fi
-      if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # variable is blank
-         fatal "-gfn GITHUB_FOLDER_NAME needs to be specified ..."
-         exit
-      fi
-      if [ "${USE_GITHUB_SSH}" = true ]; then   # -ssh specified:
-         GITHUB_REPO_URL="git@github.com:${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
-      else
-         GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
-      fi
    fi
-   note " clone from GITHUB_REPO_URL=${GITHUB_REPO_URL}"
+}
 
-   ### 25. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
-
-   if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # -gfn not specified 
-      warning "-gfn GITHUB_FOLDER_NAME not specified. Not downloaded ..."
-      # TODO: Extract from GITHUB_REPO_URL?
-      if [ -z "${GITHUB_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
-         fatal "Base GITHUB_FOLDER_PATH not specified in $CONFIG_FILEPATH. Please fix ..."
-         exit
+Identify_GITHUB_REPO_URL(){
+   # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
+   # For use at end of processing as well:
+   if [ -n "${GITHUB_REPO_URL}" ]; then   # path specified in parms
+      # PROTIP: See if URL is really available:
+      is_url_reachable "${GITHUB_REPO_URL}"
+      echo "DEBUG 0=$? GITHUB_REPO_URL=$GITHUB_REPO_URL";exit
+      if [ $? -eq 0 ]; then   # URL is reachable:
+         fatal "-gru GITHUB_REPO_URL \"${GITHUB_REPO_URL}\" not reachable. Exiting ..."
+         # return 1 # this function
+      else
+         h2 "-gru GITHUB_REPO_URL \"${GITHUB_REPO_URL}\" specified ..."
+         # PROTIP: Extract repo_name from GITHUB_REPO_URL:
+         basename="$(basename -s .git ${GITHUB_REPO_URL})"
+         note "basename=$basename"
       fi
-   else
-      if [ ! -d "${GITHUB_FOLDER_BASE:?}" ]; then  # base NOT available.
-         fatal "Base GITHUB_FOLDER_BASE not specified in $CONFIG_FILEPATH. Please fix ..."
-         exit
+      return 1
+   else  # GITHUB_REPO_URL not specified in parms
+      note "-gru GITHUB_REPO_URL not specified in parms ..."
+      # Let's build target path from one or the other variables?
+      if [ -n "${GITHUB_ACCOUNT_NAME}" ]; then   # NOT specified in parms
+         info "-gan (GITHUB_ACCOUNT_NAME) = \"${GITHUB_ACCOUNT_NAME}\"  ..."
+      else
+         note "-gan GITHUB_ACCOUNT_NAME not specified to clone ..."
+         # return 1
       fi
-      cd "${GITHUB_FOLDER_BASE}"
-      GITHUB_FOLDER_PATH="${GITHUB_FOLDER_BASE}/${GITHUB_FOLDER_NAME}"
-      if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # path available.
-         if [ "${DELETE_BEFORE}" = true ]; then
-            Delete_GITHUB_folder  # defined above in this file.
-            git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
-            cd "${GITHUB_FOLDER_NAME}"
+      if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # NOT specified in parms
+         note "-gfn GITHUB_FOLDER_NAME not specified to clone ..."
+         # return 1
+      else
+         if [ "${USE_GITHUB_SSH}" = true ]; then   # -ssh specified:
+            GITHUB_REPO_URL="git@github.com:${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
          else
-            warning "${GITHUB_FOLDER_PATH} not replaced ..."
-            cd "${GITHUB_FOLDER_PATH}"
-            note "At $PWD"
-            if [ "${RUN_VERBOSE}" = true ]; then
-               ls -ltaT "${GITHUB_FOLDER_PATH}"
-            fi
+            GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
+         fi
+         echo "DEBUG 0.4 GITHUB_REPO_URL=$GITHUB_REPO_URL"
+      fi
+      # return 0
+   fi
+}  # Identify_GITHUB_REPO_URL
+
+
+### 25. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
+
+Clone_into_GITHUB_OR_PROJECT(){
+
+   if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # -gfn NOT specified 
+      note "-gfn (GITHUB_FOLDER_NAME) not specified..."
+      # Fall through to -pfn PROJECT_FOLDER_NAME
+   else  # -gfn specified:
+      # TODO: if GITHUB_FOLDER_NAME == PWD basename 
+      #   fatal "-gru  \"$GITHUB_REPO_URL\" would wipe out existing folder \"$basename\". Exiting ..."
+      if [ -z "${GITHUB_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
+         fatal "GITHUB_FOLDER_BASE not specified in $CONFIG_FILEPATH. Exiting..."
+         return 1  # this function
+      else
+         if [ ! -d "${GITHUB_FOLDER_BASE:?}" ]; then  # path NOT available
+            fatal "GITHUB_FOLDER_BASE not found. Exiting ..."
+            return 1  # this function
          fi
       fi
+      GITHUB_FOLDER_PATH="$GITHUB_FOLDER_BASE/$GITHUB_FOLDER_NAME"
+      if [ "${DELETE_BEFORE}" = true ]; then
+         if [ ! -d "${GITHUB_FOLDER_PATH:?}" ]; then  # NOT found
+            warning "${GITHUB_FOLDER_PATH} not found ..."
+         else  # found:
+            Delete_GITHUB_folder  # defined above in this file.
+         fi
+      fi
+      if [ "${CLONE_GITHUB}" = true ]; then
+         Identify_GITHUB_REPO_URL  # function defined above
+         echo "DEBUG 1 GITHUB_REPO_URL=$GITHUB_REPO_URL";exit
+         
+         if [ -z "${GITHUB_REPO_URL}" ]; then   # not specified in mac-setup.env
+         # if [ $? -ne 0 ]; then
+            warning "-gru (GITHUB_REPO_URL) not identified for cloning ..."
+            return 1
+         else
+            cd /
+            cd "${GITHUB_FOLDER_BASE}"
+            git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
+         fi
+      else
+         note "-c (CLONE_GITHUB) not specified for cloning into ${GITHUB_FOLDER_BASE}..."
+      fi
+      # whether cloned or not:
+      cd /
+      cd "${GITHUB_FOLDER_PATH}"
       note "At $PWD"
+      if [ "${RUN_VERBOSE}" = true ]; then
+         ls -ltaT 
+      fi
    fi
 
-   if [ -z "${GITHUB_BRANCH}" ]; then   # variable is defined and not blank
-      git checkout "${GITHUB_BRANCH}"
-      note "-ghb GITHUB_BRANCH \"${GITHUB_BRANCH}\" checkout done ..."
-   else
-      note "-ghb GITHUB_BRANCH not specified. Using branch \"${GITHUB_BRANCH_DEFAULT}\" ..."
-   fi
-
-   ### 26. Clone to local Projects folder
+   ### 26. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
-
    if [ -z "${PROJECT_FOLDER_NAME}" ]; then   # -pfn not specified 
-      warning "-pfn PROJECT_FOLDER_NAME not specified. Not downloaded ..."
-      # TODO: Extract from PROJECT_REPO_URL?
-      if [ -z "${PROJECT_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
-         fatal "Base PROJECT_FOLDER_PATH not specified in $CONFIG_FILEPATH. Please fix ..."
-         exit
+      note "-pfn (PROJECT_FOLDER_NAME) not specified in parms either..."
+      # But we need a project folder anyway...
+      if [ -n "${GITHUB_REPO_URL}" ]; then  # speified in parms
+         # PROTIP: Extract repo_name from URL: either git@github.com: or https://github.com...
+         basename="$(basename -s .git ${GITHUB_REPO_URL})"
+         PROJECT_FOLDER_NAME="$basename" # like NOT "mac-setup"
+         warning "-pfn \"${PROJECT_FOLDER_NAME}\" obtained from -gru \"$GITHUB_REPO_URL\" ..."
+      else
+         PROJECT_FOLDER_NAME="$THIS_PROGRAM-$(date +%Y%m%dT%H%M%S%z)"  
+                                   # like mac-setup-20231231T235959-0600 (24 hr format)
+         warning "-pfn \"${PROJECT_FOLDER_NAME}\" assumed since -gru not specified..."
       fi
-   else
+      
       if [ ! -d "${PROJECT_FOLDER_BASE:?}" ]; then  # base NOT available.
-         fatal "Base PROJECT_FOLDER_BASE not specified in $CONFIG_FILEPATH. Please fix ..."
-         exit
+         fatal "PROJECT_FOLDER_BASE not found. Exiting ..."
+         return 1  # this function
       fi
-      cd "${PROJECT_FOLDER_BASE}"
       PROJECT_FOLDER_PATH="$PROJECT_FOLDER_BASE/$PROJECT_FOLDER_NAME"
-      if [ -d "${PROJECT_FOLDER_PATH:?}" ]; then  # path available.
-         if [ "${DELETE_BEFORE}" = true ]; then
+      if [ "${DELETE_BEFORE}" = true ]; then
+         if [ ! -d "${PROJECT_FOLDER_PATH:?}" ]; then  # NOT found
+            note "${PROJECT_FOLDER_PATH} does not exist ..."
+         else  # found:
+            note "-D specified to DELETE ${PROJECT_FOLDER_PATH} BEFORE ..."
             Delete_PROJECT_folder  # defined above in this file.
-            git clone "${PROJECT_REPO_URL}" "${PROJECT_FOLDER_NAME}"
-            cd "${PROJECT_FOLDER_NAME}"
-         else
-            warning "${PROJECT_FOLDER_PATH} not replaced ..."
-            cd "${PROJECT_FOLDER_PATH}"
-            note "At $PWD"
-            if [ "${RUN_VERBOSE}" = true ]; then
-               ls -ltaT "${PROJECT_FOLDER_PATH}"
-            fi
+         echo "DEBUG 2 GITHUB_REPO_URL=$GITHUB_REPO_URL";exit
          fi
       fi
-      note "At $PWD"
+      if [ "${CLONE_GITHUB}" = false ]; then
+         note "-c (CLONE_GITHUB) not specified for cloning into ${PROJECT_FOLDER_BASE}..."
+         warning "Creating ${PROJECT_FOLDER_PATH}..."
+         mkdir -p "${PROJECT_FOLDER_PATH}"
+      else  # do it:
+         Identify_GITHUB_REPO_URL  # function defined above
+         if [ -z "${GITHUB_REPO_URL}" ]; then
+            warning "-gru (GITHUB_REPO_URL) not specified. Not cloning ..."
+            warning "PROJECT_FOLDER_PATH=$PROJECT_FOLDER_PATH being created..." 
+            mkdir -p "${PROJECT_FOLDER_PATH}"
+         else 
+            note "-gru \"$GITHUB_REPO_URL\" being cloned ..."
+            cd /
+            cd "${PROJECT_FOLDER_BASE}"
+            git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
+         fi
+      fi
+      cd /
+      cd "${PROJECT_FOLDER_PATH}"
+   fi  # PROJECT_FOLDER_NAME
+   note "At $PWD"
+   if [ "${RUN_VERBOSE}" = true ]; then
+      ls -ltaT 
    fi
-fi  # CLONE_GITHUB
+}
+Clone_into_GITHUB_OR_PROJECT
+
+echo "DEBUG crash";exit
 
 
-### 27. Reveal secrets stored within .gitsecret folder 
+### 27. git checkout git branch if -ghb was specified
+
+if [ -z "${GITHUB_BRANCH}" ]; then   # variable not defined
+   note "-ghb GITHUB_BRANCH not specified among parms. ..."
+   if [ -n "${GITHUB_BRANCH_DEFAULT}" ]; then   # variable is defined and not blank
+      warning "GITHUB_BRANCH_DEFAULT not specified in $CONFIG_FILEPATH ..."
+      warning "so no git checkout ..."
+      # no checkout so stays on default main or master.
+   fi
+else  # GITHUB_BRANCH defined:
+   # from https://stackoverflow.com/questions/1593051/how-to-programmatically-determine-the-current-checked-out-git-branch
+   cur_branch_name=$(git symbolic-ref -q HEAD)
+   cur_branch_name=${cur_branch_name##refs/heads/}
+   cur_branch_name=${cur_branch_name:-HEAD}
+   note "git branch is current at \"${cur_branch_name}\" ..."
+
+   if [ $(git branch --list "$GITHUB_BRANCH") ]; then
+      note "-ghb GITHUB_BRANCH \"${GITHUB_BRANCH}\" checkout ..."
+      git checkout "${GITHUB_BRANCH}"
+   else
+      # TODO: if cur_branch_name is same as requested branch:
+      echo "-ghb (GITHUB_BRANCH) \"$GITHUB_BRANCH\" among parms does not exist in git repo..."
+   fi   
+fi  # GITHUB_BRANCH
+
+
+### 28. Reveal secrets stored within .gitsecret folder 
+
 # See https://wilsonmar.github.io/mac-setup/#UnencryptGitSecret
 # within repo from GitHub (after installing gnupg and git-secret)
 # See https://wilsonmar.github.io/mac-setup/#GitSecret
@@ -2531,8 +2646,6 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
    # logout_azure
 
 fi  # USE_AZURE_CLOUD
-
-echo "therethere";exit 9
 
 
 ### 32. Install K8S minikube
@@ -4136,6 +4249,71 @@ if [ "${RUN_PYTHON}" = true ]; then  # -python
 
 fi  # RUN_PYTHON
 
+
+
+### 58. USE_AIAC to generate Terraform
+
+do_aiac(){
+# See https://wilsonmar.github.io/mac-setup/#Terraform
+if [ "${USE_AIAC}" = true ]; then  # -tf
+   h2 "aiac = Artificial Intelligence Infrastructure-as-Code Generator."
+   # From https://www.firefly.ai/ with https://www.youtube.com/@firefly4183
+   if ! command -v aiac >/dev/null; then  # command not found, so:
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
+         brew install gofireflyio/aiac/aiac
+      fi
+
+   fi
+
+   if [ -z "${OPENAI_API_KEY}" ]; then  # not defined in ~/mac-setup.zsh
+      fatal "-aiac OPENAI_API_KEY not defined. Breaking out..."
+      return
+   else
+      # Insecure: note "OPENAI_API_KEY=${OPENAI_API_KEY}"
+   fi
+
+   if [ "${RUN_VERBOSE}" = true ]; then  # -v
+      note "aiac list-models ..."
+      aiac list-models
+         # --model=            Type        Maximum Tokens
+         # gpt-3.5-turbo       chat        4096
+         # gpt-3.5-turbo-0301  chat        4096
+         # gpt-4               chat        8192
+         # gpt-4-0314          chat        8192
+         # gpt-4-32k           chat        32768
+         # gpt-4-32k-0314      chat        32768
+         # text-davinci-003    completion  4097
+         # text-davinci-002    completion  4097      
+   fi
+
+   # docker run \
+   # -it \
+   # -e OPENAI_API_KEY=[PUT YOUR KEY HERE] \
+   # ghcr.io/gofireflyio/aiac get terraform for ec2
+   # hapex legomemnon
+
+   # TODO: Loop
+   if [ -z "${AIAC_PROMPT}" ]; then  # not defined:
+      fatal "-aiac AIAC_PROMPT not defined. Breaking out..."
+      return
+   else
+      # See https://github.com/gofireflyio/aiac
+      note "AIAC_PROMPTS=${AIAC_PROMPT}"
+      # eks, ec2, 
+      FILE_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
+      aiac get terraform for "${AIAC_PROMPT}" \
+         --model="gpt-3.5-turbo" 
+      #  --output-file="${AIAC_PROMPT}_${FILE_DATETIME}.tf"
+   fi
+
+   aiac get terraform for eks --output-file=eks.tf
+
+   # docker pull ghcr.io/gofireflyio/aiac:latest
+fi  # USE_AIAC zzz
+}
+do_aiac  
+
+echo "DEBUG wowza";exit
 
 
 ### 58. RUN_TERRAFORM

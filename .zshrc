@@ -37,6 +37,7 @@ if [ -f "$HOME/Applications/Visual Studio Code.app" ]; then  # installed:
 fi
 
 
+
 #### See https://wilsonmar.github.io/homebrew
 
 # Provide a separate folder to install additional apps:
@@ -300,6 +301,13 @@ fi
 #### See https://wilsonmar.github.io/rustlang
 if [ -d "$HOME/.cargo/bin" ]; then
    export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
+### See https://gist.github.com/fraune/0831edc01fa89f46ce43b8bbc3761ac7
+if grep -q 'auth sufficient pam_tid.so' /etc/pam.d/sudo; then
+  echo "Touch ID is enabled for sudo."
+else
+  echo "Touch ID is not enabled for sudo. run-after-macos-update.sh"
 fi
 
 
