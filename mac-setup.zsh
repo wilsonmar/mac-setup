@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.118" # create projects folder -aiac : mac-setup.zsh"
+SCRIPT_VERSION="v1.119" # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
@@ -1936,7 +1936,7 @@ Identify_GITHUB_REPO_URL(){
          else
             GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
          fi
-         echo "DEBUG 0.4 GITHUB_REPO_URL=$GITHUB_REPO_URL"
+         info "-gru GITHUB_REPO_URL=$GITHUB_REPO_URL"
       fi
       # return 0
    fi
@@ -1972,7 +1972,7 @@ Clone_into_GITHUB_OR_PROJECT(){
       fi
       if [ "${CLONE_GITHUB}" = true ]; then
          Identify_GITHUB_REPO_URL  # function defined above
-         echo "DEBUG 1 GITHUB_REPO_URL=$GITHUB_REPO_URL";exit
+         note "-gru GITHUB_REPO_URL=$GITHUB_REPO_URL"
          
          if [ -z "${GITHUB_REPO_URL}" ]; then   # not specified in mac-setup.env
          # if [ $? -ne 0 ]; then
