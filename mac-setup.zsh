@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.119" # add -d1 depth : mac-setup.zsh"
+SCRIPT_VERSION="v1.120" # add -vsc vscode extenions : mac-setup.zsh"
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -46,12 +46,13 @@ args_prompt() {
    echo "   -q           -quiet heading h2 for each step"
    echo "   -trace       Trace using OpenTelemtry (Jaeger)"
    echo " "
+   echo "   -envf \"/alt-folder\"   (alternate path to store/read env files)"
+   echo "   -envc         Copy env files from env folders or GitHub.com"
+   echo " "
    echo "   -I           -Install brew utilities, apps"
    echo "   -U           -Upgrade installed packages if already installed"
+   echo "   -VSC \"vscode-ext\"  - VSCode extensions to install from/to file"
    echo "   -zsh         Convert from bash to Zsh"
-   echo " "
-   echo "   -envf \"~/mac-setup.env\"   (change to alternate env file)"
-   echo "   -nenv        Do -not run env file"
    echo " "
    echo "   -N  \"Proj\"            Alternative name of Projects folder"
    echo "   -fn \"John Doe\"            user full name"
@@ -105,7 +106,7 @@ args_prompt() {
    echo "   -java         install Java and __"
    echo " "
    echo "   -conda        install Miniconda to run Python (instead of VirtualEnv)"
-   echo "   -venv         install Python to run within conda VirtualEnv (pipenv is default)"
+   echo "   -venv         install Python to run in conda venv (pipenv is default)"
    echo "   -pyenv        install Python to run with Pyenv"
    echo "   -python       install Python interpreter stand-alone (no pyenv or conda)"
    echo "   -y            install Python Flask"
@@ -210,22 +211,28 @@ fi
 ### 04. Define variables for use as "feature flags"
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
-   CONTINUE_ON_ERR=false        # -cont
+   CONTINUE_ON_ERR=false         # -cont
 
-   RUN_ACTUAL=false             # -a  (dry run is default)
-   RUN_DEBUG=false              # -vv
-   RUN_PARMS=""                 # -P
-   RUN_VERBOSE=false            # -v
-   VERIFY_ENV=false             # -V
-   RUN_QUIET=false              # -q
+   RUN_ACTUAL=false              # -a  (dry run is default)
+   RUN_DEBUG=false               # -vv
+   RUN_PARMS=""                  # -P
+   RUN_VERBOSE=false             # -v
+   VERIFY_ENV=false              # -V
+   RUN_QUIET=false               # -q
 
-   CONVERT_TO_ZSH=false         # -zsh
-   SET_TRACE=false              # -x
-   RUN_TRACE=false              # -trace
+   COPY_ENV_FILES=false           # -envc (false by default)   # to use default ENV_FOLDERPATH_BASE:
+   ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
+   ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
 
-   OPEN_CONSOLE=false           # -console
-   USE_TEST_SERVER=false        # -ts
-   USE_PROD_ENV=false           # -prod
+   VSCODE_FILE=""                 # -VSC "file"  Install/Upgrade VSCode extensions from/to file"
+  
+   CONVERT_TO_ZSH=false           # -zsh
+   SET_TRACE=false                # -x
+   RUN_TRACE=false                # -trace
+
+   OPEN_CONSOLE=false             # -console
+   USE_TEST_SERVER=false          # -ts
+   USE_PROD_ENV=false             # -prod
 
 # From secrets file mac-setup.env
 SECRETS_FILE=".secrets.env.sample"
@@ -241,15 +248,11 @@ SECRETS_FILE=".secrets.env.sample"
    RUN_QUANTUM=false        # -quantum
    
 # To be overridden by values defined within mac-setup.env:
-   USE_CONFIG_FILE=false        # -nenv
-   CONFIG_FILEPATH_BASE="$HOME/mac-setup.env"  # -env "alt-mac-setup.env"
-   CONFIG_FILEPATH=""                        # -env
-
    PROJECT_FOLDER_BASE="$HOME/Projects"       # -P
-   PROJECT_FOLDER_NAME=""                    # specify -N
-   PROJECT_NAME=""                           # -p
+   PROJECT_FOLDER_NAME=""                     # -pfn
+   PROJECT_NAME=""                            # -p
 
-   GITHUB_REPO_NAME=""                       # -grn
+   GITHUB_REPO_NAME=""                        # -grn
 #   GITHUB_REPO_PATH="$HOME/github-wilsonmar"  
 #   GITHUB_REPO="wilsonmar.github.io"f
 #   GITHUB_ACCOUNT_NAME="weirdo"              # -gan
@@ -355,42 +358,107 @@ SECRETS_FILE=".secrets.env.sample"
    KEEP_PROCESSES=false         # -K
 
 
-### 05. Download config settings file to \$HOME/mac-setup.env (away from GitHub)
+### 05. Overwrite vars with config settings file 
+
+# See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 download_mac-setup_home(){
    # filename = $1
-   if [ -f "$HOME/$1" ]; then
-      h2 "-envd file $HOME/$1 already exists. Not downloaded..."
-   else
-      h2 "-envd downloading to $HOME/$1 ..."
-      curl --create-dirs -O --output-dir $HOME \
-         "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
-      chmod +x "$HOME/$1"
-      ls -ltaT "$HOME/$1"
+   # ENV_FOLDERPATH Should be found:
+   echo "DEBUG out download_mac-setup_home $ENV_FOLDERPATH";exit
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+      if [ "${COPY_ENV_FILES}" = false ]; then  # -envc OVERWRITE!
+         note "-envc not specified. File $HOME/$1 exists. Not downloaded..."
+         return
+      else
+         warning "-envc specifies overwrite of file $HOME/$1 - first make bak..."
+         cp -f "$HOME/$1" "$HOME/$1.bak"
+      fi
+   fi  # either way:
+
+   if [ -f "$1" ]; then  # origin file exists:
+      note "-envc cannot file $1 for copy to \"$ENV_FOLDERPATH\" ..."
+      note "-envc copy from github.com repo..."
+      if ! command -v curl ; then
+         fatal "-envc from github failed. Please -I (install) curl first ..."
+         exit 9
+      else
+         # pwd
+         note "-envc file $1 downloading from GitHub ..."
+         curl --create-dirs -O --output-dir $HOME \
+            "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
+         chmod +x "$HOME/$1"
+         # ls -ltaT "$HOME/$1"
+      fi
    fi
 }
-if command -v curl ; then
-   pwd
-   download_mac-setup_home  "mac-setup.env"
-   download_mac-setup_home  "aliases.zsh"
-   download_mac-setup_home  ".zshrc"
-fi
 
-# See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
-if [ ! -f "$CONFIG_FILEPATH" ]; then
-   CONFIG_FILEPATH="$CONFIG_FILEPATH_BASE"
-fi   
-if [ ! -f "$CONFIG_FILEPATH" ]; then
-   fatal "File \"$CONFIG_FILEPATH\" not found. Exiting ..."
-   exit 9
-else
-   h2 "-envd Loading $CONFIG_FILEPATH ..."
-   chmod +x "$CONFIG_FILEPATH"
-   source "$CONFIG_FILEPATH"
-      # ENV=v2
-fi
+# See https://wilsonmar.github.io/mac-setup/#Load_Env_files
+Define_Env_folder(){
+   
+   if [ -z "$ENV_FOLDERPATH" ]; then  # var needed not specified
+      note "-envf \"$ENV_FOLDERPATH\" not specified in parms..."
+      # Set to default if -envf not specified in parms:
+      if [ -z "$ENV_FOLDERPATH_DEFAULT" ]; then  # not defined
+         fatal "-envf default variable \"$ENV_FOLDERPATH_DEFAULT\" not defined..."
+         exit 9
+      else  # default specified:
+         if [ ! -d "${ENV_FOLDERPATH_DEFAULT}" ]; then   # DEFAULT file defined NOT found:
+            warning "-env default ${ENV_FOLDERPATH_DEFAULT} not found. Creating..."
+            mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
+            # Do not cd to it.
+         else
+            note "-envf default \"$ENV_FOLDERPATH_DEFAULT\" found..."
+            export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
+         fi
+      fi
+   fi  # -envf specified in parms:
 
-Input_GitHub_User_Info(){
+   if [ ! -d "${ENV_FOLDERPATH}" ]; then   # not found:
+      warning "-envf folder \"$ENV_FOLDERPATH\" not found. Creating..."
+      mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
+   else
+      export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
+      echo "-env from folder \"$ENV_FOLDERPATH\" default \"$ENV_FOLDERPATH_DEFAULT\" ..."
+   fi
+
+   if [ ! -d "${ENV_FOLDERPATH}" ]; then   # file specified found (so bak it up):
+      echo "DEBUG inside  Load_Env_files $ENV_FOLDERPATH";exit
+      warning "-envf ${ENV_FOLDERPATH} not found. Creating..."
+      mkdir -p "${ENV_FOLDERPATH}"
+      # Do not cd to it.
+   fi
+}
+Define_Env_folder
+
+
+Load_Env_files(){
+
+   if [ "${COPY_ENV_FILES}" = false ]; then  # -envc for OVERWRITE!
+      echo "-envc not specified. Not copying files from ${ENV_FOLDERPATH} ..."
+   else  # -envc specified:
+      if command -v curl ; then
+         h2 "-envc specified. Copying files from ${ENV_FOLDERPATH} ..."
+         # pwd
+         download_mac-setup_home  "aliases.zsh"
+         download_mac-setup_home  ".zshrc"
+         download_mac-setup_home  "mac-setup.env"
+      else
+         fatal "-envc from github failed. Please -I (install) curl first ..."
+         exit 9
+      fi
+   fi
+
+   echo "-envc loading "${ENV_FOLDERPATH}/mac-setup.env" ..."
+   # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
+   source "${ENV_FOLDERPATH}/mac-setup.env"  # run file containing variable definitions.
+
+}
+Load_Env_files
+
+
+Read_Inputs_Manually(){
+
    # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
    read -r -p "Enter your GitHub user name [John Doe]: " GITHUB_USER_NAME
    GITHUB_USER_NAME=${GITHUB_USER_NAME:-"John Doe"}
@@ -398,54 +466,25 @@ Input_GitHub_User_Info(){
 
    read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GITHUB_USER_EMAIL
    GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL:-"johb_doe@gmail.com"}
-}
+
    if [ -z "${GITHUB_USER_EMAIL}" ]; then   # variable is blank
       Input_GitHub_User_Info  # function defined above.
    else
-      note "Using -u \"${GITHUB_USER_NAME}\" -e \"${GITHUB_USER_EMAIL}\" ..."
+      note "-u \"${GITHUB_USER_NAME}\" -e \"${GITHUB_USER_EMAIL}\" ..."
       # since this is hard coded as "John Doe" above
    fi
 
-if [ "${USE_CONFIG_FILE}" = true ]; then  # -nenv
-   warning "Using default values hard-coded in this bash script ..."
-   # PIPENV_DOTENV_LOCATION=/path/to/.env or =1 to not load.
-else  # use .mck-setup.env file:
-   # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
-   if [ ! -f "$CONFIG_FILEPATH" ]; then   # file NOT found, then copy from github:
-      curl -s -O https://raw.GitHubusercontent.com/wilsonmar/mac-setup/master/mac-setup.env
-      warning "Downloading default config file $CONFIG_FILEPATH file to $HOME ... "
-      if [ ! -f "$CONFIG_FILEPATH" ]; then   # file still NOT found
-         fatal "File \"$CONFIG_FILEPATH\" not found after download ..."
-         exit 9
-      fi
-      note "Please edit values in file $CONFIG_FILEPATH and run this again ..."
-      exit 9
-   else  # Read from default file name mac-setup.env :
-      h2 "-env = Reading env config file $CONFIG_FILEPATH ..."
-      note "$(ls -ltaT "${CONFIG_FILEPATH}" )"
-      chmod +x "${CONFIG_FILEPATH}"
-      source   "${CONFIG_FILEPATH}"  # run file containing variable definitions.
-      if [ ! -n "$GITHUB_ACCOUNT_NAME" ]; then
-         fatal "GITHUB_ACCOUNT_NAME variable not defined ..."
-         exit 9
-      fi
-      #if [ "${CIRCLECI_API_TOKEN}" = "xxx" ]; then 
-      #   fatal "Please edit CIRCLECI_API_TOKEN in file \$HOME/.secrets.zsh and run again ..."
-      #   exit 9
-      #fi
-      # VPN_GATEWAY_IP & user cert
-   fi
-
    # TODO: Capture password manual input once for multiple shares 
-   # (without saving password like expect command) https://www.linuxcloudvps.com/blog/how-to-automate-shell-scripts-with-expect-command/
+   # (without saving password like expect command) 
+   # See https://www.linuxcloudvps.com/blog/how-to-automate-shell-scripts-with-expect-command/
       # From https://askubuntu.com/a/711591
    #   read -p "Password: " -s szPassword
    #   printf "%s\n" "$szPassword" | sudo --stdin mount \
    #      -t cifs //192.168.1.1/home /media/$USER/home \
    #      -o username=$USER,password="$szPassword"
+}
+# Read_Inputs_Manually
 
-fi  # if [ "${USE_CONFIG_FILE}" = false ]; then  # -s
-   
 
 ### 06. Set variables dynamically based on each parameter flag
 # See https://wilsonmar.github.io/mac-setup/#VariablesSet
@@ -563,11 +602,14 @@ while test $# -gt 0; do
       APP1_PORT="80"
       shift
       ;;
-    -envf*)
-      export USE_CONFIG_FILE=true
+    -envc)
+      export COPY_ENV_FILES=true
       shift
-             CONFIG_FILEPATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      export CONFIG_FILEPATH
+      ;;
+    -envf*)
+      shift
+             ENV_FOLDERPATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export ENV_FOLDERPATH
       shift
       ;;
     -e*)
@@ -699,10 +741,6 @@ while test $# -gt 0; do
       export REMOVE_DOCKER_IMAGES=true
       shift
       ;;
-    -nenv)
-      export USE_CONFIG_FILE=false
-      shift
-      ;;
     -n*)
       shift
       # shellcheck disable=SC2034 # ... appears unused. Verify use (or export if used externally).
@@ -829,6 +867,12 @@ while test $# -gt 0; do
       ;;
     -venv)
       export RUN_VIRTUALENV=true
+      shift
+      ;;
+    -VSC*)
+      shift
+             VSCODE_FILE=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export VSCODE_FILE
       shift
       ;;
     -v)
@@ -1038,7 +1082,8 @@ if [ "${RUN_TRACE}" = true ]; then  # -trace
 fi  # RUN_TRACE
 
 
-### 12. Print run Operating environment information 
+### 12. Print run Operating environment information
+
 note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
 note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
 
@@ -1284,6 +1329,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
       brew install rbenv
 
+      #brew is also used later in this script
 
    elif [ "${PACKAGE_MANAGER}" = "apt-get" ]; then  # (Advanced Packaging Tool) for Debian/Ubuntu
 
@@ -1325,34 +1371,58 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
 fi # if [ "${DOWNLOAD_INSTALL}"
 
-if [ "${VERIFY_ENV}" = true ]; then  # -V
+if [ "${VERIFY_ENV}" = true ]; then  # -V  (upper case)
   if command -v brew >/dev/null; then  # command found, so:
-      h2 "brew doctor for -v ..."
+      h2 "brew doctor for -V (Verify) (may error out script)..."
       brew doctor
          # "Your system is ready to brew."
-      h2 "brew cleanup from previous install ..."
-      
+
+      h2 "brew cleanup from previous install (may error out script)..."
+      brew cleanup
+         # RESPONSE: Pruned 4 symbolic links from /usr/local
+
       # https://superuser.com/questions/1759738/error-could-not-cleanup-old-kegs-fix-your-permissions-on
       #sudo chown -R $(whoami) $(brew --prefix)/*
          # Above command takes minutes to run.
-      
-      brew cleanup
-         # RESPONSE: Pruned 4 symbolic links from /usr/local
    fi
 fi
 
-# use curl installed above:
-is_url_reachable(){
-   # target_url=$1  # such as "https://google.com"
-   if curl -I "$1" 2>&1 | grep -w "200\|301" ; then
-      # echo "$1 is up"
-      return 0
-   else  # error
-      # echo "$1 is down"
-      return 1
-   fi
+
+Loop_Thru_File(){
+   h2 "-VSC \"${VSCODE_FILE}\" Loop_Thru_File ..."
+   for line in ("${VSCODE_FILE}")
+   do
+      echo "${line}"   # debug
+      # Examples: https://gist.github.com/matthiasott/1695ca6f1fe9ccfc18ff6748fb2767c1
+      # Such as: https://marketplace.visualstudio.com/items?itemName=azure-ai.azure-ai
+      # code --install-extension azure-ai.vscode-ai
+      # code --install-extension "${line}"
+   done
 }
-# is_url_reachable "$URL" #  to call function
+
+
+if [ -n "${VSCODE_FILE}" ]; then   # -VSC \"vscode-ext\" file specified:
+   # For vscode CLI commands, see https://www.youtube.com/watch?v=uKCiAA4AJcI
+   # https://code.visualstudio.com/docs/editor/extension-marketplace
+   h2 "-VSC \"${VSCODE_FILE}\" at ${PWD}..."
+      # Loop_Thru_File  # function defined above
+   if [ -f "${VSCODE_FILE}" ]; then   # file found:
+      # FIXME: Dir not found.
+      # PROTIP: Use sed to strip out spaces before and after the file name:
+      LINES_IN_FILE=$( wc -l < ${VSCODE_FILE} | sed 's/ //g' )
+      echo "-VSC \"${VSCODE_FILE}\" ${LINES_IN_FILE} lines for code --install-extensions ..."
+      # h2 "-vsc \"${VSCODE_FILE}\" entries used for -U code --uninstall-extensions ..."
+      # TODO: Loop through file to install each extension: code --install-extension "${line from file}"
+         # Ignore Duplicates:
+   else  # file not found
+      # h2 "-VSC \"${VSCODE_FILE}\" gen'd by code --list-extensions output ..."
+      # This will not run if code --disable-extensions was run!
+      code --list-extensions > "${VSCODE_FILE}"
+         # [vscode-ai]: Couldn't find message for key azureml.internal.activate.title.
+      LINES_IN_FILE=$( wc -l < "${VSCODE_FILE}" | sed 's/ //g' )
+      echo "-VSC \"${VSCODE_FILE}\" file gen'd with ${LINES_IN_FILE} lines ..."
+   fi
+fi
 
 
 ### 18. Install ShellCheck 
@@ -1430,7 +1500,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       ARRAY=( $APPLE_APPS_TO_REMOVE )  
       ARRAY=(`echo ${APPLE_APPS_TO_REMOVE}`);
       for appname in "${ARRAY[@]}"; do
-         if [ -d "/Applications/$appname.app" ]; then   # file found:
+         if [ -d "/Applications/$appname.app:?}" ]; then   # file found:
             echo "$appname.app being removed..."
             h2 "/Applications/$appname.app being removed..."
             sudo rm -rf "/Applications/$appname.app"  # remove app folder 
@@ -1446,7 +1516,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  Postman  PowerShell"
       ARRAY=(`echo ${ROOT_APPS_TO_INSTALL}`);
       for appname in "${ARRAY[@]}"; do
-         if [ -d "/Applications/$appname.app" ]; then   # app found:
+         if [ -d "/Applications/$appname.app:?}" ]; then   # app found:
             if [ "${UPDATE_PKGS}" = true ]; then
                note "brew reinstall --cask $appname.app within /Applications/ ..."
                brew uninstall --cask $appname --force
@@ -1487,7 +1557,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       brew_update_app() {
          brewname=$1
          appname=$2
-         if [ -d "$HOME/Applications/$appname.app" ]; then   # app found:
+         if [ -d "$HOME/Applications/$appname.app:?}" ]; then   # app found:
             if [ "${UPDATE_PKGS}" = true ]; then
                note "brew reinstall --cask $brewname.app within $HOME/Applications/ ..."
                brew uninstall --cask $brewname --force
@@ -1533,7 +1603,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       h2 "-I install brew CLI utilities ..."
       # TODO: CLI_APPS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
       # CLI_APPS_TO_INSTALL="curl wget jp jq htop tree git hub ncdu docker-compose hadolint 1password-cli"
-      ARRAY=(`echo ${CLI_APPS_TO_INSTALL}`);
+      ARRAY=(`echo ${CLI_APPS_TO_INSTALL}`);  # from ~/mac-setup.env
       for brewname in "${ARRAY[@]}"; do
          brew install $brewname
          # NOTE: Brew updates if already installed.
@@ -1908,6 +1978,21 @@ Delete_PROJECT_folder(){
    fi
 }
 
+
+# use curl installed above:
+is_url_reachable(){
+   # target_url=$1  # such as "https://google.com"
+   if curl -I "$1" 2>&1 | grep -w "200\|301" ; then
+      # echo "$1 is up"
+      return 0
+   else  # error
+      # echo "$1 is down"
+      return 1
+   fi
+}
+# is_url_reachable "$URL" #  to call function
+
+
 Identify_GITHUB_REPO_URL(){
    # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
    # For use at end of processing as well:
@@ -1961,7 +2046,7 @@ Clone_into_GITHUB_OR_PROJECT(){
       # TODO: if GITHUB_FOLDER_NAME == PWD basename 
       #   fatal "-gru  \"$GITHUB_REPO_URL\" would wipe out existing folder \"$basename\". Exiting ..."
       if [ -z "${GITHUB_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
-         fatal "GITHUB_FOLDER_BASE not specified in $CONFIG_FILEPATH. Exiting..."
+         fatal "GITHUB_FOLDER_BASE not specified. Exiting..."
          return 1  # this function
       else
          if [ ! -d "${GITHUB_FOLDER_BASE:?}" ]; then  # path NOT available
@@ -1979,16 +2064,23 @@ Clone_into_GITHUB_OR_PROJECT(){
       fi
       if [ "${CLONE_GITHUB}" = true ]; then
          Identify_GITHUB_REPO_URL  # function defined above
-         note "-gru GITHUB_REPO_URL=$GITHUB_REPO_URL"
-         
          if [ -z "${GITHUB_REPO_URL}" ]; then   # not specified in mac-setup.env
-         # if [ $? -ne 0 ]; then
             warning "-gru (GITHUB_REPO_URL) not identified for cloning ..."
             return 1
          else
-            cd /
-            cd "${GITHUB_FOLDER_BASE}"
-            git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
+            note "-gru GITHUB_REPO_URL=$GITHUB_REPO_URL identified for cloning ..."
+            if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # found
+               warning "-gfn GITHUB_FOLDER_PATH=$GITHUB_FOLDER_PATH already exists ..."
+            else
+               cd /
+               cd "${GITHUB_FOLDER_BASE}"
+               if [ -d "${GITHUB_FOLDER_NAME:?}" ]; then  # found
+                  warning "-gfn GITHUB_FOLDER_NAME=$GITHUB_FOLDER_NAME already exists ..."
+               else
+                  echo "here before";exit
+                  git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
+               fi
+            fi
          fi
       else
          note "-c (CLONE_GITHUB) not specified for cloning into ${GITHUB_FOLDER_BASE}..."
@@ -2002,11 +2094,12 @@ Clone_into_GITHUB_OR_PROJECT(){
       fi
    fi
 
+
    ### 26. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
    if [ -z "${PROJECT_FOLDER_NAME}" ]; then   # -pfn not specified 
-      note "-pfn (PROJECT_FOLDER_NAME) not specified in parms either..."
+      echo "-pfn (PROJECT_FOLDER_NAME) not specified in parms either..."
       # But we need a project folder anyway...
       if [ -n "${GITHUB_REPO_URL}" ]; then  # speified in parms
          # PROTIP: Extract repo_name from URL: either git@github.com: or https://github.com...
@@ -2064,15 +2157,13 @@ Clone_into_GITHUB_OR_PROJECT(){
 }
 Clone_into_GITHUB_OR_PROJECT
 
-echo "DEBUG crash";exit
-
 
 ### 27. git checkout git branch if -ghb was specified
 
 if [ -z "${GITHUB_BRANCH}" ]; then   # variable not defined
    note "-ghb GITHUB_BRANCH not specified among parms. ..."
    if [ -n "${GITHUB_BRANCH_DEFAULT}" ]; then   # variable is defined and not blank
-      warning "GITHUB_BRANCH_DEFAULT not specified in $CONFIG_FILEPATH ..."
+      warning "GITHUB_BRANCH_DEFAULT not specified in $ENV_FOLDERPATH ..."
       warning "so no git checkout ..."
       # no checkout so stays on default main or master.
    fi
@@ -2103,7 +2194,7 @@ fi  # GITHUB_BRANCH
    # This is https://github.com/AGWA/git-crypt      has 4,500 stars.
    # Whereas https://github.com/sobolevn/git-secret has 1,700 stars.
 
-if [ -d "$HOME/.gitsecret" ]; then   # found directory folder in repo
+if [ -d "$HOME/.gitsecret:?}" ]; then   # found directory folder in repo
    # This script detects whether https://github.com/sobolevn/git-secret was used to store secrets inside a local git repo.
    # This looks in the repo .gitsecret folder created by the "git secret init" command on this repo (under DevSecOps).
    # "git secret tell" stores the public key of the current git user email.
@@ -2461,7 +2552,7 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
    fi  # "${PACKAGE_MANAGER}" = "brew" ]; then
 
 
-   #if [ -d "$HOME/.bash-my-aws" ]; then   # folder is there
+   #if [ -d "$HOME/.bash-my-aws:?}" ]; then   # folder is there
    #   h2 "Installing ~/.bash-my-aws ..."
    #   git clone https://github.com/bash-my-aws/bash-my-aws.git ~/.bash-my-aws
    #else
@@ -3828,7 +3919,7 @@ fi # if [ "${NODE_INSTALL}
       note "$( virtualenv --version )" # virtualenv 20.14.1 from /opt/homebrew/Cellar/virtualenv/20.14.1/libexec/lib/python3.10/site-packages/virtualenv/__init__.py
       note "$( pip3 --version )"       # pip 19.3.1 from /Library/Python/2.7/site-packages/pip (python 2.7)
 
-         if [ -d "venv" ]; then   # venv folder already there:
+         if [ -d "venv:?}" ]; then   # venv folder already there:
             note "venv folder being re-used ..."
          else
             h2 "virtualenv venv ..."
@@ -4320,11 +4411,9 @@ if [ "${USE_AIAC}" = true ]; then  # -tf
    aiac get terraform for eks --output-file=eks.tf
 
    # docker pull ghcr.io/gofireflyio/aiac:latest
-fi  # USE_AIAC zzz
+fi  # USE_AIAC
 }
 do_aiac  
-
-echo "DEBUG wowza";exit
 
 
 ### 58. RUN_TERRAFORM
