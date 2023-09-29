@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.120" # add -vsc vscode extenions : mac-setup.zsh"
+SCRIPT_VERSION="v1.123" # add azcopy brew to azure : mac-setup.zsh"
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -1393,6 +1393,7 @@ Loop_Thru_File(){
    for line in ("${VSCODE_FILE}")
    do
       echo "${line}"   # debug
+      # Skip blank lines and those whose first character is a # comment:
       # Examples: https://gist.github.com/matthiasott/1695ca6f1fe9ccfc18ff6748fb2767c1
       # Such as: https://marketplace.visualstudio.com/items?itemName=azure-ai.azure-ai
       # code --install-extension azure-ai.vscode-ai
@@ -2650,6 +2651,8 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
                # https://github.com/Azure/homebrew-functions
                brew tap azure/functions
                brew install azure-functions-core-tools
+               
+               brew install azcopy
 
                # See https://wilsonmar.github.io/quantum
                if [ "${RUN_QUANTUM}" = true ]; then  # -quantum
