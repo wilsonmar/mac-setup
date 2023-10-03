@@ -184,6 +184,11 @@ note() { if [ "${RUN_VERBOSE}" = true ]; then
    printf "\n"
    fi
 }
+echo_debug() { if [ "${RUN_DEBUG}" = true ]; then
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\n"
+   fi
+}
 success() {
    printf "\n\e[32m\e[1m✔ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
@@ -920,7 +925,8 @@ while test $# -gt 0; do
 done
 
 
-### 07. Display run variables 
+### 07. Display run variables
+
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
 if [ "${RUN_VERBOSE}" = true ]; then
    note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
@@ -937,6 +943,7 @@ fi
 
 
 ### 08. Obtain and show information about the operating system in use to define which package manager to use
+
 # See https://wilsonmar.github.io/mac-setup/#OSDetect
    export OS_TYPE="$( uname )"
    export OS_DETAILS=""  # default blank.
@@ -990,6 +997,7 @@ fi
 
 
 ### 09. Set traps to display information if script is interrupted.
+
 # See https://wilsonmar.github.io/mac-setup/#SetTraps
 # See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
 trap this_ending EXIT
@@ -1019,6 +1027,7 @@ sig_cleanup() {
 
 
 ### 10. Set Continue on Error and Trace
+
 # See https://wilsonmar.github.io/mac-setup/#StrictMode
 if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
    warning "Set to continue despite error ..."
@@ -1185,7 +1194,8 @@ fi  # CONVERT_TO_ZSH
 
 
 ### 15. Define utility functions: kill process by name, etc.
-### 16. Keep-alive: update existing `sudo` time stamp until `.osx` has finished
+###     Keep-alive: update existing `sudo` time stamp until `.osx` has finished
+
 # See https://wilsonmar.github.io/mac-setup/#KeepAlive
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
@@ -1199,7 +1209,8 @@ ps_kill(){  # $1=process name
 }
 
 
-### 17. Install installers (brew, apt-get), depending on operating system
+### 16. Install installers (brew, apt-get), depending on operating system
+
 # See https://wilsonmar.github.io/mac-setup/#InstallInstallers
 
 # Bashism Internal Field Separator used by echo, read for word splitting to lines newline or tab (not spaces).
@@ -1426,7 +1437,8 @@ if [ -n "${VSCODE_FILE}" ]; then   # -VSC \"vscode-ext\" file specified:
 fi
 
 
-### 18. Install ShellCheck 
+### 17. Install ShellCheck 
+
 # See https://wilsonmar.github.io/mac-setup/#ShellCheck
 # CAUTION: shellcheck does not work on zsh files (only bash files)
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
@@ -1455,7 +1467,7 @@ fi  # DOWNLOAD_INSTALL
 #fi
 
 
-### 19. Install basic utilities (git, jq, tree, etc.) used by many:
+### 18. Install basic utilities (git, jq, tree, etc.) used by many:
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
 if [ "${RUN_DEBUG}" = true ]; then
    h2 "Apps installed using Apple App Store ..."
@@ -1625,7 +1637,22 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # https://the.exa.website/
       # Replacement for ls - see https://the.exa.website/#installation
       # brew install exa
-      
+
+
+      ### 18c. Define file extensions to edit using VSCode
+      # https://superuser.com/questions/273756/how-to-change-default-app-for-all-files-of-particular-file-type-through-terminal
+      brew install duti
+      if command -v duti ; then
+         FILE_EXT_BY_VSCODE=".json .md .py .sh .txt .yml .yaml .zsh" # exported from ~/mac-setup.env
+         appid=$( osascript -e 'id of app "Visual Studio Code"' )  # "com.microsoft.VSCode"
+         ARRAY=(`echo ${FILE_EXT_BY_VSCODE}`);
+         for file_ext in "${ARRAY[@]}"; do
+            echo_debug "duti -s \"$appid\" \"$file_ext\" all ..."
+            duti -s "$appid" "$file_ext" all
+         done
+      fi
+
+
      #https://www.hashicorp.com/blog/announcing-hashicorp-homebrew-tap referencing https://github.com/hashicorp/homebrew-tap
       if [ "${USE_VAULT}" = true ]; then   # -HV
          brew install hashicorp/tap/vault
@@ -1713,7 +1740,10 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi  # DOWNLOAD_INSTALL
 
 
-#### 20. Override defaults in Apple macOS System Preferences:"
+### 19. ??? 
+
+
+### 20. Override defaults in Apple macOS System Preferences:"
 # See https://wilsonmar.github.io/mac-setup/#SysPrefs
 # See https://wilsonmar.github.io/dotfiles/
 
@@ -2462,7 +2492,7 @@ if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
    # https://google.qwiklabs.com/games/759/labs/2373
    h2 "Using GCP for Speech-to-Text API"  # https://cloud.google.com/speech/reference/rest/v1/RecognitionConfig
    # usage limits: https://cloud.google.com/speech-to-text/quotas
-   curl -O -s "https://raw.githubusercontent.com/wilsonmar/DevSecOps/master/gcp/gcp-speech-to-text/request.json"
+   curl -O -s "https://raw.githubusercontent.com/wilsonmar/DevSecOps/main/gcp/gcp-speech-to-text/request.json"
    cat request.json
    # Listen to it at: https://storage.cloud.google.com/speech-demo/brooklyn.wav
    
@@ -2498,6 +2528,7 @@ fi  # USE_GOOGLE_CLOUD
 
 
 ### 30. Connect to AWS
+
 # See https://wilsonmar.github.io/mac-setup/#AWS
 if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
@@ -2652,6 +2683,7 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
                brew tap azure/functions
                brew install azure-functions-core-tools
                
+               # See https://wilsonmar.github.io/azure-onboarding#azcopy
                brew install azcopy
 
                # See https://wilsonmar.github.io/quantum
