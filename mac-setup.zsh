@@ -1468,6 +1468,7 @@ fi  # DOWNLOAD_INSTALL
 
 
 ### 18. Install basic utilities (git, jq, tree, etc.) used by many:
+
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
 if [ "${SHOW_DEBUG}" = true ]; then
    h2 "Apps installed using Apple App Store ..."
@@ -1744,6 +1745,7 @@ fi  # DOWNLOAD_INSTALL
 
 
 ### 20. Override defaults in Apple macOS System Preferences:"
+
 # See https://wilsonmar.github.io/mac-setup/#SysPrefs
 # See https://wilsonmar.github.io/dotfiles/
 
@@ -1841,6 +1843,7 @@ fi  # SET_MACOS_SYSPREFS
 
 
 ### 21. Hashicorp Cloud using Doormat
+
 # Command-line interface for https://github.com/hetznercloud/cli
 
 if [ "${USE_DOORMAT}" = true ]; then  # -Doormat
@@ -1890,6 +1893,7 @@ fi  # USE_DOORMAT
 
 
 ### 22. Hashicorp Consul using Envoy
+
 # https://learn.hashicorp.com/tutorials/consul/service-mesh-with-envoy-proxy
 if [ "${USE_ENVOY}" = true ]; then  # -Envoy
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -1923,6 +1927,7 @@ fi  # USE_ENVOY
 
 
 ### 23. Image SD card 
+
 image_sd_card(){
 # See https://wilsonmar.github.io/mac-setup/#ImageSDCard
 # See https://wilsonmar.github.io/iot-raspberry-install/
@@ -2285,6 +2290,7 @@ fi
 
 
 ### 28. Pipenv and Pyenv to install Python and its modules
+
 # See https://wilsonmar.github.io/mac-setup/#Pipenv
 pipenv_install() {
    # Pipenv is a dependency manager for Python projects like Node.js’ npm or Ruby’s bundler.
@@ -2346,6 +2352,7 @@ pipenv_install() {
 
 
 ### 29. Connect to Google Cloud, if requested:
+
 # See https://wilsonmar.github.io/mac-setup/#GCP
 if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
    # Perhaps in https://console.cloud.google.com/cloudshell  (use on Chromebooks with no Terminal)
@@ -2644,6 +2651,7 @@ fi  # USE_AWS_CLOUD
 
 
 ### 31. Install Azure
+
 # See https://wilsonmar.github.io/mac-setup/#Azure
 if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
 
@@ -2683,7 +2691,7 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
                brew tap azure/functions
                brew install azure-functions-core-tools
                
-               # See https://wilsonmar.github.io/azure-onboarding#azcopy
+               # See https://wilsonmar.github.io/azure-quickly#azcopy
                brew install azcopy
 
                # See https://wilsonmar.github.io/quantum
@@ -2786,6 +2794,7 @@ fi  # USE_AZURE_CLOUD
 
 
 ### 32. Install K8S minikube
+
 # See https://wilsonmar.github.io/mac-setup/#Minikube
 if [ "${USE_K8S}" = true ]; then  # -k8s
    h2 "brew install Kubernetes IBM/RedHat OpenShift:"
@@ -2912,6 +2921,7 @@ fi  # USE_K8S
 
 
 ### 33. Install EKS using eksctl
+
 # See https://wilsonmar.github.io/mac-setup/#EKS
 if [ "${RUN_EKS}" = true ]; then  # -EKS
 
@@ -3122,6 +3132,7 @@ fi  # EKS
 
 
 ### 34. Use Docsify to create a website from Markdown files
+
 # See https://wilsonmar.github.io/mac-setup/#Docsify
 if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
    # Video of run at https://drive.google.com/file/d/17-mV8Q_cyIKDj9aNm8wXXYHm6yuwITqi/view?usp=drive_link
@@ -3186,6 +3197,7 @@ fi  # USE_DOCIFY
 
 
 ### 35. Use CircleCI SaaS
+
 # See https://wilsonmar.github.io/mac-setup/#CircleCI
 if [ "${USE_CIRCLECI}" = true ]; then   # -L
    # https://circleci.com/docs/2.0/getting-started/#setting-up-circleci
@@ -3254,6 +3266,7 @@ fi  # USE_CIRCLECI
 
 
 ### 36. Use Yubikey
+
 # See https://wilsonmar.github.io/mac-setup/#Yubikey
 if [ "${USE_YUBIKEY}" = true ]; then   # -Y
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
@@ -3327,6 +3340,7 @@ fi  # USE_YUBIKEY
 
 
 #### 37. Use GitHub
+
 # See https://wilsonmar.github.io/mac-setup/#UseGitHub
 if [ "${MOVE_SECURELY}" = true ]; then   # -m
    # See https://github.com/settings/keys 
@@ -3353,6 +3367,7 @@ fi  # MOVE_SECURELY
 
 
 ### 39. Use Hashicorp Vault
+
 # See https://wilsonmar.github.io/mac-setup/#HashiVault
 export USE_ALWAYS=false  # DEBUGGING
 if [ USE_ALWAYS = true ]; then
@@ -3439,6 +3454,7 @@ fi  # USE_ALWAYS, USE_VAULT
 
 
 ### 40. Install Hashicorp Vault
+
 # See https://wilsonmar.github.io/hashicorp-vault
 # See https://wilsonmar.github.io/mac-setup/#UseHashiVault
 if [ "${USE_VAULT}" = true ]; then   # -HV
@@ -3532,6 +3548,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
 
 
    ### 40d. Obtain Vault Status
+
    # TODO: use production ADDR from secrets
    export VAULT_ADDR="https://${VAULT_HOST}:8200"
    note "VAULT_ADDR=${VAULT_ADDR} ..."
@@ -3745,6 +3762,7 @@ fi  # USE_VAULT
 
 
 ### TODO: 41. Put secret in Hashicorp Vault
+
 # See https://wilsonmar.github.io/mac-setup/#PutInHashiVault
 if [ "${VAULT_PUT}" = true ]; then  # -n
 
@@ -3774,6 +3792,7 @@ fi  # USE_VAULT
 
 
 ### 50. Install NodeJs
+
 # See https://wilsonmar.github.io/mac-setup/#InstallNode
 if [ "${NODE_INSTALL}" = true ]; then  # -js
 
@@ -3980,6 +3999,7 @@ fi # if [ "${NODE_INSTALL}
 
 
 ### 53. Configure Pyenv with virtualenv
+
 # See https://wilsonmar.github.io/mac-setup/#VirtualPyenv
 if [ "${USE_PYENV}" = true ]; then  # -pyenv
 
@@ -4120,6 +4140,7 @@ install_miniconda
 
 
 ### 55. RUN_JAVA
+
 # See https://wilsonmar.github.io/java
 # See https://wilsonmar.github.io/mac-setup/#Java
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
@@ -4163,6 +4184,7 @@ fi  # DOWNLOAD_INSTALL
 
 
 ### 56. RUN_GOLANG  
+
 # See https://wilsonmar.github.io/golang
 # See https://wilsonmar.github.io/mac-setup/#Golang
 if [ "${RUN_GOLANG}" = true ]; then  # -Golang
@@ -4231,6 +4253,7 @@ fi   # RUN_GOLANG
 
 
 ### 57. Install Python
+
 # See https://wilsonmar.github.io/mac-setup/#InstallPython
 if [ "${RUN_PYTHON}" = true ]; then  # -python
 
@@ -4452,6 +4475,7 @@ do_aiac
 
 
 ### 58. RUN_TERRAFORM
+
 # See https://wilsonmar.github.io/mac-setup/#Terraform
 if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
    if [ "${SET_TRACE}" = true ]; then   # -x
@@ -4506,6 +4530,7 @@ fi    # RUN_TERRAFORM
 
 
 ### 59. RUN_TENSORFLOW
+
 # See https://wilsonmar.github.io/mac-setup/#Tensorflow
 if [ "${RUN_TENSORFLOW}" = true ]; then  # -tsf
 
@@ -4559,6 +4584,7 @@ fi  # if [ "${RUN_TENSORFLOW}"
 
 
 ### 60. Finish RUN_VIRTUALENV
+
 # See https://wilsonmar.github.io/mac-setup/#RunVirtualenv
 if [ "${RUN_VIRTUALENV}" = true ]; then  # -V
       h2 "Execute deactivate if the function exists (i.e. has been created by sourcing activate):"
@@ -4570,6 +4596,7 @@ fi
 
 
 ### 61. USE_TEST_SERVER
+
 # See https://wilsonmar.github.io/mac-setup/#Testenv
 if [ "${USE_TEST_SERVER}" = true ]; then  # -t
 
@@ -4614,6 +4641,7 @@ fi # if [ "${USE_TEST_SERVER}"
 
 
 ### 62. RUBY_INSTALL
+
 # See https://wilsonmar.github.io/mac-setup/#InstallRuby
 if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
 
@@ -4866,6 +4894,7 @@ fi # RUBY_INSTALL
 
 
 ### 63. RUN_EGGPLANT
+
 # See https://wilsonmar.github.io/mac-setup/#Eggplant
 if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 
@@ -4927,7 +4956,8 @@ if [ "${RUN_EGGPLANT}" = true ]; then  # -eggplant
 fi    # RUN_EGGPLANT
 
 
-### 64. Use QEMU Podman 
+### 64. Use QEMU Podman
+
 if [ "${USE_QEMU}" = true ]; then   # -qemu
    RESPONSE="$(podman ps -a)"
    if [[ "${RESPONSE}" == *"${/bin/qemu-system-aarch64}"* ]]; then  # contains it:
@@ -4939,6 +4969,7 @@ fi  # USE_PODMAN
 
 
 ### 65. USE_DOCKER or USE_PODMAN (from RedHat, instead of Docker)
+
 # See https://wilsonmar.github.io/mac-setup/#UseDocker
 
    #if [ ! -f "docker-compose.override.yml" ]; then
@@ -5214,6 +5245,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
 
    ### 66. RUN_ACTUAL
+
    if [ "${RUN_ACTUAL}" = true ]; then  # -a for actual usage
 
       h2 "Remove dangling docker ..."
@@ -5288,6 +5320,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
       # TODO: Add run in local Kubernetes.
       ### 67. RUN_ACTUAL within Docker
+
       # See https://wilsonmar.github.io/mac-setup/#RunDocker
       h2 "-a  RUN_ACTUAL ... (not dry run)"
       if [ -z "${MY_FOLDER}" ]; then  # not defined:
@@ -5322,6 +5355,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
 
    ### 68. Docker RUN_CONSUL
+
    if [ "${RUN_CONSUL}" = true ]; then  # -Consul
 
       # See https://learn.hashicorp.com/tutorials/consul/docker-container-agents 
@@ -5425,6 +5459,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
 
    ### 69. Docker RUN_EGGPLANT or container
+
    if [ "${RUN_EGGPLANT}" = true ]; then  # -O
       # Connect target browser to Eggplant license server: 
       if [ -z "${EGGPLANT_USERNAME}" ]; then
@@ -5518,6 +5553,7 @@ fi  # USE_DOCKER
 
 
 ### 70. UPDATE_GITHUB
+
 # See https://wilsonmar.github.io/mac-setup/#UpdateGitHub
 # Alternative: https://github.com/anshumanbh/git-all-secrets
 if [ "${UPDATE_GITHUB}" = true ]; then  # -u
@@ -5568,6 +5604,7 @@ fi   # UPDATE_GITHUB
 
 
 ### 71. REMOVE_GITHUB_AFTER folder after run
+
 # See https://wilsonmar.github.io/mac-setup/#RemoveGitHub
 if [ "$REMOVE_GITHUB_AFTER" = true ]; then  # -C
    h2 "Delete cloned GitHub at end ..."
@@ -5597,6 +5634,7 @@ fi
 
 
 ### 76. Use Docker
+
 if [ "${USE_DOCKER}" = true ]; then   # -k
    if [ "${KEEP_PROCESSES}" = true ]; then  # -K
       RESPONSE="$( docker images -qf dangling=true )"
@@ -5650,6 +5688,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
 
    ### 77. REMOVE_DOCKER_IMAGES downloaded
+
    # See https://wilsonmar.github.io/mac-setup/#RemoveImages
    if [ "${REMOVE_DOCKER_IMAGES}" = true ]; then  # -M
 
@@ -5683,6 +5722,7 @@ fi    # USE_DOCKER
 
 
 ### 78. Report Timings
+
 # See https://wilsonmar.github.io/mac-setup/#ReportTimings
 
 
