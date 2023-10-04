@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.123" # add azcopy brew to azure : mac-setup.zsh"
+SCRIPT_VERSION="v1.124" # duti to set VSCode file ext : mac-setup.zsh"
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -179,12 +179,12 @@ h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
 info() {   # output on every run
    printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
-note() { if [ "${RUN_VERBOSE}" = true ]; then
+note() { if [ "${SHOW_VERBOSE}" = true ]; then
    printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
    printf "\n"
    fi
 }
-echo_debug() { if [ "${RUN_DEBUG}" = true ]; then
+echo_debug() { if [ "${SHOW_DEBUG}" = true ]; then
    printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
    printf "\n"
    fi
@@ -202,7 +202,7 @@ fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
    printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
 
-if [ "${RUN_DEBUG}" = true ]; then  # -vv
+if [ "${SHOW_DEBUG}" = true ]; then  # -vv
    h2 "Header here"
    info "info"
    note "note"
@@ -219,9 +219,9 @@ fi
    CONTINUE_ON_ERR=false         # -cont
 
    RUN_ACTUAL=false              # -a  (dry run is default)
-   RUN_DEBUG=false               # -vv
    RUN_PARMS=""                  # -P
-   RUN_VERBOSE=false             # -v
+   SHOW_VERBOSE=false             # -v
+   SHOW_DEBUG=false               # -vv
    VERIFY_ENV=false              # -V
    RUN_QUIET=false               # -q
 
@@ -867,7 +867,7 @@ while test $# -gt 0; do
       shift
       ;;
     -vv)
-      export RUN_DEBUG=true
+      export SHOW_DEBUG=true
       shift
       ;;
     -venv)
@@ -881,7 +881,7 @@ while test $# -gt 0; do
       shift
       ;;
     -v)
-      export RUN_VERBOSE=true
+      export SHOW_VERBOSE=true
       shift
       ;;
     -x)
@@ -928,7 +928,7 @@ done
 ### 07. Display run variables
 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
-if [ "${RUN_VERBOSE}" = true ]; then
+if [ "${SHOW_VERBOSE}" = true ]; then
    note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
    note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
    note "GITHUB_USER_EMAIL=" "${GITHUB_USER_EMAIL}"
@@ -1126,7 +1126,7 @@ fi
 
 ### 13. Backup using macOS Time Machine via tmutil
 
-if [ "${RUN_VERBOSE}" = true ]; then
+if [ "${SHOW_VERBOSE}" = true ]; then
    h2 "Before changes, backup using macOS Time Machine via tmutil ..."
    # tmutil version
       # tmutil version 4.0.0 (built Jul  5 2023)
@@ -1160,7 +1160,7 @@ fi
 
 # Apple Directory Services database Command Line utility:
 USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
-if [ "${RUN_VERBOSE}" = true ]; then
+if [ "${SHOW_VERBOSE}" = true ]; then
    echo "SHELL=$SHELL"
    echo "USER_SHELL_INFO=$USER_SHELL_INFO"
 fi
@@ -1469,7 +1469,7 @@ fi  # DOWNLOAD_INSTALL
 
 ### 18. Install basic utilities (git, jq, tree, etc.) used by many:
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
-if [ "${RUN_DEBUG}" = true ]; then
+if [ "${SHOW_DEBUG}" = true ]; then
    h2 "Apps installed using Apple App Store ..."
    find /Applications -path '*Contents/_MASReceipt/receipt' -maxdepth 4 -print |\sed 's#.app/Contents/_MASReceipt/receipt#.app#g; s#/Applications/##'
 
@@ -1752,7 +1752,7 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
    # https://www.youtube.com/watch?v=r_MpUP6aKiQ = "~/.dotfiles in 100 seconds"
    # Patrick McDonald's $12,99 Udemy course "Dotfiles from Start to Finish" at https://bit.ly/3anaaFh
 
-   if [ "${RUN_DEBUG}" = true ]; then  # -vv
+   if [ "${SHOW_DEBUG}" = true ]; then  # -vv
       note "NSGlobalDomain NSGlobalDomain before update ..."
       defaults read NSGlobalDomain # > DefaultsGlobal.txt
    fi
@@ -2120,7 +2120,7 @@ Clone_into_GITHUB_OR_PROJECT(){
       cd /
       cd "${GITHUB_FOLDER_PATH}"
       note "At $PWD"
-      if [ "${RUN_VERBOSE}" = true ]; then
+      if [ "${SHOW_VERBOSE}" = true ]; then
          ls -ltaT 
       fi
    fi
@@ -2182,7 +2182,7 @@ Clone_into_GITHUB_OR_PROJECT(){
       cd "${PROJECT_FOLDER_PATH}"
    fi  # PROJECT_FOLDER_NAME
    note "At $PWD"
-   if [ "${RUN_VERBOSE}" = true ]; then
+   if [ "${SHOW_VERBOSE}" = true ]; then
       ls -ltaT 
    fi
 }
@@ -2413,7 +2413,7 @@ if [ "${USE_GOOGLE_CLOUD}" = true ]; then   # -g
       #- key: ssh-keys
    #note "RESPONSE=$RESPONSE"
 
-   if [ "${RUN_VERBOSE}" = true ]; then
+   if [ "${SHOW_VERBOSE}" = true ]; then
       h2 "gcloud info and versions ..."
       gcloud info
       gcloud version
@@ -3161,7 +3161,7 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
    fi
    PROJECT_FOLDER_PATH="${PROJECT_FOLDER_PATH}/${PROJECT_FOLDER_NAME}"
    cd "${PROJECT_FOLDER_PATH}"
-   if [ "${RUN_VERBOSE}" = true ]; then
+   if [ "${SHOW_VERBOSE}" = true ]; then
       note "At $(pwd)"
       note "$( ls -ltaT )"
 
@@ -3536,7 +3536,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
    export VAULT_ADDR="https://${VAULT_HOST}:8200"
    note "VAULT_ADDR=${VAULT_ADDR} ..."
 
-   if [ "${RUN_DEBUG}" = true ]; then
+   if [ "${SHOW_DEBUG}" = true ]; then
       if [ -n "${VAULT_ADDR}" ]; then  # filled
    
             # Output to JSON instead & use jq to parse?
@@ -3566,7 +3566,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
             note -e "${RESPONSE}"
          fi
       fi  # VAULT_ADDR
-   fi  # RUN_VERBOSE
+   fi  # SHOW_VERBOSE
 
 
    # 40e. Run Test Vault server
@@ -3633,7 +3633,7 @@ if [ "${USE_VAULT}" = true ]; then   # -HV
          echo -e "  \"default_user\": \"ubuntu\"," >>"${SSH_ROLE_FILENAME}"
          echo -e "  \"ttl\": \"30m0s\"" >>"${SSH_ROLE_FILENAME}"
          echo -e "}" >>"${SSH_ROLE_FILENAME}"
-         if [ "${RUN_DEBUG}" = true ]; then  # -vv
+         if [ "${SHOW_DEBUG}" = true ]; then  # -vv
             code "${SSH_ROLE_FILENAME}"
          fi
 
@@ -3691,7 +3691,7 @@ EOD
       h2 "pushd into ~/.ssh"
       pushd  "$HOME/.ssh"
       h2 "At temporary $PWD ..."
-      if [ "${RUN_DEBUG}" = true ]; then  # -vv
+      if [ "${SHOW_DEBUG}" = true ]; then  # -vv
          note "$( ls -ltaT )"
       fi
 
@@ -4047,7 +4047,7 @@ if [ "${RUN_CONDA}" = true ]; then  # -conda
    fi
 
    note "$( conda --version )"  # conda 4.11.0
-   if [ "${RUN_DEBUG}" = true ]; then
+   if [ "${SHOW_DEBUG}" = true ]; then
       note "$( conda info )"
       #      active environment : base
       #     active env location : /opt/homebrew/Caskroom/miniconda/base
@@ -4409,7 +4409,7 @@ if [ "${USE_AIAC}" = true ]; then  # -tf
       # Insecure: note "OPENAI_API_KEY=${OPENAI_API_KEY}"
    fi
 
-   if [ "${RUN_VERBOSE}" = true ]; then  # -v
+   if [ "${SHOW_VERBOSE}" = true ]; then  # -v
       note "aiac list-models ..."
       aiac list-models
          # --model=            Type        Maximum Tokens
@@ -5276,7 +5276,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
             # consul       latest    58fe9fa6a8a4   3 weeks ago   128MB
       fi  # USE_DOCKER_COMPOSE
    
-      if [ "${RUN_VERBOSE}" = true ]; then
+      if [ "${SHOW_VERBOSE}" = true ]; then
          h2 "docker images downloaded, sorted by size ..."
          # Thanks to https://tunzor.github.io/posts/docker-list-images-by-size/
          docker image ls --format "{{.Repository}}:{{.Tag}} {{.Size}}" | \
@@ -5675,7 +5675,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
       fi
    fi
 
-   if [ "${RUN_VERBOSE}" = true ]; then
+   if [ "${SHOW_VERBOSE}" = true ]; then
       h2 "At end of run: docker images -a ..."
       note "$( docker images -a )"
    fi
