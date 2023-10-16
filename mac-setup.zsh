@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.124" # duti to set VSCode file ext : mac-setup.zsh"
+SCRIPT_VERSION="v1.125" # add chezmoi to manage secrets dotfiles : mac-setup.zsh"
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -220,8 +220,8 @@ fi
 
    RUN_ACTUAL=false              # -a  (dry run is default)
    RUN_PARMS=""                  # -P
-   SHOW_VERBOSE=false             # -v
-   SHOW_DEBUG=false               # -vv
+   SHOW_VERBOSE=false            # -v
+   SHOW_DEBUG=false              # -vv
    VERIFY_ENV=false              # -V
    RUN_QUIET=false               # -q
 
@@ -1043,55 +1043,7 @@ fi
 # set -o nounset
 
 
-### 11. Trace execution of this script
-
-if [ "${RUN_TRACE}" = true ]; then  # -trace
-   # Python-based alternative to https://github.com/dell/opentelemetry-cli
-   # See Go-based otel-cli https://github.com/equinix-labs/otel-cli#getting-started
-      # https://deploy.equinix.com/labs/otel-cli/
-      # https://blog.howardjohn.info/posts/shell-tracing/
-   if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
-      if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
-         h2 "-I (install) otel-cli client for OpenTelemetry in CLI ..."
-         # https://gist.github.com/howardjohn/60ed0a3ef4d7a79b043c153631bfb18f
-         brew tap equinix-labs/otel-cli
-         brew install otel-cli
-         # Similar to System.Runtime.Metrics API in .NET
-      fi
-   fi
-   # Use Docker container as OpenTelementry server:
-      # https://dev.to/ashokan/otel-cli-push-otel-traces-with-ease-29al simple intuitive flexible
-   # Alternatively
-   if ! command -v otel-cli ; then
-   else
-      # Run a trace receiver simple demo server using https://github.com/equinix-labs/otel-cli
-      otel-cli server tui &
-      if [ -z "$OTEL_EXPORTER_OTLP_ENDPOINT" ]; then  # variable is found:
-         warning "-trace using $OTEL_EXPORTER_OTLP_ENDPOINT ..."
-         # dotnet tool install -g dotnet-monitor
-         # Docker image: mcr.microsoft.com/dotnet/monitor:6.0.0
-      else
-         export OTEL_EXPORTER_OTLP_ENDPOINT="localhost:4317"
-         warning "-trace using otel-cli on $OTEL_EXPORTER_OTLP_ENDPOINT ..."
-
-         # Run a trace receiver simple local demo server in background:
-         otel-cli server tui &
-         
-         # run a program inside a span:
-         otel-cli exec --service my-service --name "curl google" curl https://google.com
-            # The `server tui` shows traces:
-            # Trace ID     | Span ID          | Parent | Name        | Kind   | Start | End | Elapsed
-            # ddb...a5687c | f35df40a78a4d9a3 |        | curl google | client | 0     | 134 | 134
-      fi
-   fi
-#   # Place at end of script:
-#   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
-#      # kill otel-cli server background process.
-#   fi
-fi  # RUN_TRACE
-
-
-### 12. Print run Operating environment information
+### 11. Print run Operating environment information
 
 note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
 note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
@@ -1124,7 +1076,7 @@ if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
 fi
 
 
-### 13. Backup using macOS Time Machine via tmutil
+### 12. Backup using macOS Time Machine via tmutil
 
 if [ "${SHOW_VERBOSE}" = true ]; then
    h2 "Before changes, backup using macOS Time Machine via tmutil ..."
@@ -1156,7 +1108,7 @@ if [ "${SHOW_VERBOSE}" = true ]; then
 fi
 
 
-### 14. Upgrade Bash to Zsh
+### 13. Upgrade Bash to Zsh
 
 # Apple Directory Services database Command Line utility:
 USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
@@ -1193,7 +1145,7 @@ if [ "${CONVERT_TO_ZSH}" = true ]; then
 fi  # CONVERT_TO_ZSH
 
 
-### 15. Define utility functions: kill process by name, etc.
+### 14. Define utility functions: kill process by name, etc.
 ###     Keep-alive: update existing `sudo` time stamp until `.osx` has finished
 
 # See https://wilsonmar.github.io/mac-setup/#KeepAlive
@@ -1209,7 +1161,7 @@ ps_kill(){  # $1=process name
 }
 
 
-### 16. Install installers (brew, apt-get), depending on operating system
+### 15. Install installers (brew, apt-get), depending on operating system
 
 # See https://wilsonmar.github.io/mac-setup/#InstallInstallers
 
@@ -1382,6 +1334,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
 fi # if [ "${DOWNLOAD_INSTALL}"
 
+
 if [ "${VERIFY_ENV}" = true ]; then  # -V  (upper case)
   if command -v brew >/dev/null; then  # command found, so:
       h2 "brew doctor for -V (Verify) (may error out script)..."
@@ -1399,45 +1352,8 @@ if [ "${VERIFY_ENV}" = true ]; then  # -V  (upper case)
 fi
 
 
-Loop_Thru_File(){
-   h2 "-VSC \"${VSCODE_FILE}\" Loop_Thru_File ..."
-   for line in ("${VSCODE_FILE}")
-   do
-      echo "${line}"   # debug
-      # Skip blank lines and those whose first character is a # comment:
-      # Examples: https://gist.github.com/matthiasott/1695ca6f1fe9ccfc18ff6748fb2767c1
-      # Such as: https://marketplace.visualstudio.com/items?itemName=azure-ai.azure-ai
-      # code --install-extension azure-ai.vscode-ai
-      # code --install-extension "${line}"
-   done
-}
 
-
-if [ -n "${VSCODE_FILE}" ]; then   # -VSC \"vscode-ext\" file specified:
-   # For vscode CLI commands, see https://www.youtube.com/watch?v=uKCiAA4AJcI
-   # https://code.visualstudio.com/docs/editor/extension-marketplace
-   h2 "-VSC \"${VSCODE_FILE}\" at ${PWD}..."
-      # Loop_Thru_File  # function defined above
-   if [ -f "${VSCODE_FILE}" ]; then   # file found:
-      # FIXME: Dir not found.
-      # PROTIP: Use sed to strip out spaces before and after the file name:
-      LINES_IN_FILE=$( wc -l < ${VSCODE_FILE} | sed 's/ //g' )
-      echo "-VSC \"${VSCODE_FILE}\" ${LINES_IN_FILE} lines for code --install-extensions ..."
-      # h2 "-vsc \"${VSCODE_FILE}\" entries used for -U code --uninstall-extensions ..."
-      # TODO: Loop through file to install each extension: code --install-extension "${line from file}"
-         # Ignore Duplicates:
-   else  # file not found
-      # h2 "-VSC \"${VSCODE_FILE}\" gen'd by code --list-extensions output ..."
-      # This will not run if code --disable-extensions was run!
-      code --list-extensions > "${VSCODE_FILE}"
-         # [vscode-ai]: Couldn't find message for key azureml.internal.activate.title.
-      LINES_IN_FILE=$( wc -l < "${VSCODE_FILE}" | sed 's/ //g' )
-      echo "-VSC \"${VSCODE_FILE}\" file gen'd with ${LINES_IN_FILE} lines ..."
-   fi
-fi
-
-
-### 17. Install ShellCheck 
+### 16. Install ShellCheck 
 
 # See https://wilsonmar.github.io/mac-setup/#ShellCheck
 # CAUTION: shellcheck does not work on zsh files (only bash files)
@@ -1467,7 +1383,95 @@ fi  # DOWNLOAD_INSTALL
 #fi
 
 
-### 18. Install basic utilities (git, jq, tree, etc.) used by many:
+
+### 17. Trace execution of this script using otel-cli
+
+if [ "${RUN_TRACE}" = true ]; then  # -trace
+   # Python-based alternative to https://github.com/dell/opentelemetry-cli
+   # See Go-based otel-cli https://github.com/equinix-labs/otel-cli#getting-started
+      # https://deploy.equinix.com/labs/otel-cli/
+      # https://blog.howardjohn.info/posts/shell-tracing/
+   if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then # -U
+         h2 "-I (install) otel-cli client for OpenTelemetry in CLI ..."
+         # https://gist.github.com/howardjohn/60ed0a3ef4d7a79b043c153631bfb18f
+         brew tap equinix-labs/otel-cli
+         brew install otel-cli
+         # Similar to System.Runtime.Metrics API in .NET
+      fi
+   fi
+   # Use Docker container as OpenTelementry server:
+      # https://dev.to/ashokan/otel-cli-push-otel-traces-with-ease-29al simple intuitive flexible
+   # Alternatively
+   if ! command -v otel-cli ; then
+   else
+      # Run a trace receiver simple demo server using https://github.com/equinix-labs/otel-cli
+      otel-cli server tui &
+      if [ -z "$OTEL_EXPORTER_OTLP_ENDPOINT" ]; then  # variable is found:
+         warning "-trace using $OTEL_EXPORTER_OTLP_ENDPOINT ..."
+         # dotnet tool install -g dotnet-monitor
+         # Docker image: mcr.microsoft.com/dotnet/monitor:6.0.0
+      else
+         export OTEL_EXPORTER_OTLP_ENDPOINT="localhost:4317"
+         warning "-trace using otel-cli on $OTEL_EXPORTER_OTLP_ENDPOINT ..."
+
+         # Run a trace receiver simple local demo server in background:
+         otel-cli server tui &
+         
+         # run a program inside a span:
+         otel-cli exec --service my-service --name "curl google" curl https://google.com
+            # The `server tui` shows traces:
+            # Trace ID     | Span ID          | Parent | Name        | Kind   | Start | End | Elapsed
+            # ddb...a5687c | f35df40a78a4d9a3 |        | curl google | client | 0     | 134 | 134
+      fi
+   fi
+#   # Place at end of script:
+#   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+#      # kill otel-cli server background process.
+#   fi
+fi  # RUN_TRACE
+
+
+### 18. Configure VSCode
+
+Loop_Thru_File(){
+   h2 "-VSC \"${VSCODE_FILE}\" Loop_Thru_File ..."
+   for line in ("${VSCODE_FILE}")
+   do
+      echo "${line}"   # debug
+      # Skip blank lines and those whose first character is a # comment:
+      # Examples: https://gist.github.com/matthiasott/1695ca6f1fe9ccfc18ff6748fb2767c1
+      # Such as: https://marketplace.visualstudio.com/items?itemName=azure-ai.azure-ai
+      # code --install-extension azure-ai.vscode-ai
+      # code --install-extension "${line}"
+   done
+}
+
+if [ -n "${VSCODE_FILE}" ]; then   # -VSC \"vscode-ext\" file specified:
+   # For vscode CLI commands, see https://www.youtube.com/watch?v=uKCiAA4AJcI
+   # https://code.visualstudio.com/docs/editor/extension-marketplace
+   h2 "-VSC \"${VSCODE_FILE}\" at ${PWD}..."
+      # Loop_Thru_File  # function defined above
+   if [ -f "${VSCODE_FILE}" ]; then   # file found:
+      # FIXME: Dir not found.
+      # PROTIP: Use sed to strip out spaces before and after the file name:
+      LINES_IN_FILE=$( wc -l < ${VSCODE_FILE} | sed 's/ //g' )
+      echo "-VSC \"${VSCODE_FILE}\" ${LINES_IN_FILE} lines for code --install-extensions ..."
+      # h2 "-vsc \"${VSCODE_FILE}\" entries used for -U code --uninstall-extensions ..."
+      # TODO: Loop through file to install each extension: code --install-extension "${line from file}"
+         # Ignore Duplicates:
+   else  # file not found
+      # h2 "-VSC \"${VSCODE_FILE}\" gen'd by code --list-extensions output ..."
+      # This will not run if code --disable-extensions was run!
+      code --list-extensions > "${VSCODE_FILE}"
+         # [vscode-ai]: Couldn't find message for key azureml.internal.activate.title.
+      LINES_IN_FILE=$( wc -l < "${VSCODE_FILE}" | sed 's/ //g' )
+      echo "-VSC \"${VSCODE_FILE}\" file gen'd with ${LINES_IN_FILE} lines ..."
+   fi
+fi
+
+
+### 19. Install basic utilities (git, jq, tree, etc.) used by many:
 
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
 if [ "${SHOW_DEBUG}" = true ]; then
@@ -1616,7 +1620,10 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
       h2 "-I install brew CLI utilities ..."
       # TODO: CLI_APPS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
-      # CLI_APPS_TO_INSTALL="curl wget jp jq htop tree git hub ncdu docker-compose hadolint 1password-cli"
+      # Defined in ~/mac-setup.env :
+      # CLI_APPS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
+         * jq manipulates JSON
+         * yq manipulates YAML
       ARRAY=(`echo ${CLI_APPS_TO_INSTALL}`);  # from ~/mac-setup.env
       for brewname in "${ARRAY[@]}"; do
          brew install $brewname
@@ -1741,7 +1748,38 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi  # DOWNLOAD_INSTALL
 
 
-### 19. ??? 
+### 19. Install chaimos (Chai's macOS dotfiles)
+
+# See https://www.chezmoi.io/reference/concepts/
+# See https://wilsonmar.github.io/dotfiles/
+
+#if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
+         if ! command -v chezmoi >/dev/null; then  # command not found, so:
+            h2 "Brew installing chezmoi ..."
+            brew install chezmoi
+         else  # installed already:
+            if [ "${UPDATE_PKGS}" = true ]; then
+               h2 "Brew upgrading chezmoi ..."
+               brew upgrade chezmoi
+            fi
+         fi
+         note "$( chezmoi --version )"
+            # chezmoi version v2.40.0, commit 6a8ca1634654734bb33a036ffb9c21e6b9f4d28d, built at 2023-09-19T08:14:08Z, built by Homebrew
+   fi  # PACKAGE_MANAGER
+
+   CHEZMOI_CONFIG_FILE="~/.config/chezmoi/chezmoi.toml"
+   CHEZMOI_FOLDERPATH="~/.local/share/chezmoi"  # in ~/chmac-setup.env
+   if [ ! -f "$CHEZMOI_FOLDERPATH" ]; then   # NOT found
+      # Create a new git local repository to store its source state:
+      chezmoi init
+   fi
+   ls -al "${CHEZMOI_FOLDERPATH}"
+      # By default, chezmoi only modifies files in the working copy.
+#fi  # DOWNLOAD_INSTALL
+
+echo "chezmoi pardon";exit
+
 
 
 ### 20. Override defaults in Apple macOS System Preferences:"
@@ -1840,6 +1878,7 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
    sudo defaults write com.apple.loginwindow LoginHook "osascript -e 'set volume without output muted'"
 
 fi  # SET_MACOS_SYSPREFS
+
 
 
 ### 21. Hashicorp Cloud using Doormat
