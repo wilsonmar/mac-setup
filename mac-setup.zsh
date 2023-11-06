@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.125" # add chezmoi to manage secrets dotfiles : mac-setup.zsh"
+SCRIPT_VERSION="v1.126" # add -pike for min permissions req to run TF/IAC : mac-setup.zsh"
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -89,7 +89,8 @@ args_prompt() {
    echo "   -u           -update GitHub (scan for secrets)"
    echo " "
    echo "   -docsify      install docsify locally"
-   #echo "   -circleci    Use CircleCI SaaS"
+#  echo "   -chezmoi      ???"
+  #echo "   -circleci    Use CircleCI SaaS"
    echo " "
    echo "   -podman       install and use Podman (instead of Docker)"
    echo "   -k            install and use Docker"
@@ -114,7 +115,8 @@ args_prompt() {
    echo "   -tsf         -tensorflow"
    echo " "
    echo "   -aiac \"ec2\"  - AI to create Terraform Infra as Code"
-   echo "   -tf          -terraform"
+   echo "   -pike         determine min permissions on tf/IaC"
+   echo "   -tf           Run terraform"
    echo "   -a           -actually run server (not dry run)"
    echo "   -ts           setup -testserver to run tests"
    echo "   -o           -open/view app or web page in default browser"
@@ -126,6 +128,8 @@ args_prompt() {
    echo "   -usage       usage commands"
    echo "# USAGE EXAMPLES:"
    echo "chmod +x mac-setup.zsh   # change permissions"
+   echo "./mac-setup.zsh          # display this menu"
+   echo "./mac-setup.zsh -usage   # display usage examples"
 }  # args_prompt()
 
 usage_examples() {
@@ -153,7 +157,8 @@ usage_examples() {
    echo "./mac-setup.zsh -v -ruby -o  # Ruby app"   
    echo "./mac-setup.zsh -v -venv -c -circleci -s    # Use CircLeci based on secrets"
    echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
-   echo "./mac-setup.zsh -v -docsify -d -c "
+   echo "./mac-setup.zsh -docsify -d -c -v "
+   echo "./mac-setup.zsh -pike -c -gru \"alfonsof/terraform-azure-examples\" -d1 -gfn \"alonzo\" -F \"code/01-hello-world\" -o -v "
    echo "./mac-setup.zsh -tf -F \"tf-module1\" -d1 -c -v -I -U"
 } # usage_examples()
 
@@ -327,7 +332,9 @@ SECRETS_FILE=".secrets.env.sample"
    #   AWS_OUTPUT_FORMAT="json"  # asked by aws configure CLI.
    # EKS_CLUSTER_FILE=""   # cluster.yaml instead
    USE_YUBIKEY=false            # -Y
+   USE_PIKE=false               # -pike
    USE_DOCSIFY=false            # -docsify
+   USE_CHEZMOI=false            # -chezmoi
    USE_K8S=false                # -k8s
    USE_AZURE_CLOUD=false        # -azure
    USE_GOOGLE_CLOUD=false       # -g
@@ -370,7 +377,6 @@ SECRETS_FILE=".secrets.env.sample"
 download_mac-setup_home(){
    # filename = $1
    # ENV_FOLDERPATH Should be found:
-   echo "DEBUG out download_mac-setup_home $ENV_FOLDERPATH";exit
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
       if [ "${COPY_ENV_FILES}" = false ]; then  # -envc OVERWRITE!
          note "-envc not specified. File $HOME/$1 exists. Not downloaded..."
@@ -768,6 +774,10 @@ while test $# -gt 0; do
       export PROJECT_FOLDER_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
+    -pike)
+      export USE_PIKE=true
+      shift
+      ;;
     -podman)
       export USE_PODMAN=true
       shift
@@ -996,6 +1006,7 @@ fi
 # note "OS_DETAILS=$OS_DETAILS"
 
 
+
 ### 09. Set traps to display information if script is interrupted.
 
 # See https://wilsonmar.github.io/mac-setup/#SetTraps
@@ -1026,6 +1037,7 @@ sig_cleanup() {
 }
 
 
+
 ### 10. Set Continue on Error and Trace
 
 # See https://wilsonmar.github.io/mac-setup/#StrictMode
@@ -1043,6 +1055,7 @@ fi
 # set -o nounset
 
 
+
 ### 11. Print run Operating environment information
 
 note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
@@ -1056,6 +1069,10 @@ PUBLIC_IP=$( curl -s ifconfig.me )
 INTERNAL_IP=$( ipconfig getifaddr en0 )
    # To protect privacy security, don't expose IP address for attackers to use:
    # note "at PUBLIC_IP=$PUBLIC_IP, internal $INTERNAL_IP"
+
+# From https://vladiliescu.net/wiki/macos/
+note $( sysctl vm.swapusage )
+   # vm.swapusage: total = 2048.00M  used = 935.25M  free = 1112.75M  (encrypted)
 
 if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    export MACHINE_TYPE="$(uname -m)"
@@ -1108,6 +1125,7 @@ if [ "${SHOW_VERBOSE}" = true ]; then
 fi
 
 
+
 ### 13. Upgrade Bash to Zsh
 
 # Apple Directory Services database Command Line utility:
@@ -1145,6 +1163,7 @@ if [ "${CONVERT_TO_ZSH}" = true ]; then
 fi  # CONVERT_TO_ZSH
 
 
+
 ### 14. Define utility functions: kill process by name, etc.
 ###     Keep-alive: update existing `sudo` time stamp until `.osx` has finished
 
@@ -1159,6 +1178,7 @@ ps_kill(){  # $1=process name
          sleep 2
       fi
 }
+
 
 
 ### 15. Install installers (brew, apt-get), depending on operating system
@@ -1432,6 +1452,7 @@ if [ "${RUN_TRACE}" = true ]; then  # -trace
 fi  # RUN_TRACE
 
 
+
 ### 18. Configure VSCode
 
 Loop_Thru_File(){
@@ -1469,6 +1490,7 @@ if [ -n "${VSCODE_FILE}" ]; then   # -VSC \"vscode-ext\" file specified:
       echo "-VSC \"${VSCODE_FILE}\" file gen'd with ${LINES_IN_FILE} lines ..."
    fi
 fi
+
 
 
 ### 19. Install basic utilities (git, jq, tree, etc.) used by many:
@@ -1530,20 +1552,20 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          fi
       done
 
-      h2 "-I install/upgrade apps using brew --cask into /Applications/:"
+      h2 "-I brew install/upgrade --cask into /Applications/:"
       # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  Postman  PowerShell"
       ARRAY=(`echo ${ROOT_APPS_TO_INSTALL}`);
       for appname in "${ARRAY[@]}"; do
          if [ -d "/Applications/$appname.app:?}" ]; then   # app found:
             if [ "${UPDATE_PKGS}" = true ]; then
-               note "brew reinstall --cask $appname.app within /Applications/ ..."
+               note "-I brew reinstall --cask $appname.app within /Applications/ ..."
                brew uninstall --cask $appname --force
                brew install --cask $appname
                   # GIMP Error: Directory not empty @ dir_s_rmdir - /private/tmp/d20230916-90678-14otypx
             # else ignore
             fi
          else  # app not found:
-            note "-I install brew --cask $appname within /Applications/ ..."
+            note "-I brew install --cask $appname within /Applications/ ..."
             brew install --cask $appname
             # Freeform.app not recognized
          fi
@@ -1622,8 +1644,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # TODO: CLI_APPS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
       # Defined in ~/mac-setup.env :
       # CLI_APPS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
-         * jq manipulates JSON
-         * yq manipulates YAML
+         # * jq manipulates JSON
+         # * yq manipulates YAML
       ARRAY=(`echo ${CLI_APPS_TO_INSTALL}`);  # from ~/mac-setup.env
       for brewname in "${ARRAY[@]}"; do
          brew install $brewname
@@ -1748,12 +1770,13 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi  # DOWNLOAD_INSTALL
 
 
-### 19. Install chaimos (Chai's macOS dotfiles)
+
+### 19. Install chezmos (Chai's macOS dotfiles)
 
 # See https://www.chezmoi.io/reference/concepts/
 # See https://wilsonmar.github.io/dotfiles/
-
-#if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+if [ "${USE_CHEZMOI}" = true ]; then  # -chezmoi
+   #if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v chezmoi >/dev/null; then  # command not found, so:
             h2 "Brew installing chezmoi ..."
@@ -1778,7 +1801,7 @@ fi  # DOWNLOAD_INSTALL
       # By default, chezmoi only modifies files in the working copy.
 #fi  # DOWNLOAD_INSTALL
 
-echo "chezmoi pardon";exit
+fi  # USE_CHEZMOI
 
 
 
@@ -1931,6 +1954,7 @@ if [ "${USE_DOORMAT}" = true ]; then  # -Doormat
 fi  # USE_DOORMAT
 
 
+
 ### 22. Hashicorp Consul using Envoy
 
 # https://learn.hashicorp.com/tutorials/consul/service-mesh-with-envoy-proxy
@@ -1963,6 +1987,7 @@ if [ "${USE_ENVOY}" = true ]; then  # -Envoy
       #hostname.local  127.0.0.1:8301  alive   server  1.10.0  2         dc1  <all>
 
 fi  # USE_ENVOY
+
 
 
 ### 23. Image SD card 
@@ -2030,6 +2055,7 @@ if [ "${IMAGE_SD_CARD}" = true ]; then  # -sd
 fi  # IMAGE_SD_CARD
 
 
+
 ### 24. Clone repository from GitHub into local folder
 
 # For use at end of processing as well, regardless of -c CLONE
@@ -2057,11 +2083,12 @@ Delete_PROJECT_folder(){
 # use curl installed above:
 is_url_reachable(){
    # target_url=$1  # such as "https://google.com"
-   if curl -I "$1" 2>&1 | grep -w "200\|301" ; then
-      # echo "$1 is up"
+   the_url="$1"
+   if curl -I "$the_url" 2>&1 | grep -w "200\|301" ; then
+      #note "URL $the_url reachable ..."
       return 0
    else  # error
-      # echo "$1 is down"
+      #error "URL $the_url not reachable ..."
       return 1
    fi
 }
@@ -2071,23 +2098,32 @@ is_url_reachable(){
 Identify_GITHUB_REPO_URL(){
    # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
    # For use at end of processing as well:
+      # Expected value of GITHUB_REPO_URL is "alfonsof/terraform-azure-examples"
    if [ -n "${GITHUB_REPO_URL}" ]; then   # path specified in parms
-      # PROTIP: See if URL is really available:
+      if [[ "$1" == *"http"* ]]; then  # contains it:
+         info "-gru (GITHUB_REPO_URL)=$GITHUB_REPO_URL"
+      elif [[ "$1" == *"git@"* ]]; then  # contains it:
+         info "-gru (GITHUB_REPO_URL)=$GITHUB_REPO_URL"
+      else
+         if [ "${USE_GITHUB_SSH}" = true ]; then   # -ssh specified:
+            GITHUB_REPO_URL="git@github.com:${GITHUB_REPO_URL}.git"
+         else
+            GITHUB_REPO_URL="https://github.com/${GITHUB_REPO_URL}.git"
+         fi
+      fi
       is_url_reachable "${GITHUB_REPO_URL}"
-      echo "DEBUG 0=$? GITHUB_REPO_URL=$GITHUB_REPO_URL";exit
-      if [ $? -eq 0 ]; then   # URL is reachable:
-         fatal "-gru GITHUB_REPO_URL \"${GITHUB_REPO_URL}\" not reachable. Exiting ..."
-         # return 1 # this function
+      if [ $? -ne 0 ]; then   # return 1 received:
+         fatal "-gru GITHUB_REPO_URL \"${GITHUB_REPO_URL}\" unreachable. Exiting ..."
       else
          h2 "-gru GITHUB_REPO_URL \"${GITHUB_REPO_URL}\" specified ..."
          # PROTIP: Extract repo_name from GITHUB_REPO_URL:
          basename="$(basename -s .git ${GITHUB_REPO_URL})"
          note "basename=$basename"
       fi
-      return 1
+      # return 0
    else  # GITHUB_REPO_URL not specified in parms
       note "-gru GITHUB_REPO_URL not specified in parms ..."
-      # Let's build target path from one or the other variables?
+      # Build target path from one or the other variables?
       if [ -n "${GITHUB_ACCOUNT_NAME}" ]; then   # NOT specified in parms
          info "-gan (GITHUB_ACCOUNT_NAME) = \"${GITHUB_ACCOUNT_NAME}\"  ..."
       else
@@ -2118,6 +2154,7 @@ Clone_into_GITHUB_OR_PROJECT(){
       note "-gfn (GITHUB_FOLDER_NAME) not specified..."
       # Fall through to -pfn PROJECT_FOLDER_NAME
    else  # -gfn specified:
+      h2 "-gfn (GITHUB_FOLDER_NAME) \"${GITHUB_FOLDER_NAME}\" ..."
       # TODO: if GITHUB_FOLDER_NAME == PWD basename 
       #   fatal "-gru  \"$GITHUB_REPO_URL\" would wipe out existing folder \"$basename\". Exiting ..."
       if [ -z "${GITHUB_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
@@ -2130,6 +2167,7 @@ Clone_into_GITHUB_OR_PROJECT(){
          fi
       fi
       GITHUB_FOLDER_PATH="$GITHUB_FOLDER_BASE/$GITHUB_FOLDER_NAME"
+      note "GITHUB_FOLDER_PATH=$GITHUB_FOLDER_PATH"
       if [ "${DELETE_BEFORE}" = true ]; then
          if [ ! -d "${GITHUB_FOLDER_PATH:?}" ]; then  # NOT found
             warning "${GITHUB_FOLDER_PATH} not found ..."
@@ -2152,13 +2190,14 @@ Clone_into_GITHUB_OR_PROJECT(){
                if [ -d "${GITHUB_FOLDER_NAME:?}" ]; then  # found
                   warning "-gfn GITHUB_FOLDER_NAME=$GITHUB_FOLDER_NAME already exists ..."
                else
-                  echo "here before";exit
+                  #if [ "${CLONE_GITHUB}" = true ]; then
                   git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
+                  # fi
                fi
             fi
          fi
       else
-         note "-c (CLONE_GITHUB) not specified for cloning into ${GITHUB_FOLDER_BASE}..."
+         note "-c (CLONE_GITHUB) not specified for cloning ..."
       fi
       # whether cloned or not:
       cd /
@@ -2170,13 +2209,14 @@ Clone_into_GITHUB_OR_PROJECT(){
    fi
 
 
+
    ### 26. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
-   if [ -z "${PROJECT_FOLDER_NAME}" ]; then   # -pfn not specified 
-      echo "-pfn (PROJECT_FOLDER_NAME) not specified in parms either..."
+   if [ -n "${PROJECT_FOLDER_NAME}" ]; then   # -pfn not specified 
+      note "-pfn (PROJECT_FOLDER_NAME) not specified in parms either..."
       # But we need a project folder anyway...
-      if [ -n "${GITHUB_REPO_URL}" ]; then  # speified in parms
+      if [ -z "${GITHUB_REPO_URL}" ]; then  # speified in parms
          # PROTIP: Extract repo_name from URL: either git@github.com: or https://github.com...
          basename="$(basename -s .git ${GITHUB_REPO_URL})"
          PROJECT_FOLDER_NAME="$basename" # like NOT "mac-setup"
@@ -2198,7 +2238,6 @@ Clone_into_GITHUB_OR_PROJECT(){
          else  # found:
             note "-D specified to DELETE ${PROJECT_FOLDER_PATH} BEFORE ..."
             Delete_PROJECT_folder  # defined above in this file.
-         echo "DEBUG 2 GITHUB_REPO_URL=$GITHUB_REPO_URL";exit
          fi
       fi
       if [ "${CLONE_GITHUB}" = false ]; then
@@ -2233,6 +2272,7 @@ Clone_into_GITHUB_OR_PROJECT(){
 Clone_into_GITHUB_OR_PROJECT
 
 
+
 ### 27. git checkout git branch if -ghb was specified
 
 if [ -z "${GITHUB_BRANCH}" ]; then   # variable not defined
@@ -2257,6 +2297,7 @@ else  # GITHUB_BRANCH defined:
       echo "-ghb (GITHUB_BRANCH) \"$GITHUB_BRANCH\" among parms does not exist in git repo..."
    fi   
 fi  # GITHUB_BRANCH
+
 
 
 ### 28. Reveal secrets stored within .gitsecret folder 
@@ -2328,6 +2369,7 @@ if [ -d "$HOME/.gitsecret:?}" ]; then   # found directory folder in repo
 fi
 
 
+
 ### 28. Pipenv and Pyenv to install Python and its modules
 
 # See https://wilsonmar.github.io/mac-setup/#Pipenv
@@ -2388,6 +2430,7 @@ pipenv_install() {
       fi
 }  # pipenv_install()
 # pipenv_install # call function defined above.
+
 
 
 ### 29. Connect to Google Cloud, if requested:
@@ -4450,7 +4493,7 @@ fi  # RUN_PYTHON
 
 
 
-### 58. USE_AIAC to generate Terraform
+### 58a. USE_AIAC to generate Terraform
 
 do_aiac(){
 # See https://wilsonmar.github.io/mac-setup/#Terraform
@@ -4513,7 +4556,78 @@ fi  # USE_AIAC
 do_aiac  
 
 
-### 58. RUN_TERRAFORM
+# TODO: Exchange static refs with SHA references using 
+
+### 58b. Use Pike to define permissions for TF/IAC
+
+# See https://github.com/JamesWoolfenden/pike/tree/master
+# TODO: https://wilsonmar.github.io/mac-setup/#Pike
+do_pike(){
+   if [ "${USE_PIKE}" = true ]; then   # -pike
+      if command -v brew >/dev/null; then  # MacOS HomeBrew installed:
+         if ! command -v pike >/dev/null; then  # not installed, so:
+            h2 "Installing Pike ..."
+            brew tap jameswoolfenden/homebrew-tap
+            brew install jameswoolfenden/tap/pike
+               # 🍺  /usr/local/Cellar/pike/0.2.105: 5 files, 20.2MB, built in 5 seconds
+         #else  # installed already: Reinstall if -R
+         fi
+      # TODO: else on Windows use scoop.
+      fi     
+
+      # TODO: docker pull jameswoolfenden/pike
+            # docker run --tty --volume /local/path/to/tf:/tf jameswoolfenden/pike scan -d /tf
+
+      # TODO: if [ "${DELETE_BEFORE}" = false ]; then  # NOT -d 
+
+#      PROJECT_FOLDER_PATH="$PROJECT_FOLDER_BASE/$PROJECT_FOLDER_NAME"
+#      cd "${PROJECT_FOLDER_PATH}"
+      note "At $(pwd)"
+      note "$( ls -ltaT )"
+         # aws_iam_role.terraform_pike.tf
+         # pike.generated_policy.tf
+
+      cd "code/01-hello-world"
+
+      PROJECT_OUTPUT_FOLDERNAME=".pike"
+      if [ ! -d "${PROJECT_OUTPUT_FOLDERNAME}" ]; then   # DEFAULT file defined NOT found:
+         warning "-pike folder \"${PROJECT_OUTPUT_FOLDERNAME}\" not found. Creating..."
+         mkdir "${PROJECT_OUTPUT_FOLDERNAME}"
+      fi
+
+      note "-F At $(pwd)"
+      note "$( ls -ltaT )"
+
+      h2 "Run pike scan -w -i -d ."
+         # The -w flag has pike write out the role/policy required to build your project into the .pike folder:
+            # 2022/09/17 13:50:51 terraform init at .
+            # 2022/09/17 13:50:51 downloaded ip
+
+      # TODO: Make, apply, remote, compare
+
+      if [ "${OPEN_APP}" = true ]; then  # -o for -output
+         h2 'pike scan -o terraform -d "${PROJECT_FOLDERPATH}"'
+         pike scan -o terraform -d "${PROJECT_FOLDERPATH}"
+      fi
+      cd "${PROJECT_OUTPUT_FOLDERNAME}"
+      note "$( ls -ltaT )"
+
+   echo "DEBUG at pike ${PROJECT_FOLDER_PATH}";exit
+
+      # Browser will refresh when the server starts?
+
+      if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+         note "Removing project folder \"${PROJECT_FOLDER_FULL_PATH}\" ..."
+         rm -rf "${PROJECT_FOLDER_FULL_PATH}"
+            # Files are in macOS Trash.
+      fi
+
+   fi  # USE_PIKE
+}  # do_pike
+do_pike
+
+
+### 58c. RUN_TERRAFORM
 
 # See https://wilsonmar.github.io/mac-setup/#Terraform
 if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
