@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.126" # add -pike for min permissions req to run TF/IAC : mac-setup.zsh"
+SCRIPT_VERSION="v1.129" # add -hp hashicorp packer : mac-setup.zsh"
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -59,6 +59,7 @@ args_prompt() {
    echo "   -n  \"weirdo\"           -github.com account name"
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
    echo " "
+   echo "   -a           -actually run server (not dry run)"
    echo "   -sd          -sd card initialize locally"
    echo " "
    echo "   -aws         -AWS cloud"
@@ -74,6 +75,7 @@ args_prompt() {
 #  echo "   -Envoy        install/use Hashicorp's Envoy client"
    echo "   -HV           install/use -Hashicorp Vault secret manager"
    echo "   -m            Setup Vault SSH CA cert"
+   echo "   -steampipe    Steampipe.io database"
    echo " "
    echo "   -d           -delete GitHub and pyenv from previous run"
    echo "   -c           -clone from GitHub"
@@ -116,10 +118,11 @@ args_prompt() {
    echo " "
    echo "   -aiac \"ec2\"  - AI to create Terraform Infra as Code"
    echo "   -pike         determine min permissions on tf/IaC"
+   echo "   -hp           Run HashiCorp Packer"
    echo "   -tf           Run terraform"
-   echo "   -a           -actually run server (not dry run)"
    echo "   -ts           setup -testserver to run tests"
    echo "   -o           -open/view app or web page in default browser"
+   echo "   -of \"\"     output file (generate date/time if blank)"
    echo " "
    echo "   -C           remove -Cloned files after run (to save disk space)"
    echo "   -K           -Keep OS processes running at end of run (instead of killing them automatically)"
@@ -160,6 +163,7 @@ usage_examples() {
    echo "./mac-setup.zsh -docsify -d -c -v "
    echo "./mac-setup.zsh -pike -c -gru \"alfonsof/terraform-azure-examples\" -d1 -gfn \"alonzo\" -F \"code/01-hello-world\" -o -v "
    echo "./mac-setup.zsh -tf -F \"tf-module1\" -d1 -c -v -I -U"
+   echo "./mac-setup.zsh -steampipe -v -I -aws -c -d1 -gfn \"steampipe\" -of "
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -289,6 +293,8 @@ SECRETS_FILE=".secrets.env.sample"
    APP1_FOLDER=""          # custom specified
    OPEN_APP=false               # -o
 
+   USE_STEAMPIPE=false          # -steampipe
+
    USE_ENVOY=false              # -Envoy
    USE_DOORMAT=false            # -Doormat
    RUN_CONSUL=false             # -Consul
@@ -309,13 +315,12 @@ SECRETS_FILE=".secrets.env.sample"
    RUN_PYTHON=false             # -python
    RUN_GOLANG=false             # -golang
    RUN_JAVA=false               # -java
-   RUN_EKS=false                # -eks
-       EKS_CRED_IS_LOCAL=true
    RUN_EGGPLANT=false           # -eggplant
    RUN_TENSORFLOW=false         # -tsf
    USE_AIAC=false               # -aiac  prompt
        AIAC_PROMPT=""
    RUN_TERRAFORM=false          # -tf
+   RUN_PACKER=false             # -hp
    RUN_WEBGOAT=false            # -W
 
    SET_MACOS_SYSPREFS=false     # -macos
@@ -336,6 +341,9 @@ SECRETS_FILE=".secrets.env.sample"
    USE_DOCSIFY=false            # -docsify
    USE_CHEZMOI=false            # -chezmoi
    USE_K8S=false                # -k8s
+   RUN_EKS=false                # -eks
+       EKS_CRED_IS_LOCAL=true
+
    USE_AZURE_CLOUD=false        # -azure
    USE_GOOGLE_CLOUD=false       # -g
        GOOGLE_API_KEY=""  # manually copied from APIs & services > Credentials
@@ -362,6 +370,8 @@ SECRETS_FILE=".secrets.env.sample"
    WRITE_TO_DOCKERHUB=false     # -w
    USE_DOCKER_COMPOSE=false     # -dc
    USE_PYENV=false              # -pyenv
+
+   OUTPUT_FILENAME=""           # -of
 
 # Post-processing:
    DELETE_CONTAINER_AFTER=false # -D
@@ -691,6 +701,10 @@ while test $# -gt 0; do
       export GOOGLE_API_KEY
       shift
       ;;
+    -hp)
+      export RUN_PACKER=true
+      shift
+      ;;
     -HV)
       export USE_VAULT=true
       DOCKER_IMAGE_FILE="vault"
@@ -769,6 +783,11 @@ while test $# -gt 0; do
       export OPEN_APP=true
       shift
       ;;
+    -of*)
+      shift
+      export OUTPUT_FILENAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
     -pfn*)
       shift
       export PROJECT_FOLDER_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
@@ -840,6 +859,10 @@ while test $# -gt 0; do
       ;;
     -ssh)
       export USE_GITHUB_SSH=true
+      shift
+      ;;
+    -steampipe)
+      export USE_STEAMPIPE=true
       shift
       ;;
     -tf)
@@ -1689,6 +1712,12 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          which vault
       fi
 
+      if [ "${USE_PACKER}" = true ]; then   # -HP
+         brew install hashicorp/tap/packer
+         which packer
+         packer --version
+      fi
+
       if [ "${RUN_CONSUL}" = true ]; then  # -tf
          brew install hashicorp/tap/consul
          which consul   # /usr/local/bin/consul
@@ -2150,9 +2179,12 @@ Identify_GITHUB_REPO_URL(){
 
 Clone_into_GITHUB_OR_PROJECT(){
 
-   if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # -gfn NOT specified 
-      note "-gfn (GITHUB_FOLDER_NAME) not specified..."
-      # Fall through to -pfn PROJECT_FOLDER_NAME
+   if [ -z "${GITHUB_FOLDER_NAME+x}" ]; then    # -gfn NOT specified 
+      note "-gfn (GITHUB_FOLDER_NAME) not specified in parms ..."      
+      if [ -z "${PROJECT_FOLDER_NAME}" ]; then   # -pfn not specified 
+         note "-pfn (PROJECT_FOLDER_NAME) not specified in parms also ..."
+         # fall through. return 1  # this function
+      fi
    else  # -gfn specified:
       h2 "-gfn (GITHUB_FOLDER_NAME) \"${GITHUB_FOLDER_NAME}\" ..."
       # TODO: if GITHUB_FOLDER_NAME == PWD basename 
@@ -2175,7 +2207,7 @@ Clone_into_GITHUB_OR_PROJECT(){
             Delete_GITHUB_folder  # defined above in this file.
          fi
       fi
-      if [ "${CLONE_GITHUB}" = true ]; then
+      if [ "${CLONE_GITHUB}" = true ]; then  # -c
          Identify_GITHUB_REPO_URL  # function defined above
          if [ -z "${GITHUB_REPO_URL}" ]; then   # not specified in mac-setup.env
             warning "-gru (GITHUB_REPO_URL) not identified for cloning ..."
@@ -2209,14 +2241,13 @@ Clone_into_GITHUB_OR_PROJECT(){
    fi
 
 
-
    ### 26. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
-   if [ -n "${PROJECT_FOLDER_NAME}" ]; then   # -pfn not specified 
-      note "-pfn (PROJECT_FOLDER_NAME) not specified in parms either..."
+   if [ -z "${PROJECT_FOLDER_NAME+x}" ]; then   # -pfn not specified 
+      note "-pfn (PROJECT_FOLDER_NAME) not specified in parms ..."
       # But we need a project folder anyway...
-      if [ -z "${GITHUB_REPO_URL}" ]; then  # speified in parms
+      if [ -n "${GITHUB_REPO_URL}" ]; then  # speified in parms
          # PROTIP: Extract repo_name from URL: either git@github.com: or https://github.com...
          basename="$(basename -s .git ${GITHUB_REPO_URL})"
          PROJECT_FOLDER_NAME="$basename" # like NOT "mac-setup"
@@ -2226,7 +2257,8 @@ Clone_into_GITHUB_OR_PROJECT(){
                                    # like mac-setup-20231231T235959-0600 (24 hr format)
          warning "-pfn \"${PROJECT_FOLDER_NAME}\" assumed since -gru not specified..."
       fi
-      
+   fi
+
       if [ ! -d "${PROJECT_FOLDER_BASE:?}" ]; then  # base NOT available.
          fatal "PROJECT_FOLDER_BASE not found. Exiting ..."
          return 1  # this function
@@ -2263,7 +2295,7 @@ Clone_into_GITHUB_OR_PROJECT(){
       fi
       cd /
       cd "${PROJECT_FOLDER_PATH}"
-   fi  # PROJECT_FOLDER_NAME
+#   fi  # PROJECT_FOLDER_NAME
    note "At $PWD"
    if [ "${SHOW_VERBOSE}" = true ]; then
       ls -ltaT 
@@ -2277,10 +2309,11 @@ Clone_into_GITHUB_OR_PROJECT
 
 if [ -z "${GITHUB_BRANCH}" ]; then   # variable not defined
    note "-ghb GITHUB_BRANCH not specified among parms. ..."
-   if [ -n "${GITHUB_BRANCH_DEFAULT}" ]; then   # variable is defined and not blank
+   if [ -z "${GITHUB_BRANCH_DEFAULT}" ]; then   # variable is NOT defined and not blank
       warning "GITHUB_BRANCH_DEFAULT not specified in $ENV_FOLDERPATH ..."
-      warning "so no git checkout ..."
-      # no checkout so stays on default main or master.
+      warning "so no git checkout. Checkouts stays on default main or master."
+   else
+      note "GITHUB_BRANCH_DEFAULT=\"$GITHUB_BRANCH_DEFAULT\" ..."
    fi
 else  # GITHUB_BRANCH defined:
    # from https://stackoverflow.com/questions/1593051/how-to-programmatically-determine-the-current-checked-out-git-branch
@@ -2627,6 +2660,7 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
       if ! command -v aws >/dev/null; then
          h2 "brew install awscli ..."
          brew install awscli
+      # TODO: else if -U 
       fi
       note "$( aws --version )"  # aws-cli/2.6.1 Python/3.9.12 Darwin/21.4.0 source/arm64 prompt/off
                      # previously: aws-cli/2.0.9 Python/3.8.2 Darwin/19.5.0 botocore/2.0.0dev13
@@ -2642,35 +2676,131 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
       if [ "${USE_K8S}" = true ]; then   # -k8s
          brew install eksctl
       fi
-   fi
 
-   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
-      # awscli requires Python3
-      # See https://docs.aws.amazon.com/cli/latest/userguide/cli-install-macos.html#awscli-install-osx-pip
-      # PYTHON3_INSTALL  # function defined at top of this file.
-      # :  # break out immediately. Not execute the rest of the if strucutre.
-      # TODO: https://github.com/bonusbits/devops_bash_config_examples/blob/master/shared/.bash_aws
-      h2 "pipenv install awscli ..."
-      if ! command -v pipenv >/dev/null; then
-         brew install pipenv 
-         pipenv install awscli --user  # no --upgrade 
-      else
-         if [ "${UPDATE_PKGS}" = true ]; then
-            h2 "pipenv upgrade awscli ..."
-            note "Before upgrade: $(aws --version)"  # aws-cli/2.0.9 Python/3.8.2 Darwin/19.4.0 botocore/2.0.0dev13
-               # sudo rm -rf /usr/local/aws
-               # sudo rm /usr/local/bin/aws
-               # curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-               # unzip awscli-bundle.zip
-               # sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-            if ! command -v pipenv >/dev/null; then
-               brew install pipenv 
+      if [ "${RUN_EKS}" = true ]; then   # -eks
+         # TODO: USE_K8S
+         # FIXME: fatal error: runtime: bsdthread_register error
+         # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html
+         # See https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
+            if ! command -v aws-iam-authenticator >/dev/null; then  # not found:
+               h2 "aws-iam-authenticator install ..."
+               brew install aws-iam-authenticator
+               chmod +x ./aws-iam-authenticator
+            else  # installed already:
+               if [ "${UPDATE_PKGS}" = true ]; then
+                  h2 "Brew upgrading aws-iam-authenticator ..."
+                  note "aws-iam-authenticator version $( aws-iam-authenticator version )"  # {"Version":"v0.5.0","Commit":"1cfe2a90f68381eacd7b6dcfa2bf689e76eb8b4b"}
+                  brew upgrade aws-iam-authenticator
+               fi
             fi
-            pipenv install awscli --upgrade --user
+            note "aws-iam-authenticator version $( aws-iam-authenticator version )"  # {"Version":"v0.5.0","Commit":"1cfe2a90f68381eacd7b6dcfa2bf689e76eb8b4b"}  
+      fi  # USE_EKS
+
+
+      if [ "${RUN_VIRTUALENV}" = true ]; then   # -venv
+         # awscli requires Python3
+         # See https://docs.aws.amazon.com/cli/latest/userguide/cli-install-macos.html#awscli-install-osx-pip
+         # PYTHON3_INSTALL  # function defined at top of this file.
+         # :  # break out immediately. Not execute the rest of the if strucutre.
+         # TODO: https://github.com/bonusbits/devops_bash_config_examples/blob/master/shared/.bash_aws
+
+         h2 "-pipenv install awscli ..."
+         if ! command -v pipenv >/dev/null; then
+            brew install pipenv 
+            pipenv install awscli --user  # no --upgrade 
+         else
+            if [ "${UPDATE_PKGS}" = true ]; then
+               h2 "pipenv upgrade awscli ..."
+               note "Before upgrade: $(aws --version)"  # aws-cli/2.0.9 Python/3.8.2 Darwin/19.4.0 botocore/2.0.0dev13
+                  # sudo rm -rf /usr/local/aws
+                  # sudo rm /usr/local/bin/aws
+                  # curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+                  # unzip awscli-bundle.zip
+                  # sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+               if ! command -v pipenv >/dev/null; then
+                  brew install pipenv 
+               fi
+               pipenv install awscli --upgrade --user
+            fi
          fi
-      fi
+      fi  # RUN_VIRTUALENV
 
    fi  # "${PACKAGE_MANAGER}" = "brew" ]; then
+
+
+   h2 "-aws config verification ..."
+   if [ -z "${AWS_DEFAULT_REGION}" ]; then
+      error "-AWS_DEFAULT_REGION var not defined ..."
+   else
+      note "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION} var"
+   fi
+
+   if [ ! -f "$HOME/.aws/config" ]; then  # file NOT exists:
+      error "-aws folder $HOME/.aws/config not found ..."
+   else
+      note "-aws $HOME/.aws/config contains:"
+      #if [ "${SHOW_DEBUG}" = true ]; then
+         note $( cat "$HOME/.aws/config" )
+           # region = us-east-1
+      #fi
+      
+   fi
+
+   if [ -z "${AWS_ACCOUNT_ID}" ]; then
+      error "-AWS_ACCOUNT_ID (INFO) var not defined ..."
+   else
+      note "AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID} for manual https://aws.amazon.com/ console login"
+      # PROTIP: This is not the preferred / secure approach.
+   fi
+
+   # TODO: Instead, Obtain credentials from a Vault.
+   h2 "-aws credentials verification ..."
+   # PROTIP: Prefer to use local variables:
+   # See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+   USE_AWS_CREDS=false
+   if [ -z "${AWS_ACCESS_KEY_ID}" ]; then
+      error "Required AWS_ACCESS_KEY_ID var not defined ..."
+      USE_AWS_CREDS=true
+   else
+      note "AWS_ACCESS_KEY_ID var found. Not displayed for security"
+         # [default]
+         # aws_access_key_id = xxxx
+         # aws_secret_access_key = xxxx
+   fi
+   if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+      error "Required AWS_SECRET_ACCESS_KEY var not defined ..."
+      USE_AWS_CREDS=true
+   else
+      note "AWS_SECRET_ACCESS_KEY var found. Not displayed for security"
+   fi
+
+   if [ "${USE_AWS_CREDS}" = true ]; then
+      if [ ! -f "$HOME/.aws/credentials" ]; then  # file NOT exists:
+         fatal "-aws folder $HOME/.aws/credentials not found ..."
+         exit
+      else
+         note "-aws $HOME/.aws/credentials found ..."
+         # WARNING: Do not violate security policy: not display credentials (especially for root accounts)
+         # See https://wilsonmar.github.io/aws-onboarding
+            # [default]
+            # aws_access_key_id = 1234567674N4L4R3EVHC
+            # aws_secret_access_key = 1234567q3KVzhRHjFrK4PXerAEbn9e4SLRNc93d/      
+      fi
+   fi
+
+   # https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-vpcs.html
+   RESULT=$( aws ec2 describe-vpcs )
+   if [[ "${RESULT}" == *"An error occured"* ]]; then
+      h2 "-aws error ec2 describe-vpcs"
+      error "${RESULT}"
+         # An error occurred (AuthFailure) when calling the DescribeVpcs operation: AWS was not able to validate the provided access credentials
+   else
+      note "-aws ec2 describe-vpcs is good to go"
+   fi
+echo "DEBUG entering aws";exit
+
+   h2 "-aws is good to use if this runs:"
+   # Manually https://aws.amazon.com/
 
 
    #if [ -d "$HOME/.bash-my-aws:?}" ]; then   # folder is there
@@ -2714,22 +2844,120 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
    fi  # if [ "${USE_VAULT}" = true 
 
 
-   # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html
-      # See https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
-         if ! command -v aws-iam-authenticator >/dev/null; then  # not found:
-            h2 "aws-iam-authenticator install ..."
-            brew install aws-iam-authenticator
-            chmod +x ./aws-iam-authenticator
-         else  # installed already:
-            if [ "${UPDATE_PKGS}" = true ]; then
-               h2 "Brew upgrading aws-iam-authenticator ..."
-               note "aws-iam-authenticator version $( aws-iam-authenticator version )"  # {"Version":"v0.5.0","Commit":"1cfe2a90f68381eacd7b6dcfa2bf689e76eb8b4b"}
-               brew upgrade aws-iam-authenticator
-            fi
-         fi
-         note "aws-iam-authenticator version $( aws-iam-authenticator version )"  # {"Version":"v0.5.0","Commit":"1cfe2a90f68381eacd7b6dcfa2bf689e76eb8b4b"}  
+
 
 fi  # USE_AWS_CLOUD
+
+echo "DEBUG before steampipe";exit
+
+
+
+### 30b. steampipe for aws
+
+if [ "${USE_STEAMPIPE}" = true ]; then  # -steampipe
+
+   h2 "-steampipe ..."
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
+   # CAUTION: Password required:
+      brew tap turbot/tap
+         # Cloning into /usr/local/Homebrew/Library/Taps/turbot/homebrew-tap
+      if ! command -v steampipe >/dev/null; then  # command not found, so:
+         brew install steampipe
+      else  # installed already:
+         if [ "${UPDATE_PKGS}" = true ]; then
+            h2 "-U brew upgrade steampipe ..."
+            brew upgrade steampipe
+         fi
+      note "$( steampipe -v )"
+      # additional components are installed the first time steampipe query is run.
+      fi #
+   fi 
+
+   # https://steampipe.io/docs
+   if [ "${USE_AWS_CLOUD}" = true ]; then  # -aws
+
+      # Steampipe Mods are collections of named queries, codified controls that can be used to test current configuration of your cloud resources against a desired configuration, and dashboards that organize and display key pieces of information.
+      # See https://steampipe.io/docs/mods/overview
+      # TODO: How to tell if plugin is already installed?
+         steampipe plugin install aws
+            # Installed plugin: aws@latest v0.121.1
+            # Documentation:    https://hub.steampipe.io/plugins/turbot/aws
+         # TODO: else steampipe plugin update aws
+         # note "-U install AWS plug-in at $PWD ..."
+
+      # List of mods at: https://hub.steampipe.io/mods/turbot/aws_insights
+      note "-steampipe at $PWD before git clone ..."
+
+      # Dashboards are available for 15+ services, including CloudTrail, EC2, IAM, RDS, S3, VPC, and more!
+     if [ "${CLONE_GITHUB}" = true ]; then  # -c
+         if [ -d "steampipe-mod-aws-compliance" ]; then  # file exists:
+            note "-steampipe clone aws-compliance ..."
+            git clone https://github.com/turbot/steampipe-mod-aws-compliance.git
+         fi  # steampipe-mod-aws-compliance
+
+         if [ -d "steampipe-mod-aws-insights" ]; then  # file exists:
+            note "-steampipe clone aws-insights ..."
+            git clone https://github.com/turbot/steampipe-mod-aws-insights.git
+         fi
+      fi
+      note "-steampipe at $PWD after git clone ..."
+      cd steampipe-mod-aws-compliance
+      ls -ltaT
+
+      # After mod file installed:
+      # TODO: QUESTION: What is being checked?
+      # TODO: QUESTION: Can checking be limited to a several level (just critical)
+      # TODO: QUESTION: should check all run without AWS?
+      # TODO: QUESTION: Limit output to only errors?
+      if [ -z "${OUTPUT_FILENAME}" ]; then   # -of empty/not specified:
+         OUTPUT_FILENAME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))
+      fi
+      note "-steampipe check all (to file, takes many minutes) to $OUTPUT_FILENAME ..."
+      time steampipe check all > "$OUTPUT_FILENAME"
+         # Initializing
+         # ⠸ Running 9687 controls. (41 complete, 10 running, 9590 pending, 46 errors)
+         # steampipe check all  166.60s user 46.88s system 19% cpu 18:33.20 total
+      note $( ls "$OUTPUT_FILENAME" )
+
+echo "found DEBUG";exit
+
+         # cd steampipe-mod-aws-insights
+
+
+
+: ' 
+      # https://hub.steampipe.io/mods/turbot/aws_insights/dashboards
+      # Before running any dashboards, generate your AWS credential report:
+      aws iam generate-credential-report
+      # if
+         steampipe dashboard
+'
+   fi  # USE_AWS_CLOUD
+
+   # Enter interactive mode:
+   steampipe query
+
+: '
+   .tables
+   
+   .inspect aws_iam_role
+   select name from aws_iam_role
+
+   select
+   r.name,
+   policy_arn,
+   p.is_aws_managed
+   from
+   aws_iam_role as r,
+   jsonb_array_elements_text(attached_policy_arns) as policy_arn,
+   aws_iam_policy as p
+   where
+   p.arn = policy_arn
+   and p.is_aws_managed;
+'
+
+fi  # USE_STEAMPIPE
+
 
 
 ### 31. Install Azure
