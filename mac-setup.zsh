@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.129" # add -hp hashicorp packer : mac-setup.zsh"
+SCRIPT_VERSION="v1.130" # add -tenant selection : mac-setup.zsh"
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -3023,15 +3023,23 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
    # do_install_azure
 
    azure_login(){
-      # Pop up web page to login:
-      az login
-
-      if [ -n "${AZURE_SUBSCRIPTION_ID}" ]; then  # not found or blank
-         fatal "-azure AZURE_SUBSCRIPTION_ID not defined. Exiting..."
-         exit 9
+      # See https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest#az_login
+      if [ -n "${ARM_TENANT_ID}" ]; then  # not found or blank
+         fatal "-azure ARM_TENANT_ID not defined. az login ..."
+         az login
+      else         
+         note "-azure login with ARM_TENANT_ID ..."
+         az login --tenant "${ARM_TENANT_ID}"
       fi
-      note "-azure account set to ${AZURE_SUBSCRIPTION_ID} ..."
-      az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
+      # Pop up web page to login.
+
+      if [ -n "${ARM_SUBSCRIPTION_ID}" ]; then  # not found or blank
+         fatal "-azure ARM_SUBSCRIPTION_ID not defined. Exiting..."
+         exit 9
+      else
+         note "-azure account set to ${ARM_SUBSCRIPTION_ID} ..."
+         az account set --subscription "${ARM_SUBSCRIPTION_ID}"
+      fi
    }
    # azure_login
 
