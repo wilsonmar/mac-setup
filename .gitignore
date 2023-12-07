@@ -1,5 +1,8 @@
 # .gitignore file
 
+*.hcl
+packer-docker
+
 outfile
 
 pubring.kbx

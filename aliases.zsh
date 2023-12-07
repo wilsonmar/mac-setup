@@ -271,6 +271,8 @@ alias sign='gpg --detach-sign --armor'
 
 #### See https://wilsonmar.github.io/python/
 alias python="python3"
+alias pip="pip3"
+# https://virtualenvwrapper.readthedocs.io/en/latest/
 alias cr="cargo run --verbose"  # Rust .rs program file in folder
 # conda
 alias ven="virtualenv venv"

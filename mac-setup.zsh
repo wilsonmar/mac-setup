@@ -21,6 +21,7 @@
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
 SCRIPT_VERSION="v1.130" # add -tenant selection : mac-setup.zsh"
+# Install chrome extensions
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -2991,7 +2992,9 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
                # source $(brew --prefix)/etc/bash_completion.d/az
                # See https://docs.microsoft.com/en-us/cli/azure/keyvault/secret?view=azure-cli-latest
                #note "TODO: Add Azure cloud coding ..."
-               brew install --cask azure-data-studio
+               
+               # brew install --cask azure-data-studio
+                  # TODO: Error: azure-data-studio: It seems the App source '/Users/wilsonmar/Applications/Azure Data Studio.app' is not there.
                   # ==> Moving App 'Azure Data Studio.app' to '/Users/wilsonmar/Applications/Azure Data Studio.app'.
                   # ==> Linking Binary 'code' to '/usr/local/bin/azuredatastudio'
 
