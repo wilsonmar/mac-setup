@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.130" # add -tenant selection : mac-setup.zsh"
+SCRIPT_VERSION="v1.131" # add vscode ext install : mac-setup.zsh"
 # Install chrome extensions
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
@@ -52,7 +52,7 @@ args_prompt() {
    echo " "
    echo "   -I           -Install brew utilities, apps"
    echo "   -U           -Upgrade installed packages if already installed"
-   echo "   -VSC \"vscode-ext\"  - VSCode extensions to install from/to file"
+   echo "   -vsc         - Install VSCode extensions listed in file"
    echo "   -zsh         Convert from bash to Zsh"
    echo " "
    echo "   -N  \"Proj\"            Alternative name of Projects folder"
@@ -165,6 +165,7 @@ usage_examples() {
    echo "./mac-setup.zsh -pike -c -gru \"alfonsof/terraform-azure-examples\" -d1 -gfn \"alonzo\" -F \"code/01-hello-world\" -o -v "
    echo "./mac-setup.zsh -tf -F \"tf-module1\" -d1 -c -v -I -U"
    echo "./mac-setup.zsh -steampipe -v -I -aws -c -d1 -gfn \"steampipe\" -of "
+   echo "./mac-setup.zsh -vsc -v -a"
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -239,7 +240,8 @@ fi
    ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
    ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
 
-   VSCODE_FILE=""                 # -VSC "file"  Install/Upgrade VSCode extensions from/to file"
+   RUN_VSCODE=false               # -VSC
+   VSCODE_FILE="vscode-ext.txt"   # "file"  Install/Upgrade VSCode extensions from/to file"
   
    CONVERT_TO_ZSH=false           # -zsh
    SET_TRACE=false                # -x
@@ -908,10 +910,9 @@ while test $# -gt 0; do
       export RUN_VIRTUALENV=true
       shift
       ;;
-    -VSC*)
+    -vsc)
       shift
-             VSCODE_FILE=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      export VSCODE_FILE
+      export RUN_VSCODE=true
       shift
       ;;
     -v)
@@ -1477,44 +1478,68 @@ fi  # RUN_TRACE
 
 
 
-### 18. Configure VSCode
+### 18. Configure VSCode extensions
 
-Loop_Thru_File(){
-   h2 "-VSC \"${VSCODE_FILE}\" Loop_Thru_File ..."
-   for line in ("${VSCODE_FILE}")
-   do
-      echo "${line}"   # debug
-      # Skip blank lines and those whose first character is a # comment:
-      # Examples: https://gist.github.com/matthiasott/1695ca6f1fe9ccfc18ff6748fb2767c1
-      # Such as: https://marketplace.visualstudio.com/items?itemName=azure-ai.azure-ai
-      # code --install-extension azure-ai.vscode-ai
-      # code --install-extension "${line}"
-   done
-}
-
-if [ -n "${VSCODE_FILE}" ]; then   # -VSC \"vscode-ext\" file specified:
+do_vscode_ext(){
+if [ "${RUN_VSCODE}" = true ]; then  # -VSC \"vscode-ext\" file specified:
    # For vscode CLI commands, see https://www.youtube.com/watch?v=uKCiAA4AJcI
    # https://code.visualstudio.com/docs/editor/extension-marketplace
-   h2 "-VSC \"${VSCODE_FILE}\" at ${PWD}..."
-      # Loop_Thru_File  # function defined above
-   if [ -f "${VSCODE_FILE}" ]; then   # file found:
-      # FIXME: Dir not found.
-      # PROTIP: Use sed to strip out spaces before and after the file name:
-      LINES_IN_FILE=$( wc -l < ${VSCODE_FILE} | sed 's/ //g' )
-      echo "-VSC \"${VSCODE_FILE}\" ${LINES_IN_FILE} lines for code --install-extensions ..."
-      # h2 "-vsc \"${VSCODE_FILE}\" entries used for -U code --uninstall-extensions ..."
-      # TODO: Loop through file to install each extension: code --install-extension "${line from file}"
-         # Ignore Duplicates:
-   else  # file not found
-      # h2 "-VSC \"${VSCODE_FILE}\" gen'd by code --list-extensions output ..."
-      # This will not run if code --disable-extensions was run!
-      code --list-extensions > "${VSCODE_FILE}"
-         # [vscode-ai]: Couldn't find message for key azureml.internal.activate.title.
-      LINES_IN_FILE=$( wc -l < "${VSCODE_FILE}" | sed 's/ //g' )
-      echo "-VSC \"${VSCODE_FILE}\" file gen'd with ${LINES_IN_FILE} lines ..."
-   fi
-fi
 
+   h2 "-vsc to \"${VSCODE_FILE}\" from \"${VSCODE_EXT_URL}\" ..."
+   if [ -z "${VSCODE_FILE}" ]; then   # not specified in parms
+      fatal "-vsc recieving VSCODE_FILE not specified in parms"
+      break   # out of function
+   fi
+
+   # Check to see if VSCode is running based on https://stackoverflow.com/questions/1821886/check-if-mac-process-is-running-using-bash-by-process-name
+   VSCODE_APP_FILE="Visual Studio Code.app"
+   RESULT=$( ps aux | grep -v grep | grep -ci "${VSCODE_APP_FILE}" )
+   if [ "${RESULT}" -gt "0" ]; then  # it's running
+      note "-vsc \"${VSCODE_APP_FILE}\" running ${RESULT} processes ..."
+   else
+      note "-vsc \"${VSCODE_APP_FILE}\" is not running. Starting it ..."
+      open -a "${VSCODE_APP_FILE}"
+   fi
+   # With the app open:
+
+   LINES_IN_FILE=$( wc -l < "${VSCODE_FILE}" | sed 's/ //g' )
+   note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_FILE}\" ..."
+   if [ "${LINES_IN_FILE}" -gt "0" ]; then
+      note "-esc file \"${VSCODE_FILE}\" already populated..."
+   else  # not populated:
+      if [ -z "${VSCODE_EXT_URL}" ]; then   # path specified in mac-setup.env file:
+         note "-vsc populating file "${VSCODE_FILE}" since no URL specified ..."
+         code --list-extensions > "${VSCODE_FILE}"
+         break
+      else  # have file:
+         # export VSCODE_EXT_URL="https://wilsonmar.github.io/docs/vscode-exte-231214.txt"
+         wget "${VSCODE_EXT_URL}" -O "${VSCODE_FILE}"
+         LINES_IN_FILE=$( wc -l < "${VSCODE_FILE}" | sed 's/ //g' )
+         note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_FILE}\" after load ..."
+      fi
+   fi
+
+   note "-vsc \"${VSCODE_FILE}\" Loop_Thru_File ..."
+   while read line; do 
+      # Bypass lines with # comment:
+      if [ "${line:0:1}" = "#" ]; then
+         warning "${line} ignored."   # debug
+         continue  # ignore line
+      fi
+
+      # Strip out # comments to the right of extension name:
+      LINE_TRUNCED=$( echo "${line}" | cut -f1 -d"#" )
+
+      if [ "${RUN_ACTUAL}" = true ]; then
+         code --install-extension "${LINE_TRUNCED}"
+         success "${LINE_TRUNCED}"gas
+      else
+         info "${LINE_TRUNCED}"
+      fi
+   done < "${VSCODE_FILE}"
+fi
+}
+do_vscode_ext
 
 
 ### 19. Install basic utilities (git, jq, tree, etc.) used by many:
@@ -2235,8 +2260,8 @@ Clone_into_GITHUB_OR_PROJECT(){
       # whether cloned or not:
       cd /
       cd "${GITHUB_FOLDER_PATH}"
-      note "At $PWD"
-      if [ "${SHOW_VERBOSE}" = true ]; then
+      if [ "${SHOW_DEBUG}" = true ]; then
+         note "At $PWD"
          ls -ltaT 
       fi
    fi
@@ -2297,8 +2322,8 @@ Clone_into_GITHUB_OR_PROJECT(){
       cd /
       cd "${PROJECT_FOLDER_PATH}"
 #   fi  # PROJECT_FOLDER_NAME
-   note "At $PWD"
-   if [ "${SHOW_VERBOSE}" = true ]; then
+   if [ "${SHOW_DEBUG}" = true ]; then
+      note "At $PWD"
       ls -ltaT 
    fi
 }
@@ -2849,8 +2874,6 @@ echo "DEBUG entering aws";exit
 
 fi  # USE_AWS_CLOUD
 
-echo "DEBUG before steampipe";exit
-
 
 
 ### 30b. steampipe for aws
@@ -2925,7 +2948,6 @@ echo "found DEBUG";exit
          # cd steampipe-mod-aws-insights
 
 
-
 : ' 
       # https://hub.steampipe.io/mods/turbot/aws_insights/dashboards
       # Before running any dashboards, generate your AWS credential report:
@@ -2958,7 +2980,6 @@ echo "found DEBUG";exit
 '
 
 fi  # USE_STEAMPIPE
-
 
 
 ### 31. Install Azure
@@ -3112,6 +3133,7 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
    # logout_azure
 
 fi  # USE_AZURE_CLOUD
+
 
 
 ### 32. Install K8S minikube
