@@ -1,3 +1,8 @@
+amazonwebservices.aws-toolkit-vscode
+Bridgecrew.checkov
+hashicorp.hcl
+hashicorp.terraform
+ms-vscode.makefile-tools
 42Crunch.vscode-openapi
 4ops.terraform
 ahmadawais.shades-of-purple

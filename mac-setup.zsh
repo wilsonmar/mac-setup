@@ -20,8 +20,9 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.131" # add vscode ext install : mac-setup.zsh"
+SCRIPT_VERSION="v1.132" # add vscode ext force install : mac-setup.zsh"
 # Install chrome extensions
+# Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
@@ -165,7 +166,7 @@ usage_examples() {
    echo "./mac-setup.zsh -pike -c -gru \"alfonsof/terraform-azure-examples\" -d1 -gfn \"alonzo\" -F \"code/01-hello-world\" -o -v "
    echo "./mac-setup.zsh -tf -F \"tf-module1\" -d1 -c -v -I -U"
    echo "./mac-setup.zsh -steampipe -v -I -aws -c -d1 -gfn \"steampipe\" -of "
-   echo "./mac-setup.zsh -vsc -v -a"
+   echo "./mac-setup.zsh -vsc -v -a -U"
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -1528,13 +1529,17 @@ if [ "${RUN_VSCODE}" = true ]; then  # -VSC \"vscode-ext\" file specified:
       fi
 
       # Strip out # comments to the right of extension name:
-      LINE_TRUNCED=$( echo "${line}" | cut -f1 -d"#" )
+      VSCODE_EXT_ID=$( echo "${line}" | cut -f1 -d"#" )
 
-      if [ "${RUN_ACTUAL}" = true ]; then
-         code --install-extension "${LINE_TRUNCED}"
-         success "${LINE_TRUNCED}"gas
+      if [ "${RUN_ACTUAL}" = true ]; then  # -a
+         if [ "${UPDATE_PKGS}" = true ]; then  # -U
+            code --install-extension "${VSCODE_EXT_ID}" --force
+         else
+            code --install-extension "${VSCODE_EXT_ID}"
+         fi
+         success "${VSCODE_EXT_ID} installed..."
       else
-         info "${LINE_TRUNCED}"
+         info "${VSCODE_EXT_ID}" installed..."
       fi
    done < "${VSCODE_FILE}"
 fi
