@@ -24,7 +24,7 @@ erd0s.terraform-autocomplete
 esbenp.prettier-vscode
 GitHub.copilot
 GitHub.copilot-chat
-GitHub.copilot-labs
+# GitHub.copilot-labs
 GitHub.heygithub
 GitHub.vscode-codeql
 GitHub.vscode-pull-request-github

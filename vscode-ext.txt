@@ -1,1 +1,0 @@
-amazonwebservices.aws-toolkit-vscode

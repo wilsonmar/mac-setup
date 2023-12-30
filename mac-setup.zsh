@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.132" # add vscode ext force install : mac-setup.zsh"
+SCRIPT_VERSION="v1.132" # vscode ext force install : mac-setup.zsh"
 # Install chrome extensions
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -67,10 +67,10 @@ args_prompt() {
    echo "   -aws         -AWS cloud"
    echo "   -eks         -eks (Elastic Kubernetes Service) in AWS cloud"
    echo "   -azure       -Azure cloud"
-   echo "   -quantum      Quantum computing within each cloud"
    echo "   -gcp         -Google cloud"
    echo "   -g \"abcdef...89\" -gcloud API credentials for calls"
    echo "   -p \"cp100\"   -project in gcloud"
+   echo "   -quantum      Quantum computing within each cloud"
    echo " "
 #  echo "   -Consul       Install Hashicorp Consul in Docker"
 #  echo "   -Doormat      install/use Hashicorp's doormat-cli & hcloud"
@@ -191,10 +191,10 @@ h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
 info() {   # output on every run
    printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
-note() { if [ "${SHOW_VERBOSE}" = true ]; then
+note() { # FIXME: if [ "${SHOW_VERBOSE}" = true ]; then
    printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
    printf "\n"
-   fi
+   # fi
 }
 echo_debug() { if [ "${SHOW_DEBUG}" = true ]; then
    printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
@@ -214,15 +214,19 @@ fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
    printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
 
+
 if [ "${SHOW_DEBUG}" = true ]; then  # -vv
    h2 "Header here"
    info "info"
-   note "note"
+   export SHOW_VERBOSE=true 
+   note "note here"
+   echo_debug "echo_debug"
    success "success!"
    error "error"
    warning "warning (warnNotice)"
    fatal "fatal (warnError)"
 fi
+echo "DEBUG list \"${SHOW_VERBOSE}\" "
 
 
 ### 04. Define variables for use as "feature flags"
@@ -242,7 +246,7 @@ fi
    ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
 
    RUN_VSCODE=false               # -VSC
-   VSCODE_FILE="vscode-ext.txt"   # "file"  Install/Upgrade VSCode extensions from/to file"
+   VSCODE_EXT_FILE="vscode-ext.txt"  # "file" override in .env to Install/Upgrade VSCode extensions from/to file"
   
    CONVERT_TO_ZSH=false           # -zsh
    SET_TRACE=false                # -x
@@ -512,6 +516,7 @@ Read_Inputs_Manually(){
 
 
 ### 06. Set variables dynamically based on each parameter flag
+
 # See https://wilsonmar.github.io/mac-setup/#VariablesSet
 while test $# -gt 0; do
   case "$1" in
@@ -901,6 +906,11 @@ while test $# -gt 0; do
       ;;
     -V)
       export VERIFY_ENV=true
+      shift
+      ;;
+    -v)
+      export SHOW_VERBOSE=true
+      echo "DEBUG note \"${SHOW_VERBOSE}\" ";exit
       shift
       ;;
     -vv)
@@ -1479,48 +1489,49 @@ fi  # RUN_TRACE
 
 
 
-### 18. Configure VSCode extensions
+### 18. Install VSCode extensions
 
-do_vscode_ext(){
+install_vscode_ext(){
 if [ "${RUN_VSCODE}" = true ]; then  # -VSC \"vscode-ext\" file specified:
    # For vscode CLI commands, see https://www.youtube.com/watch?v=uKCiAA4AJcI
    # https://code.visualstudio.com/docs/editor/extension-marketplace
 
-   h2 "-vsc to \"${VSCODE_FILE}\" from \"${VSCODE_EXT_URL}\" ..."
-   if [ -z "${VSCODE_FILE}" ]; then   # not specified in parms
-      fatal "-vsc recieving VSCODE_FILE not specified in parms"
+   if [ -z "${VSCODE_EXT_FILE}" ]; then   # not specified in parms
+      fatal "-vsc recieving VSCODE_EXT_FILE parm not specified"
       break   # out of function
+   else
+      h2 "-vsc defaults \"${VSCODE_EXT_FILE}\" from \"${VSCODE_EXT_URL}\" ..."
    fi
 
    # Check to see if VSCode is running based on https://stackoverflow.com/questions/1821886/check-if-mac-process-is-running-using-bash-by-process-name
    VSCODE_APP_FILE="Visual Studio Code.app"
    RESULT=$( ps aux | grep -v grep | grep -ci "${VSCODE_APP_FILE}" )
    if [ "${RESULT}" -gt "0" ]; then  # it's running
-      note "-vsc \"${VSCODE_APP_FILE}\" running ${RESULT} processes ..."
+      echo "-vsc \"${VSCODE_APP_FILE}\" running ${RESULT} processes ..."
    else
-      note "-vsc \"${VSCODE_APP_FILE}\" is not running. Starting it ..."
+      echo "-vsc \"${VSCODE_APP_FILE}\" is not running. Starting it ..."
       open -a "${VSCODE_APP_FILE}"
    fi
    # With the app open:
 
-   LINES_IN_FILE=$( wc -l < "${VSCODE_FILE}" | sed 's/ //g' )
-   note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_FILE}\" ..."
+   LINES_IN_FILE=$( wc -l < "${VSCODE_EXT_FILE}" | sed 's/ //g' )
+   note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_EXT_FILE}\" ..."
    if [ "${LINES_IN_FILE}" -gt "0" ]; then
-      note "-esc file \"${VSCODE_FILE}\" already populated..."
+      note "-esc local file \"${VSCODE_EXT_FILE}\" beeing used ..."
    else  # not populated:
       if [ -z "${VSCODE_EXT_URL}" ]; then   # path specified in mac-setup.env file:
-         note "-vsc populating file "${VSCODE_FILE}" since no URL specified ..."
-         code --list-extensions > "${VSCODE_FILE}"
+         note "-vsc populating file "${VSCODE_EXT_FILE}" since no URL specified ..."
+         code --list-extensions > "${VSCODE_EXT_FILE}"
          break
       else  # have file:
          # export VSCODE_EXT_URL="https://wilsonmar.github.io/docs/vscode-exte-231214.txt"
-         wget "${VSCODE_EXT_URL}" -O "${VSCODE_FILE}"
-         LINES_IN_FILE=$( wc -l < "${VSCODE_FILE}" | sed 's/ //g' )
-         note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_FILE}\" after load ..."
+         wget "${VSCODE_EXT_URL}" -O "${VSCODE_EXT_FILE}"
+         LINES_IN_FILE=$( wc -l < "${VSCODE_EXT_FILE}" | sed 's/ //g' )
+         note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_EXT_FILE}\" after load ..."
       fi
    fi
 
-   note "-vsc \"${VSCODE_FILE}\" Loop_Thru_File ..."
+   note "-vsc \"${VSCODE_EXT_FILE}\" Loop_Thru_File ..."
    while read line; do 
       # Bypass lines with # comment:
       if [ "${line:0:1}" = "#" ]; then
@@ -1530,21 +1541,19 @@ if [ "${RUN_VSCODE}" = true ]; then  # -VSC \"vscode-ext\" file specified:
 
       # Strip out # comments to the right of extension name:
       VSCODE_EXT_ID=$( echo "${line}" | cut -f1 -d"#" )
-
       if [ "${RUN_ACTUAL}" = true ]; then  # -a
          if [ "${UPDATE_PKGS}" = true ]; then  # -U
             code --install-extension "${VSCODE_EXT_ID}" --force
          else
             code --install-extension "${VSCODE_EXT_ID}"
          fi
-         success "${VSCODE_EXT_ID} installed..."
+         success "-vsc extension \"${VSCODE_EXT_ID}\" installed..."
       else
-         info "${VSCODE_EXT_ID}" installed..."
+         info "-vsc extension \"${VSCODE_EXT_ID}\" NOT installed..."
       fi
-   done < "${VSCODE_FILE}"
-fi
+   done < "${VSCODE_EXT_FILE}"
+fi  # RUN_VSCODE
 }
-do_vscode_ext
 
 
 ### 19. Install basic utilities (git, jq, tree, etc.) used by many:
@@ -1607,7 +1616,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       done
 
       h2 "-I brew install/upgrade --cask into /Applications/:"
-      # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  Postman  PowerShell"
+      # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  PowerShell"
       ARRAY=(`echo ${ROOT_APPS_TO_INSTALL}`);
       for appname in "${ARRAY[@]}"; do
          if [ -d "/Applications/$appname.app:?}" ]; then   # app found:
@@ -1691,8 +1700,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          brew_update_app "zoom" "zoom.us"
          #brew_update_app "tor-browser" "Tor Browser"
 
-      # TODO: Install Chrome Add-ons
-
+      # TODO: Install Chrome Add-ons: $HOME/Applications/Chrome Apps.localized/Postman.app, 
+         # Docs.app, Gmail.app, Google Drive.app, Sheets.app, Slides,app, YouTube.app
 
       h2 "-I install brew CLI utilities ..."
       # TODO: CLI_APPS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
@@ -1829,6 +1838,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
 fi  # DOWNLOAD_INSTALL
 
+# Install VSCode extensions:
+install_vscode_ext
 
 
 ### 19. Install chezmos (Chai's macOS dotfiles)
