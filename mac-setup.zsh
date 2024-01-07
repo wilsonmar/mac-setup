@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.132" # vscode ext force install : mac-setup.zsh"
+SCRIPT_VERSION="v1.133" # create /opt/homebrew/bin/brew : mac-setup.zsh"
 # Install chrome extensions
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -1118,15 +1118,27 @@ if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
       export BREW_PATH="/opt/homebrew"
       export BREW_PATH_OPT="/opt/homebrew/opt"
       eval $( "${BREW_PATH}/bin/brew" shellenv)
+      export BASHFILE="~/.zshrc"
    elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
       export BREW_PATH="/usr/local/bin"
       export BREW_PATH_OPT="/usr/local/opt"
-      # BASHFILE=~/.bash_profile ..."
-      # BASHFILE="$HOME/.bash_profile"  # on Macs
-      #note "BASHFILE=~/.bashrc ..."
+      export BASHFILE="$HOME/.bash_profile"
+
       #BASHFILE="$HOME/.bashrc"  # on Linux
    fi  # MACHINE_TYPE
 fi
+
+if [ -d "$BREW_PATH:?}" ]; then   # directory NOT found, so create it:
+   info "Directory BREW_PATH=$BREW_PATH found, creating ..."
+   mkdir -p "$BREW_PATH"
+   ls -al "$BREW_PATH"
+fi
+if [ -d "$BREW_PATH_OPT:?}" ]; then   # directory NOT found, so create it:
+   info "Directory BREW_PATH_OPT=$BREW_PATH_OPT found, creating ..."
+   mkdir -p "$BREW_PATH_OPT"
+   ls -al "$BREW_PATH_OPT"
+fi
+# TODO: Check if BREW_PATH_OPT is in PATH within .zshrc & .bash_profile
 
 
 ### 12. Backup using macOS Time Machine via tmutil
