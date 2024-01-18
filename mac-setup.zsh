@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.133" # create /opt/homebrew/bin/brew : mac-setup.zsh"
+SCRIPT_VERSION="v1.135" # akeyless val retrieve & vscode-ext : mac-setup.zsh"
 # Install chrome extensions
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -31,7 +31,6 @@ SCRIPT_VERSION="v1.133" # create /opt/homebrew/bin/brew : mac-setup.zsh"
 
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
 # clear  # screen (but not history)
-echo "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 
@@ -72,6 +71,7 @@ args_prompt() {
    echo "   -p \"cp100\"   -project in gcloud"
    echo "   -quantum      Quantum computing within each cloud"
    echo " "
+   echo "   -akeyless     install/use Akeyless secret manager"
 #  echo "   -Consul       Install Hashicorp Consul in Docker"
 #  echo "   -Doormat      install/use Hashicorp's doormat-cli & hcloud"
 #  echo "   -Envoy        install/use Hashicorp's Envoy client"
@@ -167,6 +167,7 @@ usage_examples() {
    echo "./mac-setup.zsh -tf -F \"tf-module1\" -d1 -c -v -I -U"
    echo "./mac-setup.zsh -steampipe -v -I -aws -c -d1 -gfn \"steampipe\" -of "
    echo "./mac-setup.zsh -vsc -v -a -U"
+   echo "./mac-setup.zsh -akeyless -v -a -U"
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -181,55 +182,8 @@ exit_abnormal() {            # Function: Exit with error.
   exit 1
 }
 
-### 03. Custom functions to echo text to screen
-# See https://wilsonmar.github.io/mac-setup/#TextColors
-# \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
-h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
-   printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-   fi
-}
-info() {   # output on every run
-   printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-note() { # FIXME: if [ "${SHOW_VERBOSE}" = true ]; then
-   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
-   printf "\n"
-   # fi
-}
-echo_debug() { if [ "${SHOW_DEBUG}" = true ]; then
-   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
-   printf "\n"
-   fi
-}
-success() {
-   printf "\n\e[32m\e[1m✔ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-error() {    # &#9747;
-   printf "\n\e[31m\e[1m✖ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-warning() {  # &#9758; or &#9755;
-   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
-   printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
 
-
-if [ "${SHOW_DEBUG}" = true ]; then  # -vv
-   h2 "Header here"
-   info "info"
-   export SHOW_VERBOSE=true 
-   note "note here"
-   echo_debug "echo_debug"
-   success "success!"
-   error "error"
-   warning "warning (warnNotice)"
-   fatal "fatal (warnError)"
-fi
-echo "DEBUG list \"${SHOW_VERBOSE}\" "
-
-
-### 04. Define variables for use as "feature flags"
+### 03. Define variables for use as "feature flags"
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
    CONTINUE_ON_ERR=false         # -cont
@@ -242,8 +196,8 @@ echo "DEBUG list \"${SHOW_VERBOSE}\" "
    RUN_QUIET=false               # -q
 
    COPY_ENV_FILES=false           # -envc (false by default)   # to use default ENV_FOLDERPATH_BASE:
-   ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
-   ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
+   #ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
+   #ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
 
    RUN_VSCODE=false               # -VSC
    VSCODE_EXT_FILE="vscode-ext.txt"  # "file" override in .env to Install/Upgrade VSCode extensions from/to file"
@@ -303,6 +257,7 @@ SECRETS_FILE=".secrets.env.sample"
 
    USE_STEAMPIPE=false          # -steampipe
 
+   USE_AKEYLESS=false           # -akeyless
    USE_ENVOY=false              # -Envoy
    USE_DOORMAT=false            # -Doormat
    RUN_CONSUL=false             # -Consul
@@ -388,6 +343,42 @@ SECRETS_FILE=".secrets.env.sample"
    KEEP_PROCESSES=false         # -K
 
 
+### 04. Set custom functions to echo text to screen
+# See https://wilsonmar.github.io/mac-setup/#TextColors
+# \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
+
+h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
+   printf "\n\e[1m\e[33m\u2665 %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+info() {   # output on every run
+   printf "\e[2m\n➜ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+}
+note() { if [ "${SHOW_VERBOSE}" = true ]; then
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+echo_debug() { if [ "${SHOW_DEBUG}" = true ]; then
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+success() {
+   printf "\n\e[32m\e[1m✔ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+}
+error() {    # &#9747;
+   printf "\n\e[31m\e[1m✖ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+}
+warning() {  # &#9758; or &#9755;
+   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+}
+fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
+   printf "\n\e[31m\e[1m☢  %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+}
+blank_line(){
+   printf "\n"
+}
+
+
 ### 05. Overwrite vars with config settings file 
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
@@ -448,11 +439,10 @@ Define_Env_folder(){
       mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
    else
       export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
-      echo "-env from folder \"$ENV_FOLDERPATH\" default \"$ENV_FOLDERPATH_DEFAULT\" ..."
+      note "-env from folder \"$ENV_FOLDERPATH\" default \"$ENV_FOLDERPATH_DEFAULT\" ..."
    fi
 
    if [ ! -d "${ENV_FOLDERPATH}" ]; then   # file specified found (so bak it up):
-      echo "DEBUG inside  Load_Env_files $ENV_FOLDERPATH";exit
       warning "-envf ${ENV_FOLDERPATH} not found. Creating..."
       mkdir -p "${ENV_FOLDERPATH}"
       # Do not cd to it.
@@ -464,7 +454,7 @@ Define_Env_folder
 Load_Env_files(){
 
    if [ "${COPY_ENV_FILES}" = false ]; then  # -envc for OVERWRITE!
-      echo "-envc not specified. Not copying files from ${ENV_FOLDERPATH} ..."
+      note "-envc not specified. Not copying files from ${ENV_FOLDERPATH} ..."
    else  # -envc specified:
       if command -v curl ; then
          h2 "-envc specified. Copying files from ${ENV_FOLDERPATH} ..."
@@ -478,9 +468,10 @@ Load_Env_files(){
       fi
    fi
 
-   echo "-envc loading "${ENV_FOLDERPATH}/mac-setup.env" ..."
+   note "-envc loading "${ENV_FOLDERPATH}/mac-setup.env" ..."
    # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
    source "${ENV_FOLDERPATH}/mac-setup.env"  # run file containing variable definitions.
+   note "mac-setup.env $ENV_VER sourced (loaded)..."
 
 }
 Load_Env_files
@@ -522,6 +513,10 @@ while test $# -gt 0; do
   case "$1" in
     -a)
       export RUN_ACTUAL=true
+      shift
+      ;;
+    -akeyless)
+      export USE_AKEYLESS=true
       shift
       ;;
     -aiac)
@@ -910,7 +905,6 @@ while test $# -gt 0; do
       ;;
     -v)
       export SHOW_VERBOSE=true
-      echo "DEBUG note \"${SHOW_VERBOSE}\" ";exit
       shift
       ;;
     -vv)
@@ -988,7 +982,71 @@ fi
 #done 
 
 
-### 08. Obtain and show information about the operating system in use to define which package manager to use
+### 08. Show Operating environment information
+
+# if [ "${SHOW_DEBUG}" = true ]; then  # -vv
+   h2 "Header example -q to suppress."
+   info "info example"
+   note "note example, -v to show."
+   echo_debug "echo_debug example"
+   success "success example"
+   error "error example"
+   warning "warning (warnNotice) example"
+   fatal "fatal (warnError) example"
+   blank_line
+# fi
+
+info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
+note "Explained at https://wilsonmar.github.io/mac-setup"
+note "Running in PWD=$PWD"  # $0 = script being run in Present Wording Directory.
+note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
+
+# See https://wilsonmar.github.io/mac-setup/#BashTraps
+note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
+HOSTNAME="$( hostname )"
+   note "on hostname=$HOSTNAME "
+PUBLIC_IP=$( curl -s ifconfig.me )
+INTERNAL_IP=$( ipconfig getifaddr en0 )
+   # To protect privacy security, don't expose IP address for attackers to use:
+   # note "at PUBLIC_IP=$PUBLIC_IP, internal $INTERNAL_IP"
+
+# From https://vladiliescu.net/wiki/macos/
+note $( sysctl vm.swapusage )
+   # vm.swapusage: total = 2048.00M  used = 935.25M  free = 1112.75M  (encrypted)
+
+if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
+   export MACHINE_TYPE="$(uname -m)"
+   note "OS_TYPE=$OS_TYPE MACHINE_TYPE=$MACHINE_TYPE"
+   if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
+      # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
+      export BREW_PATH="/opt/homebrew"
+      export BREW_PATH_OPT="/opt/homebrew/opt"
+      eval $( "${BREW_PATH}/bin/brew" shellenv)
+      export BASHFILE="~/.zshrc"
+   elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
+      export BREW_PATH="/usr/local/bin"
+      export BREW_PATH_OPT="/usr/local/opt"
+      export BASHFILE="$HOME/.bash_profile"
+
+      #BASHFILE="$HOME/.bashrc"  # on Linux
+   fi  # MACHINE_TYPE
+
+   note "BASHFILE at $BASHFILE"
+   note "BREW_PATH=$BREW_PATH & BREW_PATH_OPT=$BREW_PATH_OPT"
+
+   if [ -d "$BREW_PATH:?}" ]; then   # directory NOT found, so create it:
+      info "BREW_PATH=$BREW_PATH NOT found, creating ..."
+      mkdir -p "$BREW_PATH"
+      ls -ltaT "$BREW_PATH"
+   fi
+   if [ -d "$BREW_PATH_OPT:?}" ]; then   # directory NOT found, so create it:
+      info "BREW_PATH_OPT=$BREW_PATH_OPT NOT found, creating ..."
+      mkdir -p "$BREW_PATH_OPT"
+      ls -ltaT "$BREW_PATH_OPT"
+   fi
+
+   # TODO: Check if BREW_PATH_OPT is in PATH within .zshrc & .bash_profile
+fi
 
 # See https://wilsonmar.github.io/mac-setup/#OSDetect
    export OS_TYPE="$( uname )"
@@ -1042,7 +1100,6 @@ fi
 # note "OS_DETAILS=$OS_DETAILS"
 
 
-
 ### 09. Set traps to display information if script is interrupted.
 
 # See https://wilsonmar.github.io/mac-setup/#SetTraps
@@ -1060,7 +1117,7 @@ this_ending() {
       FREE_DISKBLOCKS_END=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[10]}" )
    fi
    FREE_DIFF=$(((FREE_DISKBLOCKS_END-FREE_DISKBLOCKS_START)))
-   MSG="End of script $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds. and $((FREE_DIFF*512)) bytes on disk"
+   MSG="End of script $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
    # echo 'Elapsed HH:MM:SS: ' $( awk -v t=$beg-seconds 'BEGIN{t=int(t*1000); printf "%d:%02d:%02d\n", t/3600000, t/60000%60, t/1000%60}' )
    # TODO: Delete stuff?
    success "$MSG"
@@ -1092,59 +1149,10 @@ fi
 
 
 
-### 11. Print run Operating environment information
-
-note "Running $0 in $PWD"  # $0 = script being run in Present Wording Directory.
-note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
-
-# See https://wilsonmar.github.io/mac-setup/#BashTraps
-note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
-HOSTNAME="$( hostname )"
-   note "on hostname=$HOSTNAME "
-PUBLIC_IP=$( curl -s ifconfig.me )
-INTERNAL_IP=$( ipconfig getifaddr en0 )
-   # To protect privacy security, don't expose IP address for attackers to use:
-   # note "at PUBLIC_IP=$PUBLIC_IP, internal $INTERNAL_IP"
-
-# From https://vladiliescu.net/wiki/macos/
-note $( sysctl vm.swapusage )
-   # vm.swapusage: total = 2048.00M  used = 935.25M  free = 1112.75M  (encrypted)
-
-if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
-   export MACHINE_TYPE="$(uname -m)"
-   note "OS_TYPE=$OS_TYPE MACHINE_TYPE=$MACHINE_TYPE"
-   if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
-      # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
-      export BREW_PATH="/opt/homebrew"
-      export BREW_PATH_OPT="/opt/homebrew/opt"
-      eval $( "${BREW_PATH}/bin/brew" shellenv)
-      export BASHFILE="~/.zshrc"
-   elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
-      export BREW_PATH="/usr/local/bin"
-      export BREW_PATH_OPT="/usr/local/opt"
-      export BASHFILE="$HOME/.bash_profile"
-
-      #BASHFILE="$HOME/.bashrc"  # on Linux
-   fi  # MACHINE_TYPE
-fi
-
-if [ -d "$BREW_PATH:?}" ]; then   # directory NOT found, so create it:
-   info "Directory BREW_PATH=$BREW_PATH found, creating ..."
-   mkdir -p "$BREW_PATH"
-   ls -al "$BREW_PATH"
-fi
-if [ -d "$BREW_PATH_OPT:?}" ]; then   # directory NOT found, so create it:
-   info "Directory BREW_PATH_OPT=$BREW_PATH_OPT found, creating ..."
-   mkdir -p "$BREW_PATH_OPT"
-   ls -al "$BREW_PATH_OPT"
-fi
-# TODO: Check if BREW_PATH_OPT is in PATH within .zshrc & .bash_profile
-
-
 ### 12. Backup using macOS Time Machine via tmutil
 
-if [ "${SHOW_VERBOSE}" = true ]; then
-   h2 "Before changes, backup using macOS Time Machine via tmutil ..."
+#if [ "${SHOW_VERBOSE}" = true ]; then
+ #  h2 "Before changes, backup using macOS Time Machine via tmutil ..."
    # tmutil version
       # tmutil version 4.0.0 (built Jul  5 2023)
    # See https://www.hexnode.com/mobile-device-management/help/script-for-time-machine-backup-in-mac/
@@ -1170,7 +1178,7 @@ if [ "${SHOW_VERBOSE}" = true ]; then
    #echo "Plug in external backup drive and enter password to continue ..."
    #sudo tmutil startbackup
    # pause
-fi
+# fi
 
 
 
@@ -1179,8 +1187,8 @@ fi
 # Apple Directory Services database Command Line utility:
 USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
 if [ "${SHOW_VERBOSE}" = true ]; then
-   echo "SHELL=$SHELL"
-   echo "USER_SHELL_INFO=$USER_SHELL_INFO"
+   note "SHELL=$SHELL"
+   note "USER_SHELL_INFO=$USER_SHELL_INFO"
 fi
 if [ "${CONVERT_TO_ZSH}" = true ]; then
    # Shell scripting NOTE: Double brackets and double dashes to compare strings, with space between symbols:
@@ -1880,7 +1888,7 @@ if [ "${USE_CHEZMOI}" = true ]; then  # -chezmoi
       # Create a new git local repository to store its source state:
       chezmoi init
    fi
-   ls -al "${CHEZMOI_FOLDERPATH}"
+   ls -ltaT "${CHEZMOI_FOLDERPATH}"
       # By default, chezmoi only modifies files in the working copy.
 #fi  # DOWNLOAD_INSTALL
 
@@ -1930,21 +1938,24 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
          # https://github.com/ulwlu/dotfiles/blob/master/system/macos.zsh has grep error.
       
       # Explained in https://wilsonmar.github.io/dotfiles/#Dock
-         # Dock (icon) Size: "smallish"
-         defaults write com.apple.dock tilesize -int 36;
+      # Dock (icon) Size: "smallish"
+      defaults write com.apple.dock tilesize -int 36;
 
-         # Position (Dock) on screen: Right
-         defaults write com.apple.dock orientation right; 
+      # Position (Dock) on screen: Right
+      defaults write com.apple.dock orientation right; 
 
-         # Automatically hide and show the Dock:
-         defaults write com.apple.dock autohide-delay -float 0; 
+      # Automatically hide and show the Dock:
+      defaults write com.apple.dock autohide-delay -float 0; 
 
-         # remove Dock show delay:
-         defaults write com.apple.dock autohide -bool true; 
-         defaults write com.apple.dock autohide-time-modifier -float 0;
+      # remove Dock show delay:
+      defaults write com.apple.dock autohide -bool true; 
+      defaults write com.apple.dock autohide-time-modifier -float 0;
 
-         # remove icons in Dock
-         defaults write com.apple.dock persistent-apps -array; 
+      # remove icons in Dock
+      defaults write com.apple.dock persistent-apps -array; 
+
+      # Show active apps in Dock as translucent:
+      defaults write com.apple.Dock show-hidden -bool true;
 
       # Explained in https://wilsonmar.github.io/dotfiles/#Battery
       # Show remaining battery time; hide percentage
@@ -1985,6 +1996,100 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
 
 fi  # SET_MACOS_SYSPREFS
 
+
+### 20. Akeyless 
+
+if [ "${USE_AKEYLESS}" = true ]; then  # -akeyless
+   # https://docs.akeyless.io/docs/cli
+   # Avoid using # if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+   h2 "-akeyless install ..."
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
+      if ! command -v akeyless >/dev/null; then  # command not found, so:
+         brew info akeylesslabs/tap/akeyless
+         brew install akeylesslabs/tap/akeyless
+      else  # installed already:
+         if [ "${UPDATE_PKGS}" = true ]; then  # -U
+            h2 "Brew upgrade akeyless ..."
+            brew upgrade akeyless
+         fi
+      fi
+   fi  # PACKAGE_MANAGER brew
+
+   if [ ! -d "$HOME/.akeyless" ]; then
+      warning "$HOME/.akeyless folder not found. First use ..."
+      blank_line
+      # AKEYLESS-CLI, first use detected
+         # For more info please visit: https://docs.akeyless.io/docs/cli
+         # Enter Akeyless URL (Default: vault.akeyless.io) 
+         # Would you like to configure a profile? (Y/n) n
+         # Would you like to move 'akeyless' binary to: /Users/wilsonmar/.akeyless/bin/akeyless? (Y/n)
+         # Please type your answer: n
+      # <<-EOF = heredoc: https://kodekloud.com/blog/eof-bash/
+      # FIXME: Enter Akeyless URL (Default: vault.akeyless.io) Would you like to configure a profile? (Y/n) Profile Name:  (Default: default) Access Type (enter for access_key): 
+      akeyless --init
+   fi   
+
+   if [ "${SHOW_VERBOSE}" = true ]; then
+      note " akeyless $( akeyless -v )"
+         # Version: 1.90.0.dca3303
+         # A new version of Akeyless CLI is available: 1.91.0 
+         # To update, run: akeyless update as an administrator 
+      note " ls -ltaT ~/.akeyless ..."
+      ls -ltaT ~/.akeyless
+         # total 8
+         # drwxr-xr-x   3 wilsonmar  staff    96 Sep  5 16:14 .
+         # drwxr-xr-x+ 41 wilsonmar  staff  1312 Sep  5 16:14 ..
+         # -rw-r--r--   1 wilsonmar  staff   231 Sep  5 16:14 config.json
+   fi
+
+   if [ -n "${AKEYLESS_PROFILE_PATH}" ]; then
+      note " AKEYLESS_PROFILE_PATH not specified. Using hard-coded default."
+      AKEYLESS_PROFILE_PATH="~/.akeyless/settings/profile/default.toml"
+   fi
+   note " AKEYLESS_PROFILE_PATH=${AKEYLESS_PROFILE_PATH} "
+   if [ ! -f "${AKEYLESS_PROFILE_PATH}" ]; then  # file not found:
+      if [ -n "${AKEYLESS_ACCESS_ID}" ]; then
+         fatal " AKEYLESS_ACCESS_ID not specified in .env file. Connot continue."
+         fatal " Please see https://wilsonmar.github.io/akeyless about GitHub OIDC"
+         exit
+      else
+         note " AKEYLESS_ACCESS_ID being used to configure oidc ..."
+         akeyless configure --access-id "${AKEYLESS_ACCESS_ID}" --access-type oidc
+      fi
+   fi
+
+   if [ "${SHOW_VERBOSE}" = true ]; then
+      note " akeyless: cat ${AKEYLESS_PROFILE_PATH} ..."
+      cat "${AKEYLESS_PROFILE_PATH}"
+   fi
+
+   # TODO: Create org, Access Id from https://cli.github.com/manual/gh_help_reference ?
+
+   RESULT= $( akeyless list-items | wc -l )
+   if [ "${RESULT}" -gt "0" ]; then  # it's running
+      info "-akeyless list-items contains $RESULT lines ..."
+   else  # login:
+      AKEYLESS_GITHUB_URL="https://auth.akeyless.io/oidc-login?access_id=${AKEYLESS_ACCESS_ID}&redirect_uri=https%3A%2F%2Fconsole.akeyless.io%2Flogin-oidc&is_short_token=truee://newtab"
+      note "AKEYLESS_GITHUB_URL used to open browser ..."
+      open "${AKEYLESS_GITHUB_URL}"
+   fi
+
+   # From earlier:
+   # AKL_SECRET_PATH="/static/OMDB"  # Online Movie Database
+   # AKL_SECRET_PATH="/static/OPENAI_API_KEY"
+   # AKL_SECRET_PATH="/static/BRASTEN_API"
+   # AKL_SECRET_PATH="/static/AWS_ACCOUNT_ID"
+   # AKL_SECRET_PATH="/static/AWS_ACCESS_KEY_ID"
+   # AKL_SECRET_PATH="/static/AWS_SECRET_ACCESS_KEY"
+   AKL_SECRET_PATH="/folder/sec1"  # from earlier
+      # Created manually earlier using: akeyless create-secret -n "${SECRET_}" -v "${SECRET_VALUE}"
+   note "-akeyless get-secret-value ${AKL_SECRET_PATH} ..."
+   SECRET_VALUE=$( akeyless get-secret-value -n "${AKL_SECRET_PATH}" )
+   note "SECRET_VALUE=$SECRET_VALUE"
+
+fi  # USE_AKEYLESS
+
+echo "akeyless";exit
 
 
 ### 21. Hashicorp Cloud using Doormat
@@ -2312,43 +2417,41 @@ Clone_into_GITHUB_OR_PROJECT(){
          warning "-pfn \"${PROJECT_FOLDER_NAME}\" assumed since -gru not specified..."
       fi
    fi
-
-      if [ ! -d "${PROJECT_FOLDER_BASE:?}" ]; then  # base NOT available.
-         fatal "PROJECT_FOLDER_BASE not found. Exiting ..."
-         return 1  # this function
+   if [ ! -d "${PROJECT_FOLDER_BASE:?}" ]; then  # base NOT available.
+      fatal "PROJECT_FOLDER_BASE not found. Exiting ..."
+      return 1  # this function
+   fi
+   PROJECT_FOLDER_PATH="$PROJECT_FOLDER_BASE/$PROJECT_FOLDER_NAME"
+   if [ "${DELETE_BEFORE}" = true ]; then
+      if [ ! -d "${PROJECT_FOLDER_PATH:?}" ]; then  # NOT found
+         note "${PROJECT_FOLDER_PATH} does not exist ..."
+      else  # found:
+         note "-D specified to DELETE ${PROJECT_FOLDER_PATH} BEFORE ..."
+         Delete_PROJECT_folder  # defined above in this file.
       fi
-      PROJECT_FOLDER_PATH="$PROJECT_FOLDER_BASE/$PROJECT_FOLDER_NAME"
-      if [ "${DELETE_BEFORE}" = true ]; then
-         if [ ! -d "${PROJECT_FOLDER_PATH:?}" ]; then  # NOT found
-            note "${PROJECT_FOLDER_PATH} does not exist ..."
-         else  # found:
-            note "-D specified to DELETE ${PROJECT_FOLDER_PATH} BEFORE ..."
-            Delete_PROJECT_folder  # defined above in this file.
-         fi
-      fi
-      if [ "${CLONE_GITHUB}" = false ]; then
-         note "-c (CLONE_GITHUB) not specified for cloning into ${PROJECT_FOLDER_BASE}..."
-         warning "Creating ${PROJECT_FOLDER_PATH}..."
+   fi
+   if [ "${CLONE_GITHUB}" = false ]; then
+      note "-c (CLONE_GITHUB) not specified for cloning into ${PROJECT_FOLDER_BASE}..."
+   else  # do it:
+      Identify_GITHUB_REPO_URL  # function defined above
+      if [ -z "${GITHUB_REPO_URL}" ]; then
+         warning "-gru (GITHUB_REPO_URL) not specified. Not cloning ..."
+         warning "PROJECT_FOLDER_PATH=$PROJECT_FOLDER_PATH being created..." 
          mkdir -p "${PROJECT_FOLDER_PATH}"
-      else  # do it:
-         Identify_GITHUB_REPO_URL  # function defined above
-         if [ -z "${GITHUB_REPO_URL}" ]; then
-            warning "-gru (GITHUB_REPO_URL) not specified. Not cloning ..."
-            warning "PROJECT_FOLDER_PATH=$PROJECT_FOLDER_PATH being created..." 
-            mkdir -p "${PROJECT_FOLDER_PATH}"
-         else 
-            note "-gru \"$GITHUB_REPO_URL\" being cloned ..."
-            cd /
-            cd "${PROJECT_FOLDER_BASE}"
-            if [ -z "${GITHUB_DEPTH_1}" ]; then  # not specified
-               git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
-            else
-               git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}" --depth 1
-            fi
+      else 
+         note "-gru \"$GITHUB_REPO_URL\" being cloned ..."
+         cd /
+         cd "${PROJECT_FOLDER_BASE}"
+         if [ -z "${GITHUB_DEPTH_1}" ]; then  # not specified
+            git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
+         else
+            git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}" --depth 1
          fi
       fi
-      cd /
-      cd "${PROJECT_FOLDER_PATH}"
+   fi
+
+   cd /
+   cd "${PROJECT_FOLDER_PATH}"
 #   fi  # PROJECT_FOLDER_NAME
    if [ "${SHOW_DEBUG}" = true ]; then
       note "At $PWD"
@@ -5836,7 +5939,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
          error "/consul/config not found"
          # exit 9
       else 
-         note "$( ls -al /consul/config )"
+         note "$( ls -ltaT /consul/config )"
       fi
 
       note "docker exec \"${CONSUL_DOCKER_NAME}\" consul members ... "

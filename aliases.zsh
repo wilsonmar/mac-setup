@@ -3,6 +3,7 @@
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
+# LATEST: Add -S to gc to sign git commits
 
 alias now='date +"%A %Y-%m-%d %T %p %s"'
 alias c="clear"  # screen
@@ -56,7 +57,7 @@ alias f50='stat -f "%m%t%Sm %N" /tmp/* | sort -rn | head -50 | cut -f2- 2>/dev/n
 alias en0="ipconfig getifaddr en0"  # like 172.20.1.91 or 192.168.1.253
 #alias myip="ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2" 
 # ip route get 1 | awk '{print $NF;exit}'
-
+alias netq="networkquality"  # comes with MacOS
 # These all return the public ip like https://www.whatismyip.com/:
 # alias mac="curl http://canhazip.com"  # public IP 
 #alias pubip="curl https://checkip.amazonaws.com"  # public IP
@@ -237,7 +238,7 @@ alias gds="git diff --staged"
 alias get='git fetch;' # git pull + merge
 alias gf='git fetch origin master;git diff master..origin/master'
 alias gfu='git fetch upstream;git diff HEAD @{u} --name-only'
-alias gc='git commit -m --quiet' # requires you to type a commit message
+alias gc='git commit -S -m --quiet' # requires you to type a Signed commit message
 alias gcm='git checkout master'
 alias githead="git rev-parse --short HEAD"  # current SHA commit ID
 alias gl='git log --pretty=format:"%h %s %ad" --graph --since=1.days --date=relative;git log --show-signature -n 1'
@@ -259,7 +260,6 @@ alias gsl='git config user.email;git status -s -b; git stash list'
 alias gss='git stash show'
 alias gtf='git ls-tree --full-tree --name-only -r HEAD'
 alias grx="rm .git/merge"  # Remove merge
-alias gcs='cd ~/.google-cloud-sdk;ls'
 # https://www.youtube.com/watch?v=YwG8C0jPapE making your own custom git commands (intermediate) by @anthonywritescode (Anthony Sottile)
 
 

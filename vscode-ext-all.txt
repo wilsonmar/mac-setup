@@ -1,42 +1,7 @@
+# https://marketplace.visualstudio.com/items?itemName=...
+# Cloud ::
 amazonwebservices.aws-toolkit-vscode
-Bridgecrew.checkov
-hashicorp.hcl
-hashicorp.terraform
-ms-vscode.makefile-tools
-42Crunch.vscode-openapi
-4ops.terraform
-ahmadawais.shades-of-purple
-alexcvzz.vscode-sqlite
-anfuchs.alexa-code-snippets
-antfu.icons-carbon
-ask-toolkit.alexa-skills-kit-toolkit
-bewhite.psrule-vscode
-christian-kohler.npm-intellisense
-DavidAnson.vscode-markdownlint
-dbaeumer.vscode-eslint
-deerawan.vscode-protractor-snippets
-docsmsft.docs-article-templates
-docsmsft.docs-markdown
-docsmsft.docs-preview
-docsmsft.docs-yaml
-enkia.tokyo-night
-erd0s.terraform-autocomplete
-esbenp.prettier-vscode
-GitHub.copilot
-GitHub.copilot-chat
-# GitHub.copilot-labs
-GitHub.heygithub
-GitHub.vscode-codeql
-GitHub.vscode-pull-request-github
-golang.go
-hashicorp.hcl
-hashicorp.terraform
-hbenl.vscode-test-explorer
-HCLTechnologies.hclappscancodesweep
-JFrog.jfrog-vscode-extension
-luciannaie.protractor-test-runner
-mikestead.dotenv
-mrsauravsahu.vscode-manager
+# Azure ::
 ms-azurecache.vscode-azurecache
 ms-azuretools.azure-dev
 ms-azuretools.vscode-azureappservice
@@ -49,11 +14,134 @@ ms-azuretools.vscode-azureterraform
 ms-azuretools.vscode-azurevirtualmachines
 ms-azuretools.vscode-bicep
 ms-azuretools.vscode-cosmosdb
+ms-vscode-remote.remote-containers
+ms-vscode.azure-account
+ms-vscode.azurecli
+ms-vscode.powershell
+ms-vscode.sublime-keybindings
+ms-vscode.test-adapter-converter
+ms-vsliveshare.vsliveshare
+ms-vsliveshare.vsliveshare-pack
+#
+# Colorization ::
+dzhavat.bracket-pair-toggler
+# Rainbow CSV by mechatroner = highlights CSV & TSV in color columns, run SQL-like queries
+mechatroner.rainbow-csv
+# Better Comments by Aaron Bond = colorize text based on ?, !, *, etc.
+aaron-bond.better-comments
+# Colorize by kamikillerto = Display colors for rgb specs in code.
+# oderwat's indept-rainbow = Different color for each indent level
+oderwat.indent-rainbow
+# CodeSnap by adpyke = ctrl+shift+P to create image file of colorized code snippets to share.
+adpyke.codesnap
+# ahmadawais.shades-of-purple = theme
+#
+# Icons:
+vscode-icons-team.vscode-icons
+antfu.icons-carbon
+#
+# Multi-language tools:
+# Turbo Console Log by ChakrounAnas = Cntl+Alt+L to write meaningful log messages
+ChakrounAnas.turbo-console-log
+# Paste and Indent by g3rry = Auto indent after paste
+Rubymaniac.vscode-paste-and-indent
+# Thunder Client by Ranga Vadhineni = REST API client (like Postman)
+rangav.vscode-thunder-client
+VisualStudioExptTeam.intellicode-api-usage-examples
+VisualStudioExptTeam.vscodeintellicode
+vsls-contrib.codetour
+anfuchs.alexa-code-snippets
+#
+# C# ::
+mikestead.dotenv
+#
+ask-toolkit.alexa-skills-kit-toolkit
+bewhite.psrule-vscode
+# Code Spell Checker by Street Side Software = with custom dictionary
+streetsidesoftware.code-spell-checker
+# Code Runner by Jun Han = runs many languages
+formulahendry.code-runner
+#
+# ES Lint by Microsoft
+dbaeumer.vscode-eslint
+docsmsft.docs-article-templates
+docsmsft.docs-markdown
+docsmsft.docs-preview
+docsmsft.docs-yaml
+enkia.tokyo-night
+# 
+# Prettier.Prettier set Default formatter:
+esbenp.prettier-vscode
+#
+# CSS ::
+pranaygp.vscode-css-peek
+#
+# Git & GitHub ::
+DavidAnson.vscode-markdownlint
+# Auto-Open Markdown Preview by hnw = renders .md (markdown) pages when reading README.md
+hnw.vscode-auto-open-markdown-preview
+# GitKraen's GitLens = subscription
+# Git History by Don Jayamanne = free and simpler
+donjayamanne.githistory
+mhutchie.git-graph
+vsls-contrib.gitdoc
+GitHub.copilot
+GitHub.copilot-chat
+# GitHub.copilot-labs = no longer free
+GitHub.heygithub
+GitHub.vscode-codeql
+GitHub.vscode-pull-request-github
+#
+# Golang ::
+golang.go
+#
+# Auto Rename Tag by Jun Han = renames closing HTML/XML tag automatically
+deerawan.vscode-protractor-snippets
+#
+# NodeJs ::
+ms-vscode.vscode-node-azure-pack
+christian-kohler.npm-intellisense
+#
+# SQL ::
+alexcvzz.vscode-sqlite
+#
+# Terraform ::
+hashicorp.terraform
+hashicorp.hcl
+4ops.terraform
+erd0s.terraform-autocomplete
+hbenl.vscode-test-explorer
+pjmiravalle.terraform-advanced-syntax-highlighting
+tfsec.tfsec
+Bridgecrew.checkov
+#
+HCLTechnologies.hclappscancodesweep
+JFrog.jfrog-vscode-extension
+# Import Cost by Wix = Display import/require package size in editor.
+luciannaie.protractor-test-runner
+# Microsoft IntelliCode free
+mrsauravsahu.vscode-manager
+#
+# Bash::
+timonwong.shellcheck
+#
+# CSharp ::
 ms-azuretools.vscode-docker
 ms-dotnettools.csharp
 ms-dotnettools.vscode-dotnet-runtime
 ms-kubernetes-tools.vscode-aks-tools
 ms-kubernetes-tools.vscode-kubernetes-tools
+#
+# Java & Maven ::
+redhat.java
+vscjava.vscode-java-debug
+vscjava.vscode-java-dependency
+vscjava.vscode-java-pack
+vscjava.vscode-java-test
+vscjava.vscode-maven
+ms-vscode.makefile-tools
+#
+# Python ::
 ms-python.python
 ms-python.vscode-pylance
 MS-SarifVSCode.sarif-viewer
@@ -62,35 +150,23 @@ ms-toolsai.jupyter-keymap
 ms-toolsai.jupyter-renderers
 ms-toolsai.vscode-jupyter-cell-tags
 ms-toolsai.vscode-jupyter-slideshow
-ms-vscode-remote.remote-containers
-ms-vscode.azure-account
-ms-vscode.azurecli
-ms-vscode.powershell
-ms-vscode.sublime-keybindings
-ms-vscode.test-adapter-converter
-ms-vscode.vscode-node-azure-pack
-ms-vsliveshare.vsliveshare
-ms-vsliveshare.vsliveshare-pack
-ms-vsts.team
-pjmiravalle.terraform-advanced-syntax-highlighting
-redhat.java
+#
+# ms-vsts.team
+# Python Debugger by Microsoft
+ms-python.debugpy
+# Python Test Explorer by Little Fox Team = run tests in sidebar
+LittleFoxTeam.vscode-python-test-adapter
 redhat.vscode-commons
+#
+# YAML::
 redhat.vscode-yaml
-salesforce.salesforcedx-vscode
-salesforce.salesforcedx-vscode-apex
-salesforce.salesforcedx-vscode-apex-debugger
-salesforce.salesforcedx-vscode-core
-salesforce.salesforcedx-vscode-soql
-tfsec.tfsec
-timonwong.shellcheck
-VisualStudioExptTeam.intellicode-api-usage-examples
-VisualStudioExptTeam.vscodeintellicode
-vscjava.vscode-java-debug
-vscjava.vscode-java-dependency
-vscjava.vscode-java-pack
-vscjava.vscode-java-test
-vscjava.vscode-maven
-vscode-icons-team.vscode-icons
-vsls-contrib.codetour
-vsls-contrib.gitdoc
+#
+# salesforce.salesforcedx-vscode
+# salesforce.salesforcedx-vscode-apex
+# salesforce.salesforcedx-vscode-apex-debugger
+# salesforce.salesforcedx-vscode-core
+# salesforce.salesforcedx-vscode-soql
+#
+# API Tools::
+42Crunch.vscode-openapi
 znck.grammarly
