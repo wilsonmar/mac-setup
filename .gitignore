@@ -1,5 +1,7 @@
 # .gitignore file
 
+test.sh
+
 *.hcl
 packer-docker
 

@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.135" # akeyless val retrieve & vscode-ext : mac-setup.zsh"
+SCRIPT_VERSION="v1.137" # -envf default : mac-setup.zsh"
 # Install chrome extensions
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -196,8 +196,8 @@ exit_abnormal() {            # Function: Exit with error.
    RUN_QUIET=false               # -q
 
    COPY_ENV_FILES=false           # -envc (false by default)   # to use default ENV_FOLDERPATH_BASE:
-   #ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
-   #ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
+   ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
+   ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
 
    RUN_VSCODE=false               # -VSC
    VSCODE_EXT_FILE="vscode-ext.txt"  # "file" override in .env to Install/Upgrade VSCode extensions from/to file"
@@ -355,6 +355,10 @@ info() {   # output on every run
    printf "\e[2m\n➜ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
 }
 note() { if [ "${SHOW_VERBOSE}" = true ]; then
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+secret_note() { if [ "${SHOW_VERBOSE}" = true ]; then
    printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
    fi
 }
@@ -633,8 +637,7 @@ while test $# -gt 0; do
       ;;
     -envf*)
       shift
-             ENV_FOLDERPATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      export ENV_FOLDERPATH
+      ENV_FOLDERPATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -e*)
@@ -1282,7 +1285,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # Ensure Apple's command line tools (such as cc) are installed by node:
       if ! command -v gcc >/dev/null; then  # not installed, so:
          note "Apple gcc compiler utility not available ..."
-         if ! command -v xcode-select >/dev/null; then  # not installed, so:
+         if ! command -v "xcode-select -v" >/dev/null; then  # not installed, so:
             note "ERROR: xcode-select command not available ..."
          else
             if [ -f "/Applications/Xcode.app" ]; then  # Xcode IDE already installed:
@@ -1428,8 +1431,7 @@ if [ "${VERIFY_ENV}" = true ]; then  # -V  (upper case)
 fi
 
 
-
-### 16. Install ShellCheck 
+### 16. Install ShellCheck & bclm
 
 # See https://wilsonmar.github.io/mac-setup/#ShellCheck
 # CAUTION: shellcheck does not work on zsh files (only bash files)
@@ -1449,6 +1451,28 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # version: 0.7.0
             # license: GNU General Public License, version 3
             # website: https://www.zshellcheck.net
+
+
+         if ! command -v bclm >/dev/null; then
+            h2 " bclm not found. installing bclm ..."
+            brew tap zackelia/formulae
+            brew install bclm
+         else  # installed already:
+            if [ "${UPDATE_PKGS}" = true ]; then
+               h2 "Brew upgrading bclm ..."
+               brew upgrade bclm
+            fi
+         fi
+         note "$( bclm --version )"
+            # 0.1.0
+            # https://github.com/wilsonmar/bclm
+            # https://www.youtube.com/watch?v=jcEhKGpgmzM
+         bclm read
+         sudo bclm write 77
+         # Bring it up to 100 once a week.
+         note " bclm needs to run in sudo ..."
+         sudo bclm persist
+      # Alt: https://github.com/davidwernhart/AlDente app & https://www.youtube.com/watch?v=8jaTSi1kL1w
 
    fi  # PACKAGE_MANAGER
 fi  # DOWNLOAD_INSTALL
@@ -2053,6 +2077,8 @@ if [ "${USE_AKEYLESS}" = true ]; then  # -akeyless
          fatal " Please see https://wilsonmar.github.io/akeyless about GitHub OIDC"
          exit
       else
+         AKEYLESS_GITHUB_URL="https://auth.akeyless.io/oidc-login?access_id=${AKEYLESS_ACCESS_ID}&redirect_uri=https%3A%2F%2Fconsole.akeyless.io%2Flogin-oidc&is_short_token=truee://newtab"
+
          note " AKEYLESS_ACCESS_ID being used to configure oidc ..."
          akeyless configure --access-id "${AKEYLESS_ACCESS_ID}" --access-type oidc
       fi
@@ -2069,7 +2095,6 @@ if [ "${USE_AKEYLESS}" = true ]; then  # -akeyless
    if [ "${RESULT}" -gt "0" ]; then  # it's running
       info "-akeyless list-items contains $RESULT lines ..."
    else  # login:
-      AKEYLESS_GITHUB_URL="https://auth.akeyless.io/oidc-login?access_id=${AKEYLESS_ACCESS_ID}&redirect_uri=https%3A%2F%2Fconsole.akeyless.io%2Flogin-oidc&is_short_token=truee://newtab"
       note "AKEYLESS_GITHUB_URL used to open browser ..."
       open "${AKEYLESS_GITHUB_URL}"
    fi
@@ -2088,6 +2113,15 @@ if [ "${USE_AKEYLESS}" = true ]; then  # -akeyless
    note "SECRET_VALUE=$SECRET_VALUE"
 
 fi  # USE_AKEYLESS
+
+
+akeyless_static_key(){  # $1 = "${ARM_TENANT_ID}" containing "/mac-setup/SOME_API_KEY"
+   # Created manually earlier using: akeyless create-secret -n "${SECRET_}" -v "${SECRET_VALUE}"
+   AKL_SECRET_PATH="$1"
+   note "-akeyless get-secret-value ${AKL_SECRET_PATH} ..."
+   export SECRET_VALUE=$( akeyless get-secret-value -n "${AKL_SECRET_PATH}" )
+   # DO NOT: note "SECRET_VALUE=$SECRET_VALUE"
+}  # $1 = "${ARM_TENANT_ID}"
 
 echo "akeyless";exit
 
@@ -3179,6 +3213,9 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
 
    azure_login(){
       # See https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest#az_login
+      akeyless_static_key "${ARM_TENANT_ID}"
+      note "SECRET_VALUE=$SECRET_VALUE"
+zzz
       if [ -n "${ARM_TENANT_ID}" ]; then  # not found or blank
          fatal "-azure ARM_TENANT_ID not defined. az login ..."
          az login
