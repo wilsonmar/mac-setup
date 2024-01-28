@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.137" # -envf default : mac-setup.zsh"
+SCRIPT_VERSION="v1.138" # add -utils & -ossec : mac-setup.zsh"
 # Install chrome extensions
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -92,10 +92,11 @@ args_prompt() {
    echo "   -P \"-v -x\"   -Parameters controlling program called"
    echo "   -u           -update GitHub (scan for secrets)"
    echo " "
-   echo "   -docsify      install docsify locally"
+   echo "   -utils        install utilities we all need and love"
+   echo "   -ossec        install OSSEC"
 #  echo "   -chezmoi      ???"
   #echo "   -circleci    Use CircleCI SaaS"
-   echo " "
+   echo "   -docsify      install docsify locally"
    echo "   -podman       install and use Podman (instead of Docker)"
    echo "   -k            install and use Docker"
    echo "   -b           -build Docker image"
@@ -168,6 +169,7 @@ usage_examples() {
    echo "./mac-setup.zsh -steampipe -v -I -aws -c -d1 -gfn \"steampipe\" -of "
    echo "./mac-setup.zsh -vsc -v -a -U"
    echo "./mac-setup.zsh -akeyless -v -a -U"
+   echo "./mac-setup.zsh -utils -I -v"
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -322,6 +324,8 @@ SECRETS_FILE=".secrets.env.sample"
 
 # Install?
    DOWNLOAD_INSTALL=false       # -I
+   RUN_UTILS=false              # -utils
+   RUN_OSSEC=false              # -ossec
    IMAGE_SD_CARD=false          # -sd
 
 # Pre-processing:
@@ -790,6 +794,10 @@ while test $# -gt 0; do
       export OPEN_APP=true
       shift
       ;;
+    -ossec)
+      export RUN_OSSEC=true
+      shift
+      ;;
     -of*)
       shift
       export OUTPUT_FILENAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
@@ -896,6 +904,10 @@ while test $# -gt 0; do
       ;;
     -usage)
       usage_examples  # local function
+      shift
+      ;;
+    -utils)
+      export RUN_UTILS=true
       shift
       ;;
     -U)
@@ -1452,7 +1464,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # license: GNU General Public License, version 3
             # website: https://www.zshellcheck.net
 
-
          if ! command -v bclm >/dev/null; then
             h2 " bclm not found. installing bclm ..."
             brew tap zackelia/formulae
@@ -1470,8 +1481,12 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          bclm read
          sudo bclm write 77
          # Bring it up to 100 once a week.
+
          note " bclm needs to run in sudo ..."
          sudo bclm persist
+
+         note " bclm plist should show as \"0\" ..."
+         sudo launchctl list | grep com.zackelia.bclm.plist
       # Alt: https://github.com/davidwernhart/AlDente app & https://www.youtube.com/watch?v=8jaTSi1kL1w
 
    fi  # PACKAGE_MANAGER
@@ -1881,6 +1896,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    fi  # PACKAGE_MANAGER
 
 fi  # DOWNLOAD_INSTALL
+
 
 # Install VSCode extensions:
 install_vscode_ext
@@ -3035,8 +3051,6 @@ echo "DEBUG entering aws";exit
    fi  # if [ "${USE_VAULT}" = true 
 
 
-
-
 fi  # USE_AWS_CLOUD
 
 
@@ -3111,7 +3125,6 @@ if [ "${USE_STEAMPIPE}" = true ]; then  # -steampipe
 echo "found DEBUG";exit
 
          # cd steampipe-mod-aws-insights
-
 
 : ' 
       # https://hub.steampipe.io/mods/turbot/aws_insights/dashboards
@@ -3215,7 +3228,7 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
       # See https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest#az_login
       akeyless_static_key "${ARM_TENANT_ID}"
       note "SECRET_VALUE=$SECRET_VALUE"
-zzz
+
       if [ -n "${ARM_TENANT_ID}" ]; then  # not found or blank
          fatal "-azure ARM_TENANT_ID not defined. az login ..."
          az login
@@ -6133,6 +6146,28 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
    fi  # RUN_ACTUAL
 fi  # USE_DOCKER
 
+
+### ?? OSSEC
+
+# VIDEO: https://atomicorp.wistia.com/medias/8f18n8mbcw by Boris Lukashev 2020-12-01
+# to /private/var/root/airport_monitor.sh
+# Runs a chron job 
+# https://en.wikipedia.org/wiki/OSSEC
+# https://www.ossec.net/docs/manual/installation/index.html
+# https://www.linkedin.com/in/boris-lukashev/
+# https://github.com/ossec/ossec-hids
+# https://www.ossec.net/docs/manual/programs/ossec-control.html
+# https://www.ossec.net/docs/manual/programs/ossec-analysisd.html
+# https://www.ossec.net/docs/manual/programs/ossec-logcollector.html
+# https://www.ossec.net/docs/manual/programs/ossec-syscheckd.html
+# https://www.ossec.net/docs/manual/programs/ossec-remoted.html
+# https://www.ossec.net/docs/manual/programs/ossec-monitord.html
+# https://www.ossec.net/docs/manual/programs/ossec-execd.html
+# https://www.ossec.net/docs/manual/programs/ossec-authd.html
+# https://www.ossec.net/docs/manual/programs/ossec-maild.html
+# https://www.ossec.net/docs/manual/programs/ossec-remoted.html
+
+#https://www.rainforestqa.com/blog/macos-tcc-db-deep-dive
 
 ### 70. UPDATE_GITHUB
 
