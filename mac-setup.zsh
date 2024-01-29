@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.138" # add -utils & -ossec : mac-setup.zsh"
+SCRIPT_VERSION="v1.139" # add -sha : mac-setup.zsh"
 # Install chrome extensions
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -39,99 +39,107 @@ EPOCH_START="$( date -u +%s )"  # such as 1572634619
 # See https://wilsonmar.github.io/mac-setup/#EchoFunctions
 args_prompt() {
    echo "OPTIONS:"
-   echo "   -cont         continue (NOT stop) on error"
-   echo "   -v            run -verbose (list space use and images)"
-   echo "   -vv           run -very verbose diagnostics (brew upgrade, update, doctor)"
-   echo "   -x            set -x to trace command lines"
-#  echo "   -x            set sudoers -e to stop on error"
-   echo "   -q           -quiet heading h2 for each step"
-   echo "   -trace       Trace using OpenTelemtry (Jaeger)"
+   echo "   -cont           continue (NOT stop) on error"
+   echo "   -v              run -verbose (list space use and images)"
+   echo "   -vv             run -very verbose diagnostics (brew upgrade, update, doctor)"
+   echo "   -x              set -x to trace command lines"
+#  echo "   -x              set sudoers -e to stop on error"
+   echo "   -q              quiet heading h2 for each step"
+   echo "   -trace          trace using OpenTelemtry (Jaeger)"
    echo " "
    echo "   -envf \"/alt-folder\"   (alternate path to store/read env files)"
-   echo "   -envc         Copy env files from env folders or GitHub.com"
+   echo "   -envc           copy env files from env folders or GitHub.com"
    echo " "
-   echo "   -I           -Install brew utilities, apps"
-   echo "   -U           -Upgrade installed packages if already installed"
-   echo "   -vsc         - Install VSCode extensions listed in file"
-   echo "   -zsh         Convert from bash to Zsh"
+   echo "   -zsh            convert from bash to Zsh"
    echo " "
-   echo "   -N  \"Proj\"            Alternative name of Projects folder"
-   echo "   -fn \"John Doe\"            user full name"
-   echo "   -n  \"weirdo\"           -github.com account name"
+   echo "   -I              Install brew utilities, apps"
+   echo "   -U              Upgrade installed packages if already installed"
+   echo "   -utils          install utilities we all need and love"
+   echo "   -ossec          install OSSEC file integrity monitor"
+   echo " "
+   echo "   -N  \"Proj\"      Alternative name of Projects folder"
+   echo "   -url \"https://.../filename.gz\" = URL to download"
+   echo "   -F \"abc\"        Folder inside repo"
+   echo "   -od \"directory\" = output directory"
+   echo "   -of \"filename\" = output file"
+   echo "   -DB               Delete Before run"
+   echo "   -f \"a9y.py\"     file (program) to process"
+   echo "   -P \"-v\"         Parameters controlling program called"
+   echo "   -sha            generate SHA256 from -f (file)"
+   echo "   -hash \"...\"         hash to compare against the -sha downloaded"
+   echo "   -unzip          unzip (untar) .zip/.gz downloaded -f (file)"
+   echo "   -vsc            install VSCode extensions listed in -f (file)"
+   echo " "
+   echo "   -fn \"John Doe\"  user full name"
+   echo "   -n  \"weirdo\"    github.com account name"
    echo "   -e  \"john_doe@gmail.com\"  GitHub user -email"
    echo " "
-   echo "   -a           -actually run server (not dry run)"
-   echo "   -sd          -sd card initialize locally"
+   echo "   -golang         install Golang language"
+   echo "   -ruby           install Ruby and Refinery"
+   echo "   -js             install JavaScript (NodeJs) app (no MongoDB/PostgreSQL)"
+   echo "   -java           install Java and __"
    echo " "
-   echo "   -aws         -AWS cloud"
-   echo "   -eks         -eks (Elastic Kubernetes Service) in AWS cloud"
-   echo "   -azure       -Azure cloud"
-   echo "   -gcp         -Google cloud"
-   echo "   -g \"abcdef...89\" -gcloud API credentials for calls"
-   echo "   -p \"cp100\"   -project in gcloud"
-   echo "   -quantum      Quantum computing within each cloud"
+   echo "   -conda          install Miniconda to run Python (instead of VirtualEnv)"
+   echo "   -venv           install Python to run in conda venv (pipenv is default)"
+   echo "   -pyenv          install Python to run with Pyenv"
+   echo "   -python         install Python interpreter stand-alone (no pyenv or conda)"
+   echo "   -y              install Python Flask"
+   echo "   -A              run with Python -Anaconda "
+   echo "   -tsf            tensorflow"
    echo " "
-   echo "   -akeyless     install/use Akeyless secret manager"
-#  echo "   -Consul       Install Hashicorp Consul in Docker"
-#  echo "   -Doormat      install/use Hashicorp's doormat-cli & hcloud"
-#  echo "   -Envoy        install/use Hashicorp's Envoy client"
-   echo "   -HV           install/use -Hashicorp Vault secret manager"
-   echo "   -m            Setup Vault SSH CA cert"
-   echo "   -steampipe    Steampipe.io database"
+   echo "   -a              actually run server (not dry run)"
+   echo "   -sd             sd card initialize locally"
    echo " "
-   echo "   -d           -delete GitHub and pyenv from previous run"
-   echo "   -c           -clone from GitHub"
+   echo "   -aws            AWS cloud"
+   echo "   -eks            eks (Elastic Kubernetes Service) in AWS cloud"
+   echo "   -azure          Azure cloud"
+   echo "   -gcp            Google cloud"
+   echo "   -g \"...\"        gcloud API credentials for calls"
+   echo "   -p \"cp100\"      project in gcloud"
+   echo "   -quantum        Quantum computing within each cloud"
+   echo " "
+   echo "   -akeyless       install/use Akeyless secret manager"
+#  echo "   -Consul         Install Hashicorp Consul in Docker"
+#  echo "   -Doormat        install/use Hashicorp's doormat-cli & hcloud"
+#  echo "   -Envoy          install/use Hashicorp's Envoy client"
+   echo "   -HV             install/use -Hashicorp Vault secret manager"
+   echo "   -m              Setup Vault SSH CA cert"
+   echo "   -steampipe      Steampipe.io database"
+   echo " "
+   echo "   -d              delete GitHub and pyenv from previous run"
+   echo "   -c              clone from GitHub"
    echo "   -gru \"acct/repo\"   GITHUB_REPO_URL to download from GitHub"
-   echo "   -d1          --depth 1 during GitHub clone for main branch only"
-   echo "   -ssh         use SSH to construct GITHUB_REPO_URL to download"
-   echo "   -pfn         PROJECT_FOLDER_NAME folder to clone locally"
-   echo "   -gfn         GITHUB_FOLDER_NAME folder to clone locally"
-   echo "   -ghb \"v0.5\"     git checkout branch or tag"
-   echo "   -F \"abc\"     -Folder inside repo"
-   echo "   -f \"a9y.py\"  -file (program) to run"
-   echo "   -P \"-v -x\"   -Parameters controlling program called"
-   echo "   -u           -update GitHub (scan for secrets)"
+   echo "   -d1             depth 1 during GitHub clone for main branch only"
+   echo "   -ssh            use SSH to construct GITHUB_REPO_URL to download"
+   echo "   -pfn            PROJECT_FOLDER_NAME folder to clone locally"
+   echo "   -gfn            GITHUB_FOLDER_NAME folder to clone locally"
+   echo "   -ghb \"v0.5\"   git checkout branch or tag"
+   echo "   -u              update GitHub (scan for secrets)"
    echo " "
-   echo "   -utils        install utilities we all need and love"
-   echo "   -ossec        install OSSEC"
-#  echo "   -chezmoi      ???"
-  #echo "   -circleci    Use CircleCI SaaS"
-   echo "   -docsify      install docsify locally"
-   echo "   -podman       install and use Podman (instead of Docker)"
-   echo "   -k            install and use Docker"
-   echo "   -b           -build Docker image"
-   echo "   -dps \"dev1\"   override default name of a docker process"
-   echo "   -dc           use docker-compose.yml file"
-   echo "   -w           -write image to DockerHub"
-   echo "   -k8s         -k8s (Kubernetes) minikube & OpenShift CLI"
-   echo "   -r           -restart (Docker) before run"
+#  echo "   -chezmoi        ???"
+  #echo "   -circleci       Use CircleCI SaaS"
+   echo "   -docsify        install docsify locally"
+   echo "   -podman         install and use Podman (instead of Docker)"
+   echo "   -k              install and use Docker"
+   echo "   -b              build Docker image"
+   echo "   -dps \"dev1\"     override default name of a docker process"
+   echo "   -dc             use docker-compose.yml file"
+   echo "   -w              write image to DockerHub"
+   echo "   -k8s            Kubernetes minikube & OpenShift CLI"
+   echo "   -r              restart (Docker) before run"
    echo " "
-   echo "   -golang       install Golang language"
-   echo "   -ruby         install Ruby and Refinery"
-   echo "   -js           install JavaScript (NodeJs) app (no MongoDB/PostgreSQL)"
-   echo "   -java         install Java and __"
+   echo "   -aiac \"ec2\"     AI to create Terraform Infra as Code"
+   echo "   -pike           determine min permissions on tf/IaC"
+   echo "   -hp             run HashiCorp Packer"
+   echo "   -tf             run terraform"
+   echo "   -ts             setup -testserver to run tests"
+   echo "   -o              open/view app or web page in default browser"
    echo " "
-   echo "   -conda        install Miniconda to run Python (instead of VirtualEnv)"
-   echo "   -venv         install Python to run in conda venv (pipenv is default)"
-   echo "   -pyenv        install Python to run with Pyenv"
-   echo "   -python       install Python interpreter stand-alone (no pyenv or conda)"
-   echo "   -y            install Python Flask"
-   echo "   -A            run with Python -Anaconda "
-   echo "   -tsf         -tensorflow"
-   echo " "
-   echo "   -aiac \"ec2\"  - AI to create Terraform Infra as Code"
-   echo "   -pike         determine min permissions on tf/IaC"
-   echo "   -hp           Run HashiCorp Packer"
-   echo "   -tf           Run terraform"
-   echo "   -ts           setup -testserver to run tests"
-   echo "   -o           -open/view app or web page in default browser"
-   echo "   -of \"\"     output file (generate date/time if blank)"
-   echo " "
-   echo "   -C           remove -Cloned files after run (to save disk space)"
-   echo "   -K           -Keep OS processes running at end of run (instead of killing them automatically)"
-   echo "   -D           -Delete containers and other files after run (to save disk space)"
-   echo "   -M           remove Docker iMages pulled from DockerHub (to save disk space)"
-   echo "   -usage       usage commands"
+   echo "   -K              Keep OS processes running at end of run (instead of killing them)"
+   echo "   -C              remove -Cloned files after run (to save disk space)"
+   echo "   -DA             Delete After run containers and other files (to save disk space)"
+   echo "   -M              remove Docker iMages pulled from DockerHub (to save disk space)"
+   echo "   -usage          usage commands"
    echo "# USAGE EXAMPLES:"
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "./mac-setup.zsh          # display this menu"
@@ -150,19 +158,19 @@ usage_examples() {
    echo "./mac-setup.zsh -v -HV -s -ts     # Initiate Vault testserver"
    echo " "
    echo "./mac-setup.zsh -v -aws  # for Terraform"
-   echo "./mac-setup.zsh -v -eks -D "
+   echo "./mac-setup.zsh -v -eks -DA "
    echo "./mac-setup.zsh -v -g \"abcdef...89\" -p \"cp100-1094\"  # Google API call"
    echo " "
    echo "./mac-setup.zsh -v -I -U -c    -HV -G -N \"python-samples\" -f \"a9y-sample.py\" -P \"-v\" -t -AWS -C  # Python sample app using Vault"
    echo "./mac-setup.zsh -v -venv -c -T -F \"section_2\" -f \"2-1.ipynb\" -K  # Jupyter Conda Tensorflow in Venv"
-   echo "./mac-setup.zsh -v -D -M -C"
+   echo "./mac-setup.zsh -v -DA -M -C"
    echo "./mac-setup.zsh -G -v -f \"challenge.py\" -P \"-v\"  # to run a program in my python-samples repo"
    echo "./mac-setup.zsh -v -I -U -c -s -y -r -a -aws   # Python Flask web app in Docker"
    echo " "
    echo "./mac-setup.zsh -v -n -a     # NodeJs app with MongoDB"
    echo "./mac-setup.zsh -v -ruby -o  # Ruby app"   
    echo "./mac-setup.zsh -v -venv -c -circleci -s    # Use CircLeci based on secrets"
-   echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -D  # eggplant use docker-compose of selenium-hub images"
+   echo "./mac-setup.zsh -v -s -eggplant -k -a -console -dc -K -DA  # eggplant use docker-compose of selenium-hub images"
    echo "./mac-setup.zsh -docsify -d -c -v "
    echo "./mac-setup.zsh -pike -c -gru \"alfonsof/terraform-azure-examples\" -d1 -gfn \"alonzo\" -F \"code/01-hello-world\" -o -v "
    echo "./mac-setup.zsh -tf -F \"tf-module1\" -d1 -c -v -I -U"
@@ -170,6 +178,8 @@ usage_examples() {
    echo "./mac-setup.zsh -vsc -v -a -U"
    echo "./mac-setup.zsh -akeyless -v -a -U"
    echo "./mac-setup.zsh -utils -I -v"
+   echo "./mac-setup.zsh -down -url \"https://.../.../filename.gz\" -v"
+   echo "./mac-setup.zsh -sha -pfn \"work\" -f \"filename.gz\" -unzip  -hash \"...\" -of \"gatewayd\" -v"
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
@@ -205,6 +215,10 @@ exit_abnormal() {            # Function: Exit with error.
    VSCODE_EXT_FILE="vscode-ext.txt"  # "file" override in .env to Install/Upgrade VSCode extensions from/to file"
   
    CONVERT_TO_ZSH=false           # -zsh
+   URL_TO_DOWNLOAD=""             # -url "https://.../.../filename.gz"
+   GEN_SHA=false                  # -sha Generate SHA256 from file path specified"
+   RUN_UNZIP=false                # -unzip
+   HASH_STING=""                  # -hash string to compare against gen from download"
    SET_TRACE=false                # -x
    RUN_TRACE=false                # -trace
 
@@ -250,8 +264,11 @@ SECRETS_FILE=".secrets.env.sample"
 
 # Different for each app:
    MY_FOLDER=""                 # -F folder
-   MY_FILE=""
+   MY_FILE=""                   # -f file
      #MY_FILE="2-3.ipynb"
+   OUTPUT_DIRECTORY=""          # -od
+   OUTPUT_FILENAME=""           # -of
+
    APP1_HOST="127.0.0.1"   # default
    APP1_PORT="8200"        # default
    APP1_FOLDER=""          # custom specified
@@ -329,6 +346,7 @@ SECRETS_FILE=".secrets.env.sample"
    IMAGE_SD_CARD=false          # -sd
 
 # Pre-processing:
+   DELETE_BEFORE=false          # -DB
    USE_QEMU=false               # -qemu
    RESTART_DOCKER=false         # -r
    DOCKER_IMAGE_FILE=""  # custom specified
@@ -338,10 +356,8 @@ SECRETS_FILE=".secrets.env.sample"
    USE_DOCKER_COMPOSE=false     # -dc
    USE_PYENV=false              # -pyenv
 
-   OUTPUT_FILENAME=""           # -of
-
 # Post-processing:
-   DELETE_CONTAINER_AFTER=false # -D
+   DELETE_CONTAINER_AFTER=false # -DA
    REMOVE_DOCKER_IMAGES=false   # -M
    REMOVE_GITHUB_AFTER=false    # -R
    KEEP_PROCESSES=false         # -K
@@ -352,7 +368,7 @@ SECRETS_FILE=".secrets.env.sample"
 # \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
 
 h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
-   printf "\n\e[1m\e[33m\u2665 %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
    fi
 }
 info() {   # output on every run
@@ -380,7 +396,7 @@ warning() {  # &#9758; or &#9755;
    printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
 }
 fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
-   printf "\n\e[31m\e[1m☢  %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
 blank_line(){
    printf "\n"
@@ -612,8 +628,12 @@ while test $# -gt 0; do
       export DELETE_BEFORE=true
       shift
       ;;
-    -D)
+    -DA)
       export DELETE_CONTAINER_AFTER=true
+      shift
+      ;;
+    -DB)
+      export DELETE_BEFORE=true
       shift
       ;;
     -eks)
@@ -712,6 +732,11 @@ while test $# -gt 0; do
       export GOOGLE_API_KEY
       shift
       ;;
+    -hash*)
+      shift
+      export HASH_STRING=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
     -hp)
       export RUN_PACKER=true
       shift
@@ -790,17 +815,22 @@ while test $# -gt 0; do
       export PROJECT_FOLDER_NAME
       shift
       ;;
+    -od*)
+      shift
+      export OUTPUT_DIRECTORY=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -of*)
+      shift
+      export OUTPUT_FILENAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
     -o)
       export OPEN_APP=true
       shift
       ;;
     -ossec)
       export RUN_OSSEC=true
-      shift
-      ;;
-    -of*)
-      shift
-      export OUTPUT_FILENAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -pfn*)
@@ -872,6 +902,10 @@ while test $# -gt 0; do
       export IMAGE_SD_CARD=true
       shift
       ;;
+    -sha)
+      export GEN_SHA=true
+      shift
+      ;;
     -ssh)
       export USE_GITHUB_SSH=true
       shift
@@ -896,6 +930,10 @@ while test $# -gt 0; do
     -T)
       export RUN_TENSORFLOW=true
       export RUN_CONDA=true
+      shift
+      ;;
+    -unzip)
+      export RUN_UNZIP=true
       shift
       ;;
     -u)
@@ -2139,8 +2177,6 @@ akeyless_static_key(){  # $1 = "${ARM_TENANT_ID}" containing "/mac-setup/SOME_AP
    # DO NOT: note "SECRET_VALUE=$SECRET_VALUE"
 }  # $1 = "${ARM_TENANT_ID}"
 
-echo "akeyless";exit
-
 
 ### 21. Hashicorp Cloud using Doormat
 
@@ -3306,7 +3342,7 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
    # build_azure_workspace 
 
    logout_azure(){
-      if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+      if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -DA
          h2 "az logout ..."
          az logout
       fi
@@ -3635,7 +3671,7 @@ if [ "${RUN_EKS}" = true ]; then  # -EKS
 
    # Performance testing using ab (apache bench)
 
-   if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
+   if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -DA
  
       kubectl delete deployments --all
       kubectl get pods
@@ -3650,7 +3686,7 @@ if [ "${RUN_EKS}" = true ]; then  # -EKS
            rm "$HOME/.kube/config"
       fi
 
-   fi   # if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
+   fi   # if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -DA
 
 fi  # EKS
 
@@ -3712,7 +3748,7 @@ if [ "${USE_DOCSIFY}" = true ]; then   # -docsify
 
    # Browser will refresh when the server starts?
 
-   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -DA
       note "Removing project folder \"${PROJECT_FOLDER_FULL_PATH}\" ..."
       rm -rf "${PROJECT_FOLDER_FULL_PATH}"   
    fi
@@ -5058,7 +5094,7 @@ do_pike(){
 
       # Browser will refresh when the server starts?
 
-      if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
+      if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -DA
          note "Removing project folder \"${PROJECT_FOLDER_FULL_PATH}\" ..."
          rm -rf "${PROJECT_FOLDER_FULL_PATH}"
             # Files are in macOS Trash.
@@ -5111,7 +5147,7 @@ if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
    terraform apply -auto-approve
 
    if [ "${SET_TRACE}" = true ]; then   # -x
-      if [ "$DELETE_CONTAINER_AFTER" = true ]; then
+      if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -DA
          h2 "Terraform -Destroy ..."
          terraform destroy
 
@@ -5486,6 +5522,76 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
    exit
 
 fi # RUBY_INSTALL
+
+
+### 62b. Generate SHA from file
+
+# ./mac-setup.zsh -curl -pfn "work" -url "http://?"  # to curl .tar.gz file based on -url
+# ./mac-setup.zsh -sha  -pfn "work" -f "gatewayd-darwin-amd64-v0.8.10.tar.gz" -unzip -of "gatewayd" -DB -v
+if [ "${GEN_SHA}" = true ]; then  # -sha Generate SHA256 from file path specified"
+   # mac-setup.zsh -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.10/gatewayd-darwin-amd64-v0.8.10.tar.gz"
+   if [ -z "${MY_FILE}" ]; then   # -f not specified:
+      fatal "-sha -f (file) \"$MY_FILE\" not specified... "
+   elif [ ! -f "${MY_FILE}" ]; then 
+      fatal "-sha MY_FILE ${MY_FILE} not found in $PWD ..."
+      fatal $( ls -ltaT )
+      exit 9
+   else
+      h2 "-sha -f \"${MY_FILE}\" in $PWD ..."
+   fi
+
+   RESULT=$( echo -n "${MY_FILE}" | shasum -a 256 )
+   SHA_GENED=${RESULT::-3}  # remove trailing  "  -"
+   info "SHA_GENED=${SHA_GENED}"
+
+   if [ -z "${HASH_STRING}" ]; then   # -hash string 
+      note "-sha -hash (HASH_STRING) not specified for verification... "
+   else
+      if [[ "${HASH_STRING}" == *"${SHA_GENED}"* ]]; then  # contains it:
+         note "-sha -hash string same as SHA_GEND from download ..."
+      else
+         fatal "-sha -hash string DIFFERENT from SHA_GEND from download ..."
+         exit 9
+      fi
+   fi
+
+   if [ -z "${OUTPUT_FILENAME}" ]; then   # -of filename specified:
+      note "-sha -of (output filename) not specified for verification... "
+   else
+      if [ -f "${OUTPUT_FILENAME}" ]; then 
+         note "-sha -of \"${OUTPUT_FILENAME}\" exists (from prior unzip)!"
+         if [ "${DELETE_BEFORE}" = true ]; then  # -DB
+            warning $( ls -ltaT "${OUTPUT_FILENAME}" )
+            warning "-sha -of \"${OUTPUT_FILENAME}\" -DB (Deleted before run) ..."
+            rm -rf "${OUTPUT_FILENAME}"
+         fi
+      # else  # file not found, so can unzip.
+      fi 
+   fi
+
+   if [ -z "${RUN_UNZIP}" ]; then   # -unzip not specified:
+      note "-sha -unzip not specified... "
+   else
+      note "-sha -unzip \"${MY_FILE}\" ..."
+      note $( ls -ltaT "${MY_FILE}" )
+      # TODO: if "${MY_FILE}" ends in .tar.gz, use tar:
+         tar -xvzf "${MY_FILE}"
+            # -C "extract to directory"
+      # TODO: if "${MY_FILE}" ends in .zip, use unzip:
+   fi
+
+   if [ ! -f "${OUTPUT_FILENAME}" ]; then 
+      fatal "-sha file \"${MY_FILE}\" NOT found after expansion..."
+   else
+      note "-sha file \"${OUTPUT_FILENAME}\" found after expansion..."
+      note $( ls -ltaT "${OUTPUT_FILENAME}" )
+
+      # TODO: chmod +x "${OUTPUT_FILENAME}"
+      # TODO: "${OUTPUT_FILENAME}" --version
+   fi
+
+fi # GEN_SHA
+
 
 
 ### 63. RUN_EGGPLANT
@@ -6111,7 +6217,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
             # docker rm `docker ps -aq -f status=exited`
          note "docker ps -a -f status=running ..."
          note "$DOCKER_CONTAINERS_RUNNING"
-         if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
+         if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -DA
             h2 "Stopping all docker containers:"
             docker stop "${DOCKER_CONTAINERS_RUNNING}"
                # –time/-t=1 is grace period seconds to wait before stopping the container.
@@ -6120,7 +6226,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
             docker rm -v "${DOCKER_CONTAINERS_RUNNING}"
          fi
       }
-      if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
+      if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -DA
          Delete_running_containers  # function defined above.
       fi
 
@@ -6250,7 +6356,7 @@ if [ "${KEEP_PROCESSES}" = false ]; then  # -K
 fi
 
 
-### 76. Use Docker
+### 76. After Use Docker
 
 if [ "${USE_DOCKER}" = true ]; then   # -k
    if [ "${KEEP_PROCESSES}" = true ]; then  # -K
@@ -6267,7 +6373,7 @@ if [ "${USE_DOCKER}" = true ]; then   # -k
 
 
    # See https://wilsonmar.github.io/mac-setup/#DeleteDocker
-   if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -D
+   if [ "$DELETE_CONTAINER_AFTER" = true ]; then  # -DA
 
       # TODO: if docker-compose.yml available:
       if [ "${RUN_EGGPLANT}" = true ]; then  # -O
