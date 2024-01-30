@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.139" # add -sha : mac-setup.zsh"
+SCRIPT_VERSION="v1.140" # fix -url -sha invoke gatewayd : mac-setup.zsh"
 # Install chrome extensions
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -372,7 +372,7 @@ h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
    fi
 }
 info() {   # output on every run
-   printf "\e[2m\n➜ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
 note() { if [ "${SHOW_VERBOSE}" = true ]; then
    printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
@@ -383,7 +383,7 @@ secret_note() { if [ "${SHOW_VERBOSE}" = true ]; then
    fi
 }
 echo_debug() { if [ "${SHOW_DEBUG}" = true ]; then
-   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
    fi
 }
 success() {
@@ -948,6 +948,12 @@ while test $# -gt 0; do
       export RUN_UTILS=true
       shift
       ;;
+    -url*)
+      shift
+             URL_TO_DOWNLOAD=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export URL_TO_DOWNLOAD
+      shift
+      ;;
     -U)
       export UPDATE_PKGS=true
       shift
@@ -1052,7 +1058,8 @@ fi
 info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
 note "Explained at https://wilsonmar.github.io/mac-setup"
 note "Running in PWD=$PWD"  # $0 = script being run in Present Wording Directory.
-note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  # example: 10.15.1 / 21.4.0
+note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  
+   # example: 10.15.1 / 21.4.0
 
 # See https://wilsonmar.github.io/mac-setup/#BashTraps
 note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
@@ -1586,74 +1593,7 @@ fi  # RUN_TRACE
 
 
 
-### 18. Install VSCode extensions
-
-install_vscode_ext(){
-if [ "${RUN_VSCODE}" = true ]; then  # -VSC \"vscode-ext\" file specified:
-   # For vscode CLI commands, see https://www.youtube.com/watch?v=uKCiAA4AJcI
-   # https://code.visualstudio.com/docs/editor/extension-marketplace
-
-   if [ -z "${VSCODE_EXT_FILE}" ]; then   # not specified in parms
-      fatal "-vsc recieving VSCODE_EXT_FILE parm not specified"
-      break   # out of function
-   else
-      h2 "-vsc defaults \"${VSCODE_EXT_FILE}\" from \"${VSCODE_EXT_URL}\" ..."
-   fi
-
-   # Check to see if VSCode is running based on https://stackoverflow.com/questions/1821886/check-if-mac-process-is-running-using-bash-by-process-name
-   VSCODE_APP_FILE="Visual Studio Code.app"
-   RESULT=$( ps aux | grep -v grep | grep -ci "${VSCODE_APP_FILE}" )
-   if [ "${RESULT}" -gt "0" ]; then  # it's running
-      echo "-vsc \"${VSCODE_APP_FILE}\" running ${RESULT} processes ..."
-   else
-      echo "-vsc \"${VSCODE_APP_FILE}\" is not running. Starting it ..."
-      open -a "${VSCODE_APP_FILE}"
-   fi
-   # With the app open:
-
-   LINES_IN_FILE=$( wc -l < "${VSCODE_EXT_FILE}" | sed 's/ //g' )
-   note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_EXT_FILE}\" ..."
-   if [ "${LINES_IN_FILE}" -gt "0" ]; then
-      note "-esc local file \"${VSCODE_EXT_FILE}\" beeing used ..."
-   else  # not populated:
-      if [ -z "${VSCODE_EXT_URL}" ]; then   # path specified in mac-setup.env file:
-         note "-vsc populating file "${VSCODE_EXT_FILE}" since no URL specified ..."
-         code --list-extensions > "${VSCODE_EXT_FILE}"
-         break
-      else  # have file:
-         # export VSCODE_EXT_URL="https://wilsonmar.github.io/docs/vscode-exte-231214.txt"
-         wget "${VSCODE_EXT_URL}" -O "${VSCODE_EXT_FILE}"
-         LINES_IN_FILE=$( wc -l < "${VSCODE_EXT_FILE}" | sed 's/ //g' )
-         note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_EXT_FILE}\" after load ..."
-      fi
-   fi
-
-   note "-vsc \"${VSCODE_EXT_FILE}\" Loop_Thru_File ..."
-   while read line; do 
-      # Bypass lines with # comment:
-      if [ "${line:0:1}" = "#" ]; then
-         warning "${line} ignored."   # debug
-         continue  # ignore line
-      fi
-
-      # Strip out # comments to the right of extension name:
-      VSCODE_EXT_ID=$( echo "${line}" | cut -f1 -d"#" )
-      if [ "${RUN_ACTUAL}" = true ]; then  # -a
-         if [ "${UPDATE_PKGS}" = true ]; then  # -U
-            code --install-extension "${VSCODE_EXT_ID}" --force
-         else
-            code --install-extension "${VSCODE_EXT_ID}"
-         fi
-         success "-vsc extension \"${VSCODE_EXT_ID}\" installed..."
-      else
-         info "-vsc extension \"${VSCODE_EXT_ID}\" NOT installed..."
-      fi
-   done < "${VSCODE_EXT_FILE}"
-fi  # RUN_VSCODE
-}
-
-
-### 19. Install basic utilities (git, jq, tree, etc.) used by many:
+### 18. Install basic utilities (git, jq, tree, etc.) used by many:
 
 # See https://wilsonmar.github.io/mac-setup/#BasicUtils
 if [ "${SHOW_DEBUG}" = true ]; then
@@ -1673,6 +1613,8 @@ if [ "${SHOW_DEBUG}" = true ]; then
    h2 "brew list ..."
    brew list
 fi
+
+if [ "${RUN_UTILS}" = true ]; then  # -utils
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # CAUTION: Install only packages that you actually use and trust!
 
@@ -1934,13 +1876,80 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    fi  # PACKAGE_MANAGER
 
 fi  # DOWNLOAD_INSTALL
+fi  # RUN_UTILS
 
+
+### 19. Install VSCode extensions
+
+install_vscode_ext(){
+if [ "${RUN_VSCODE}" = true ]; then  # -VSC \"vscode-ext\" file specified:
+   # For vscode CLI commands, see https://www.youtube.com/watch?v=uKCiAA4AJcI
+   # https://code.visualstudio.com/docs/editor/extension-marketplace
+
+   if [ -z "${VSCODE_EXT_FILE}" ]; then   # not specified in parms
+      fatal "-vsc recieving VSCODE_EXT_FILE parm not specified"
+      break   # out of function
+   else
+      h2 "-vsc defaults \"${VSCODE_EXT_FILE}\" from \"${VSCODE_EXT_URL}\" ..."
+   fi
+
+   # Check to see if VSCode is running based on https://stackoverflow.com/questions/1821886/check-if-mac-process-is-running-using-bash-by-process-name
+   VSCODE_APP_FILE="Visual Studio Code.app"
+   RESULT=$( ps aux | grep -v grep | grep -ci "${VSCODE_APP_FILE}" )
+   if [ "${RESULT}" -gt "0" ]; then  # it's running
+      echo "-vsc \"${VSCODE_APP_FILE}\" running ${RESULT} processes ..."
+   else
+      echo "-vsc \"${VSCODE_APP_FILE}\" is not running. Starting it ..."
+      open -a "${VSCODE_APP_FILE}"
+   fi
+   # With the app open:
+
+   LINES_IN_FILE=$( wc -l < "${VSCODE_EXT_FILE}" | sed 's/ //g' )
+   note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_EXT_FILE}\" ..."
+   if [ "${LINES_IN_FILE}" -gt "0" ]; then
+      note "-esc local file \"${VSCODE_EXT_FILE}\" beeing used ..."
+   else  # not populated:
+      if [ -z "${VSCODE_EXT_URL}" ]; then   # path specified in mac-setup.env file:
+         note "-vsc populating file "${VSCODE_EXT_FILE}" since no URL specified ..."
+         code --list-extensions > "${VSCODE_EXT_FILE}"
+         break
+      else  # have file:
+         # export VSCODE_EXT_URL="https://wilsonmar.github.io/docs/vscode-exte-231214.txt"
+         wget "${VSCODE_EXT_URL}" -O "${VSCODE_EXT_FILE}"
+         LINES_IN_FILE=$( wc -l < "${VSCODE_EXT_FILE}" | sed 's/ //g' )
+         note "-vsc ${LINES_IN_FILE} lines in \"${VSCODE_EXT_FILE}\" after load ..."
+      fi
+   fi
+
+   note "-vsc \"${VSCODE_EXT_FILE}\" Loop_Thru_File ..."
+   while read line; do 
+      # Bypass lines with # comment:
+      if [ "${line:0:1}" = "#" ]; then
+         warning "${line} ignored."   # debug
+         continue  # ignore line
+      fi
+
+      # Strip out # comments to the right of extension name:
+      VSCODE_EXT_ID=$( echo "${line}" | cut -f1 -d"#" )
+      if [ "${RUN_ACTUAL}" = true ]; then  # -a
+         if [ "${UPDATE_PKGS}" = true ]; then  # -U
+            code --install-extension "${VSCODE_EXT_ID}" --force
+         else
+            code --install-extension "${VSCODE_EXT_ID}"
+         fi
+         success "-vsc extension \"${VSCODE_EXT_ID}\" installed..."
+      else
+         info "-vsc extension \"${VSCODE_EXT_ID}\" NOT installed..."
+      fi
+   done < "${VSCODE_EXT_FILE}"
+fi  # RUN_VSCODE
+}
 
 # Install VSCode extensions:
 install_vscode_ext
 
 
-### 19. Install chezmos (Chai's macOS dotfiles)
+### 20a. Install chezmos (Chai's macOS dotfiles)
 
 # See https://www.chezmoi.io/reference/concepts/
 # See https://wilsonmar.github.io/dotfiles/
@@ -1973,8 +1982,7 @@ if [ "${USE_CHEZMOI}" = true ]; then  # -chezmoi
 fi  # USE_CHEZMOI
 
 
-
-### 20. Override defaults in Apple macOS System Preferences:"
+### 20b. Override defaults in Apple macOS System Preferences:"
 
 # See https://wilsonmar.github.io/mac-setup/#SysPrefs
 # See https://wilsonmar.github.io/dotfiles/
@@ -2075,7 +2083,8 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
 fi  # SET_MACOS_SYSPREFS
 
 
-### 20. Akeyless 
+
+### 21. Akeyless
 
 if [ "${USE_AKEYLESS}" = true ]; then  # -akeyless
    # https://docs.akeyless.io/docs/cli
@@ -2178,7 +2187,8 @@ akeyless_static_key(){  # $1 = "${ARM_TENANT_ID}" containing "/mac-setup/SOME_AP
 }  # $1 = "${ARM_TENANT_ID}"
 
 
-### 21. Hashicorp Cloud using Doormat
+
+### 22. Hashicorp Cloud using Doormat
 
 # Command-line interface for https://github.com/hetznercloud/cli
 
@@ -2229,7 +2239,7 @@ fi  # USE_DOORMAT
 
 
 
-### 22. Hashicorp Consul using Envoy
+### 23. Hashicorp Consul using Envoy
 
 # https://learn.hashicorp.com/tutorials/consul/service-mesh-with-envoy-proxy
 if [ "${USE_ENVOY}" = true ]; then  # -Envoy
@@ -2264,7 +2274,7 @@ fi  # USE_ENVOY
 
 
 
-### 23. Image SD card 
+### 24. Image SD card 
 
 image_sd_card(){
 # See https://wilsonmar.github.io/mac-setup/#ImageSDCard
@@ -2330,7 +2340,7 @@ fi  # IMAGE_SD_CARD
 
 
 
-### 24. Clone repository from GitHub into local folder
+### 25. Clone repository from GitHub into local folder
 
 # For use at end of processing as well, regardless of -c CLONE
 Delete_GITHUB_folder(){
@@ -2420,7 +2430,7 @@ Identify_GITHUB_REPO_URL(){
 }  # Identify_GITHUB_REPO_URL
 
 
-### 25. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
+### 26. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
 
 Clone_into_GITHUB_OR_PROJECT(){
 
@@ -2486,7 +2496,7 @@ Clone_into_GITHUB_OR_PROJECT(){
    fi
 
 
-   ### 26. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
+   ### 27. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
    if [ -z "${PROJECT_FOLDER_NAME+x}" ]; then   # -pfn not specified 
@@ -2548,7 +2558,7 @@ Clone_into_GITHUB_OR_PROJECT
 
 
 
-### 27. git checkout git branch if -ghb was specified
+### 28. git checkout git branch if -ghb was specified
 
 if [ -z "${GITHUB_BRANCH}" ]; then   # variable not defined
    note "-ghb GITHUB_BRANCH not specified among parms. ..."
@@ -2576,7 +2586,32 @@ fi  # GITHUB_BRANCH
 
 
 
-### 28. Reveal secrets stored within .gitsecret folder 
+### 29. Curl file URL
+
+# ./mac-setup.zsh -pfn "work" -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.11/gatewayd-darwin-amd64-v0.8.11.tar.gz" -v
+
+if [ -z "$URL_TO_DOWNLOAD" ]; then  # -url not specified
+   note "-url \"$URL_TO_DOWNLOAD\" not specified in parms..."
+else
+   if [ -f "$URL_TO_DOWNLOAD" ]; then  # -url already exists
+      note "-url \"$URL_TO_DOWNLOAD\" already exists ..."
+   else
+      note "-url at $PWD ..."
+      if [ "${DELETE_BEFORE}" = true ]; then  # -DB
+         warning $( ls -ltaT "${URL_TO_DOWNLOAD}" )
+         warning "-sha -of \"${URL_TO_DOWNLOAD}\" -DB (Deleted before run) ..."
+         rm -rf "${URL_TO_DOWNLOAD}"
+      fi
+      note "-url \"$URL_TO_DOWNLOAD\" being downloaded ..."
+      curl -O -L "${URL_TO_DOWNLOAD}"
+      note " "
+      ls -ltaT
+   fi
+fi
+
+
+
+### 30. Reveal secrets stored within .gitsecret folder 
 
 # See https://wilsonmar.github.io/mac-setup/#UnencryptGitSecret
 # within repo from GitHub (after installing gnupg and git-secret)
@@ -5526,15 +5561,14 @@ fi # RUBY_INSTALL
 
 ### 62b. Generate SHA from file
 
-# ./mac-setup.zsh -curl -pfn "work" -url "http://?"  # to curl .tar.gz file based on -url
-# ./mac-setup.zsh -sha  -pfn "work" -f "gatewayd-darwin-amd64-v0.8.10.tar.gz" -unzip -of "gatewayd" -DB -v
+# ./mac-setup.zsh -sha  -pfn "work" -f "gatewayd-darwin-amd64-v0.8.11.tar.gz" -unzip -of "gatewayd" -DB -v
 if [ "${GEN_SHA}" = true ]; then  # -sha Generate SHA256 from file path specified"
-   # mac-setup.zsh -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.10/gatewayd-darwin-amd64-v0.8.10.tar.gz"
+   # mac-setup.zsh -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.11/gatewayd-darwin-amd64-v0.8.11.tar.gz"
    if [ -z "${MY_FILE}" ]; then   # -f not specified:
       fatal "-sha -f (file) \"$MY_FILE\" not specified... "
    elif [ ! -f "${MY_FILE}" ]; then 
       fatal "-sha MY_FILE ${MY_FILE} not found in $PWD ..."
-      fatal $( ls -ltaT )
+      ls -ltaT
       exit 9
    else
       h2 "-sha -f \"${MY_FILE}\" in $PWD ..."
@@ -5575,7 +5609,7 @@ if [ "${GEN_SHA}" = true ]; then  # -sha Generate SHA256 from file path specifie
       note "-sha -unzip \"${MY_FILE}\" ..."
       note $( ls -ltaT "${MY_FILE}" )
       # TODO: if "${MY_FILE}" ends in .tar.gz, use tar:
-         tar -xvzf "${MY_FILE}"
+      tar -xvzf "${MY_FILE}"
             # -C "extract to directory"
       # TODO: if "${MY_FILE}" ends in .zip, use unzip:
    fi
@@ -5584,10 +5618,12 @@ if [ "${GEN_SHA}" = true ]; then  # -sha Generate SHA256 from file path specifie
       fatal "-sha file \"${MY_FILE}\" NOT found after expansion..."
    else
       note "-sha file \"${OUTPUT_FILENAME}\" found after expansion..."
-      note $( ls -ltaT "${OUTPUT_FILENAME}" )
+      # note $( ls -ltaT "${OUTPUT_FILENAME}" )
 
-      # TODO: chmod +x "${OUTPUT_FILENAME}"
-      # TODO: "${OUTPUT_FILENAME}" --version
+      # Set executable: 
+      chmod +x "${OUTPUT_FILENAME}"
+      # Execute to get version: 
+      ./"${OUTPUT_FILENAME}" version
    fi
 
 fi # GEN_SHA
