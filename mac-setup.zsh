@@ -20,7 +20,8 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.140" # fix -url -sha invoke gatewayd : mac-setup.zsh"
+SCRIPT_VERSION="v1.142" # add latest release scall : mac-setup.zsh"
+# lastrelease() { git ls-remote --tags "$1" | cut -d/ -f3- | tail -n1; }
 # Install chrome extensions
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -2378,6 +2379,10 @@ is_url_reachable(){
 }
 # is_url_reachable "$URL" #  to call function
 
+lastrelease() { 
+   # $1 is GitHub URL such as https://github.com/JohnPostlethwait/fixme
+   git ls-remote --tags "$1" | cut -d/ -f3- | tail -n1; 
+}
 
 Identify_GITHUB_REPO_URL(){
    # See https://wilsonmar.github.io/mac-setup/#ObtainRepo
@@ -2427,6 +2432,10 @@ Identify_GITHUB_REPO_URL(){
       fi
       # return 0
    fi
+
+   # Using function defined above:
+   GITHUB_REPO_VER=$( lastrelease "${GITHUB_REPO_URL}" )
+
 }  # Identify_GITHUB_REPO_URL
 
 
@@ -5563,7 +5572,7 @@ fi # RUBY_INSTALL
 
 # ./mac-setup.zsh -sha  -pfn "work" -f "gatewayd-darwin-amd64-v0.8.11.tar.gz" -unzip -of "gatewayd" -DB -v
 if [ "${GEN_SHA}" = true ]; then  # -sha Generate SHA256 from file path specified"
-   # mac-setup.zsh -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.11/gatewayd-darwin-amd64-v0.8.11.tar.gz"
+   # ./mac-setup.zsh -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.11/gatewayd-darwin-amd64-v0.8.11.tar.gz"
    if [ -z "${MY_FILE}" ]; then   # -f not specified:
       fatal "-sha -f (file) \"$MY_FILE\" not specified... "
    elif [ ! -f "${MY_FILE}" ]; then 
@@ -5576,7 +5585,7 @@ if [ "${GEN_SHA}" = true ]; then  # -sha Generate SHA256 from file path specifie
 
    RESULT=$( echo -n "${MY_FILE}" | shasum -a 256 )
    SHA_GENED=${RESULT::-3}  # remove trailing  "  -"
-   info "SHA_GENED=${SHA_GENED}"
+   info "${SHA_GENED}"
 
    if [ -z "${HASH_STRING}" ]; then   # -hash string 
       note "-sha -hash (HASH_STRING) not specified for verification... "
@@ -5624,6 +5633,7 @@ if [ "${GEN_SHA}" = true ]; then  # -sha Generate SHA256 from file path specifie
       chmod +x "${OUTPUT_FILENAME}"
       # Execute to get version: 
       ./"${OUTPUT_FILENAME}" version
+         # GatewayD v0.8.11 (2024-01-29T20:40:52+0000/a319750, go1.21.6, darwin/amd64)
    fi
 
 fi # GEN_SHA
