@@ -20,9 +20,8 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.142" # add latest release scall : mac-setup.zsh"
-# lastrelease() { git ls-remote --tags "$1" | cut -d/ -f3- | tail -n1; }
-# Install chrome extensions
+SCRIPT_VERSION="v1.143" # rm root file copy : mac-setup.zsh"
+# fix extra ) at end of mac-setup.env
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
@@ -496,7 +495,7 @@ Load_Env_files(){
    note "-envc loading "${ENV_FOLDERPATH}/mac-setup.env" ..."
    # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
    source "${ENV_FOLDERPATH}/mac-setup.env"  # run file containing variable definitions.
-   note "mac-setup.env $ENV_VER sourced (loaded)..."
+   note "-envc mac-setup.env $ENV_VER sourced (loaded)..."
 
 }
 Load_Env_files
@@ -5325,11 +5324,11 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
 
       if ! command -v gnupg2 ; then
-         h2 "Installing gnupg2 ..."
+         h2 "-ruby Installing gnupg2 ..."
          brew install gnupg2
       else
          if [ "${UPDATE_PKGS}" = true ]; then
-            h2 "Upgrading gnupg2 ..."
+            h2 "-ruby Upgrading gnupg2 ..."
             brew upgrade gnupg2
          fi
       fi
@@ -5343,11 +5342,11 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
          # FIX: gpg: keyserver receive failed: No route to host
 
       if ! command -v imagemagick ; then
-         h2 "Installing imagemagick ..."
+         h2 "-ruby Installing imagemagick ..."
          brew install imagemagick
       else
          if [ "${UPDATE_PKGS}" = true ]; then
-            h2 "Upgrading imagemagick ..."
+            h2 "-ruby Upgrading imagemagick ..."
             brew upgrade imagemagick
          fi
       fi
@@ -5356,7 +5355,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
 
       sudo apt-get update
 
-      h2 "Use apt instead of apt-get since Ubuntu 16.04 (from Linux Mint)"
+      h2 "-ruby Use apt instead of apt-get since Ubuntu 16.04 (from Linux Mint)"
       sudo apt install curl git
       note "$( git --version --build-options )"
          # git version 2.20.1 (Apple Git-117), cpu: x86_64, no commit associated with this build
@@ -5368,7 +5367,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
       h2 "sudo apt autoremove"
       sudo apt autoremove
 
-      h2 "Install NodeJs to run Ruby"
+      h2 "-ruby Install NodeJs to run Ruby"
       curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
       silent-apt-get-install "nodejs"
 
@@ -5378,7 +5377,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
       echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
       silent-apt-get-install "yarn" 
 
-      h2 "Install Ruby dependencies "
+      h2 "-ruby Install Ruby dependencies "
       silent-apt-get-install "rbenv"   # instead of git clone https://github.com/rbenv/rbenv.git ~/.rbenv
          # Extracting templates from packages: 100%
       silent-apt-get-install "autoconf"
@@ -5398,11 +5397,11 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
       silent-apt-get-install "libxslt1-dev"
       silent-apt-get-install "libcurl4-openssl-dev"
       
-      h2 "Install SQLite3 ..."
+      h2 "-ruby Install SQLite3 ..."
       silent-apt-get-install "libsqlite3-dev"
       silent-apt-get-install "sqlite3"
 
-      h2 "Install MySQL Server"
+      h2 "-ruby Install MySQL Server"
       silent-apt-get-install "mysql-client"
       silent-apt-get-install "mysql-server"
       silent-apt-get-install "libmysqlclient-dev"  # unable to locate
@@ -5442,7 +5441,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
          fi
    
    if ! command -v rbenv ; then
-      fatal "rbenv not found. Aborting for script fix ..."
+      fatal "-ruby rbenv not found. Aborting for script fix ..."
       exit 1
    fi
 
@@ -5450,7 +5449,7 @@ if [ "${RUBY_INSTALL}" = true ]; then  # -ruby
             if grep -q "rbenv init " "${BASHFILE}" ; then
                note "rbenv init  already in ${BASHFILE}"
             else
-               info "Appending rbenv init - in ${BASHFILE} "
+               info "-ruby Appending rbenv init - in ${BASHFILE} "
                # shellcheck disable=SC2016 # Expressions don't expand in single quotes, use double quotes for that.
                echo "eval \"$( rbenv init - )\" " >>"${BASHFILE}"
                source "${BASHFILE}"
