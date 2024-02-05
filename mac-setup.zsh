@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.143" # rm root file copy : mac-setup.zsh"
+SCRIPT_VERSION="v1.144" # rm root file copy : mac-setup.zsh"
 # fix extra ) at end of mac-setup.env
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -148,6 +148,7 @@ args_prompt() {
 
 usage_examples() {
    echo "# USAGE EXAMPLES:"
+   echo "./mac-setup.zsh -utils -I -U -v  # to install or update utilities"
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
    echo "./mac-setup.zsh -v -I -U -golang  # Install brew, plus golang"
@@ -177,12 +178,14 @@ usage_examples() {
    echo "./mac-setup.zsh -steampipe -v -I -aws -c -d1 -gfn \"steampipe\" -of "
    echo "./mac-setup.zsh -vsc -v -a -U"
    echo "./mac-setup.zsh -akeyless -v -a -U"
-   echo "./mac-setup.zsh -utils -I -v"
    echo "./mac-setup.zsh -down -url \"https://.../.../filename.gz\" -v"
    echo "./mac-setup.zsh -sha -pfn \"work\" -f \"filename.gz\" -unzip  -hash \"...\" -of \"gatewayd\" -v"
 } # usage_examples()
 
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
+
+
+### 03. Set display and exit
 
 if [ $# -eq 0 ]; then  # display if no parameters are provided:
    args_prompt
@@ -195,7 +198,8 @@ exit_abnormal() {            # Function: Exit with error.
 }
 
 
-### 03. Define variables for use as "feature flags"
+### 04. Define variables for use as "feature flags"
+
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
    CONTINUE_ON_ERR=false         # -cont
@@ -362,8 +366,7 @@ SECRETS_FILE=".secrets.env.sample"
    REMOVE_GITHUB_AFTER=false    # -R
    KEEP_PROCESSES=false         # -K
 
-
-### 04. Set custom functions to echo text to screen
+### 05. Set custom functions to echo text to screen
 # See https://wilsonmar.github.io/mac-setup/#TextColors
 # \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
 
@@ -403,43 +406,18 @@ blank_line(){
 }
 
 
-### 05. Overwrite vars with config settings file 
+### 06. Supply password for sudo root actions below
+
+# TPDO: sudo ???
+
+
+### 07. Read vars from .env settings file 
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
-download_mac-setup_home(){
-   # filename = $1
-   # ENV_FOLDERPATH Should be found:
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      if [ "${COPY_ENV_FILES}" = false ]; then  # -envc OVERWRITE!
-         note "-envc not specified. File $HOME/$1 exists. Not downloaded..."
-         return
-      else
-         warning "-envc specifies overwrite of file $HOME/$1 - first make bak..."
-         cp -f "$HOME/$1" "$HOME/$1.bak"
-      fi
-   fi  # either way:
 
-   if [ -f "$1" ]; then  # origin file exists:
-      note "-envc cannot file $1 for copy to \"$ENV_FOLDERPATH\" ..."
-      note "-envc copy from github.com repo..."
-      if ! command -v curl ; then
-         fatal "-envc from github failed. Please -I (install) curl first ..."
-         exit 9
-      else
-         # pwd
-         note "-envc file $1 downloading from GitHub ..."
-         curl --create-dirs -O --output-dir $HOME \
-            "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
-         chmod +x "$HOME/$1"
-         # ls -ltaT "$HOME/$1"
-      fi
-   fi
-}
-
-# See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 Define_Env_folder(){
-   
+   # Called from within function Load_Env_files (below)
    if [ -z "$ENV_FOLDERPATH" ]; then  # var needed not specified
       note "-envf \"$ENV_FOLDERPATH\" not specified in parms..."
       # Set to default if -envf not specified in parms:
@@ -475,8 +453,42 @@ Define_Env_folder(){
 Define_Env_folder
 
 
-Load_Env_files(){
+### 08. Download mac-setup.env, mac-setup.zsh, .zshrc
 
+# See https://wilsonmar.github.io/mac-setup/#Load_Env_files
+download_mac-setup_home(){
+   # filename = $1
+   h2 "In download_mac-setup_home ..."
+   # ENV_FOLDERPATH Should be found:
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+      if [ "${COPY_ENV_FILES}" = false ]; then  # -envc OVERWRITE!
+         note "-envc not specified. File $HOME/$1 exists. Not downloaded..."
+         return
+      else
+         warning "-envc specifies overwrite of file $HOME/$1 - first make bak..."
+         cp -f "$HOME/$1" "$HOME/$1.bak"
+      fi
+   fi  # either way:
+
+   if [ -f "$1" ]; then  # origin file exists:
+      note "-envc cannot file $1 for copy to \"$ENV_FOLDERPATH\" ..."
+      note "-envc copy from github.com repo..."
+      if ! command -v curl ; then
+         fatal "-envc from github failed. Please -I (install) curl first ..."
+         exit 9
+      else
+         # pwd
+         note "-envc file $1 downloading from GitHub ..."
+         curl --create-dirs -O --output-dir $HOME \
+            "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
+         chmod +x "$HOME/$1"
+         # ls -ltaT "$HOME/$1"
+      fi
+   fi
+}
+
+Load_Env_files(){
+   h2 "In Load_Env_files..."
    if [ "${COPY_ENV_FILES}" = false ]; then  # -envc for OVERWRITE!
       note "-envc not specified. Not copying files from ${ENV_FOLDERPATH} ..."
    else  # -envc specified:
@@ -498,8 +510,14 @@ Load_Env_files(){
    note "-envc mac-setup.env $ENV_VER sourced (loaded)..."
 
 }
-Load_Env_files
+# Load_Env_files called when -envc is identified 
 
+# TODO: Stop for user to edit .env file.
+
+echo "DEBUG: after Define_Env_folder";exit
+
+
+### 09. Download mac-setup.env, mac-setup.zsh, .zshrc
 
 Read_Inputs_Manually(){
 
@@ -523,14 +541,14 @@ Read_Inputs_Manually(){
    # See https://www.linuxcloudvps.com/blog/how-to-automate-shell-scripts-with-expect-command/
       # From https://askubuntu.com/a/711591
    #   read -p "Password: " -s szPassword
-   #   printf "%s\n" "$szPassword" | sudo --stdin mount \
+   #   printf "%s\n" "???" | sudo --stdin mount \
    #      -t cifs //192.168.1.1/home /media/$USER/home \
-   #      -o username=$USER,password="$szPassword"
+   #      -o username=$USER,password="???"
 }
 # Read_Inputs_Manually
 
 
-### 06. Set variables dynamically based on each parameter flag
+### 10. Override variables in .env using flags supplied as command arguments
 
 # See https://wilsonmar.github.io/mac-setup/#VariablesSet
 while test $# -gt 0; do
@@ -658,6 +676,8 @@ while test $# -gt 0; do
     -envc)
       export COPY_ENV_FILES=true
       shift
+      # The one exception: invoke function defined above:
+      Load_Env_files
       ;;
     -envf*)
       shift
@@ -1024,7 +1044,7 @@ while test $# -gt 0; do
 done
 
 
-### 07. Display run variables
+### 11. Display run variables
 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
 if [ "${SHOW_VERBOSE}" = true ]; then
@@ -1041,9 +1061,59 @@ fi
 #done 
 
 
-### 08. Show Operating environment information
 
-# if [ "${SHOW_DEBUG}" = true ]; then  # -vv
+### 08. Set traps to display information if script is interrupted.
+
+# See https://wilsonmar.github.io/mac-setup/#SetTraps
+# See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
+trap this_ending EXIT
+trap this_ending INT QUIT TERM
+this_ending() {
+   EPOCH_END=$(date -u +%s);
+   EPOCH_DIFF=$((EPOCH_END-EPOCH_START))
+   sudo --reset-timestamp  # prompt for password for sudo session
+   # Using BASH_VERSION identified above:
+   if [ "${BASH_VERSION}" -lt "4" ]; then
+      FREE_DISKBLOCKS_END="0"
+   else
+      FREE_DISKBLOCKS_END=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[10]}" )
+   fi
+   FREE_DIFF=$(((FREE_DISKBLOCKS_END-FREE_DISKBLOCKS_START)))
+   MSG="End of script $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
+   # echo 'Elapsed HH:MM:SS: ' $( awk -v t=$beg-seconds 'BEGIN{t=int(t*1000); printf "%d:%02d:%02d\n", t/3600000, t/60000%60, t/1000%60}' )
+   # TODO: Delete stuff?
+   success "$MSG"
+   # note "Disk $FREE_DISKBLOCKS_START to $FREE_DISKBLOCKS_END"
+}
+sig_cleanup() {
+    trap '' EXIT  # some shells call EXIT after the INT handler.
+    false # sets $?
+    this_ending
+}
+
+
+
+### 09. Set Continue on Error and Trace
+
+# See https://wilsonmar.github.io/mac-setup/#StrictMode
+if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
+   warning "Set to continue despite error ..."
+else
+   note "Set -e (error stops execution) ..."
+   set -e  # exits script when a command fails
+   # ALTERNATE: set -eu pipefail  # pipefail counts as a parameter
+fi
+if [ "${SET_TRACE}" = true ]; then
+   h2 "Set -x ..."
+   set -x  # (-o xtrace) to show commands for specific issues.
+fi
+# set -o nounset
+
+
+
+### 10. Show Operating environment information
+
+if [ "${SHOW_DEBUG}" = true ]; then  # -vv
    h2 "Header example -q to suppress."
    info "info example"
    note "note example, -v to show."
@@ -1053,7 +1123,7 @@ fi
    warning "warning (warnNotice) example"
    fatal "fatal (warnError) example"
    blank_line
-# fi
+fi
 
 info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
 note "Explained at https://wilsonmar.github.io/mac-setup"
@@ -1160,53 +1230,7 @@ fi
 # note "OS_DETAILS=$OS_DETAILS"
 
 
-### 09. Set traps to display information if script is interrupted.
-
-# See https://wilsonmar.github.io/mac-setup/#SetTraps
-# See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
-trap this_ending EXIT
-trap this_ending INT QUIT TERM
-this_ending() {
-   EPOCH_END=$(date -u +%s);
-   EPOCH_DIFF=$((EPOCH_END-EPOCH_START))
-   sudo --reset-timestamp  # prompt for password for sudo session
-   # Using BASH_VERSION identified above:
-   if [ "${BASH_VERSION}" -lt "4" ]; then
-      FREE_DISKBLOCKS_END="0"
-   else
-      FREE_DISKBLOCKS_END=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[10]}" )
-   fi
-   FREE_DIFF=$(((FREE_DISKBLOCKS_END-FREE_DISKBLOCKS_START)))
-   MSG="End of script $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
-   # echo 'Elapsed HH:MM:SS: ' $( awk -v t=$beg-seconds 'BEGIN{t=int(t*1000); printf "%d:%02d:%02d\n", t/3600000, t/60000%60, t/1000%60}' )
-   # TODO: Delete stuff?
-   success "$MSG"
-   # note "Disk $FREE_DISKBLOCKS_START to $FREE_DISKBLOCKS_END"
-}
-sig_cleanup() {
-    trap '' EXIT  # some shells call EXIT after the INT handler.
-    false # sets $?
-    this_ending
-}
-
-
-
-### 10. Set Continue on Error and Trace
-
-# See https://wilsonmar.github.io/mac-setup/#StrictMode
-if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
-   warning "Set to continue despite error ..."
-else
-   note "Set -e (error stops execution) ..."
-   set -e  # exits script when a command fails
-   # ALTERNATE: set -eu pipefail  # pipefail counts as a parameter
-fi
-if [ "${SET_TRACE}" = true ]; then
-   h2 "Set -x ..."
-   set -x  # (-o xtrace) to show commands for specific issues.
-fi
-# set -o nounset
-
+### 11.
 
 
 ### 12. Backup using macOS Time Machine via tmutil
@@ -3200,8 +3224,6 @@ if [ "${USE_STEAMPIPE}" = true ]; then  # -steampipe
          # ⠸ Running 9687 controls. (41 complete, 10 running, 9590 pending, 46 errors)
          # steampipe check all  166.60s user 46.88s system 19% cpu 18:33.20 total
       note $( ls "$OUTPUT_FILENAME" )
-
-echo "found DEBUG";exit
 
          # cd steampipe-mod-aws-insights
 
