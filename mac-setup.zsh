@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.144" # rm root file copy : mac-setup.zsh"
+SCRIPT_VERSION="v1.145" # rm root file copy : mac-setup.zsh"
 # fix extra ) at end of mac-setup.env
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -410,6 +410,7 @@ blank_line(){
 
 # TPDO: sudo ???
 
+echo "DEBUG: before Define_Env_folder";exit
 
 ### 07. Read vars from .env settings file 
 
