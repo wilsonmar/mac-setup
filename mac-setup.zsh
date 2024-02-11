@@ -253,10 +253,10 @@ blank_line(){
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 ENV_FOLDERPATH="$HOME"   # before args
-download_mac-setup_home(){
+download_file_from_github(){
    # filename = $1
    if [ -z "$1" ]; then  # var needed not specified
-      fatal "\"$1\" is invalid parm to download_mac-setup_home(). Programming error."
+      fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
       exit 9
    fi
 
@@ -269,13 +269,18 @@ download_mac-setup_home(){
       fatal "curl utility not available to download file ..."
       exit 9
    fi
-
-   h2 "Downloading file \"$ENV_FOLDERPATH/$1\" from GitHub ..."
-   curl --create-dirs -O --output-dir $HOME \
-      "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
-   chmod +x "$ENV_FOLDERPATH/$1"
-   ls -ltaT "$ENV_FOLDERPATH/$1"
-   return 0
+      read -p "Press Y or Space to confirm dowload of ${ENV_FOLDERPATH}/$1 " -n 1 -r
+      if [[ $REPLY =~ ^[Yy]$ ]]; then
+         h2 "Downloading file \"$ENV_FOLDERPATH/$1\" from GitHub ..."
+         curl --create-dirs -O --output-dir $HOME \
+            "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
+         chmod +x "$ENV_FOLDERPATH/$1"
+         ls -ltaT "$ENV_FOLDERPATH/$1"
+         return 0
+      else
+         note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
+      fi
+   fi
 }
 
 check_mac-setup_env(){
@@ -967,15 +972,15 @@ done
 
 if [ "${INIT_ENV_FILES}" = true ]; then  # -init
 
-   download_mac-setup_home  "mac-setup.env"
+   download_file_from_github  "mac-setup.env"
    valNumResult=$?   # '$?' is the return value of the previous command
    if [[ $valNumResult -eq 0 ]]; then  # file downloaded
       h2 "Now please customize file \"${ENV_FOLDERPATH}\" ..."
       exit 9
    fi
-   download_mac-setup_home  ".zshrc"
-   download_mac-setup_home  "aliases.zsh"
-   download_mac-setup_home  "mac-setup.zsh"
+   download_file_from_github  ".zshrc"
+   download_file_from_github  "aliases.zsh"
+   download_file_from_github  "mac-setup.zsh"
 fi
 
 echo "DEBUG: after Define_Env_folder";exit
