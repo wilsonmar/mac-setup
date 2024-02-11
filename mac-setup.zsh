@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.149" # Func Not download if exists msg :mac-setup.zsh"
+SCRIPT_VERSION="v1.151" # Add GITHUB_DOWNLOAD_URL for downlowd :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -246,13 +246,13 @@ blank_line(){
 
 
 
-### 06. Read vars from .env settings file for args to overrride
-### 07. -init Download mac-setup.env to $HOME (for customization)
+### 06. Read & download .env settings file for args to overrride
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 ENV_FOLDERPATH="$HOME"   # before args
+GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main/"
 download_file_from_github(){
    # filename = $1
    if [ -z "$1" ]; then  # var needed not specified
@@ -269,17 +269,16 @@ download_file_from_github(){
       fatal "curl utility not available to download file ..."
       exit 9
    fi
-      read -p "Press Y or Space to confirm dowload of ${ENV_FOLDERPATH}/$1 " -n 1 -r
-      if [[ $REPLY =~ ^[Yy]$ ]]; then
-         h2 "Downloading file \"$ENV_FOLDERPATH/$1\" from GitHub ..."
-         curl --create-dirs -O --output-dir $HOME \
-            "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
-         chmod +x "$ENV_FOLDERPATH/$1"
-         ls -ltaT "$ENV_FOLDERPATH/$1"
-         return 0
-      else
-         note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
-      fi
+
+   read -p "Press Y or Space to confirm dowload of ${ENV_FOLDERPATH}/$1 " -n 1 -r
+   if [[ $REPLY =~ ^[Yy]$ ]]; then
+      h2 "Downloading file \"$ENV_FOLDERPATH/$1\" from GitHub ..."
+      curl --create-dirs -O --output-dir $ENV_FOLDERPATH "${GITHUB_DOWNLOAD_URL}/$1" 
+      chmod +x "$ENV_FOLDERPATH/$1"
+      ls -ltaT "$ENV_FOLDERPATH/$1"
+      return 0
+   else
+      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
    fi
 }
 
