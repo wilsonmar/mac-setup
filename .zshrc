@@ -329,6 +329,9 @@ fi
 
 # >>> Python conda initialize >>>
 # See https://wilsonmar.github.io/python-install/#miniconda-install
+# Per https://github.com/conda/conda/issues/7126 and in brew caveat:
+# eval "$(conda "shell.$(basename "${SHELL}")" hook)"
+
 if [ -d "$HOME/miniconda3" ]; then  # folder was created for Python3, so:
    # !! Contents within this block are managed by 'conda init' !!
    __conda_setup="$('$HOME/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"

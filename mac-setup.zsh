@@ -20,7 +20,7 @@
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.145" # rm root file copy : mac-setup.zsh"
+SCRIPT_VERSION="v1.146" # download mac-setup.env init : mac-setup.zsh"
 # fix extra ) at end of mac-setup.env
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -34,7 +34,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 
-### 02. Display a menu if no parameter is specified in the command line
+### 02a. Display a menu if no parameter is specified in the command line
 # See https://wilsonmar.github.io/mac-setup/#Args
 # See https://wilsonmar.github.io/mac-setup/#EchoFunctions
 args_prompt() {
@@ -43,7 +43,6 @@ args_prompt() {
    echo "   -v              run -verbose (list space use and images)"
    echo "   -vv             run -very verbose diagnostics (brew upgrade, update, doctor)"
    echo "   -x              set -x to trace command lines"
-#  echo "   -x              set sudoers -e to stop on error"
    echo "   -q              quiet heading h2 for each step"
    echo "   -trace          trace using OpenTelemtry (Jaeger)"
    echo " "
@@ -146,6 +145,7 @@ args_prompt() {
    echo "./mac-setup.zsh -usage   # display usage examples"
 }  # args_prompt()
 
+### 2b. Usage Examples
 usage_examples() {
    echo "# USAGE EXAMPLES:"
    echo "./mac-setup.zsh -utils -I -U -v  # to install or update utilities"
@@ -178,6 +178,7 @@ usage_examples() {
    echo "./mac-setup.zsh -steampipe -v -I -aws -c -d1 -gfn \"steampipe\" -of "
    echo "./mac-setup.zsh -vsc -v -a -U"
    echo "./mac-setup.zsh -akeyless -v -a -U"
+   echo "./mac-setup.zsh -gatewayd \"filename.gz\"-pfn \"work\" -DB -v"
    echo "./mac-setup.zsh -down -url \"https://.../.../filename.gz\" -v"
    echo "./mac-setup.zsh -sha -pfn \"work\" -f \"filename.gz\" -unzip  -hash \"...\" -of \"gatewayd\" -v"
 } # usage_examples()
@@ -198,7 +199,136 @@ exit_abnormal() {            # Function: Exit with error.
 }
 
 
-### 04. Define variables for use as "feature flags"
+### 04. Set custom functions to echo text to screen (with defaults)
+
+# See https://wilsonmar.github.io/mac-setup/#TextColors
+# \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
+
+RUN_QUIET=false
+SHOW_VERBOSE=true
+SHOW_DEBUG=true
+
+h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
+   printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+info() {   # output on every run
+   printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+}
+note() { if [ "${SHOW_VERBOSE}" = true ]; then
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+secret_note() { if [ "${SHOW_VERBOSE}" = true ]; then
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+echo_debug() { if [ "${SHOW_DEBUG}" = true ]; then
+   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+   fi
+}
+success() {
+   printf "\n\e[32m\e[1m✔ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+}
+error() {    # &#9747;
+   printf "\n\e[31m\e[1m✖ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+}
+warning() {  # &#9758; or &#9755;
+   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+}
+fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
+   printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
+}
+blank_line(){
+   printf "\n"
+}
+
+
+
+### 05. Download mac-setup.env to $HOME & Read vars from .env settings file 
+
+# See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
+# See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
+
+# See https://wilsonmar.github.io/mac-setup/#Load_Env_files
+ENV_FOLDERPATH="$HOME"
+COPY_ENV_FILES=true
+TEMP_FOLDERPATH="$HOME/Temp"
+
+download_mac-setup_home(){
+   # filename = $1
+   if [ -z "$1" ]; then  # var needed not specified
+      fatal "\"$1\" is invalid parm to download_mac-setup_home(). Programming error."
+      exit 9
+   fi
+
+   if ! command -v curl ; then
+      fatal "curl utility not available to download file ..."
+      exit 9
+   fi
+
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
+   else
+      h2 "Downloading file \"ENV_FOLDERPATH/$1\" from GitHub ..."
+      curl --create-dirs -O --output-dir $HOME \
+         "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
+      chmod +x "$ENV_FOLDERPATH/$1"
+      ls -ltaT "$ENV_FOLDERPATH/$1"
+   fi
+}
+
+download_mac-setup_home  "mac-setup.env"
+#download_mac-setup_home  "aliases.zsh"
+#download_mac-setup_home  ".zshrc"
+#download_mac-setup_home  "mac-setup.zsh"
+
+echo "DEBUG: after Define_Env_folder";exit
+
+Define_Env_folder(){
+   # Called from within function Load_Env_files (below)
+   if [ -z "$ENV_FOLDERPATH" ]; then  # var needed not specified
+      echo "-envf \"$ENV_FOLDERPATH\" not specified in parms..."
+      # Set to default if -envf not specified in parms:
+      if [ -z "$ENV_FOLDERPATH_DEFAULT" ]; then  # not defined
+         fatal "-envf default variable \"$ENV_FOLDERPATH_DEFAULT\" not defined..."
+         exit 9
+      else  # default specified:
+         if [ ! -d "${ENV_FOLDERPATH_DEFAULT}" ]; then   # DEFAULT file defined NOT found:
+            warning "-env default ${ENV_FOLDERPATH_DEFAULT} not found. Creating..."
+            mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
+            # Do not cd to it.
+         else
+            note "-envf default \"$ENV_FOLDERPATH_DEFAULT\" found..."
+            export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
+         fi
+      fi
+   fi  # -envf specified in parms:
+
+   if [ ! -d "${ENV_FOLDERPATH}" ]; then   # not found:
+      warning "-envf folder \"$ENV_FOLDERPATH\" not found. Creating..."
+      mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
+   else
+      export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
+      note "-env from folder \"$ENV_FOLDERPATH\" default \"$ENV_FOLDERPATH_DEFAULT\" ..."
+   fi
+
+   if [ ! -d "${ENV_FOLDERPATH}" ]; then   # file specified found (so bak it up):
+      warning "-envf ${ENV_FOLDERPATH} not found. Creating..."
+      mkdir -p "${ENV_FOLDERPATH}"
+      # Do not cd to it.
+   fi
+}
+Define_Env_folder
+
+
+
+# TODO: Stop for user to edit .env file.
+
+echo "DEBUG: after Define_Env_folder";exit
+
+
+### 05. Define variables for use as "feature flags"
 
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
@@ -211,7 +341,7 @@ exit_abnormal() {            # Function: Exit with error.
    VERIFY_ENV=false              # -V
    RUN_QUIET=false               # -q
 
-   COPY_ENV_FILES=false           # -envc (false by default)   # to use default ENV_FOLDERPATH_BASE:
+   COPY_ENV_FILES=false           # -envc  # to use default ENV_FOLDERPATH_BASE:
    ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
    ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
 
@@ -257,12 +387,12 @@ SECRETS_FILE=".secrets.env.sample"
    #GITHUB_USER_EMAIL="WilsonMar+GitHub@gmail.com"
 
    USE_GITHUB_SSH=false         # -ssh
-   GITHUB_REPO_URL=""           # -gru in https://github.com/wilsonmar/xxx.git
+   GITHUB_REPO_URL=""           # -gru "https://github.com/wilsonmar/xxx.git"
 
    CLONE_GITHUB=false           # -c
    DELETE_BEFORE=false          # -d
    GITHUB_DEPTH_1=false         # -d1
-   GITHUB_FOLDER_BASE="$HOME/github-wilsonmar" # -gfb
+   GITHUB_FOLDER_BASE=""        # -gfb "$HOME/github-wilsonmar"
   #GITHUB_FOLDER_NAME=""        # -gfn
    GITHUB_BRANCH=""             # -ghb
 
@@ -343,6 +473,8 @@ SECRETS_FILE=".secrets.env.sample"
    
    MONGO_DB_NAME=""
 
+   GATEWAYD_FILE=""             # -gatewayd "file.gz"
+
 # Install?
    DOWNLOAD_INSTALL=false       # -I
    RUN_UTILS=false              # -utils
@@ -366,188 +498,8 @@ SECRETS_FILE=".secrets.env.sample"
    REMOVE_GITHUB_AFTER=false    # -R
    KEEP_PROCESSES=false         # -K
 
-### 05. Set custom functions to echo text to screen
-# See https://wilsonmar.github.io/mac-setup/#TextColors
-# \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
 
-h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
-   printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-   fi
-}
-info() {   # output on every run
-   printf "\e[2m\n➜ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-note() { if [ "${SHOW_VERBOSE}" = true ]; then
-   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-   fi
-}
-secret_note() { if [ "${SHOW_VERBOSE}" = true ]; then
-   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-   fi
-}
-echo_debug() { if [ "${SHOW_DEBUG}" = true ]; then
-   printf "\n\e[1m\e[36m \e[0m \e[36m%s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-   fi
-}
-success() {
-   printf "\n\e[32m\e[1m✔ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
-}
-error() {    # &#9747;
-   printf "\n\e[31m\e[1m✖ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
-}
-warning() {  # &#9758; or &#9755;
-   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
-}
-fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
-   printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
-}
-blank_line(){
-   printf "\n"
-}
-
-
-### 06. Supply password for sudo root actions below
-
-# TPDO: sudo ???
-
-echo "DEBUG: before Define_Env_folder";exit
-
-### 07. Read vars from .env settings file 
-
-# See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
-# See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
-
-Define_Env_folder(){
-   # Called from within function Load_Env_files (below)
-   if [ -z "$ENV_FOLDERPATH" ]; then  # var needed not specified
-      note "-envf \"$ENV_FOLDERPATH\" not specified in parms..."
-      # Set to default if -envf not specified in parms:
-      if [ -z "$ENV_FOLDERPATH_DEFAULT" ]; then  # not defined
-         fatal "-envf default variable \"$ENV_FOLDERPATH_DEFAULT\" not defined..."
-         exit 9
-      else  # default specified:
-         if [ ! -d "${ENV_FOLDERPATH_DEFAULT}" ]; then   # DEFAULT file defined NOT found:
-            warning "-env default ${ENV_FOLDERPATH_DEFAULT} not found. Creating..."
-            mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
-            # Do not cd to it.
-         else
-            note "-envf default \"$ENV_FOLDERPATH_DEFAULT\" found..."
-            export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
-         fi
-      fi
-   fi  # -envf specified in parms:
-
-   if [ ! -d "${ENV_FOLDERPATH}" ]; then   # not found:
-      warning "-envf folder \"$ENV_FOLDERPATH\" not found. Creating..."
-      mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
-   else
-      export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
-      note "-env from folder \"$ENV_FOLDERPATH\" default \"$ENV_FOLDERPATH_DEFAULT\" ..."
-   fi
-
-   if [ ! -d "${ENV_FOLDERPATH}" ]; then   # file specified found (so bak it up):
-      warning "-envf ${ENV_FOLDERPATH} not found. Creating..."
-      mkdir -p "${ENV_FOLDERPATH}"
-      # Do not cd to it.
-   fi
-}
-Define_Env_folder
-
-
-### 08. Download mac-setup.env, mac-setup.zsh, .zshrc
-
-# See https://wilsonmar.github.io/mac-setup/#Load_Env_files
-download_mac-setup_home(){
-   # filename = $1
-   h2 "In download_mac-setup_home ..."
-   # ENV_FOLDERPATH Should be found:
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      if [ "${COPY_ENV_FILES}" = false ]; then  # -envc OVERWRITE!
-         note "-envc not specified. File $HOME/$1 exists. Not downloaded..."
-         return
-      else
-         warning "-envc specifies overwrite of file $HOME/$1 - first make bak..."
-         cp -f "$HOME/$1" "$HOME/$1.bak"
-      fi
-   fi  # either way:
-
-   if [ -f "$1" ]; then  # origin file exists:
-      note "-envc cannot file $1 for copy to \"$ENV_FOLDERPATH\" ..."
-      note "-envc copy from github.com repo..."
-      if ! command -v curl ; then
-         fatal "-envc from github failed. Please -I (install) curl first ..."
-         exit 9
-      else
-         # pwd
-         note "-envc file $1 downloading from GitHub ..."
-         curl --create-dirs -O --output-dir $HOME \
-            "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
-         chmod +x "$HOME/$1"
-         # ls -ltaT "$HOME/$1"
-      fi
-   fi
-}
-
-Load_Env_files(){
-   h2 "In Load_Env_files..."
-   if [ "${COPY_ENV_FILES}" = false ]; then  # -envc for OVERWRITE!
-      note "-envc not specified. Not copying files from ${ENV_FOLDERPATH} ..."
-   else  # -envc specified:
-      if command -v curl ; then
-         h2 "-envc specified. Copying files from ${ENV_FOLDERPATH} ..."
-         # pwd
-         download_mac-setup_home  "aliases.zsh"
-         download_mac-setup_home  ".zshrc"
-         download_mac-setup_home  "mac-setup.env"
-      else
-         fatal "-envc from github failed. Please -I (install) curl first ..."
-         exit 9
-      fi
-   fi
-
-   note "-envc loading "${ENV_FOLDERPATH}/mac-setup.env" ..."
-   # See https://pipenv-fork.readthedocs.io/en/latest/advanced.html#automatic-loading-of-env
-   source "${ENV_FOLDERPATH}/mac-setup.env"  # run file containing variable definitions.
-   note "-envc mac-setup.env $ENV_VER sourced (loaded)..."
-
-}
-# Load_Env_files called when -envc is identified 
-
-# TODO: Stop for user to edit .env file.
-
-echo "DEBUG: after Define_Env_folder";exit
-
-
-### 09. Download mac-setup.env, mac-setup.zsh, .zshrc
-
-Read_Inputs_Manually(){
-
-   # https://www.zshellcheck.net/wiki/SC2162: read without -r will mangle backslashes.
-   read -r -p "Enter your GitHub user name [John Doe]: " GITHUB_USER_NAME
-   GITHUB_USER_NAME=${GITHUB_USER_NAME:-"John Doe"}
-   GITHUB_ACCOUNT_NAME=${GITHUB_ACCOUNT_NAME:-"john-doe"}
-
-   read -r -p "Enter your GitHub user email [john_doe@gmail.com]: " GITHUB_USER_EMAIL
-   GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL:-"johb_doe@gmail.com"}
-
-   if [ -z "${GITHUB_USER_EMAIL}" ]; then   # variable is blank
-      Input_GitHub_User_Info  # function defined above.
-   else
-      note "-u \"${GITHUB_USER_NAME}\" -e \"${GITHUB_USER_EMAIL}\" ..."
-      # since this is hard coded as "John Doe" above
-   fi
-
-   # TODO: Capture password manual input once for multiple shares 
-   # (without saving password like expect command) 
-   # See https://www.linuxcloudvps.com/blog/how-to-automate-shell-scripts-with-expect-command/
-      # From https://askubuntu.com/a/711591
-   #   read -p "Password: " -s szPassword
-   #   printf "%s\n" "???" | sudo --stdin mount \
-   #      -t cifs //192.168.1.1/home /media/$USER/home \
-   #      -o username=$USER,password="???"
-}
-# Read_Inputs_Manually
-
+### 05. 
 
 ### 10. Override variables in .env using flags supplied as command arguments
 
@@ -717,6 +669,11 @@ while test $# -gt 0; do
     -ga*)
       shift
       export GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      shift
+      ;;
+    -gatewayd*)
+      shift
+      export GATEWAYD_FILE=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -gfb*)
@@ -1063,7 +1020,7 @@ fi
 
 
 
-### 08. Set traps to display information if script is interrupted.
+### 12. Set traps to display information if script is interrupted.
 
 # See https://wilsonmar.github.io/mac-setup/#SetTraps
 # See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
@@ -1093,8 +1050,7 @@ sig_cleanup() {
 }
 
 
-
-### 09. Set Continue on Error and Trace
+### 13. Set Continue on Error and Trace
 
 # See https://wilsonmar.github.io/mac-setup/#StrictMode
 if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
@@ -1112,7 +1068,7 @@ fi
 
 
 
-### 10. Show Operating environment information
+### 14. Show Operating environment information
 
 if [ "${SHOW_DEBUG}" = true ]; then  # -vv
    h2 "Header example -q to suppress."
@@ -1231,7 +1187,18 @@ fi
 # note "OS_DETAILS=$OS_DETAILS"
 
 
-### 11.
+### 11. Supply password for sudo root actions below
+
+# https://askubuntu.com/questions/711580/how-to-enter-password-only-once-in-a-bash-script-needing-sudo
+
+if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+   read -p "Password: " -s szPassword
+   printf "%s\n" "$szPassword" | sudo --stdin mount -t cifs //192.168.1.1/home /media/$USER/home -o username=$USER,password="$szPassword"
+
+   sudo ls -al  #   
+fi
+
+echo "DEBUG: after sudo";exit
 
 
 ### 12. Backup using macOS Time Machine via tmutil
@@ -2212,7 +2179,6 @@ akeyless_static_key(){  # $1 = "${ARM_TENANT_ID}" containing "/mac-setup/SOME_AP
 }  # $1 = "${ARM_TENANT_ID}"
 
 
-
 ### 22. Hashicorp Cloud using Doormat
 
 # Command-line interface for https://github.com/hetznercloud/cli
@@ -2614,7 +2580,7 @@ else  # GITHUB_BRANCH defined:
    else
       # TODO: if cur_branch_name is same as requested branch:
       echo "-ghb (GITHUB_BRANCH) \"$GITHUB_BRANCH\" among parms does not exist in git repo..."
-   fi   
+   fi
 fi  # GITHUB_BRANCH
 
 
@@ -2642,6 +2608,29 @@ else
    fi
 fi
 
+
+### 29. GatewayD
+
+if [ -z "$URL_TO_DOWNLOAD" ]; then  # -url not specified
+   note "-url \"$URL_TO_DOWNLOAD\" not specified in parms..."
+else
+   if [ -f "$URL_TO_DOWNLOAD" ]; then  # -url already exists
+      note "-url \"$URL_TO_DOWNLOAD\" already exists ..."
+   else
+      note "-url at $PWD ..."
+      if [ "${DELETE_BEFORE}" = true ]; then  # -DB
+         warning $( ls -ltaT "${URL_TO_DOWNLOAD}" )
+         warning "-sha -of \"${URL_TO_DOWNLOAD}\" -DB (Deleted before run) ..."
+         rm -rf "${URL_TO_DOWNLOAD}"
+      fi
+      note "-url \"$URL_TO_DOWNLOAD\" being downloaded ..."
+      curl -O -L "${URL_TO_DOWNLOAD}"
+      note " "
+      ls -ltaT
+   fi
+fi
+
+echo "DEBUG: afteer gatewayd";exit
 
 
 ### 30. Reveal secrets stored within .gitsecret folder 
@@ -5592,7 +5581,7 @@ fi # RUBY_INSTALL
 
 ### 62b. Generate SHA from file
 
-# ./mac-setup.zsh -sha  -pfn "work" -f "gatewayd-darwin-amd64-v0.8.11.tar.gz" -unzip -of "gatewayd" -DB -v
+# ./mac-setup.zsh -sha -pfn "work" -f "gatewayd-darwin-amd64-v0.8.11.tar.gz" -unzip -of "gatewayd" -DB -v
 if [ "${GEN_SHA}" = true ]; then  # -sha Generate SHA256 from file path specified"
    # ./mac-setup.zsh -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.11/gatewayd-darwin-amd64-v0.8.11.tar.gz"
    if [ -z "${MY_FILE}" ]; then   # -f not specified:
