@@ -346,8 +346,9 @@ if [ -d "$HOME/miniconda3" ]; then  # folder was created for Python3, so:
    fi
    unset __conda_setup
       # <<< conda initialize venv <<<
+   # List conda environments created:
    conda info --envs
-   # conda activate py3k
+   # conda activate py310
 fi
 
 

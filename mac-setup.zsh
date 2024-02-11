@@ -25,7 +25,8 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.147" # sudo password mac-setup.env init : mac-setup.zsh"
+SCRIPT_VERSION="v1.147" # Not download if exists :mac-setup.zsh"
+# sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
@@ -35,7 +36,7 @@ SCRIPT_VERSION="v1.147" # sudo password mac-setup.env init : mac-setup.zsh"
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
 
 
-### 02a. Display a menu if no parameter is specified in the command line
+### 02. Display a menu if no parameter is specified in the command line
 # See https://wilsonmar.github.io/mac-setup/#Args
 # See https://wilsonmar.github.io/mac-setup/#EchoFunctions
 args_prompt() {
@@ -47,10 +48,10 @@ args_prompt() {
    echo "   -q              quiet heading h2 for each step"
    echo "   -trace          trace using OpenTelemtry (Jaeger)"
    echo " "
+   echo "   -zsh            convert from bash to Zsh"
+   echo " "
    echo "   -init           copy mac-setup.env,.zsh, .zshrc files from GitHub.com"
    echo "   -envf \"/alt-folder\"   (alternate path to store/read env files)"
-   echo " "
-   echo "   -zsh            convert from bash to Zsh"
    echo " "
    echo "   -I              Install brew utilities, apps"
    echo "   -U              Upgrade installed packages if already installed"
@@ -146,7 +147,7 @@ args_prompt() {
    echo "./mac-setup.zsh -usage   # display usage examples"
 }  # args_prompt()
 
-### 2b. Usage Examples
+### 03. Usage Examples
 usage_examples() {
    echo "# USAGE EXAMPLES:"
    echo "./mac-setup.zsh -init  # to install mac-setup.env/.zsh, .zshrc from utilities"
@@ -186,7 +187,7 @@ usage_examples() {
 } # usage_examples()
 
 
-### 03. Set display and exit
+### 04. Set display and exit
 
 if [ $# -eq 0 ]; then  # display if no parameters are provided:
    args_prompt
@@ -199,14 +200,10 @@ exit_abnormal() {            # Function: Exit with error.
 }
 
 
-### 04. Set custom functions to echo text to screen (with defaults)
+### 05. Set custom functions to echo text to screen (with defaults)
 
 # See https://wilsonmar.github.io/mac-setup/#TextColors
 # \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
-
-RUN_QUIET=false
-SHOW_VERBOSE=true
-SHOW_DEBUG=true
 
 h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
    printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
@@ -242,15 +239,17 @@ fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
 blank_line(){
    printf "\n"
 }
-# Display these after -v argument is obtained later.
+# TODO: Display these after -v argument from later.
 
 
-### 05. -I Download mac-setup.env to $HOME (for customization)
+
+### 06. Read vars from .env settings file for args to overrride
+### 07. -init Download mac-setup.env to $HOME (for customization)
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
-ENV_FOLDERPATH="$HOME"
+ENV_FOLDERPATH="$HOME"   # before args
 download_mac-setup_home(){
    # filename = $1
    if [ -z "$1" ]; then  # var needed not specified
@@ -258,66 +257,30 @@ download_mac-setup_home(){
       exit 9
    fi
 
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
+      return 1
+   fi
+   
    if ! command -v curl ; then
       fatal "curl utility not available to download file ..."
       exit 9
    fi
 
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
-      return 1
-   else
-      h2 "Downloading file \"ENV_FOLDERPATH/$1\" from GitHub ..."
-      curl --create-dirs -O --output-dir $HOME \
-         "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
-      chmod +x "$ENV_FOLDERPATH/$1"
-      ls -ltaT "$ENV_FOLDERPATH/$1"
-      return 0
-   fi
+   h2 "Downloading file \"$ENV_FOLDERPATH/$1\" from GitHub ..."
+   curl --create-dirs -O --output-dir $HOME \
+      "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
+   chmod +x "$ENV_FOLDERPATH/$1"
+   ls -ltaT "$ENV_FOLDERPATH/$1"
+   return 0
 }
 
-
-### 06. Read vars from .env settings file for args to overrride
-
-Define_Env_folder(){
-   # Called from within function Load_Env_files (below)
-   if [ -z "$ENV_FOLDERPATH" ]; then  # var needed not specified
-      echo "-envf \"$ENV_FOLDERPATH\" not specified in parms..."
-      # Set to default if -envf not specified in parms:
-      if [ -z "$ENV_FOLDERPATH_DEFAULT" ]; then  # not defined
-         fatal "-envf default variable \"$ENV_FOLDERPATH_DEFAULT\" not defined..."
-         exit 9
-      else  # default specified:
-         if [ ! -d "${ENV_FOLDERPATH_DEFAULT}" ]; then   # DEFAULT file defined NOT found:
-            warning "-env default ${ENV_FOLDERPATH_DEFAULT} not found. Creating..."
-            mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
-            # Do not cd to it.
-         else
-            note "-envf default \"$ENV_FOLDERPATH_DEFAULT\" found..."
-            export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
-         fi
-      fi
-   fi  # -envf specified in parms:
-
-   if [ ! -d "${ENV_FOLDERPATH}" ]; then   # not found:
-      warning "-envf folder \"$ENV_FOLDERPATH\" not found. Creating..."
-      mkdir -p "${ENV_FOLDERPATH_DEFAULT}"
-   else
-      export ENV_FOLDERPATH="${ENV_FOLDERPATH_DEFAULT}"
-      note "-env from folder \"$ENV_FOLDERPATH\" default \"$ENV_FOLDERPATH_DEFAULT\" ..."
-   fi
-
-   if [ ! -d "${ENV_FOLDERPATH}" ]; then   # file specified found (so bak it up):
-      warning "-envf ${ENV_FOLDERPATH} not found. Creating..."
-      mkdir -p "${ENV_FOLDERPATH}"
-      # Do not cd to it.
-   fi
-}
-Define_Env_folder
-
-
-
-# TODO: Stop for user to edit .env file.
+if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+   h2 "-init : Reading  File $ENV_FOLDERPATH/$1 into variables ..."
+   source  "$ENV_FOLDERPATH/$1"
+   h2 "Now please edit the file to customize variables ..."
+   exit 9
+fi
 
 echo "DEBUG: after Define_Env_folder";exit
 
@@ -326,16 +289,16 @@ echo "DEBUG: after Define_Env_folder";exit
 
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
-   CONTINUE_ON_ERR=false         # -cont
+   CONTINUE_ON_ERR=false          # -cont
 
-   RUN_ACTUAL=false              # -a  (dry run is default)
-   RUN_PARMS=""                  # -P
-   SHOW_VERBOSE=false            # -v
-   SHOW_DEBUG=false              # -vv
-   VERIFY_ENV=false              # -V
-   RUN_QUIET=false               # -q
+   RUN_ACTUAL=false               # -a  (dry run is default)
+   RUN_PARMS=""                   # -P
+   SHOW_VERBOSE=false             # -v
+   SHOW_DEBUG=false               # -vv
+   VERIFY_ENV=false               # -V
+   RUN_QUIET=false                # -q
 
-   COPY_ENV_FILES=false           # -init  # to use default ENV_FOLDERPATH_BASE:
+   INIT_ENV_FILES=false           # -init  # to use default ENV_FOLDERPATH_BASE:
    ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
    ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
 
@@ -716,7 +679,7 @@ while test $# -gt 0; do
       shift
       ;;
     -init)
-      export COPY_ENV_FILES=true
+      export INIT_ENV_FILES=true
       shift
       ;;
     -I)
@@ -994,7 +957,7 @@ done
 
 ### 07. -init mac-setup files in user $HOME folder
 
-if [ "${COPY_ENV_FILES}" = true ]; then  # -init
+if [ "${INIT_ENV_FILES}" = true ]; then  # -init
 
    download_mac-setup_home  "mac-setup.env"
    valNumResult=$?   # '$?' is the return value of the previous command
