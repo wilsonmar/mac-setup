@@ -18,20 +18,21 @@
 # This was run on macOS Mojave and Ubuntu 16.04.
 
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
+
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
+LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
+# clear  # screen (but not history)
+EPOCH_START="$( date -u +%s )"  # such as 1572634619
+
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.146" # download mac-setup.env init : mac-setup.zsh"
-# fix extra ) at end of mac-setup.env
+SCRIPT_VERSION="v1.147" # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
 # TODO: Add encryption of log output.
-
-LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
-# clear  # screen (but not history)
-EPOCH_START="$( date -u +%s )"  # such as 1572634619
+# TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
 
 
 ### 02a. Display a menu if no parameter is specified in the command line
@@ -46,8 +47,8 @@ args_prompt() {
    echo "   -q              quiet heading h2 for each step"
    echo "   -trace          trace using OpenTelemtry (Jaeger)"
    echo " "
+   echo "   -init           copy mac-setup.env,.zsh, .zshrc files from GitHub.com"
    echo "   -envf \"/alt-folder\"   (alternate path to store/read env files)"
-   echo "   -envc           copy env files from env folders or GitHub.com"
    echo " "
    echo "   -zsh            convert from bash to Zsh"
    echo " "
@@ -148,6 +149,7 @@ args_prompt() {
 ### 2b. Usage Examples
 usage_examples() {
    echo "# USAGE EXAMPLES:"
+   echo "./mac-setup.zsh -init  # to install mac-setup.env/.zsh, .zshrc from utilities"
    echo "./mac-setup.zsh -utils -I -U -v  # to install or update utilities"
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
@@ -182,8 +184,6 @@ usage_examples() {
    echo "./mac-setup.zsh -down -url \"https://.../.../filename.gz\" -v"
    echo "./mac-setup.zsh -sha -pfn \"work\" -f \"filename.gz\" -unzip  -hash \"...\" -of \"gatewayd\" -v"
 } # usage_examples()
-
-# TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
 
 
 ### 03. Set display and exit
@@ -242,19 +242,15 @@ fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
 blank_line(){
    printf "\n"
 }
+# Display these after -v argument is obtained later.
 
 
-
-### 05. Download mac-setup.env to $HOME & Read vars from .env settings file 
+### 05. -I Download mac-setup.env to $HOME (for customization)
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
-
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 ENV_FOLDERPATH="$HOME"
-COPY_ENV_FILES=true
-TEMP_FOLDERPATH="$HOME/Temp"
-
 download_mac-setup_home(){
    # filename = $1
    if [ -z "$1" ]; then  # var needed not specified
@@ -269,21 +265,19 @@ download_mac-setup_home(){
 
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
       note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
+      return 1
    else
       h2 "Downloading file \"ENV_FOLDERPATH/$1\" from GitHub ..."
       curl --create-dirs -O --output-dir $HOME \
          "https://raw.githubusercontent.com/wilsonmar/mac-setup/main/$1" 
       chmod +x "$ENV_FOLDERPATH/$1"
       ls -ltaT "$ENV_FOLDERPATH/$1"
+      return 0
    fi
 }
 
-download_mac-setup_home  "mac-setup.env"
-#download_mac-setup_home  "aliases.zsh"
-#download_mac-setup_home  ".zshrc"
-#download_mac-setup_home  "mac-setup.zsh"
 
-echo "DEBUG: after Define_Env_folder";exit
+### 06. Read vars from .env settings file for args to overrride
 
 Define_Env_folder(){
    # Called from within function Load_Env_files (below)
@@ -341,7 +335,7 @@ echo "DEBUG: after Define_Env_folder";exit
    VERIFY_ENV=false              # -V
    RUN_QUIET=false               # -q
 
-   COPY_ENV_FILES=false           # -envc  # to use default ENV_FOLDERPATH_BASE:
+   COPY_ENV_FILES=false           # -init  # to use default ENV_FOLDERPATH_BASE:
    ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
    ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
 
@@ -499,9 +493,7 @@ SECRETS_FILE=".secrets.env.sample"
    KEEP_PROCESSES=false         # -K
 
 
-### 05. 
-
-### 10. Override variables in .env using flags supplied as command arguments
+### 06. Override variables in .env using flags supplied as command arguments
 
 # See https://wilsonmar.github.io/mac-setup/#VariablesSet
 while test $# -gt 0; do
@@ -626,12 +618,6 @@ while test $# -gt 0; do
       APP1_PORT="80"
       shift
       ;;
-    -envc)
-      export COPY_ENV_FILES=true
-      shift
-      # The one exception: invoke function defined above:
-      Load_Env_files
-      ;;
     -envf*)
       shift
       ENV_FOLDERPATH=$( echo "$1" | sed -e 's/^[^=]*=//g' )
@@ -729,13 +715,8 @@ while test $# -gt 0; do
       export VAULT_PUT=true
       shift
       ;;
-    -ruby)
-      export RUBY_INSTALL=true
-      export GITHUB_REPO_URL="https://github.com/nickjj/build-a-saas-app-with-flask.git"
-      export PROJECT_FOLDER_NAME="bsawf"
-      #DOCKER_DB_NANE="snakeeyes-postgres"
-      #DOCKER_WEB_SVC_NAME="snakeeyes_worker_1"  # from docker-compose ps  
-      APPNAME="snakeeyes"
+    -init)
+      export COPY_ENV_FILES=true
       shift
       ;;
     -I)
@@ -856,12 +837,21 @@ while test $# -gt 0; do
       # https://wiki.qemu.org/Hosts/Mac
       shift
       ;;
-    -q)
+    -quantum)
       export RUN_QUANTUM=true
       shift
       ;;
     -q)
       export RUN_QUIET=true
+      shift
+      ;;
+    -ruby)
+      export RUBY_INSTALL=true
+      export GITHUB_REPO_URL="https://github.com/nickjj/build-a-saas-app-with-flask.git"
+      export PROJECT_FOLDER_NAME="bsawf"
+      #DOCKER_DB_NANE="snakeeyes-postgres"
+      #DOCKER_WEB_SVC_NAME="snakeeyes_worker_1"  # from docker-compose ps  
+      APPNAME="snakeeyes"
       shift
       ;;
     -r)
@@ -1000,6 +990,24 @@ while test $# -gt 0; do
       ;;
   esac
 done
+
+
+### 07. -init mac-setup files in user $HOME folder
+
+if [ "${COPY_ENV_FILES}" = true ]; then  # -init
+
+   download_mac-setup_home  "mac-setup.env"
+   valNumResult=$?   # '$?' is the return value of the previous command
+   if [[ $valNumResult -eq 0 ]]; then  # file downloaded
+      h2 "Now please customize file \"${ENV_FOLDERPATH}\" ..."
+      exit 9
+   fi
+   download_mac-setup_home  ".zshrc"
+   download_mac-setup_home  "aliases.zsh"
+   download_mac-setup_home  "mac-setup.zsh"
+fi
+
+echo "DEBUG: after Define_Env_folder";exit
 
 
 ### 11. Display run variables
