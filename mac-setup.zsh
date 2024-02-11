@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.147" # Not download if exists :mac-setup.zsh"
+SCRIPT_VERSION="v1.147" # Not download if exists msg :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -205,6 +205,9 @@ exit_abnormal() {            # Function: Exit with error.
 # See https://wilsonmar.github.io/mac-setup/#TextColors
 # \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
 
+RUN_QUIET=false
+SHOW_VERBOSE=true
+SHOW_DEBUG=true
 h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
    printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
    fi
@@ -276,10 +279,12 @@ download_mac-setup_home(){
 }
 
 if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-   h2 "-init : Reading  File $ENV_FOLDERPATH/$1 into variables ..."
+   h2 "Reading file $ENV_FOLDERPATH/$1 into variables ..."
    source  "$ENV_FOLDERPATH/$1"
    h2 "Now please edit the file to customize variables ..."
    exit 9
+else
+   note "$ENV_FOLDERPATH/$1 not found. Please -init to download..."
 fi
 
 echo "DEBUG: after Define_Env_folder";exit
