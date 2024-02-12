@@ -295,6 +295,7 @@ check_mac-setup_env(){
    else
 #      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
       download_file_from_github "$1"
+      check_mac-setup_env "$1"
    fi
 }
 check_mac-setup_env "mac-setup.env"
