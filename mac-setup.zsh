@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.159" # no download fix : mac-setup.zsh"
+SCRIPT_VERSION="v1.160" # download fix : mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -286,7 +286,7 @@ download_file_from_github(){
 }
 
 check_mac-setup_env(){
-   # $1 = mac-setup.env or other file
+   # $1 = mac-setup.env
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
       h2 "Reading file $ENV_FOLDERPATH/$1 into variables ..."
       chmod  +x "$ENV_FOLDERPATH/$1"
@@ -294,6 +294,7 @@ check_mac-setup_env(){
       h2 "Now please edit the file to customize variables ..."
       exit 9
    else
+      download_file_from_github "$1"
       note "File \"$ENV_FOLDERPATH/$1\" not found"
    fi
 }
