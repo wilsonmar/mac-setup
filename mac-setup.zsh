@@ -275,6 +275,7 @@ download_file_from_github(){
 
       h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
       curl -iLO "${GITHUB_DOWNLOAD_URL}/$1" 
+      echo "  "
       ls -ltaT "$ENV_FOLDERPATH/$1"
       return 0
    else
