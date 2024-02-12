@@ -265,9 +265,7 @@ download_file_from_github(){
       return 1
    fi
    
-# FIXME: -p: no coprocess
-#   read -r -p "Confirm dowload of ${ENV_FOLDERPATH}/$1? [y/N]" -n 1
-   # For zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
+   # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
    read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
       if ! command -v curl >/dev/null; then  # command not found, so:
@@ -295,7 +293,7 @@ check_mac-setup_env(){
       exit 9
    else
       download_file_from_github "$1"
-      note "File \"$ENV_FOLDERPATH/$1\" not found"
+      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
    fi
 }
 check_mac-setup_env "mac-setup.env"
