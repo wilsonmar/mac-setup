@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.163" # No curl -i for headers in mac-setup_env : mac-setup.zsh"
+SCRIPT_VERSION="v1.164" # Add doc url in mac-setup_env : mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -290,18 +290,16 @@ check_mac-setup_env(){
       h2 "Reading file $ENV_FOLDERPATH/$1 into variables ..."
       chmod  +x "$ENV_FOLDERPATH/$1"
       source    "$ENV_FOLDERPATH/$1"
-      h2 "Now please edit the file to customize variables ..."
-      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
-      exit 9
    else
 #      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
       download_file_from_github "$1"
       check_mac-setup_env "$1"
+      h2 "Now please edit the file to customize variables ..."
+      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
+      exit 9
    fi
 }
 check_mac-setup_env "mac-setup.env"
-
-echo "DEBUG: after Define_Env_folder";exit
 
 
 ### 05. Define variables for use as "feature flags"
@@ -978,12 +976,6 @@ done
 
 if [ "${INIT_ENV_FILES}" = true ]; then  # -init
 
-   download_file_from_github  "mac-setup.env"
-   valNumResult=$?   # '$?' is the return value of the previous command
-   if [[ $valNumResult -eq 0 ]]; then  # file downloaded
-      h2 "Now please customize file \"${ENV_FOLDERPATH}\" ..."
-      exit 9
-   fi
    download_file_from_github  ".zshrc"
    download_file_from_github  "aliases.zsh"
    download_file_from_github  "mac-setup.zsh"
