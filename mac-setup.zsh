@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.156" # curl -il to fix moved permanently :mac-setup.zsh"
+SCRIPT_VERSION="v1.157" # curl slash fix moved permanently :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -252,7 +252,7 @@ blank_line(){
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 ENV_FOLDERPATH="$HOME"   # before args
-GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main/"
+GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"
 download_file_from_github(){
    # filename = $1
    if [ -z "$1" ]; then  # var needed not specified
