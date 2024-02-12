@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.160" # download fix : mac-setup.zsh"
+SCRIPT_VERSION="v1.161" # SCRIPT_VERSION download fix : mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -40,7 +40,7 @@ SCRIPT_VERSION="v1.160" # download fix : mac-setup.zsh"
 # See https://wilsonmar.github.io/mac-setup/#Args
 # See https://wilsonmar.github.io/mac-setup/#EchoFunctions
 args_prompt() {
-   echo "OPTIONS:"
+   echo "OPTIONS: $SCRIPT_VERSION"
    echo "   -cont           continue (NOT stop) on error"
    echo "   -v              run -verbose (list space use and images)"
    echo "   -vv             run -very verbose diagnostics (brew upgrade, update, doctor)"
