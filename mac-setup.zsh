@@ -289,7 +289,8 @@ download_file_from_github(){
 check_mac-setup_env(){
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
       h2 "Reading file $ENV_FOLDERPATH/$1 into variables ..."
-      source  "$ENV_FOLDERPATH/$1"
+      chmod  +x "$ENV_FOLDERPATH/$1"
+      source    "$ENV_FOLDERPATH/$1"
       h2 "Now please edit the file to customize variables ..."
       exit 9
    else
