@@ -268,7 +268,7 @@ download_file_from_github(){
 # FIXME: -p: no coprocess
 #   read -r -p "Confirm dowload of ${ENV_FOLDERPATH}/$1? [y/N]" -n 1
    # For zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
-   read REPLY"?Confirm dowload of ${ENV_FOLDERPATH}/$1? [y/N] "
+   read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
       if ! command -v curl >/dev/null; then  # command not found, so:
          fatal "curl utility not available. Please brew install curl ..."
