@@ -294,7 +294,7 @@ check_mac-setup_env(){
       h2 "Now please edit the file to customize variables ..."
       exit 9
    else
-      note "File not found"
+      note "File \"$ENV_FOLDERPATH/$1\" not found"
    fi
 }
 check_mac-setup_env "mac-setup.env"
