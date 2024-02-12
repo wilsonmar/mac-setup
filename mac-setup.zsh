@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.153" # confirm downlowd :mac-setup.zsh"
+SCRIPT_VERSION="v1.154" #  -p: no coprocess pre downlowd :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -265,8 +265,9 @@ download_file_from_github(){
       return 1
    fi
    
-   read -r -p "Confirm dowload of ${ENV_FOLDERPATH}/$1? [y/N]" -n 1
-   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+# FIXME: -p: no coprocess
+#   read -r -p "Confirm dowload of ${ENV_FOLDERPATH}/$1? [y/N]" -n 1
+#   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
       if ! command -v curl >/dev/null; then  # command not found, so:
          fatal "curl utility not available. Please brew install curl ..."
          exit 9
@@ -277,9 +278,9 @@ download_file_from_github(){
       chmod +x "$ENV_FOLDERPATH/$1"
       ls -ltaT "$ENV_FOLDERPATH/$1"
       return 0
-   else
-      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
-      return 1
+#   else
+#      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
+#      return 1
    fi
 }
 
