@@ -275,9 +275,8 @@ download_file_from_github(){
          exit 9
       fi
 
-      h2 "Downloading from \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
+      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
       curl -iLO "${GITHUB_DOWNLOAD_URL}/$1" 
-      chmod +x "$ENV_FOLDERPATH/$1"
       ls -ltaT "$ENV_FOLDERPATH/$1"
       return 0
    else
@@ -294,6 +293,8 @@ check_mac-setup_env(){
       source    "$ENV_FOLDERPATH/$1"
       h2 "Now please edit the file to customize variables ..."
       exit 9
+   else
+      note "File not found"
    fi
 }
 check_mac-setup_env "mac-setup.env"
