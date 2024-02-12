@@ -972,19 +972,7 @@ while test $# -gt 0; do
 done
 
 
-### 07. -init mac-setup files in user $HOME folder
-
-if [ "${INIT_ENV_FILES}" = true ]; then  # -init
-
-   download_file_from_github  ".zshrc"
-   download_file_from_github  "aliases.zsh"
-   download_file_from_github  "mac-setup.zsh"
-fi
-
-echo "DEBUG: after Define_Env_folder";exit
-
-
-### 11. Display run variables
+### 07. Display run variables
 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
 if [ "${SHOW_VERBOSE}" = true ]; then
@@ -1002,7 +990,7 @@ fi
 
 
 
-### 12. Set traps to display information if script is interrupted.
+### 08. Set traps to display information if script is interrupted.
 
 # See https://wilsonmar.github.io/mac-setup/#SetTraps
 # See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
@@ -1032,7 +1020,7 @@ sig_cleanup() {
 }
 
 
-### 13. Set Continue on Error and Trace
+### 09. Set Continue on Error and Trace
 
 # See https://wilsonmar.github.io/mac-setup/#StrictMode
 if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
@@ -1050,7 +1038,7 @@ fi
 
 
 
-### 14. Show Operating environment information
+### 10. Show Operating environment information
 
 if [ "${SHOW_DEBUG}" = true ]; then  # -vv
    h2 "Header example -q to suppress."
@@ -1180,39 +1168,20 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    sudo ls -al  #   
 fi
 
-echo "DEBUG: after sudo";exit
+
+### 12. -init mac-setup files in user $HOME folder
+
+if [ "${INIT_ENV_FILES}" = true ]; then  # -init
+
+   download_file_from_github  ".zshrc"
+   download_file_from_github  "aliases.zsh"
+   download_file_from_github  "mac-setup.zsh"
+fi
+
+echo "DEBUG: after Init";exit
 
 
 ### 12. Backup using macOS Time Machine via tmutil
-
-#if [ "${SHOW_VERBOSE}" = true ]; then
- #  h2 "Before changes, backup using macOS Time Machine via tmutil ..."
-   # tmutil version
-      # tmutil version 4.0.0 (built Jul  5 2023)
-   # See https://www.hexnode.com/mobile-device-management/help/script-for-time-machine-backup-in-mac/
-   #tmutil status
-      #    ClientID = "com.apple.backupd";
-      #    Running = 0;
-   #tmutil destinationinfo
-      # ====================================================
-      # Name          : One Touch
-      # Kind          : Local
-      # ID            : D370D806-D01D-4600-AFD1-5F8E75C92D17   
-   #sudo tmutil listlocalsnapshots /
-      #com.apple.TimeMachine.2023-09-15-184333.local
-      # x4
-   # Identify backup_folder
-   #BACKUP_FOLDER=$(tmutil machinedirectory)
-   #echo "$BACKUP_FOLDER"
-   #if NOT "No machine directory found for host."
-      # Check if backup is needed:
-      #tmutil calculatedrift "${BACKUP_FOLDER}"
-      #tmutil listbackups
-      #sudo tmutil enable 
-   #echo "Plug in external backup drive and enter password to continue ..."
-   #sudo tmutil startbackup
-   # pause
-# fi
 
 
 
