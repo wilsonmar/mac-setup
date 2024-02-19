@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.164" # Add doc url in mac-setup_env : mac-setup.zsh"
+SCRIPT_VERSION="v1.165" # Init other files : mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -348,7 +348,7 @@ SECRETS_FILE=".secrets.env.sample"
    RUN_QUANTUM=false        # -quantum
    
 # To be overridden by values defined within mac-setup.env:
-   PROJECT_FOLDER_BASE="$HOME/Projects"       # -P
+   PROJECT_FOLDER_BASE="$HOME/Projects"       # -P  default
    PROJECT_FOLDER_NAME=""                     # -pfn
    PROJECT_NAME=""                            # -p
 

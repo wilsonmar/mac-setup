@@ -72,6 +72,12 @@ export PATH="$BREW_PATH/bin/:$BREW_PATH/bin/share/:${PATH}"
 export FPATH=":$BREW_PATH/share/zsh-completions:$FPATH"
    #export PATH="${PATH}:/usr/local/opt/grep/libexec/gnubin"   # after brew install grep ?
 
+# For azure.ai.cli
+if [ -d "$HOME/.dotnet/tools" ]; then # is installed:
+   export PATH="$HOME/.dotnet/tools/:${PATH}"
+   echo "dotnet --version = $(dotnet --version)"
+      # 8.0.100
+fi
 
 # Upgrade by setting Apple Directory Services database Command Line utility:
 USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"   # UserShell: /bin/zsh
