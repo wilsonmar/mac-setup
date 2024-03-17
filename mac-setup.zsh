@@ -1377,7 +1377,7 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
          # Homebrew/homebrew-core (git revision e103; last commit 2020-01-07)
          # Homebrew/homebrew-cask (git revision bbf0e; last commit 2020-01-07)
       fi
-      
+
       brew install rbenv
 
       #brew is also used later in this script
@@ -1460,32 +1460,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # version: 0.7.0
             # license: GNU General Public License, version 3
             # website: https://www.zshellcheck.net
-
-         if ! command -v bclm >/dev/null; then
-            h2 " bclm not found. installing bclm ..."
-            brew tap zackelia/formulae
-            brew install bclm
-         else  # installed already:
-            if [ "${UPDATE_PKGS}" = true ]; then
-               h2 "Brew upgrading bclm ..."
-               brew upgrade bclm
-            fi
-         fi
-         note "$( bclm --version )"
-            # 0.1.0
-            # https://github.com/wilsonmar/bclm
-            # https://www.youtube.com/watch?v=jcEhKGpgmzM
-         bclm read
-         sudo bclm write 77
-         # Bring it up to 100 once a week.
-
-         note " bclm needs to run in sudo ..."
-         sudo bclm persist
-
-         note " bclm plist should show as \"0\" ..."
-         sudo launchctl list | grep com.zackelia.bclm.plist
-      # Alt: https://github.com/davidwernhart/AlDente app & https://www.youtube.com/watch?v=8jaTSi1kL1w
-
    fi  # PACKAGE_MANAGER
 fi  # DOWNLOAD_INSTALL
 
@@ -1494,6 +1468,7 @@ fi  # DOWNLOAD_INSTALL
 #   shellcheck "$0"
 #fi
 
+# bclm removed to futures/bclm.md
 
 
 ### 17. Trace execution of this script using otel-cli
