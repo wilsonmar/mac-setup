@@ -1180,10 +1180,10 @@ fi
 ### 12. -init mac-setup files in user $HOME folder
 
 if [ "${INIT_ENV_FILES}" = true ]; then  # -init
-
    download_file_from_github  ".zshrc"
    download_file_from_github  "aliases.zsh"
    download_file_from_github  "mac-setup.zsh"
+   download_file_from_github  "mac-setup.env"
 fi
 
 
