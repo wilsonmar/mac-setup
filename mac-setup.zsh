@@ -1161,7 +1161,8 @@ fi
 
 # https://askubuntu.com/questions/711580/how-to-enter-password-only-once-in-a-bash-script-needing-sudo
 
-if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+if [ false = true ]; then  # -I  # NEVER EXECUTE
+# if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # For bash only: read -p "Password: " -s szPassword
    # For zsh, to avoid "read -p no coprocess" error:
    read "?Password for $USER please: "
