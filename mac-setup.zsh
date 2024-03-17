@@ -1183,8 +1183,6 @@ if [ "${INIT_ENV_FILES}" = true ]; then  # -init
    download_file_from_github  "mac-setup.zsh"
 fi
 
-echo "DEBUG: after Init";exit
-
 
 ### 12. Backup using macOS Time Machine via tmutil
 
