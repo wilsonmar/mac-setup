@@ -1075,12 +1075,13 @@ if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    export MACHINE_TYPE="$(uname -m)"
    note "OS_TYPE=$OS_TYPE MACHINE_TYPE=$MACHINE_TYPE"
    if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
-      # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
+      # On Apple Mx Monterey: Zsh uses /opt/homebrew/bin 
       export BREW_PATH="/opt/homebrew"
       export BREW_PATH_OPT="/opt/homebrew/opt"
       eval $( "${BREW_PATH}/bin/brew" shellenv)
       export BASHFILE="~/.zshrc"
    elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
+      # On Intel macs, it's /usr/local/bin
       export BREW_PATH="/usr/local/bin"
       export BREW_PATH_OPT="/usr/local/opt"
       export BASHFILE="$HOME/.bash_profile"
@@ -1367,11 +1368,16 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             brew update
          fi
       fi
-      note "$( brew --version )"
+      if ! command -v brew >/dev/null; then  # NOT installed:
+         fatal "brew command not found"
+         exit 9
+      else
+         note "$( brew --version )"
          # Homebrew 2.2.2
          # Homebrew/homebrew-core (git revision e103; last commit 2020-01-07)
          # Homebrew/homebrew-cask (git revision bbf0e; last commit 2020-01-07)
-
+      fi
+      
       brew install rbenv
 
       #brew is also used later in this script
