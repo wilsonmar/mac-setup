@@ -2341,12 +2341,12 @@ Identify_GITHUB_REPO_URL(){
       if [ -n "${GITHUB_ACCOUNT_NAME}" ]; then   # NOT specified in parms
          info "-gan (GITHUB_ACCOUNT_NAME) = \"${GITHUB_ACCOUNT_NAME}\"  ..."
       else
-         note "-gan GITHUB_ACCOUNT_NAME not specified to clone ..."
-         # return 1
+         fatal "-gan GITHUB_ACCOUNT_NAME not specified to clone ..."
+         exit 9
       fi
       if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # NOT specified in parms
-         note "-gfn GITHUB_FOLDER_NAME not specified to clone ..."
-         # return 1
+         fatal "-gfn GITHUB_FOLDER_NAME not specified to clone ..."
+         exit 9
       else
          if [ "${USE_GITHUB_SSH}" = true ]; then   # -ssh specified:
             GITHUB_REPO_URL="git@github.com:${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
@@ -2367,6 +2367,19 @@ Identify_GITHUB_REPO_URL(){
 ### 26. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
 
 Clone_into_GITHUB_OR_PROJECT(){
+
+   # export GITHUB_FOLDER_BASE="$HOME/github-wilsonmar"
+   if [ ! -d "${GITHUB_FOLDER_BASE:?}" ]; then  # path NOT available
+      if [ -z "${GITHUB_FOLDER_BASE+x}" ]; then   # not specified in mac-setup.env
+         fatal "-gfb No GITHUB_FOLDER_BASE specified. Exiting..."
+         exit 9
+      else
+         h2 "-gfb Creating GITHUB_FOLDER_BASE ${GITHUB_FOLDER_BASE} ..."
+         mkdir "${GITHUB_FOLDER_BASE}"
+         ls -ltaT "${GITHUB_FOLDER_BASE}"
+      fi
+   fi
+
 
    if [ -z "${GITHUB_FOLDER_NAME+x}" ]; then    # -gfn NOT specified 
       note "-gfn (GITHUB_FOLDER_NAME) not specified in parms ..."      
@@ -2433,6 +2446,19 @@ Clone_into_GITHUB_OR_PROJECT(){
    ### 27. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
+
+   # export PROJECT_FOLDER_BASE="$HOME/Projects"  # -pfb
+   if [ ! -d "${PROJECT_FOLDER_BASE:?}" ]; then  # path NOT available
+      if [ -z "${PROJECT_FOLDER_BASE+x}" ]; then   # not specified in mac-setup.env
+         fatal "-pfb No PROJECT_FOLDER_BASE specified. Exiting..."
+         exit 9
+      else
+         h2 "-pfb Creating PROJECT_FOLDER_BASE ${PROJECT_FOLDER_BASE} ..."
+         mkdir "${PROJECT_FOLDER_BASE}"
+         ls -ltaT "${PROJECT_FOLDER_BASE}"
+      fi
+   fi
+
    if [ -z "${PROJECT_FOLDER_NAME+x}" ]; then   # -pfn not specified 
       note "-pfn (PROJECT_FOLDER_NAME) not specified in parms ..."
       # But we need a project folder anyway...
