@@ -301,7 +301,6 @@ check_mac-setup_env(){
 }
 check_mac-setup_env "mac-setup.env"
 
-echo "debug env";exit 9
 
 
 ### 05. Define variables for use as "feature flags"
