@@ -1164,7 +1164,8 @@ fi
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    # For bash only: read -p "Password: " -s szPassword
    # For zsh, to avoid "read -p no coprocess" error:
-   read "?Password please: "
+   read "?Password for $USER please: "
+   szPassword="$REPLY"
    # Printing of password for security: 
    printf "%s\n" "$szPassword" | sudo --stdin mount -t cifs //192.168.1.1/home /media/$USER/home -o username=$USER,password="$szPassword"
 
