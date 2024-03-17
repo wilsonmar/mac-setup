@@ -295,7 +295,10 @@ alias crj="cat /var/consul/raft/peers.json"
 alias bdy="boundary"
 
 #### See https://wilsonmar.github.io/terraform#KeyboardAliases
-alias tf="terraform $1"  # provide a parameter
+# Make using these tf aliases a habit for less typing and
+# to enable switch to tofu (opentofu.org) with less mistakes.
+#lias tf="tofu $1"  # provide any parameter
+alias tf="terraform $1"  # provide any parameter
 alias tffd="terraform fmt -diff"
 alias tfv="terraform validate"
 alias tfi="terraform init"

@@ -22,6 +22,9 @@ ms-vscode.sublime-keybindings
 ms-vscode.test-adapter-converter
 ms-vsliveshare.vsliveshare
 ms-vsliveshare.vsliveshare-pack
+# From https://github.com/Azure/bicep-registry-modules/tree/main/.vscode
+esbenp.prettier-vscode
+ms-python.black-formatter
 #
 # Colorization ::
 dzhavat.bracket-pair-toggler

@@ -1162,7 +1162,10 @@ fi
 # https://askubuntu.com/questions/711580/how-to-enter-password-only-once-in-a-bash-script-needing-sudo
 
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
-   read -p "Password: " -s szPassword
+   # For bash only: read -p "Password: " -s szPassword
+   # For zsh, to avoid "read -p no coprocess" error:
+   read "?Password please: "
+   # Printing of password for security: 
    printf "%s\n" "$szPassword" | sudo --stdin mount -t cifs //192.168.1.1/home /media/$USER/home -o username=$USER,password="$szPassword"
 
    sudo ls -al  #   
