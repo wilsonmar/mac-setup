@@ -225,6 +225,7 @@ if [[ "$(uname)" == *"Darwin"* ]]; then  # it's on a Mac:
    alias vers="sw_vers"
    function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
    function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
+   function gsp() { git stash pop; }
    function gd() { # get dirty
      [[ $(git status 2> /dev/null | tail -n1) != *"working directory clean"* ]] && echo "*"
    }
