@@ -25,7 +25,7 @@ LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.165" # Init other files : mac-setup.zsh"
+SCRIPT_VERSION="v1.166"  # download_file_from_github files : mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -253,28 +253,32 @@ blank_line(){
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 #ENV_FOLDERPATH="$HOME"   # before args
 
-
+GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"
+# ENV_FOLDERPATH in $HOME folder to ensure privacy by avoiding saving to github:
+ENV_FOLDERPATH="$HOME"
 check_mac-setup_env(){
    # $1 = mac-setup.env
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      h2 "Reading file $ENV_FOLDERPATH/$1 into variables ..."
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
+      note "File \"$ENV_FOLDERPATH/$1\" exists, not downloaded ..."
+   else
+      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
+      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
+      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
+      echo "  "
+
+      h2 "Reading file ENV_FOLDERPATH $ENV_FOLDERPATH/$1 into variables ..."
       chmod  +x "$ENV_FOLDERPATH/$1"
       source    "$ENV_FOLDERPATH/$1"
-   else
-#      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
-      download_file_from_github "$1"
-      check_mac-setup_env "$1"
+
       h2 "Now please edit the file to customize variables ..."
       h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
-      exit 9
+
+      ls -ltaT "$ENV_FOLDERPATH/$1"
    fi
 }
 check_mac-setup_env "mac-setup.env"
 
-source mac-setup.env
 
-
-GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"
 download_file_from_github(){
    # filename = $1
    if [ -z "$1" ]; then  # var needed not specified
@@ -305,6 +309,7 @@ download_file_from_github(){
       return 1
    fi
 }
+
 
 
 ### 05. Define variables for use as "feature flags"
@@ -1186,7 +1191,6 @@ if [ "${INIT_ENV_FILES}" = true ]; then  # -init
    download_file_from_github  ".zshrc"
    download_file_from_github  "aliases.zsh"
    download_file_from_github  "mac-setup.zsh"
-   download_file_from_github  "mac-setup.env"
 fi
 
 
