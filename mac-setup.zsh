@@ -310,7 +310,7 @@ SECRETS_FILE=".secrets.env.sample"
    DELETE_BEFORE=false          # -d
    GITHUB_DEPTH_1=false         # -d1
    GITHUB_FOLDER_BASE=""        # -gfb "$HOME/github-wilsonmar"
-  #GITHUB_FOLDER_NAME=""        # -gfn
+   GITHUB_FOLDER_NAME="mac-setup"        # -gfn
    GITHUB_BRANCH=""             # -ghb
 
 # Different for each app:
