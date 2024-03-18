@@ -245,74 +245,7 @@ blank_line(){
 # TODO: Display these after -v argument from later.
 
 
-
-### 06. Read & download .env settings file for args to overrride
-
-# See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
-# See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
-# See https://wilsonmar.github.io/mac-setup/#Load_Env_files
-#ENV_FOLDERPATH="$HOME"   # before args
-
-GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"
-# ENV_FOLDERPATH in $HOME folder to ensure privacy by avoiding saving to github:
-ENV_FOLDERPATH="$HOME"
-check_mac-setup_env(){
-   # $1 = mac-setup.env
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
-      note "File \"$ENV_FOLDERPATH/$1\" exists, not downloaded ..."
-   else
-      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
-      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
-      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
-      echo "  "
-
-      h2 "Reading file ENV_FOLDERPATH $ENV_FOLDERPATH/$1 into variables ..."
-      chmod  +x "$ENV_FOLDERPATH/$1"
-      source    "$ENV_FOLDERPATH/$1"
-
-      h2 "Now please edit the file to customize variables ..."
-      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
-
-      ls -ltaT "$ENV_FOLDERPATH/$1"
-   fi
-}
-check_mac-setup_env "mac-setup.env"
-
-
-download_file_from_github(){
-   # filename = $1
-   if [ -z "$1" ]; then  # var needed not specified
-      fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
-      exit 9
-   fi
-
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
-      return 1
-   fi
-   
-   # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
-   read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
-   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-      if ! command -v curl >/dev/null; then  # command not found, so:
-         fatal "curl utility not available. Please brew install curl ..."
-         exit 9
-      fi
-
-      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
-      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
-      echo "  "
-      ls -ltaT "$ENV_FOLDERPATH/$1"
-      return 0
-   else
-      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
-      return 1
-   fi
-}
-
-
-
-### 05. Define variables for use as "feature flags"
+### 05. Define variables that can be overridden as "feature flags"
 
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
@@ -483,7 +416,76 @@ SECRETS_FILE=".secrets.env.sample"
    KEEP_PROCESSES=false         # -K
 
 
-### 06. Override variables in .env using flags supplied as command arguments
+
+### 06. Read & download .env settings file for args to overrride
+
+# See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
+# See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
+# See https://wilsonmar.github.io/mac-setup/#Load_Env_files
+#ENV_FOLDERPATH="$HOME"   # before args
+
+GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"
+# ENV_FOLDERPATH in $HOME folder to ensure privacy by avoiding saving to github:
+ENV_FOLDERPATH="$HOME"
+check_mac-setup_env(){
+   # $1 = mac-setup.env
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
+      note "File \"$ENV_FOLDERPATH/$1\" exists, not downloaded ..."
+   else
+      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
+      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
+      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
+      echo "  "
+
+      h2 "Reading file ENV_FOLDERPATH $ENV_FOLDERPATH/$1 into variables ..."
+      chmod  +x "$ENV_FOLDERPATH/$1"
+      source    "$ENV_FOLDERPATH/$1"
+
+      h2 "Now please edit the file to customize variables ..."
+      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
+
+      ls -ltaT "$ENV_FOLDERPATH/$1"
+   fi
+}
+check_mac-setup_env "mac-setup.env"
+
+echo "debug GITHUB_FOLDER_BASE=$GITHUB_FOLDER_BASE"; exit 9
+
+
+download_file_from_github(){
+   # filename = $1
+   if [ -z "$1" ]; then  # var needed not specified
+      fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
+      exit 9
+   fi
+
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
+      return 1
+   fi
+   
+   # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
+   read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
+   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+      if ! command -v curl >/dev/null; then  # command not found, so:
+         fatal "curl utility not available. Please brew install curl ..."
+         exit 9
+      fi
+
+      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
+      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
+      echo "  "
+      ls -ltaT "$ENV_FOLDERPATH/$1"
+      return 0
+   else
+      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
+      return 1
+   fi
+}
+
+
+
+### 07. Override variables in .env using flags supplied as command arguments
 
 # See https://wilsonmar.github.io/mac-setup/#VariablesSet
 while test $# -gt 0; do
