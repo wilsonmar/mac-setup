@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.167"  # rm debug gatewayd :mac-setup.zsh"
+SCRIPT_VERSION="v1.169" # set GITHUB_FOLDER_BASE :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -309,8 +309,8 @@ SECRETS_FILE=".secrets.env.sample"
    CLONE_GITHUB=false           # -c
    DELETE_BEFORE=false          # -d
    GITHUB_DEPTH_1=false         # -d1
-   GITHUB_FOLDER_BASE=""        # -gfb "$HOME/github-wilsonmar"
-   GITHUB_FOLDER_NAME="mac-setup"        # -gfn
+   GITHUB_FOLDER_BASE="$HOME/github-wilsonmar" # -gfb 
+   GITHUB_FOLDER_NAME="mac-setup" # -gfn
    GITHUB_BRANCH=""             # -ghb
 
 # Different for each app:
