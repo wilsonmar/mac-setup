@@ -16,16 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-
-### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
-
-# See https://wilsonmar.github.io/mac-setup/#StartingTimes
-LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
-# clear  # screen (but not history)
-EPOCH_START="$( date -u +%s )"  # such as 1572634619
-
-THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
-SCRIPT_VERSION="v1.166"  # download_file_from_github files : mac-setup.zsh"
+SCRIPT_VERSION="v1.167"  # rm debug gatewayd :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -35,6 +26,15 @@ SCRIPT_VERSION="v1.166"  # download_file_from_github files : mac-setup.zsh"
 # TODO: Add encryption of log output.
 # TODO: https://github.com/hashicorp/docker-consul/ to create a prod image from Dockerfile (for security)
 
+
+### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
+
+# See https://wilsonmar.github.io/mac-setup/#StartingTimes
+LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
+# clear  # screen (but not history)
+EPOCH_START="$( date -u +%s )"  # such as 1572634619
+
+THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
 
 ### 02. Display a menu if no parameter is specified in the command line
 # See https://wilsonmar.github.io/mac-setup/#Args
@@ -2602,7 +2602,6 @@ else
    fi
 fi
 
-echo "DEBUG: afteer gatewayd";exit
 
 
 ### 30. Reveal secrets stored within .gitsecret folder 
