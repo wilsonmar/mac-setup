@@ -435,21 +435,21 @@ check_mac-setup_env(){
       note "File \"$ENV_FOLDERPATH/$1\" not found ..."
       h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
       curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
+      ls -ltaT "$ENV_FOLDERPATH/$1"
       echo "  "
 
       h2 "Reading file ENV_FOLDERPATH $ENV_FOLDERPATH/$1 into variables ..."
       chmod  +x "$ENV_FOLDERPATH/$1"
       source    "$ENV_FOLDERPATH/$1"
+      note "-gfb GITHUB_FOLDER_BASE=$GITHUB_FOLDER_BASE"
 
-      h2 "Now please edit the file to customize variables ..."
-      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
+#      h2 "Now please edit the file to customize variables ..."
+#      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
 
-      ls -ltaT "$ENV_FOLDERPATH/$1"
    fi
 }
 check_mac-setup_env "mac-setup.env"
 
-echo "debug GITHUB_FOLDER_BASE=$GITHUB_FOLDER_BASE"; exit 9
 
 
 download_file_from_github(){
