@@ -251,7 +251,29 @@ blank_line(){
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
-ENV_FOLDERPATH="$HOME"   # before args
+#ENV_FOLDERPATH="$HOME"   # before args
+
+
+check_mac-setup_env(){
+   # $1 = mac-setup.env
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+      h2 "Reading file $ENV_FOLDERPATH/$1 into variables ..."
+      chmod  +x "$ENV_FOLDERPATH/$1"
+      source    "$ENV_FOLDERPATH/$1"
+   else
+#      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
+      download_file_from_github "$1"
+      check_mac-setup_env "$1"
+      h2 "Now please edit the file to customize variables ..."
+      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
+      exit 9
+   fi
+}
+check_mac-setup_env "mac-setup.env"
+
+source mac-setup.env
+
+
 GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"
 download_file_from_github(){
    # filename = $1
@@ -283,24 +305,6 @@ download_file_from_github(){
       return 1
    fi
 }
-
-check_mac-setup_env(){
-   # $1 = mac-setup.env
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      h2 "Reading file $ENV_FOLDERPATH/$1 into variables ..."
-      chmod  +x "$ENV_FOLDERPATH/$1"
-      source    "$ENV_FOLDERPATH/$1"
-   else
-#      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
-      download_file_from_github "$1"
-      check_mac-setup_env "$1"
-      h2 "Now please edit the file to customize variables ..."
-      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
-      exit 9
-   fi
-}
-check_mac-setup_env "mac-setup.env"
-
 
 
 ### 05. Define variables for use as "feature flags"
@@ -3059,7 +3063,7 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
    else
       note "-aws ec2 describe-vpcs is good to go"
    fi
-echo "DEBUG entering aws";exit
+
 
    h2 "-aws is good to use if this runs:"
    # Manually https://aws.amazon.com/
