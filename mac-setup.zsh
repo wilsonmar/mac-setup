@@ -2527,6 +2527,7 @@ Clone_into_GITHUB_OR_PROJECT(){
 }
 Clone_into_GITHUB_OR_PROJECT
 
+echo "DEBUG AFTER CLONE"
 
 
 ### 28. git checkout git branch if -ghb was specified
@@ -2554,6 +2555,8 @@ else  # GITHUB_BRANCH defined:
       echo "-ghb (GITHUB_BRANCH) \"$GITHUB_BRANCH\" among parms does not exist in git repo..."
    fi
 fi  # GITHUB_BRANCH
+
+echo "DEBUG AFTER branch"
 
 
 
