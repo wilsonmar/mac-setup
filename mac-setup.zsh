@@ -37,6 +37,7 @@ EPOCH_START="$( date -u +%s )"  # such as 1572634619
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
 
 ### 02. Display a menu if no parameter is specified in the command line
+
 # See https://wilsonmar.github.io/mac-setup/#Args
 # See https://wilsonmar.github.io/mac-setup/#EchoFunctions
 args_prompt() {
