@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.169" # set GITHUB_FOLDER_BASE :mac-setup.zsh"
+SCRIPT_VERSION="v1.170" # set GITHUB_FOLDER_BASE :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -2430,6 +2430,7 @@ Clone_into_GITHUB_OR_PROJECT(){
             if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # found
                warning "-gfn GITHUB_FOLDER_PATH=$GITHUB_FOLDER_PATH already exists ..."
             else
+               note "cd to GITHUB_FOLDER_BASE=$GITHUB_FOLDER_BASE ..."
                cd /
                cd "${GITHUB_FOLDER_BASE}"
                if [ -d "${GITHUB_FOLDER_NAME:?}" ]; then  # found
