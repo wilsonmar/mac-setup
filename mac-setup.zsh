@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.174" # .gitconfig check ~/GITHUB_FOLDER_BASE :mac-setup.zsh"
+SCRIPT_VERSION="v1.175" # check existing .env :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -230,13 +230,13 @@ echo_debug() { if [ "${SHOW_DEBUG}" = true ]; then
    fi
 }
 success() {
-   printf "\n\e[32m\e[1m✔ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\n\e[32m\e[1m✔ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
 error() {    # &#9747;
-   printf "\n\e[31m\e[1m✖ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\n\e[31m\e[1m✖ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
 warning() {  # &#9758; or &#9755;
-   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m" "$(echo "$@" | sed '/./,$!d')"
+   printf "\n\e[5m\e[36m\e[1m☞ %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
 }
 fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
    printf "\n\e[31m\e[1m☢  %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
@@ -474,13 +474,20 @@ setup_mac-setup_env(){
       warning "-envf ENV_FOLDERPATH not defined. Hard coded \"$ENV_FOLDERPATH\" being used..."
    fi
    if [ -d "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
-      note "-envf \"$ENV_FOLDERPATH/$1\" exists ..."
+      note "-envf \"$ENV_FOLDERPATH/$1\" exists. Continuing ..."
    else
       warning "-envf ENV_FOLDERPATH \"$ENV_FOLDERPATH\" not found. Creating..."
-      cd \
+      cd
       mkdir -p "${ENV_FOLDERPATH}"
       cd "${ENV_FOLDERPATH}"
       pwd
+   fi
+
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
+      note "-envf \"$ENV_FOLDERPATH/$1\" exists. Not downloading ..."
+      return 0
+   else
+      warning "-envf \"$ENV_FOLDERPATH/$1\" not found. Creating..."
    fi
 
    if [ -z "${GITHUB_DOWNLOAD_URL}" ]; then   # not specified in parms
@@ -488,14 +495,13 @@ setup_mac-setup_env(){
       export GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"    
       warning "-gdu GITHUB_DOWNLOAD_URL not defined. Hard coded \"$GITHUB_DOWNLOAD_URL\" being used..."
    fi
-
+   # TODO: .gitconfig
+ 
    h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
    curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
    ls -ltaT "$ENV_FOLDERPATH/$1"
    echo "  "
 
-   # TODO: .gitconfig
- 
    note "-envf ENV_FOLDERPATH $ENV_FOLDERPATH/$1 chmod ..."
    chmod  +x "$ENV_FOLDERPATH/$1"
 
@@ -504,6 +510,7 @@ setup_mac-setup_env(){
 
 }
 setup_mac-setup_env "mac-setup.env"
+
    note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
    note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
    note "GITHUB_USER_EMAIL=" "${GITHUB_USER_EMAIL}"
