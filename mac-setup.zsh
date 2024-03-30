@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.170" # set GITHUB_FOLDER_BASE :mac-setup.zsh"
+SCRIPT_VERSION="v1.172" # check ~/GITHUB_FOLDER_BASE :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -152,6 +152,7 @@ args_prompt() {
 usage_examples() {
    echo "# USAGE EXAMPLES:"
    echo "./mac-setup.zsh -init  # to install mac-setup.env/.zsh, .zshrc from utilities"
+   echo "./mac-setup.zsh -gfb \"~/github-wilsonmar\" -v  # create GITHUB_FOLDER_BASE"
    echo "./mac-setup.zsh -utils -I -U -v  # to install or update utilities"
    echo "chmod +x mac-setup.zsh   # change permissions"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
@@ -260,8 +261,7 @@ blank_line(){
    RUN_QUIET=false                # -q
 
    INIT_ENV_FILES=false           # -init  # to use default ENV_FOLDERPATH_BASE:
-   ENV_FOLDERPATH=""              # -envf "/alt-folder" (away from GitHub)
-   ENV_FOLDERPATH_DEFAULT="$HOME" # defined in ~/mac-setup.env
+   ENV_FOLDERPATH=""              # -envf "$HOME" or alt-folder (away from GitHub)
 
    RUN_VSCODE=false               # -VSC
    VSCODE_EXT_FILE="vscode-ext.txt"  # "file" override in .env to Install/Upgrade VSCode extensions from/to file"
@@ -422,39 +422,66 @@ SECRETS_FILE=".secrets.env.sample"
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
+
+setup_mac-setup_env(){
+   # Example $1 = "mac-setup.env" to download ~/mac-setup.env
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
-#ENV_FOLDERPATH="$HOME"   # before args
 
-GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"
-# ENV_FOLDERPATH in $HOME folder to ensure privacy by avoiding saving to github:
-ENV_FOLDERPATH="$HOME"
-check_mac-setup_env(){
-   # $1 = mac-setup.env
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
-      note "File \"$ENV_FOLDERPATH/$1\" exists, not downloaded ..."
-   else
-      note "File \"$ENV_FOLDERPATH/$1\" not found ..."
-      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
-      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
-      ls -ltaT "$ENV_FOLDERPATH/$1"
-      echo "  "
-
-      h2 "Reading file ENV_FOLDERPATH $ENV_FOLDERPATH/$1 into variables ..."
-      chmod  +x "$ENV_FOLDERPATH/$1"
-      source    "$ENV_FOLDERPATH/$1"
-      note "-gfb GITHUB_FOLDER_BASE=$GITHUB_FOLDER_BASE"
-
-#      h2 "Now please edit the file to customize variables ..."
-#      h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
-
+   if [ -z "${ENV_FOLDERPATH}" ]; then   # not specified in parms
+      export ENV_FOLDERPATH="$HOME"              # -envf "$HOME" or alt-folder (away from GitHub)
+      warning "-envf ENV_FOLDERPATH not defined. Hard coded \"$ENV_FOLDERPATH\" being used..."
    fi
-}
-check_mac-setup_env "mac-setup.env"
+   if [ -d "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
+      note "-envf \"$ENV_FOLDERPATH/$1\" exists ..."
+   else
+      warning "-envf ENV_FOLDERPATH \"$ENV_FOLDERPATH\" not found. Creating..."
+      cd \
+      mkdir -p "${ENV_FOLDERPATH}"
+   fi
 
+   if [ -z "${ENV_FOLDERPATH}" ]; then   # not specified in parms
+      export ENV_FOLDERPATH="$HOME"              # -envf "$HOME" or alt-folder (away from GitHub)
+      warning "-envf ENV_FOLDERPATH not defined. Hard coded \"$ENV_FOLDERPATH\" being used..."
+   fi
+   if [ -d "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
+      note "-envf \"$ENV_FOLDERPATH/$1\" exists ..."
+   else
+      warning "-envf ENV_FOLDERPATH \"$ENV_FOLDERPATH\" not found. Creating..."
+      cd \
+      mkdir -p "${ENV_FOLDERPATH}"
+      cd "${ENV_FOLDERPATH}"
+      pwd
+   fi
+
+   if [ -z "${GITHUB_DOWNLOAD_URL}" ]; then   # not specified in parms
+      export GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"    
+      warning "-gdu GITHUB_DOWNLOAD_URL not defined. Hard coded \"$GITHUB_DOWNLOAD_URL\" being used..."
+   fi
+
+   h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
+   curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
+   ls -ltaT "$ENV_FOLDERPATH/$1"
+   echo "  "
+
+   note "-envf ENV_FOLDERPATH $ENV_FOLDERPATH/$1 chmod ..."
+   chmod  +x "$ENV_FOLDERPATH/$1"
+
+   note "-envf ENV_FOLDERPATH $ENV_FOLDERPATH/$1 source'd to load variables ..."
+   source    "$ENV_FOLDERPATH/$1"
+
+}
+setup_mac-setup_env "mac-setup.env"
+# h2 "Now please edit the file to customize variables ..."
+# h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
+
+# TODO: Setup SSH and upload to GITHUB.com using downloaded gh utility
+
+echo "setup mac-setup";exit 9
 
 
 download_file_from_github(){
    # filename = $1
+
    if [ -z "$1" ]; then  # var needed not specified
       fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
       exit 9
@@ -464,7 +491,12 @@ download_file_from_github(){
       note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
       return 1
    fi
-   
+
+   note "-gfb GITHUB_FOLDER_BASE=\"$GITHUB_FOLDER_BASE\" "
+
+
+
+
    # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
    read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
@@ -2380,13 +2412,11 @@ Identify_GITHUB_REPO_URL(){
 
 Clone_into_GITHUB_OR_PROJECT(){
 
-   # export GITHUB_FOLDER_BASE="$HOME/github-wilsonmar"
    if [ ! -d "${GITHUB_FOLDER_BASE:?}" ]; then  # path NOT available
       if [ -z "${GITHUB_FOLDER_BASE+x}" ]; then   # not specified in mac-setup.env
-         fatal "-gfb No GITHUB_FOLDER_BASE specified. Exiting..."
-         exit 9
-      else
-         h2 "-gfb Creating GITHUB_FOLDER_BASE ${GITHUB_FOLDER_BASE} ..."
+         export GITHUB_FOLDER_BASE="$HOME/github-wilsonmar"
+         h2 "-gfb GITHUB_FOLDER_BASE not specified. Creating hard-coded ${GITHUB_FOLDER_BASE}..."
+         cd \
          mkdir "${GITHUB_FOLDER_BASE}"
          ls -ltaT "${GITHUB_FOLDER_BASE}"
       fi
