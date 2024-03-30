@@ -2431,15 +2431,20 @@ Clone_into_GITHUB_OR_PROJECT(){
             if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # found
                warning "-gfn GITHUB_FOLDER_PATH=$GITHUB_FOLDER_PATH already exists ..."
             else
-               note "cd to GITHUB_FOLDER_BASE=$GITHUB_FOLDER_BASE ..."
-               cd /
-               cd "${GITHUB_FOLDER_BASE}"
-               if [ -d "${GITHUB_FOLDER_NAME:?}" ]; then  # found
-                  warning "-gfn GITHUB_FOLDER_NAME=$GITHUB_FOLDER_NAME already exists ..."
+               if [ -z "${GITHUB_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
+                  warning "-gfb GITHUB_FOLDER_BASE not identified for cloning ..."
+                  return 1
                else
-                  #if [ "${CLONE_GITHUB}" = true ]; then
-                  git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
-                  # fi
+                  note "cd to GITHUB_FOLDER_BASE=$GITHUB_FOLDER_BASE ..."
+                  cd /
+                  cd "${GITHUB_FOLDER_BASE}"
+                  if [ -d "${GITHUB_FOLDER_NAME:?}" ]; then  # found
+                     warning "-gfn GITHUB_FOLDER_NAME=$GITHUB_FOLDER_NAME already exists ..."
+                  else
+                     #if [ "${CLONE_GITHUB}" = true ]; then
+                     git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
+                     # fi
+                  fi
                fi
             fi
          fi
