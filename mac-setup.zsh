@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.172" # check ~/GITHUB_FOLDER_BASE :mac-setup.zsh"
+SCRIPT_VERSION="v1.174" # .gitconfig check ~/GITHUB_FOLDER_BASE :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -151,7 +151,7 @@ args_prompt() {
 ### 03. Usage Examples
 usage_examples() {
    echo "# USAGE EXAMPLES:"
-   echo "./mac-setup.zsh -init  # to install mac-setup.env/.zsh, .zshrc from utilities"
+   echo "./mac-setup.zsh -envf \"~/github-wilsonmar\"  # to install ~/mac-setup.env from utilities"
    echo "./mac-setup.zsh -gfb \"~/github-wilsonmar\" -v  # create GITHUB_FOLDER_BASE"
    echo "./mac-setup.zsh -utils -I -U -v  # to install or update utilities"
    echo "chmod +x mac-setup.zsh   # change permissions"
@@ -247,7 +247,7 @@ blank_line(){
 # TODO: Display these after -v argument from later.
 
 
-### 05. Define variables that can be overridden as "feature flags"
+### 06. Define hard-coded variable values that can be overridden as "feature flags"
 
 # See https://wilsonmar.github.io/mac-setup/#FeatureFlags
 # Normal:
@@ -417,8 +417,38 @@ SECRETS_FILE=".secrets.env.sample"
    KEEP_PROCESSES=false         # -K
 
 
+### 07. Set traps to display information if script is interrupted.
 
-### 06. Read & download .env settings file for args to overrride
+# See https://wilsonmar.github.io/mac-setup/#SetTraps
+# See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
+trap this_ending EXIT
+trap this_ending INT QUIT TERM
+this_ending() {
+   EPOCH_END=$(date -u +%s);
+   EPOCH_DIFF=$((EPOCH_END-EPOCH_START))
+   sudo --reset-timestamp  # prompt for password for sudo session
+   # Using BASH_VERSION identified above:
+   if [ "${BASH_VERSION}" -lt "4" ]; then
+      FREE_DISKBLOCKS_END="0"
+   else
+      FREE_DISKBLOCKS_END=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[10]}" )
+   fi
+   FREE_DIFF=$(((FREE_DISKBLOCKS_END-FREE_DISKBLOCKS_START)))
+   MSG="End of script $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
+   # echo 'Elapsed HH:MM:SS: ' $( awk -v t=$beg-seconds 'BEGIN{t=int(t*1000); printf "%d:%02d:%02d\n", t/3600000, t/60000%60, t/1000%60}' )
+   # TODO: Delete stuff?
+   success "$MSG"
+   # note "Disk $FREE_DISKBLOCKS_START to $FREE_DISKBLOCKS_END"
+}
+sig_cleanup() {
+    trap '' EXIT  # some shells call EXIT after the INT handler.
+    false # sets $?
+    this_ending
+}
+
+
+
+### 08a. Read & download .env variables
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
@@ -454,6 +484,7 @@ setup_mac-setup_env(){
    fi
 
    if [ -z "${GITHUB_DOWNLOAD_URL}" ]; then   # not specified in parms
+      # Assuming you didn't fork this github repo:
       export GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"    
       warning "-gdu GITHUB_DOWNLOAD_URL not defined. Hard coded \"$GITHUB_DOWNLOAD_URL\" being used..."
    fi
@@ -463,6 +494,8 @@ setup_mac-setup_env(){
    ls -ltaT "$ENV_FOLDERPATH/$1"
    echo "  "
 
+   # TODO: .gitconfig
+ 
    note "-envf ENV_FOLDERPATH $ENV_FOLDERPATH/$1 chmod ..."
    chmod  +x "$ENV_FOLDERPATH/$1"
 
@@ -471,54 +504,40 @@ setup_mac-setup_env(){
 
 }
 setup_mac-setup_env "mac-setup.env"
+   note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
+   note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
+   note "GITHUB_USER_EMAIL=" "${GITHUB_USER_EMAIL}"
+   note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
+
 # h2 "Now please edit the file to customize variables ..."
 # h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
 
 # TODO: Setup SSH and upload to GITHUB.com using downloaded gh utility
 
+
 echo "setup mac-setup";exit 9
 
 
-download_file_from_github(){
-   # filename = $1
 
-   if [ -z "$1" ]; then  # var needed not specified
-      fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
-      exit 9
-   fi
+### 08b. Display run variables
 
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
-      return 1
-   fi
+# See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
+if [ "${SHOW_VERBOSE}" = true ]; then
+   note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
+   note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
+   note "GITHUB_USER_EMAIL=" "${GITHUB_USER_EMAIL}"
+   note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
+fi
 
-   note "-gfb GITHUB_FOLDER_BASE=\"$GITHUB_FOLDER_BASE\" "
-
-
-
-
-   # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
-   read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
-   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-      if ! command -v curl >/dev/null; then  # command not found, so:
-         fatal "curl utility not available. Please brew install curl ..."
-         exit 9
-      fi
-
-      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
-      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
-      echo "  "
-      ls -ltaT "$ENV_FOLDERPATH/$1"
-      return 0
-   else
-      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
-      return 1
-   fi
-}
+# TODO: print all command arguments submitted:
+#while (( "$#" )); do 
+#  echo $1 
+#  shift 
+#done 
 
 
 
-### 07. Override variables in .env using flags supplied as command arguments
+### 09. Read parameters as command arguments:
 
 # See https://wilsonmar.github.io/mac-setup/#VariablesSet
 while test $# -gt 0; do
@@ -1017,55 +1036,10 @@ while test $# -gt 0; do
 done
 
 
-### 07. Display run variables
 
-# See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
-if [ "${SHOW_VERBOSE}" = true ]; then
-   note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
-   note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
-   note "GITHUB_USER_EMAIL=" "${GITHUB_USER_EMAIL}"
-   note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
-fi
+### 10. Show Operating environment information
 
-# TODO: print all command arguments submitted:
-#while (( "$#" )); do 
-#  echo $1 
-#  shift 
-#done 
-
-
-
-### 08. Set traps to display information if script is interrupted.
-
-# See https://wilsonmar.github.io/mac-setup/#SetTraps
-# See https://github.com/MikeMcQuaid/strap/blob/master/bin/strap.zsh
-trap this_ending EXIT
-trap this_ending INT QUIT TERM
-this_ending() {
-   EPOCH_END=$(date -u +%s);
-   EPOCH_DIFF=$((EPOCH_END-EPOCH_START))
-   sudo --reset-timestamp  # prompt for password for sudo session
-   # Using BASH_VERSION identified above:
-   if [ "${BASH_VERSION}" -lt "4" ]; then
-      FREE_DISKBLOCKS_END="0"
-   else
-      FREE_DISKBLOCKS_END=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[10]}" )
-   fi
-   FREE_DIFF=$(((FREE_DISKBLOCKS_END-FREE_DISKBLOCKS_START)))
-   MSG="End of script $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
-   # echo 'Elapsed HH:MM:SS: ' $( awk -v t=$beg-seconds 'BEGIN{t=int(t*1000); printf "%d:%02d:%02d\n", t/3600000, t/60000%60, t/1000%60}' )
-   # TODO: Delete stuff?
-   success "$MSG"
-   # note "Disk $FREE_DISKBLOCKS_START to $FREE_DISKBLOCKS_END"
-}
-sig_cleanup() {
-    trap '' EXIT  # some shells call EXIT after the INT handler.
-    false # sets $?
-    this_ending
-}
-
-
-### 09. Set Continue on Error and Trace
+Set Continue on Error and Trace
 
 # See https://wilsonmar.github.io/mac-setup/#StrictMode
 if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
@@ -1082,8 +1056,7 @@ fi
 # set -o nounset
 
 
-
-### 10. Show Operating environment information
+### 07. Show Operating environment information
 
 if [ "${SHOW_DEBUG}" = true ]; then  # -vv
    h2 "Header example -q to suppress."
@@ -1220,7 +1193,46 @@ if [ false = true ]; then  # -I  # NEVER EXECUTE
 fi
 
 
-### 12. -init mac-setup files in user $HOME folder
+### 12. Backup using macOS Time Machine via tmutil
+
+
+
+### 13. -init mac-setup files in user $HOME folder
+
+download_file_from_github(){
+   # filename = $1
+
+   if [ -z "$1" ]; then  # var needed not specified
+      fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
+      exit 9
+   fi
+
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
+      return 1
+   fi
+
+   note "-gfb GITHUB_FOLDER_BASE=\"$GITHUB_FOLDER_BASE\" "
+
+
+   # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
+   read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
+   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+      if ! command -v curl >/dev/null; then  # command not found, so:
+         fatal "curl utility not available. Please brew install curl ..."
+         exit 9
+      fi
+
+      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
+      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
+      echo "  "
+      ls -ltaT "$ENV_FOLDERPATH/$1"
+      return 0
+   else
+      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
+      return 1
+   fi
+}
 
 if [ "${INIT_ENV_FILES}" = true ]; then  # -init
    download_file_from_github  ".zshrc"
@@ -1229,11 +1241,8 @@ if [ "${INIT_ENV_FILES}" = true ]; then  # -init
 fi
 
 
-### 12. Backup using macOS Time Machine via tmutil
 
-
-
-### 13. Upgrade Bash to Zsh
+### 14. Upgrade Bash to Zsh
 
 # Apple Directory Services database Command Line utility:
 USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
