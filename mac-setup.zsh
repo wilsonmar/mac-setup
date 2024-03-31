@@ -465,7 +465,7 @@ setup_mac-setup_env(){
       note "-envf ${ENV_FOLDERPATH}/$1 exists ..."
    else
       warning "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH} not found. Creating..."
-      cd \
+      cd /
       mkdir -p "${ENV_FOLDERPATH}"
    fi
 
@@ -2560,7 +2560,7 @@ Clone_into_GITHUB_OR_PROJECT(){
          mkdir -p "${PROJECT_FOLDER_PATH}"
       else 
          note "-gru \"$GITHUB_REPO_URL\" being cloned ..."
-         cd /
+         cd 
          cd "${PROJECT_FOLDER_BASE}"
          if [ -z "${GITHUB_DEPTH_1}" ]; then  # not specified
             git clone "${GITHUB_REPO_URL}" "${PROJECT_FOLDER_NAME}"
@@ -2570,7 +2570,7 @@ Clone_into_GITHUB_OR_PROJECT(){
       fi
    fi
 
-   cd /
+   cd
    cd "${PROJECT_FOLDER_PATH}"
 #   fi  # PROJECT_FOLDER_NAME
    if [ "${SHOW_DEBUG}" = true ]; then
