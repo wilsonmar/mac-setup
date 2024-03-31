@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.176" # $HOME folder .env :mac-setup.zsh"
+SCRIPT_VERSION="v1.177" # fix: too many arguments :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -459,24 +459,24 @@ setup_mac-setup_env(){
 
    if [ -z "${ENV_FOLDERPATH}" ]; then   # not specified in parms
       export ENV_FOLDERPATH="$HOME"              # -envf "$HOME" or alt-folder (away from GitHub)
-      warning "-envf ENV_FOLDERPATH not defined. Hard coded \"$ENV_FOLDERPATH\" being used..."
+      warning "-envf ENV_FOLDERPATH not defined. Hard coded ${ENV_FOLDERPATH} being used..."
    fi
    if [ -d "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
-      note "-envf \"$ENV_FOLDERPATH/$1\" exists ..."
+      note "-envf ${ENV_FOLDERPATH}/$1 exists ..."
    else
-      warning "-envf ENV_FOLDERPATH \"$ENV_FOLDERPATH\" not found. Creating..."
+      warning "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH} not found. Creating..."
       cd \
       mkdir -p "${ENV_FOLDERPATH}"
    fi
 
    if [ -z "${ENV_FOLDERPATH}" ]; then   # not specified in parms
       export ENV_FOLDERPATH="$HOME"              # -envf "$HOME" or alt-folder (away from GitHub)
-      warning "-envf ENV_FOLDERPATH not defined. Hard coded \"$ENV_FOLDERPATH\" being used..."
+      warning "-envf ENV_FOLDERPATH not defined. Hard coded ${ENV_FOLDERPATH} being used..."
    fi
    if [ -d "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
-      note "-envf \"$ENV_FOLDERPATH/$1\" exists. Continuing ..."
+      note "-envf ${ENV_FOLDERPATH}/$1 exists. Continuing ..."
    else
-      warning "-envf ENV_FOLDERPATH \"$ENV_FOLDERPATH\" not found. Creating..."
+      warning "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH} not found. Creating..."
       cd
       mkdir -p "${ENV_FOLDERPATH}"
       cd "${ENV_FOLDERPATH}"
@@ -484,20 +484,20 @@ setup_mac-setup_env(){
    fi
 
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
-      note "-envf \"$ENV_FOLDERPATH/$1\" exists. Not downloading ..."
+      note "-envf ${ENV_FOLDERPATH}/$1 exists. Not downloading ..."
       return 0
    else
-      warning "-envf \"$ENV_FOLDERPATH/$1\" not found. Creating..."
+      warning "-envf ${$ENV_FOLDERPATH}/$1 not found. Creating..."
    fi
 
    if [ -z "${GITHUB_DOWNLOAD_URL}" ]; then   # not specified in parms
       # Assuming you didn't fork this github repo:
       export GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"    
-      warning "-gdu GITHUB_DOWNLOAD_URL not defined. Hard coded \"$GITHUB_DOWNLOAD_URL\" being used..."
+      warning "-gdu GITHUB_DOWNLOAD_URL not defined. Hard coded ${GITHUB_DOWNLOAD_URL} being used..."
    fi
    # TODO: .gitconfig
  
-   h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
+   h2 "Downloading ${GITHUB_DOWNLOAD_URL}/$1 ..."
    curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
    ls -ltaT "$ENV_FOLDERPATH/$1"
    echo "  "
