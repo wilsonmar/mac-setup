@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.175" # check existing .env :mac-setup.zsh"
+SCRIPT_VERSION="v1.176" # $HOME folder .env :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -151,7 +151,7 @@ args_prompt() {
 ### 03. Usage Examples
 usage_examples() {
    echo "# USAGE EXAMPLES:"
-   echo "./mac-setup.zsh -envf \"~/github-wilsonmar\"  # to install ~/mac-setup.env from utilities"
+   echo "./mac-setup.zsh -init # to download mac-setup.env into \$HOME folder ${HOME}"
    echo "./mac-setup.zsh -gfb \"~/github-wilsonmar\" -v  # create GITHUB_FOLDER_BASE"
    echo "./mac-setup.zsh -utils -I -U -v  # to install or update utilities"
    echo "chmod +x mac-setup.zsh   # change permissions"
