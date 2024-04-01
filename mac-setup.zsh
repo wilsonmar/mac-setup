@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.179" # rm stop @ setup :mac-setup.zsh"
+SCRIPT_VERSION="v1.180" # add check for .env @ setup :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -207,9 +207,6 @@ exit_abnormal() {            # Function: Exit with error.
 # See https://wilsonmar.github.io/mac-setup/#TextColors
 # \e ANSI color variables are defined in https://wilsonmar.github.io/bash-scripts#TextColors
 
-RUN_QUIET=false
-SHOW_VERBOSE=true
-SHOW_DEBUG=true
 h2() { if [ "${RUN_QUIET}" = false ]; then    # heading
    printf "\n\e[1m\e[33m\u2665 %s\e[0m\n" "$(echo "$@" | sed '/./,$!d')"
    fi
@@ -453,9 +450,18 @@ sig_cleanup() {
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 
+RUN_QUIET=false
+SHOW_VERBOSE=true
 setup_mac-setup_env(){
    # Example $1 = "mac-setup.env" to download ~/mac-setup.env
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
+
+   if [ -z "$1" ]; then   # not specified in parms
+      warning "setup_mac-setup_env \"$1\" not specified..."
+      return 9
+   else
+      note "setup_mac-setup_env \"$1\" being processed..."
+   fi
 
    if [ -z "${ENV_FOLDERPATH}" ]; then   # not specified in parms
       export ENV_FOLDERPATH="$HOME"              # -envf "$HOME" or alt-folder (away from GitHub)
@@ -465,7 +471,7 @@ setup_mac-setup_env(){
       note "-envf ${ENV_FOLDERPATH}/$1 exists ..."
    else
       warning "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH} not found. Creating..."
-      cd /
+      cd
       mkdir -p "${ENV_FOLDERPATH}"
    fi
 
@@ -485,31 +491,32 @@ setup_mac-setup_env(){
 
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
       note "-envf ${ENV_FOLDERPATH}/$1 exists. Not downloading ..."
-      return 0
    else
       warning "-envf ${$ENV_FOLDERPATH}/$1 not found. Creating..."
+
+      if [ -z "${GITHUB_DOWNLOAD_URL}" ]; then   # not specified in parms
+         # Assuming you didn't fork this github repo:
+         export GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"    
+         warning "-gdu GITHUB_DOWNLOAD_URL not defined. Hard coded ${GITHUB_DOWNLOAD_URL} being used..."
+      fi
+
+      h2 "Downloading ${GITHUB_DOWNLOAD_URL}/$1 ..."
+      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
+      ls -ltaT "${ENV_FOLDERPATH}/$1"
+      echo "  "
+
+      note "-envf ENV_FOLDERPATH $ENV_FOLDERPATH/$1 chmod ..."
+      chmod  +x "${ENV_FOLDERPATH}/$1"
    fi
 
-   if [ -z "${GITHUB_DOWNLOAD_URL}" ]; then   # not specified in parms
-      # Assuming you didn't fork this github repo:
-      export GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"    
-      warning "-gdu GITHUB_DOWNLOAD_URL not defined. Hard coded ${GITHUB_DOWNLOAD_URL} being used..."
-   fi
-   # TODO: .gitconfig
- 
-   h2 "Downloading ${GITHUB_DOWNLOAD_URL}/$1 ..."
-   curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
-   ls -ltaT "$ENV_FOLDERPATH/$1"
-   echo "  "
+   note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
+   source    "${ENV_FOLDERPATH}/$1"
 
-   note "-envf ENV_FOLDERPATH $ENV_FOLDERPATH/$1 chmod ..."
-   chmod  +x "$ENV_FOLDERPATH/$1"
-
-   note "-envf ENV_FOLDERPATH $ENV_FOLDERPATH/$1 source'd to load variables ..."
-   source    "$ENV_FOLDERPATH/$1"
-
+   # TODO: .gitconfig   
 }
 setup_mac-setup_env "mac-setup.env"
+RUN_QUIET=false
+SHOW_VERBOSE=false
 
    note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
    note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
