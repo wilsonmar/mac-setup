@@ -958,6 +958,12 @@ if [ "${SHOW_DEBUG}" = true ]; then  # -vv
    blank_line
 fi
 
+# TODO: print all command arguments submitted:
+#while (( "$#" )); do 
+#  echo $1 
+#  shift 
+#done 
+
 
 ### 09. Show Operating environment information
 
@@ -1092,7 +1098,7 @@ if [ false = true ]; then  # -I  # NEVER EXECUTE
    # For bash only: read -p "Password: " -s szPassword
    # For zsh, to avoid "read -p no coprocess" error:
    read "?Password for $USER please: "
-   szPassword="$REPLY"
+   szPassword="$REPLY"w
    # Printing of password for security: 
    printf "%s\n" "$szPassword" | sudo --stdin mount -t cifs //192.168.1.1/home /media/$USER/home -o username=$USER,password="$szPassword"
 
@@ -1102,7 +1108,7 @@ fi
 
 ### 12. Backup using macOS Time Machine via tmutil
 
-# https://github.com/pacoorozco/dotfiles/tree/main/backup-tool
+# https://github.com/pacoorozco/dotfiles/tree/main/backup-toolj
 
 
 ### 13. Read & download .env variables
@@ -1176,17 +1182,11 @@ if [ "${INIT_ENV_FILES}" = true ]; then
 
 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
-   note "GITHUB_USER_NAME=${GITHUB_USER_NAME}"
-   note "GITHUB_USER_ACCOUNT=${GITHUB_USER_ACCOUNT}"
-   note "GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL}"
-   note "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+#   note "GITHUB_USER_NAME=${GITHUB_USER_NAME}"
+#   note "GITHUB_USER_ACCOUNT=${GITHUB_USER_ACCOUNT}"
+#   note "GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL}"
+#   note "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
 
-
-# TODO: print all command arguments submitted:
-#while (( "$#" )); do 
-#  echo $1 
-#  shift 
-#done 
 
 
 ### 14. Upgrade Bash to Zsh
