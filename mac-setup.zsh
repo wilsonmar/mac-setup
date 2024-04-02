@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.188" # bebug stop setup for env downloads :mac-setup.zsh"
+SCRIPT_VERSION="v1.190" # _download_setup :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -453,31 +453,31 @@ sig_cleanup() {
 RUN_QUIET=false
 SHOW_VERBOSE=true
    set -x  # (-o xtrace) to show commands for specific issues.
+
 setup_mac-setup_env(){
    # Example $1 = "mac-setup.env" to download ~/mac-setup.env
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 
    if [ -z "${ENV_FOLDERPATH}" ]; then   # not specified in parms
       export ENV_FOLDERPATH="$HOME"              # -envf "$HOME" or alt-folder (away from GitHub)
-      warning "-envf ENV_FOLDERPATH not defined. Hard coded ${ENV_FOLDERPATH} being used..."
+      note "-envf ENV_FOLDERPATH not defined. Hard coded ${ENV_FOLDERPATH} being used..."
    fi
 
    if [ -d "$ENV_FOLDERPATH" ]; then  # target file exists, don't overwrite:
       note "-envf ${ENV_FOLDERPATH} exists ..."
    else
-      warning "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH} not found. Creating..."
+      warning "-envf ENV_FOLDERPATH \"${ENV_FOLDERPATH}\" not found. Creating..."
       cd
       mkdir -p "${ENV_FOLDERPATH}"
    fi
    cd "${ENV_FOLDERPATH}"
    pwd
 
-
    if [ -z "$1" ]; then   # not specified in parms
-      warning "setup_mac-setup_env file not specified in parms. Cannot continue..."
+      fatal "_download_setup file not specified in parms. Cannot continue..."
       return 9
    else
-      note "setup_mac-setup_env \"$1\" being processed..."
+      note "_download_setup \"$1\" being processed..."
    fi
 
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
@@ -500,15 +500,15 @@ setup_mac-setup_env(){
       chmod  +x "${ENV_FOLDERPATH}/$1"
    fi
 
-   note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
-   source   "${ENV_FOLDERPATH}/$1"
-
    # TODO: .gitconfig   
 }
-setup_mac-setup_env "mac-setup.env"
-setup_mac-setup_env ".zshrc"
-setup_mac-setup_env "aliases.zsh"
-setup_mac-setup_env "mac-setup.zsh"
+_download_setup "mac-setup.zsh"
+_download_setup "mac-setup.env"
+_download_setup ".zshrc"
+_download_setup "aliases.zsh"
+
+#   note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
+#   source   "${ENV_FOLDERPATH}/$1"
 
 echo "DEBUG: setup.env";exit
 
