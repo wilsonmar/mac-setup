@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# gas "v0.26 # Add /opt/homebrew for Apple Silicon ARM chips :.zshrc"
+# gas "v0.27 # Add /opt/homebrew/bin for Apple Silicon ARM chips :.zshrc"
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
 # This is explained in https://wilsonmar.github.io/zsh
 # This file is not provided by macOS by default.

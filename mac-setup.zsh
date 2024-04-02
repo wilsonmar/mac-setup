@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.186" # rm stop after setup :mac-setup.zsh"
+SCRIPT_VERSION="v1.187" # brew HEAD/install.sh :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -1379,13 +1379,8 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 
       if ! command -v brew >/dev/null; then  # NOT installed:
          if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
-            # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
             h2 "Installing brew package manager ..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-            # mkdir homebrew && curl -L https://GitHub.com/Homebrew/brew/tarball/master \
-            #   | tar xz --strip 1 -C homebrew
-            # if PATH for brew available:
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
          elif [ "$OS_TYPE" = "WSL" ]; then
             h2 "Installing brew package manager on WSL ..." # A fork of Homebrew known as Linuxbrew.
