@@ -4,7 +4,7 @@
 # Shell scripting techniques are explained in https://wilsonmar.github.io/shell-scripts
 # Like https://medium.com/@maxy_ermayank/developer-environment-setup-script-5fcb7b854acc
 
-# shellcheck does not work on zsh.
+# shellcheckdoes not work on zsh.
 
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
@@ -13,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.194" # GITHUB_FOLDER_BASE :mac-setup.zsh"
+SCRIPT_VERSION="v1.196" # note of GITHUB_FOLDER_BASE :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -1169,14 +1169,13 @@ if [ "${INIT_ENV_FILES}" = true ]; then
       # h2 "Now please edit the file to customize variables ..."
       # h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
    download_setup "mac-setup.zsh"
-   # Restart Terminal, which runs .zshrc which runs aliases.zsh and mac-setup.env
+   warning "Now restart Terminal, which runs .zshrc which runs aliases.zsh and mac-setup.env"
 
-   #   note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
-   #   source   "${ENV_FOLDERPATH}/$1"
+   # note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
+   # source   "${ENV_FOLDERPATH}/$1"
 
    # TODO: .gitconfig   
-   # TODO: Setup SSH and upload to GITHUB.com using downloaded gh utility
-
+   # "Now setup SSH and upload to GITHUB.com using downloaded gh utility
    exit
 }
 
@@ -1191,17 +1190,18 @@ if [ "${INIT_ENV_FILES}" = true ]; then
 
 ### 14. Upgrade Bash to Zsh
 
-# Apple Directory Services database Command Line utility:
-USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"
+# Using Apple's dscl (Directory Services database Command Line) utility:
+
+USER_SHELL_INFO="$( dscl . -read /Users/${USER} UserShell )"
 if [ "${SHOW_VERBOSE}" = true ]; then
-   note "SHELL=$SHELL"
-   note "USER_SHELL_INFO=$USER_SHELL_INFO"
+   note "SHELL=$SHELL for ${$USER}"
+   # note "USER_SHELL_INFO=${USER_SHELL_INFO}"
 fi
 if [ "${CONVERT_TO_ZSH}" = true ]; then
    # Shell scripting NOTE: Double brackets and double dashes to compare strings, with space between symbols:
-   if [[ "UserShell: /bin/bash" = *"${USER_SHELL_INFO}"* ]]; then
+   if [[ "UserShell: /bin/bash" = *"${SHELL}"* ]]; then
       if [ "${CONVERT_TO_ZSH}" = true ]; then
-         warning "chsh -s /bin/zsh  # to switch to zsh from ${USER_SHELL_INFO}"
+         warning "chsh -s /bin/zsh  # to switch to zsh from ${SHELL}"
          #chsh -s /opt/homebrew/bin/zsh  # not allow because it is a non-standard shell.
          chsh -s /bin/zsh 
          # Password will be requested here.
