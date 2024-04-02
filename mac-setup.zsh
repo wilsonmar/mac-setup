@@ -501,18 +501,14 @@ setup_mac-setup_env(){
    fi
 
    note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
-   source    "${ENV_FOLDERPATH}/$1"
+   source   "${ENV_FOLDERPATH}/$1"
 
    # TODO: .gitconfig   
 }
 setup_mac-setup_env "mac-setup.env"
-RUN_QUIET=false
-SHOW_VERBOSE=false
-
-   note "GITHUB_USER_NAME=${GITHUB_USER_NAME}"
-   note "GITHUB_USER_ACCOUNT=${GITHUB_USER_ACCOUNT}"
-   note "GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL}"
-   note "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+setup_mac-setup_env ".zshrc"
+setup_mac-setup_env "aliases.zsh"
+setup_mac-setup_env "mac-setup.zsh"
 
 # h2 "Now please edit the file to customize variables ..."
 # h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
@@ -520,16 +516,58 @@ SHOW_VERBOSE=false
 # TODO: Setup SSH and upload to GITHUB.com using downloaded gh utility
 
 
-
 ### 08b. Display run variables
 
+### 13. -init mac-setup files in user $HOME folder
+
+download_file_from_github(){
+   # filename = $1
+
+   if [ -z "$1" ]; then  # var needed not specified
+      fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
+      exit 9
+   fi
+
+   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
+      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
+      return 1
+   fi
+
+   note "-gfb GITHUB_FOLDER_BASE=\"$GITHUB_FOLDER_BASE\" "
+
+
+   # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
+   read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
+   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+      if ! command -v curl >/dev/null; then  # command not found, so:
+         fatal "curl utility not available. Please brew install curl ..."
+         exit 9
+      fi
+
+      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
+      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
+      echo "  "
+      ls -ltaT "$ENV_FOLDERPATH/$1"
+      return 0
+   else
+      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
+      return 1
+   fi
+}
+
+#if [ "${INIT_ENV_FILES}" = true ]; then  # -init
+#   download_file_from_github  ".zshrc"
+#   download_file_from_github  "aliases.zsh"
+#   download_file_from_github  "mac-setup.zsh"
+#fi
+
+
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
-if [ "${SHOW_VERBOSE}" = true ]; then
-   note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
-   note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
-   note "GITHUB_USER_EMAIL=" "${GITHUB_USER_EMAIL}"
-   note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
-fi
+   note "GITHUB_USER_NAME=${GITHUB_USER_NAME}"
+   note "GITHUB_USER_ACCOUNT=${GITHUB_USER_ACCOUNT}"
+   note "GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL}"
+   note "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+
 
 # TODO: print all command arguments submitted:
 #while (( "$#" )); do 
@@ -537,6 +575,9 @@ fi
 #  shift 
 #done 
 
+
+RUN_QUIET=false
+SHOW_VERBOSE=false
 
 
 ### 09. Read parameters as command arguments:
@@ -1198,49 +1239,6 @@ fi
 ### 12. Backup using macOS Time Machine via tmutil
 
 
-
-### 13. -init mac-setup files in user $HOME folder
-
-download_file_from_github(){
-   # filename = $1
-
-   if [ -z "$1" ]; then  # var needed not specified
-      fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
-      exit 9
-   fi
-
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
-      return 1
-   fi
-
-   note "-gfb GITHUB_FOLDER_BASE=\"$GITHUB_FOLDER_BASE\" "
-
-
-   # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
-   read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
-   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-      if ! command -v curl >/dev/null; then  # command not found, so:
-         fatal "curl utility not available. Please brew install curl ..."
-         exit 9
-      fi
-
-      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
-      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
-      echo "  "
-      ls -ltaT "$ENV_FOLDERPATH/$1"
-      return 0
-   else
-      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
-      return 1
-   fi
-}
-
-if [ "${INIT_ENV_FILES}" = true ]; then  # -init
-   download_file_from_github  ".zshrc"
-   download_file_from_github  "aliases.zsh"
-   download_file_from_github  "mac-setup.zsh"
-fi
 
 
 

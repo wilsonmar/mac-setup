@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# gas "v0.25 # Fix command err for complete - .zshrc"
+# gas "v0.26 # Add /opt/homebrew for Apple Silicon ARM chips :.zshrc"
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
 # This is explained in https://wilsonmar.github.io/zsh
 # This file is not provided by macOS by default.
@@ -17,8 +17,8 @@ echo "At ~/.zshrc to set environment variables for interactive shells."
 # Colons separate items in $PATH (semicolons as in Windows will cause error):
    # /usr/local/bin contains user-installed pgms (using brew) so should be first to override libraries
    # but only on Intel Macs. 
-export PATH="/usr/local/bin:/usr/local/opt:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
-   # /opt/homebrew is added in front of /usr/local/bin by brew on Apple M1/2 machines.
+export PATH="/opt/homebrew/;/usr/local/bin:/usr/local/opt:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
+   # /opt/homebrew/ is added in front of /usr/local/bin by brew on Apple M1/2 machines.
    # /usr/local/bin contains pgms installed using brew, so should be first to override libraries
    # /usr/local/opt contains folders for brew-installed apps, such as /usr/local/opt/openssl@1.1
    # /usr/local/sbin contains java, javac, javadoc, javap, etc.
