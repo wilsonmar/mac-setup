@@ -4,10 +4,7 @@
 # Shell scripting techniques are explained in https://wilsonmar.github.io/shell-scripts
 # Like https://medium.com/@maxy_ermayank/developer-environment-setup-script-5fcb7b854acc
 
-# shellcheck does not work on zsh, but 
-# shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
-# shellcheck disable=SC1090 # Can't follow non-constant source. Use a directive to specify location.
-# shellcheck disable=SC2129  # Consider using { cmd1; cmd2; } >> file instead of individual redirects.
+# shellcheck does not work on zsh.
 
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
@@ -16,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.191" # display pgm at start :mac-setup.zsh"
+SCRIPT_VERSION="v1.192" # rm _ in download_setup :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -244,7 +241,7 @@ blank_line(){
 RUN_QUIET=false
 SHOW_VERBOSE=true
 info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
-note "Explained at https://wilsonmar.github.io/mac-setup"
+# note "Explained at https://wilsonmar.github.io/mac-setup"
 
 
 ### 06. Define hard-coded variable values that can be overridden as "feature flags"
@@ -434,7 +431,7 @@ this_ending() {
       FREE_DISKBLOCKS_END=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[10]}" )
    fi
    FREE_DIFF=$(((FREE_DISKBLOCKS_END-FREE_DISKBLOCKS_START)))
-   MSG="End of script $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
+   MSG="End of ${THIS_PROGRAM} $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
    # echo 'Elapsed HH:MM:SS: ' $( awk -v t=$beg-seconds 'BEGIN{t=int(t*1000); printf "%d:%02d:%02d\n", t/3600000, t/60000%60, t/1000%60}' )
    # TODO: Delete stuff?
    success "$MSG"
@@ -452,9 +449,7 @@ sig_cleanup() {
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 
-   set -x  # (-o xtrace) to show commands for specific issues.
-
-_download_setup(){
+download_setup(){
    # Example $1 = "mac-setup.env" to download ~/mac-setup.env
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 
@@ -499,72 +494,28 @@ _download_setup(){
       note "-envf ENV_FOLDERPATH $ENV_FOLDERPATH/$1 chmod ..."
       chmod  +x "${ENV_FOLDERPATH}/$1"
    fi
-
-   # TODO: .gitconfig   
 }
-_download_setup "mac-setup.zsh"
-_download_setup "mac-setup.env"
-_download_setup ".zshrc"
-_download_setup "aliases.zsh"
+download_setup ".zshrc"
+download_setup "aliases.zsh"
+download_setup "mac-setup.env"
+download_setup "mac-setup.zsh"
+# Restart Terminal, which runs .zshrc which runs aliases.zsh and mac-setup.env
 
-echo "DEBUG: setup.env";exit
-
-# TODO: 
 #   note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
 #   source   "${ENV_FOLDERPATH}/$1"
-
 
 # h2 "Now please edit the file to customize variables ..."
 # h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
 
+   set -x  # (-o xtrace) to show commands for specific issues.
+
+# TODO: .gitconfig   
 # TODO: Setup SSH and upload to GITHUB.com using downloaded gh utility
 
 
 ### 08b. Display run variables
 
 ### 13. -init mac-setup files in user $HOME folder
-
-download_file_from_github(){
-   # filename = $1
-
-   if [ -z "$1" ]; then  # var needed not specified
-      fatal "\"$1\" is invalid parm to download_file_from_github(). Programming error."
-      exit 9
-   fi
-
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists:
-      note "File $ENV_FOLDERPATH/$1 already exists... Not overwiting..."
-      return 1
-   fi
-
-   note "-gfb GITHUB_FOLDER_BASE=\"$GITHUB_FOLDER_BASE\" "
-
-
-   # To avoid no coprocess in zsh, see https://www.youtube.com/watch?v=VDibMOCJk_E&t=1m31s
-   read REPLY"?Press Y to dowload file ${ENV_FOLDERPATH}/$1? [y/N] "
-   if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-      if ! command -v curl >/dev/null; then  # command not found, so:
-         fatal "curl utility not available. Please brew install curl ..."
-         exit 9
-      fi
-
-      h2 "Downloading \"${GITHUB_DOWNLOAD_URL}/$1\" ..."
-      curl -LO "${GITHUB_DOWNLOAD_URL}/$1" 
-      echo "  "
-      ls -ltaT "$ENV_FOLDERPATH/$1"
-      return 0
-   else
-      note "\"$ENV_FOLDERPATH/$1\" not downloaded ..."
-      return 1
-   fi
-}
-
-#if [ "${INIT_ENV_FILES}" = true ]; then  # -init
-#   download_file_from_github  ".zshrc"
-#   download_file_from_github  "aliases.zsh"
-#   download_file_from_github  "mac-setup.zsh"
-#fi
-
 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
    note "GITHUB_USER_NAME=${GITHUB_USER_NAME}"
