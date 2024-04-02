@@ -509,10 +509,10 @@ setup_mac-setup_env "mac-setup.env"
 RUN_QUIET=false
 SHOW_VERBOSE=false
 
-   note "GITHUB_USER_NAME=" "${GITHUB_USER_NAME}"
-   note "GITHUB_USER_ACCOUNT=" "${GITHUB_USER_ACCOUNT}"
-   note "GITHUB_USER_EMAIL=" "${GITHUB_USER_EMAIL}"
-   note "AWS_DEFAULT_REGION= " "${AWS_DEFAULT_REGION}"
+   note "GITHUB_USER_NAME=${GITHUB_USER_NAME}"
+   note "GITHUB_USER_ACCOUNT=${GITHUB_USER_ACCOUNT}"
+   note "GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL}"
+   note "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
 
 # h2 "Now please edit the file to customize variables ..."
 # h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
