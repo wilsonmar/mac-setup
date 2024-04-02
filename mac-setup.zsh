@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.181" # add xtrace @ setup :mac-setup.zsh"
+SCRIPT_VERSION="v1.183" # ${ENV_FOLDERPATH} @ setup :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -493,7 +493,7 @@ setup_mac-setup_env(){
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
       note "-envf ${ENV_FOLDERPATH}/$1 exists. Not downloading ..."
    else
-      warning "-envf ${$ENV_FOLDERPATH}/$1 not found. Creating..."
+      warning "-envf ${ENV_FOLDERPATH}/$1 not found. Creating..."
 
       if [ -z "${GITHUB_DOWNLOAD_URL}" ]; then   # not specified in parms
          # Assuming you didn't fork this github repo:
