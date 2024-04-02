@@ -16,7 +16,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.190" # _download_setup :mac-setup.zsh"
+SCRIPT_VERSION="v1.191" # display pgm at start :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -33,7 +33,6 @@ SCRIPT_VERSION="v1.190" # _download_setup :mac-setup.zsh"
 LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
 # clear  # screen (but not history)
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
-
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
 
 ### 02. Display a menu if no parameter is specified in the command line
@@ -241,7 +240,11 @@ fatal() {   # Skull: &#9760;  # Star: &starf; &#9733; U+02606  # Toxic: &#9762;
 blank_line(){
    printf "\n"
 }
-# TODO: Display these after -v argument from later.
+
+RUN_QUIET=false
+SHOW_VERBOSE=true
+info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
+note "Explained at https://wilsonmar.github.io/mac-setup"
 
 
 ### 06. Define hard-coded variable values that can be overridden as "feature flags"
@@ -444,17 +447,14 @@ sig_cleanup() {
 }
 
 
-
 ### 08a. Read & download .env variables
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
 # See https://wilsonmar.github.io/mac-setup/#SaveConfigFile
 
-RUN_QUIET=false
-SHOW_VERBOSE=true
    set -x  # (-o xtrace) to show commands for specific issues.
 
-setup_mac-setup_env(){
+_download_setup(){
    # Example $1 = "mac-setup.env" to download ~/mac-setup.env
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 
@@ -507,10 +507,12 @@ _download_setup "mac-setup.env"
 _download_setup ".zshrc"
 _download_setup "aliases.zsh"
 
+echo "DEBUG: setup.env";exit
+
+# TODO: 
 #   note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
 #   source   "${ENV_FOLDERPATH}/$1"
 
-echo "DEBUG: setup.env";exit
 
 # h2 "Now please edit the file to customize variables ..."
 # h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
@@ -1115,8 +1117,6 @@ if [ "${SHOW_DEBUG}" = true ]; then  # -vv
    blank_line
 fi
 
-info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
-note "Explained at https://wilsonmar.github.io/mac-setup"
 note "Running in PWD=$PWD"  # $0 = script being run in Present Wording Directory.
 note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  
    # example: 10.15.1 / 21.4.0
