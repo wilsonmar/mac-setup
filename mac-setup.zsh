@@ -474,10 +474,10 @@ _download_setup(){
    pwd
 
    if [ -z "$1" ]; then   # not specified in parms
-      fatal "_download_setup file not specified in parms. Cannot continue..."
+      fatal "file \"$1\" not specified in parms. Cannot continue..."
       return 9
    else
-      note "_download_setup \"$1\" being processed..."
+      note "file \"$1\" being processed..."
    fi
 
    if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
