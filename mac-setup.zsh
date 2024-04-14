@@ -13,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.196" # fix SHELL :mac-setup.zsh"
+SCRIPT_VERSION="v1.198" # GITHUB SSH compaudit :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -147,11 +147,13 @@ args_prompt() {
 ### 03. Usage Examples
 usage_examples() {
    echo "# USAGE EXAMPLES:"
-   echo "./mac-setup.zsh -init  # to download mac-setup.env into \$HOME folder ${HOME}"
-   echo "./mac-setup.zsh -gfb \"~/github-wilsonmar\" -v  # create GITHUB_FOLDER_BASE"
-   echo "./mac-setup.zsh -utils -I -U -v  # to install or update utilities"
+   echo "./mac-setup.zsh -init -v # to download mac-setup.env into \$HOME folder ${HOME}"
+   echo "./mac-setup.zsh -init -gfb \"~/github-wilsonmar\" -v  # create GITHUB_FOLDER_BASE"
    echo "chmod +x mac-setup.zsh   # change permissions"
+   echo " "
+   echo "./mac-setup.zsh -I -U -utils -v  # install or update utilities spec'd in .env file"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
+   echo " "
    echo "./mac-setup.zsh -v -I -U -golang  # Install brew, plus golang"
    echo "./mac-setup.zsh -v -Consul -k -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
    echo "./mac-setup.zsh -v -Consul -podman -a -K   # Use HashicorpVault in Podman for localhost Kept alive"
@@ -296,7 +298,7 @@ SECRETS_FILE=".secrets.env.sample"
    GITHUB_REPO_NAME=""                        # -grn
 #   GITHUB_REPO_PATH="$HOME/github-wilsonmar"  
 #   GITHUB_REPO="wilsonmar.github.io"f
-#   GITHUB_ACCOUNT_NAME="weirdo"              # -gan
+#   GITHUB_USER_ACCOUNT="weirdo"              # -gan
 #   GITHUB_USER_NAME="Wilson Mar"             # -n
 #   GITHUB_USER_EMAIL="wilson_mar@gmail.com"  # -e
    #GITHUB_USER_EMAIL="WilsonMar+GitHub@gmail.com"
@@ -599,13 +601,8 @@ while test $# -gt 0; do
       ;;
     -gan*)
       shift
-             GITHUB_ACCOUNT_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
-      export GITHUB_ACCOUNT_NAME
-      shift
-      ;;
-    -ga*)
-      shift
-      export GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+             GITHUB_USER_ACCOUNT=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export GITHUB_USER_ACCOUNT
       shift
       ;;
     -gatewayd*)
@@ -965,9 +962,10 @@ fi
 #done 
 
 
+
 ### 09. Show Operating environment information
 
-Set Continue on Error and Trace
+set Continue on Error and Trace
 
 # See https://wilsonmar.github.io/mac-setup/#StrictMode
 if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
@@ -987,6 +985,7 @@ fi
 note "Running in PWD=$PWD"  # $0 = script being run in Present Wording Directory.
 note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  
    # example: 10.15.1 / 21.4.0
+note "Apple About: $( ioreg -l | grep IOPlatformSerialNumber )"
 
 # See https://wilsonmar.github.io/mac-setup/#BashTraps
 note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
@@ -1177,12 +1176,11 @@ if [ "${INIT_ENV_FILES}" = true ]; then
    # TODO: .gitconfig   
    # "Now setup SSH and upload to GITHUB.com using downloaded gh utility
    exit
-}
+fi
 
 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
 #   note "GITHUB_USER_NAME=${GITHUB_USER_NAME}"
-#   note "GITHUB_USER_ACCOUNT=${GITHUB_USER_ACCOUNT}"
 #   note "GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL}"
 #   note "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
 
@@ -1194,8 +1192,7 @@ if [ "${INIT_ENV_FILES}" = true ]; then
 
 USER_SHELL_INFO="$( dscl . -read /Users/${USER} UserShell )"
 if [ "${SHOW_VERBOSE}" = true ]; then
-   note "SHELL=$SHELL for ${$USER}"
-   # note "USER_SHELL_INFO=${USER_SHELL_INFO}"
+   note "SHELL=$SHELL for USER=$USER"
 fi
 if [ "${CONVERT_TO_ZSH}" = true ]; then
    # Shell scripting NOTE: Double brackets and double dashes to compare strings, with space between symbols:
@@ -1337,6 +1334,9 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
             test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
+            # See https://osxdaily.com/2021/12/29/fix-oh-my-zsh-insecure-completion-dependent-directories-detected/
+            compaudit | xargs chmod g-w
+
             if grep -q ".rbenv/bin:" "${BASHFILE}" ; then
                note ".rbenv/bin: already in ${BASHFILE}"
             else
@@ -1435,6 +1435,14 @@ if [ "${VERIFY_ENV}" = true ]; then  # -V  (upper case)
 fi
 
 
+
+# For deep info about temperature, disk read/write info, unsafe shutdowns (crashes or power situations), 
+# power cycles, hours of the drive on,
+# See https://osxdaily.com/2024/04/10/how-to-check-disk-health-on-mac-with-smartctl/
+# brew install smartmontools
+# smartctl -a disk0
+
+
 ### 16. Install ShellCheck & bclm
 
 # See https://wilsonmar.github.io/mac-setup/#ShellCheck
@@ -1485,8 +1493,7 @@ if [ "${RUN_TRACE}" = true ]; then  # -trace
    # Use Docker container as OpenTelementry server:
       # https://dev.to/ashokan/otel-cli-push-otel-traces-with-ease-29al simple intuitive flexible
    # Alternatively
-   if ! command -v otel-cli ; then
-   else
+   if command -v otel-cli ; then
       # Run a trace receiver simple demo server using https://github.com/equinix-labs/otel-cli
       otel-cli server tui &
       if [ -z "$OTEL_EXPORTER_OTLP_ENDPOINT" ]; then  # variable is found:
@@ -1511,6 +1518,7 @@ if [ "${RUN_TRACE}" = true ]; then  # -trace
 #   if [ "${DELETE_CONTAINER_AFTER}" = true ]; then  # -D
 #      # kill otel-cli server background process.
 #   fi
+
 fi  # RUN_TRACE
 
 
@@ -1537,268 +1545,269 @@ if [ "${SHOW_DEBUG}" = true ]; then
 fi
 
 if [ "${RUN_UTILS}" = true ]; then  # -utils
-if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
-   # CAUTION: Install only packages that you actually use and trust!
+   if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
+      # CAUTION: Install only packages that you actually use and trust!
+      if [ "${PACKAGE_MANAGER}" = "brew" ]; then
+   
+         ########## DOTHIS: remove apps you don't want removed: ##########
+         # See https://wilsonmar.github.io/macos-homebrew/
+         h2 "Remove apps pre-installed by Apple, taking up space if they are not used ..."
+         # set comma as internal field separator for the string list
+         #Field_Separator=$IFS
+         #IFS=,
+   
+         # Excludes apps installed using Apple's App Store app: Amazon Prime Video, Textual, 
+            # 1Password, Flash Player, "Grammerly Desktop.app", "Google Chrome", github, Kindle Classic, 
+            # "Hidden Bar", "Home Assistant", HP Easy Scan, "Hotkey App",
+            # Speedtest, Strongbox, Telegram, Whatsapp Desktop
+            # Okta Verify, p4merge, TextEdit, XCode, zoom.us.app
+         # Response: "Lensa AI: photo editor, video", The Unarchiver.app, Pixelmator.app, "Save to Pocket", 
+            # TextWrangler.app, WriteRoom.app,
+            # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
 
-   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
-  
-      ########## DOTHIS: remove apps you don't want removed: ##########
-      # See https://wilsonmar.github.io/macos-homebrew/
-      h2 "Remove apps pre-installed by Apple, taking up space if they are not used ..."
-      # set comma as internal field separator for the string list
-      #Field_Separator=$IFS
-      #IFS=,
- 
-      # Excludes apps installed using Apple's App Store app: Amazon Prime Video, Textual, 
-         # 1Password, Flash Player, "Grammerly Desktop.app", "Google Chrome", github, Kindle Classic, 
-         # "Hidden Bar", "Home Assistant", HP Easy Scan, "Hotkey App",
-         # Speedtest, Strongbox, Telegram, Whatsapp Desktop
-         # Okta Verify, p4merge, TextEdit, XCode, zoom.us.app
-      # Response: "Lensa AI: photo editor, video", The Unarchiver.app, Pixelmator.app, "Save to Pocket", 
-          # TextWrangler.app, WriteRoom.app,
-          # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
-
-      h2 "-I removing Apple-created apps installed from Apple Store into /Applications/ ..."
-      # APPLE_APPS_TO_REMOVE="iMovie GarageBand Keynote Numbers Pages"
-      # convert to array space-separated string from mac-setup.env file:
-      ARRAY=( $APPLE_APPS_TO_REMOVE )  
-      ARRAY=(`echo ${APPLE_APPS_TO_REMOVE}`);
-      for appname in "${ARRAY[@]}"; do
-         if [ -d "/Applications/$appname.app:?}" ]; then   # file found:
-            echo "$appname.app being removed..."
-            h2 "/Applications/$appname.app being removed..."
-            sudo rm -rf "/Applications/$appname.app"  # remove app folder 
-            # Sudo and password needed to remove Numbers, Pages
-            # TODO: Remove iMovie and others using the built-in uninstaller.
-            # TODO: Also remove app data in "/Library/Application Support" and other folders
-         else  # file not found:
-            note "/Applications/$appname.app not found to remove ..."
-         fi
-      done
-
-      h2 "-I brew install/upgrade --cask into /Applications/:"
-      # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  PowerShell"
-      ARRAY=(`echo ${ROOT_APPS_TO_INSTALL}`);
-      for appname in "${ARRAY[@]}"; do
-         if [ -d "/Applications/$appname.app:?}" ]; then   # app found:
-            if [ "${UPDATE_PKGS}" = true ]; then
-               note "-I brew reinstall --cask $appname.app within /Applications/ ..."
-               brew uninstall --cask $appname --force
-               brew install --cask $appname
-                  # GIMP Error: Directory not empty @ dir_s_rmdir - /private/tmp/d20230916-90678-14otypx
-            # else ignore
+         h2 "-I removing Apple-created apps installed from Apple Store into /Applications/ ..."
+         # APPLE_APPS_TO_REMOVE="iMovie GarageBand Keynote Numbers Pages"
+         # convert to array space-separated string from mac-setup.env file:
+         ARRAY=( $APPLE_APPS_TO_REMOVE )  
+         ARRAY=(`echo ${APPLE_APPS_TO_REMOVE}`);
+         for appname in "${ARRAY[@]}"; do
+            if [ -d "/Applications/$appname.app:?}" ]; then   # file found:
+               echo "$appname.app being removed..."
+               h2 "/Applications/$appname.app being removed..."
+               sudo rm -rf "/Applications/$appname.app"  # remove app folder 
+               # Sudo and password needed to remove Numbers, Pages
+               # TODO: Remove iMovie and others using the built-in uninstaller.
+               # TODO: Also remove app data in "/Library/Application Support" and other folders
+            else  # file not found:
+               note "/Applications/$appname.app not found to remove ..."
             fi
-         else  # app not found:
-            note "-I brew install --cask $appname within /Applications/ ..."
-            brew install --cask $appname
-            # Freeform.app not recognized
-         fi
-      done
-
-      # For those with different brew names than app name:
-         # Anki flashcard player
-         # "GPG Keychain.app"
-         # Karabiner-Elements to "Karabiner-Elements.app"
-         # Karabiner-EventViewer to "Karabiner-EventViewer.app"
-             # https://www.youtube.com/watch?v=j4b_uQX3Vu0
-         # microsoft-edge to "Microsoft Edge.app"
-         # Microsoft Remote Desktop, 
-         # Microsoft Office, Microsoft PowerShell, Microsoft Teams, Microsoft Remote Desktop,
-         # sublime-text to "Sublime Text.app"
-      # Installed from vendor website: Keka, Adobe, Camtasia, DiffMerge, p4merge
-
-      h2 "-I install/upgrade apps using brew --cask into $HOME/Applications/:"
-      # HOME_APPS_TO_INSTALL="1Password  Docker Firefox google-cloud-sdk Hyper Macvim"
-      # Exceptions: 
-         # google-cloud-sdk does not create a "Google Cloud SDK.app"
-            # See https://snark.github.io/jumpcut/ for more cut-and-paste.
-         # hyper install stores a file in /usr/local/bin on ARM machines.
-         # No longer supported? the-unarchiver
-      # Not on my list but may be in yours: cakebrew, snowflake-snowsql, geekbench, spotify, 
-         # pycharm, textmate, brave, opera, 
-      # Installed separately: 1password (1Password7.app),
-         # licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
-      brew_update_app() {
-         brewname=$1
-         appname=$2
-         if [ -d "$HOME/Applications/$appname.app:?}" ]; then   # app found:
-            if [ "${UPDATE_PKGS}" = true ]; then
-               note "brew reinstall --cask $brewname.app within $HOME/Applications/ ..."
-               brew uninstall --cask $brewname --force
-               brew install --cask $brewname
-            # else ignore
-            fi
-         else  # app not found:
-            note "-I install brew --cask $brewname within $HOME/Applications/ ..."
-            brew install --cask $brewname
-         fi
-         # PROTIP: On Error: Directory not empty @ dir_s_rmdir - , sudo chown -R $(whoami) $(brew --prefix)/*
-         # Then reboot the system
-      }
-      # HOME_APPS_TO_INSTALL="1Password  Docker Firefox google-cloud-sdk Hyper Macvim"
-      ARRAY=(`echo ${HOME_APPS_TO_INSTALL}`);
-      for appname in "${ARRAY[@]}"; do
-         brew_update_app $appname $appname
-      done
-      
-      # Not specified: Jumpcut  Sketch (licensed)
-      # Exceptions:
-         # Atom has been discontinued. Use VSCode instead.
-         # Keybase (licensed) has error
-         # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
-         # Microsoft O365, download from https://www.office.com/?auth=2&home=1
-         
-         brew install --cask elgato-stream-deck  # does not create a "StreamDeck.app"
-         brew install --cask miniconda
-            # miniconda ( to '/usr/local/bin/conda') does not create a "Miniconda3.app"
-
-      # TODO: Until an array for those with different brew names than app name:
-         brew_update_app "google-chrome" "Google Chrome"
-         brew_update_app "github" "GitHub Desktop"
-         # brew_update_app "iterm2" "iTerm"
-         brew_update_app "microsoft-teams" "Microsoft Teams"
-         brew_update_app "visual-studio-code" "Visual Studio Code"
-         brew_update_app "zoom" "zoom.us"
-         #brew_update_app "tor-browser" "Tor Browser"
-
-      # TODO: Install Chrome Add-ons: $HOME/Applications/Chrome Apps.localized/Postman.app, 
-         # Docs.app, Gmail.app, Google Drive.app, Sheets.app, Slides,app, YouTube.app
-
-      h2 "-I install brew CLI utilities ..."
-      # TODO: CLI_APPS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
-      # Defined in ~/mac-setup.env :
-      # CLI_APPS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
-         # * jq manipulates JSON
-         # * yq manipulates YAML
-      ARRAY=(`echo ${CLI_APPS_TO_INSTALL}`);  # from ~/mac-setup.env
-      for brewname in "${ARRAY[@]}"; do
-         brew install $brewname
-         # NOTE: Brew updates if already installed.
-      done
-
-      # Exceptions:
-      brew install jmespath/jmespath/jp
-       # https://github.com/jmespath/jp
-      
-      # DEPRECATED: brew install docker-compose
-         # Until Jul 2023 Compose was part of Docker Desktop on Mac. However,
-            # See https://docs.docker.com/compose/install/
-         # See https://www.upwork.com/resources/how-to-install-docker-compose
-      # Verify:
-         # docker compose version
-            # Docker Compose version v2.2.3
-
-      # https://the.exa.website/
-      # Replacement for ls - see https://the.exa.website/#installation
-      # brew install exa
-
-
-      ### 18c. Define file extensions to edit using VSCode
-      # https://superuser.com/questions/273756/how-to-change-default-app-for-all-files-of-particular-file-type-through-terminal
-      brew install duti
-      if command -v duti ; then
-         FILE_EXT_BY_VSCODE=".json .md .py .sh .txt .yml .yaml .zsh" # exported from ~/mac-setup.env
-         appid=$( osascript -e 'id of app "Visual Studio Code"' )  # "com.microsoft.VSCode"
-         ARRAY=(`echo ${FILE_EXT_BY_VSCODE}`);
-         for file_ext in "${ARRAY[@]}"; do
-            echo_debug "duti -s \"$appid\" \"$file_ext\" all ..."
-            duti -s "$appid" "$file_ext" all
          done
-      fi
+
+         h2 "-I brew install/upgrade --cask into /Applications/:"
+         # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  PowerShell"
+         ARRAY=(`echo ${ROOT_APPS_TO_INSTALL}`);
+         for appname in "${ARRAY[@]}"; do
+            if [ -d "/Applications/$appname.app:?}" ]; then   # app found:
+               if [ "${UPDATE_PKGS}" = true ]; then
+                  note "-I brew reinstall --cask $appname.app within /Applications/ ..."
+                  brew uninstall --cask $appname --force
+                  brew install --cask $appname
+                     # GIMP Error: Directory not empty @ dir_s_rmdir - /private/tmp/d20230916-90678-14otypx
+               # else ignore
+               fi
+            else  # app not found:
+               note "-I brew install --cask $appname within /Applications/ ..."
+               brew install --cask $appname
+               # Freeform.app not recognized
+            fi
+         done
+
+         # For those with different brew names than app name:
+            # Anki flashcard player
+            # "GPG Keychain.app"
+            # Karabiner-Elements to "Karabiner-Elements.app"
+            # Karabiner-EventViewer to "Karabiner-EventViewer.app"
+               # https://www.youtube.com/watch?v=j4b_uQX3Vu0
+            # microsoft-edge to "Microsoft Edge.app"
+            # Microsoft Remote Desktop, 
+            # Microsoft Office, Microsoft PowerShell, Microsoft Teams, Microsoft Remote Desktop,
+         # Installed from vendor website: Keka, Adobe, Camtasia, DiffMerge, p4merge
+
+         h2 "-I install/upgrade apps using brew --cask into $HOME/Applications/:"
+         # HOME_APPS_TO_INSTALL="1Password  Docker Firefox google-cloud-sdk Hyper Macvim"
+         # Exceptions: 
+            # google-cloud-sdk does not create a "Google Cloud SDK.app"
+               # See https://snark.github.io/jumpcut/ for more cut-and-paste.
+            # hyper install stores a file in /usr/local/bin on ARM machines.
+            # No longer supported? the-unarchiver
+         # Not on my list but may be in yours: cakebrvgcew, snowflake-snowsql, geekbench, spotify, 
+            # pycharm, textmate, brave, opera, 
+         # Installed separately: 1password (1Password7.app),
+            # licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
+         brew_update_app() {
+            brewname=$1
+            appname=$2
+            if [ -d "$HOME/Applications/$appname.app:?}" ]; then   # app found:
+               if [ "${UPDATE_PKGS}" = true ]; then
+                  note "brew reinstall --cask $brewname.app within $HOME/Applications/ ..."
+                  brew uninstall --cask $brewname --force
+                  brew install --cask $brewname
+               # else ignore
+               fi
+            else  # app not found:
+               note "-I install brew --cask $brewname within $HOME/Applications/ ..."
+               brew install --cask $brewname
+            fi
+            # PROTIP: On Error: Directory not empty @ dir_s_rmdir - , sudo chown -R $(whoami) $(brew --prefix)/*
+            # Then reboot the system
+         }
+         # HOME_APPS_TO_INSTALL="1Password  Docker Firefox google-cloud-sdk Hyper Macvim"
+         ARRAY=(`echo ${HOME_APPS_TO_INSTALL}`);
+         for appname in "${ARRAY[@]}"; do
+            brew_update_app $appname $appname
+         done
+         
+         # Not specified: Jumpcut  Sketch (licensed)
+         # Exceptions:
+            # Atom has been discontinued. Use VSCode instead.
+            # Keybase (licensed) has error
+            # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
+            # Microsoft O365, download from https://www.office.com/?auth=2&home=1
+            
+            brew install --cask elgato-stream-deck  # does not create a "StreamDeck.app"
+            brew install --cask miniconda
+               # miniconda ( to '/usr/local/bin/conda') does not create a "Miniconda3.app"
+
+         # TODO: Until an array for those with different brew names than app name:
+            brew_update_app "google-chrome" "Google Chrome"
+            brew_update_app "github" "GitHub Desktop"
+            # brew_update_app "iterm2" "iTerm"
+            brew_update_app "microsoft-teams" "Microsoft Teams"
+            brew_update_app "visual-studio-code" "Visual Studio Code"
+            brew_update_app "zoom" "zoom.us"
+            brew_update_app "sublime-text" "Sublime Text"
+            #brew_update_app "tor-browser" "Tor Browser"
+
+         # TODO: Install Chrome Add-ons: $HOME/Applications/Chrome Apps.localized/Postman.app, 
+            # Docs.app, Gmail.app, Google Drive.app, Sheets.app, Slides,app, YouTube.app
+
+         h2 "-I install brew CLI utilities ..."
+         # TODO: CLI_APPS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
+         # Defined in ~/mac-setup.env :
+         # CLI_APPS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
+            # * jq manipulates JSON
+            # * yq manipulates YAML
+         ARRAY=(`echo ${CLI_APPS_TO_INSTALL}`);  # from ~/mac-setup.env
+         for brewname in "${ARRAY[@]}"; do
+            brew install $brewname
+            # NOTE: Brew updates if already installed.
+         done
+
+         # Exceptions:
+         brew install jmespath/jmespath/jp
+         # https://github.com/jmespath/jp
+         
+         # DEPRECATED: brew install docker-compose
+            # Until Jul 2023 Compose was part of Docker Desktop on Mac. However,
+               # See https://docs.docker.com/compose/install/
+            # See https://www.upwork.com/resources/how-to-install-docker-compose
+         # Verify:
+            # docker compose version
+               # Docker Compose version v2.2.3
+
+         # https://the.exa.website/
+         # Replacement for ls - see https://the.exa.website/#installation
+         # brew install exa
 
 
-     #https://www.hashicorp.com/blog/announcing-hashicorp-homebrew-tap referencing https://github.com/hashicorp/homebrew-tap
-      if [ "${USE_VAULT}" = true ]; then   # -HV
-         brew install hashicorp/tap/vault
-         which vault
-      fi
+         ### 18c. Define file extensions to edit using VSCode
+         # https://superuser.com/questions/273756/how-to-change-default-app-for-all-files-of-particular-file-type-through-terminal
+         brew install duti
+         if command -v duti ; then
+            FILE_EXT_BY_VSCODE=".json .md .py .sh .txt .yml .yaml .zsh" # exported from ~/mac-setup.env
+            appid=$( osascript -e 'id of app "Visual Studio Code"' )  # "com.microsoft.VSCode"
+            ARRAY=(`echo ${FILE_EXT_BY_VSCODE}`);
+            for file_ext in "${ARRAY[@]}"; do
+               echo_debug "duti -s \"$appid\" \"$file_ext\" all ..."
+               duti -s "$appid" "$file_ext" all
+            done
+         fi
 
-      if [ "${USE_PACKER}" = true ]; then   # -HP
-         brew install hashicorp/tap/packer
-         which packer
-         packer --version
-      fi
 
-      if [ "${RUN_CONSUL}" = true ]; then  # -tf
-         brew install hashicorp/tap/consul
-         which consul   # /usr/local/bin/consul
-         brew install hashicorp/tap/envconsul
-         which envconsul
-      fi
+      #https://www.hashicorp.com/blog/announcing-hashicorp-homebrew-tap referencing https://github.com/hashicorp/homebrew-tap
+         if [ "${USE_VAULT}" = true ]; then   # -HV
+            brew install hashicorp/tap/vault
+            which vault
+         fi
 
-      if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
-         h2 "brew install latest Terraform with tfenv ..."
-         brew install tfenv
-         # NO brew install hashicorp/tap/terraform
-         brew install tfenv      
-         tfenv install latest
-            # https://releases.hashicorp.com/terraform/
-         TF_VERSION=$( tfenv version-name )
-            # Terraform v1.5.7
-         note "TF_VERSION=$TF_VERSION"
-         tfenv use "${TF_VERSION}"
+         if [ "${USE_PACKER}" = true ]; then   # -HP
+            brew install hashicorp/tap/packer
+            which packer
+            packer --version
+         fi
 
-         which terraform
-            # On Apple Silicon: /opt/homebrew/bin//terraform
-            # On Intel: /usr/local/bin/terraform
+         if [ "${RUN_CONSUL}" = true ]; then  # -tf
+            brew install hashicorp/tap/consul
+            which consul   # /usr/local/bin/consul
+            brew install hashicorp/tap/envconsul
+            which envconsul
+         fi
 
-         brew install terraform-docs
-         brew install tfsec
-         brew install tflint
-         brew install terragrunt
-         brew install terrascan
+         if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
+            h2 "brew install latest Terraform with tfenv ..."
+            brew install tfenv
+            # NO brew install hashicorp/tap/terraform
+            brew install tfenv      
+            tfenv install latest
+               # https://releases.hashicorp.com/terraform/
+            TF_VERSION=$( tfenv version-name )
+               # Terraform v1.5.7
+            note "TF_VERSION=$TF_VERSION"
+            tfenv use "${TF_VERSION}"
 
-         # brew install hashicorp/tap/sentinel
-         # which sentinel
-      fi
+            which terraform
+               # On Apple Silicon: /opt/homebrew/bin//terraform
+               # On Intel: /usr/local/bin/terraform
 
-      h2 "brew install HashiCorp Consul:"
-      if [ "${RUN_CONSUL}" = true ]; then  # -tf
-         brew install hashicorp/tap/consul-k8s
-         which consul-k8s
-         # https://learning.oreilly.com/library/view/consul-up-and/9781098106133/ch03.html
-         # minikube tunnel
-         # y  consul-k8s install -config-file values.yaml
-            #  --> Service does not have load balancer ingress IP address: consul/consul-ui
-         #  Cannot install Consul. A Consul cluster is already installed in namespace consul with name consul.
-         #Use the command `consul-k8s uninstall` to uninstall Consul from the cluster.
-         # consul status
-            #    NAME  | NAMESPACE |     STATUS      | CHART VERSION | APPVERSION | REVISION |      LAST UPDATED        
-            # ---------+-----------+-----------------+---------------+------------+----------+--------------------------
-            # consul | consul    | pending-install | 0.44.0        | 1.12.0     |        1 | 2022/06/05 17:47:57 MDT  
-            # ✓ Consul servers healthy (1/1)
-            # ✓ Consul clients healthy (1/1)
-         # kubectl get daemonset,statefulset,deployment -n consul
-      fi
-     
-      if [ "${RUN_NOMAD}" = true ]; then  # -tf
-         brew install hashicorp/tap/nomad
-         #brew install hashicorp/tap/packer
-         which nomad
-      fi
+            brew install terraform-docs
+            brew install tfsec
+            brew install tflint
+            brew install terragrunt
+            brew install terrascan
 
-      # brew install --cask iterm2   # for use by .oh-my-zsh
-      # Path to your oh-my-zsh installation:
-      # export ZSH="$HOME/.oh-my-zsh"
-      #if [ ! -d "$ZSH" ]; then # install:
-      #   note "Creating ~/.oh-my-zsh and installing based on https://ohmyz.sh/ (NO brew install)"
-      #   mkdir -p "${ZSH}"
-      #   sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-      #else
-         #if [ "${UPDATE_PKGS}" = true ]; then
-            # upgrade_oh_my_zsh   # function.
+            # brew install hashicorp/tap/sentinel
+            # which sentinel
+         fi
+
+         h2 "brew install HashiCorp Consul:"
+         if [ "${RUN_CONSUL}" = true ]; then  # -tf
+            brew install hashicorp/tap/consul-k8s
+            which consul-k8s
+            # https://learning.oreilly.com/library/view/consul-up-and/9781098106133/ch03.html
+            # minikube tunnel
+            # y  consul-k8s install -config-file values.yaml
+               #  --> Service does not have load balancer ingress IP address: consul/consul-ui
+            #  Cannot install Consul. A Consul cluster is already installed in namespace consul with name consul.
+            #Use the command `consul-k8s uninstall` to uninstall Consul from the cluster.
+            # consul status
+               #    NAME  | NAMESPACE |     STATUS      | CHART VERSION | APPVERSION | REVISION |      LAST UPDATED        
+               # ---------+-----------+-----------------+---------------+------------+----------+--------------------------
+               # consul | consul    | pending-install | 0.44.0        | 1.12.0     |        1 | 2022/06/05 17:47:57 MDT  
+               # ✓ Consul servers healthy (1/1)
+               # ✓ Consul clients healthy (1/1)
+            # kubectl get daemonset,statefulset,deployment -n consul
+         fi
+      
+         if [ "${RUN_NOMAD}" = true ]; then  # -tf
+            brew install hashicorp/tap/nomad
+            #brew install hashicorp/tap/packer
+            which nomad
+         fi
+
+         # brew install --cask iterm2   # for use by .oh-my-zsh
+         # Path to your oh-my-zsh installation:
+         # export ZSH="$HOME/.oh-my-zsh"
+         #if [ ! -d "$ZSH" ]; then # install:
+         #   note "Creating ~/.oh-my-zsh and installing based on https://ohmyz.sh/ (NO brew install)"
+         #   mkdir -p "${ZSH}"
+         #   sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+         #else
+            #if [ "${UPDATE_PKGS}" = true ]; then
+               # upgrade_oh_my_zsh   # function.
+            #fi
          #fi
-      #fi
 
-      zsh --version  # Check the installed version
-      # Custom theme from : git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
-      # ZSH_THEME="powerlevel9k/powerlevel9k"
-      # source ~/.zhrc  # source $ZSH/oh-my-zsh.sh
+         zsh --version  # Check the installed version
+         # Custom theme from : git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
+         # ZSH_THEME="powerlevel9k/powerlevel9k"
+         # source ~/.zhrc  # source $ZSH/oh-my-zsh.sh
 
-   fi  # PACKAGE_MANAGER
-
-fi  # DOWNLOAD_INSTALL
+      fi  # PACKAGE_MANAGER
+   fi  # DOWNLOAD_INSTALL
 fi  # RUN_UTILS
+
+
+echo "DEBUG OUT OF INSTALL"
 
 
 ### 19. Install VSCode extensions
@@ -1949,7 +1958,10 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       # Dock (icon) Size: "smallish"
       defaults write com.apple.dock tilesize -int 36;
 
-      # Position (Dock) on screen: Right
+      # (Dock) Size (small to large, default 3)
+      defaults write com.apple.dock iconsize -integer 3
+
+      # (Dock) Position on screen: left, right, or bottom (the default):
       defaults write com.apple.dock orientation right; 
 
       # Automatically hide and show the Dock:
@@ -1959,7 +1971,7 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       defaults write com.apple.dock autohide -bool true; 
       defaults write com.apple.dock autohide-time-modifier -float 0;
 
-      # remove icons in Dock
+      # remove icons in Dock:
       defaults write com.apple.dock persistent-apps -array; 
 
       # Show active apps in Dock as translucent:
@@ -1979,18 +1991,18 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       # Show ~/Library hidden by default:
       chflags hidden ~/Library
 
+   # Explained in https://wilsonmar.github.io/dotfiles/#Mouse
+      RESULT=$( defaults read -g com.apple.mouse.scaling )
+   note "Mouse Tracking speed: ${RESULT} (default is 3 in GUI) fastest 5.0"
+      defaults write -g com.apple.mouse.scaling 5.0
+
    # Explained in https://wilsonmar.github.io/dotfiles/#Trackpad
-      # Tracking speed: (default is 1.5 in GUI)
-      defaults read -g com.apple.trackpad.scaling
-      # Tracking speed: maximum 5.0
-      defaults write -g com.apple.trackpad.scaling 5.0
+      RESULT=$( defaults read -g com.apple.trackpad.scaling )
+   note "Trackpad Tracking speed: ${RESULT} (default is 1.5 in GUI) fastest 5.0"
+      defaults write -g com.apple.trackpad.scaling 3.0
       # FIX: Output: 5.0\013
 
-   # Explained in https://wilsonmar.github.io/dotfiles/#Mouse
-      # Tracking speed: (default is 3 in GUI)
-      defaults read -g com.apple.mouse.scaling
-      # Tracking speed: maximum 5.0
-      defaults write -g com.apple.mouse.scaling 5.0
+   # Tap to click: there is always a delay (between 1/4 - 3/4 second) before a tap actually does anything."3
 
    # See https://www.youtube.com/watch?v=8fFNVlpM-Tw
    # Changing the login screen image on Monterey.
@@ -2001,6 +2013,8 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
     # Mute Startup Sound - just before logout, and restores the previous volume just after login. 
    sudo defaults write com.apple.loginwindow LogoutHook "osascript -e 'set volume with output muted'"
    sudo defaults write com.apple.loginwindow LoginHook "osascript -e 'set volume without output muted'"
+
+   # Set Printers & Scanners. 
 
 fi  # SET_MACOS_SYSPREFS
 
@@ -2170,7 +2184,7 @@ if [ "${USE_ENVOY}" = true ]; then  # -Envoy
          export FUNC_E_PLATFORM="darwin/amd64"
       fi
       if ! command -v func-e >/dev/null; then  # command not found, so:
-         curl -L https://func-e.io/install.sh | bash -s -- -b /usr/local/bin
+         curl -L https://func-e.io/install.sh | bash -s -- -b "${BREW_PATH}"
       else  # installed already:
          if [ "${UPDATE_PKGS}" = true ]; then
             h2 "Brew upgrade func-e ..."
@@ -2333,10 +2347,10 @@ Identify_GITHUB_REPO_URL(){
    else  # GITHUB_REPO_URL not specified in parms
       note "-gru GITHUB_REPO_URL not specified in parms ..."
       # Build target path from one or the other variables?
-      if [ -n "${GITHUB_ACCOUNT_NAME}" ]; then   # NOT specified in parms
-         info "-gan (GITHUB_ACCOUNT_NAME) = \"${GITHUB_ACCOUNT_NAME}\"  ..."
+      if [ -n "${GITHUB_USER_ACCOUNT}" ]; then   # NOT specified in parms
+         info "-gan (GITHUB_USER_ACCOUNT) = \"${GITHUB_USER_ACCOUNT}\"  ..."
       else
-         fatal "-gan GITHUB_ACCOUNT_NAME not specified to clone ..."
+         fatal "-gan GITHUB_USER_ACCOUNT not specified to clone ..."
          exit 9
       fi
       if [ -z "${GITHUB_FOLDER_NAME}" ]; then   # NOT specified in parms
@@ -2344,9 +2358,9 @@ Identify_GITHUB_REPO_URL(){
          exit 9
       else
          if [ "${USE_GITHUB_SSH}" = true ]; then   # -ssh specified:
-            GITHUB_REPO_URL="git@github.com:${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
+            GITHUB_REPO_URL="git@github.com:${GITHUB_USER_ACCOUNT}/${GITHUB_FOLDER_NAME}.git"
          else
-            GITHUB_REPO_URL="https://github.com/${GITHUB_ACCOUNT_NAME}/${GITHUB_FOLDER_NAME}.git"
+            GITHUB_REPO_URL="https://github.com/${GITHUB_USER_ACCOUNT}/${GITHUB_FOLDER_NAME}.git"
          fi
          info "-gru GITHUB_REPO_URL=$GITHUB_REPO_URL"
       fi
@@ -2359,23 +2373,31 @@ Identify_GITHUB_REPO_URL(){
 }  # Identify_GITHUB_REPO_URL
 
 
-### 26. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
+
+### 26a. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
 
 Clone_into_GITHUB_OR_PROJECT(){
 
-   if [ ! -d "${GITHUB_FOLDER_BASE:?}" ]; then  # path NOT available
-      if [ -z "${GITHUB_FOLDER_BASE+x}" ]; then   # not specified in mac-setup.env
-         export GITHUB_FOLDER_BASE="$HOME/github-wilsonmar"
-         h2 "-gfb GITHUB_FOLDER_BASE not specified. Creating hard-coded ${GITHUB_FOLDER_BASE}..."
-         cd \
-         mkdir "${GITHUB_FOLDER_BASE}"
-         ls -ltaT "${GITHUB_FOLDER_BASE}"
-      fi
+   if [ -z "${GITHUB_FOLDER_BASE+x}" ]; then   # not specified in mac-setup.env
+      export GITHUB_FOLDER_BASE="$HOME/github-wilsonmar"
+      h2 "-gfb GITHUB_FOLDER_BASE not defined. Using hard-coded ${GITHUB_FOLDER_BASE}..."
    fi
 
+   if [ ! -d "${GITHUB_FOLDER_BASE}" ]; then  # path NOT available
+      h2 "-gfb GITHUB_FOLDER_BASE not found. Creating hard-coded ${GITHUB_FOLDER_BASE}..."
+      cd
+      mkdir "${GITHUB_FOLDER_BASE}"
+
+      # Add config file for github
+      if [ ! -f "${GITHUB_FOLDER_BASE}/config" ]; then  # NOT available
+         # Create file "config":
+         echo "[user]\nemail = ${GITHUB_USER_NAME}\nname = ${GITHUB_USER_EMAIL}" > config
+      fi
+      ls -ltaT "${GITHUB_FOLDER_BASE}/config"
+   fi
 
    if [ -z "${GITHUB_FOLDER_NAME+x}" ]; then    # -gfn NOT specified 
-      note "-gfn (GITHUB_FOLDER_NAME) not specified in parms ..."      
+      note "-gfn GITHUB_FOLDER_NAME not specified in parms ..."      
       if [ -z "${PROJECT_FOLDER_NAME}" ]; then   # -pfn not specified 
          note "-pfn (PROJECT_FOLDER_NAME) not specified in parms also ..."
          # fall through. return 1  # this function
@@ -2389,7 +2411,7 @@ Clone_into_GITHUB_OR_PROJECT(){
          return 1  # this function
       else
          if [ ! -d "${GITHUB_FOLDER_BASE:?}" ]; then  # path NOT available
-            fatal "GITHUB_FOLDER_BASE not found. Exiting ..."
+            fatal "-gfb GITHUB_FOLDER_BASE folder not found. Exiting ..."
             return 1  # this function
          fi
       fi
@@ -2405,22 +2427,22 @@ Clone_into_GITHUB_OR_PROJECT(){
       if [ "${CLONE_GITHUB}" = true ]; then  # -c
          Identify_GITHUB_REPO_URL  # function defined above
          if [ -z "${GITHUB_REPO_URL}" ]; then   # not specified in mac-setup.env
-            warning "-gru (GITHUB_REPO_URL) not identified for cloning ..."
+            note "-gru (GITHUB_REPO_URL) not identified for cloning ..."
             return 1
          else
             note "-gru GITHUB_REPO_URL=$GITHUB_REPO_URL identified for cloning ..."
             if [ -d "${GITHUB_FOLDER_PATH:?}" ]; then  # found
-               warning "-gfn GITHUB_FOLDER_PATH=$GITHUB_FOLDER_PATH already exists ..."
+               note "-gfn GITHUB_FOLDER_PATH=$GITHUB_FOLDER_PATH already exists ..."
             else
                if [ -z "${GITHUB_FOLDER_BASE}" ]; then   # not specified in mac-setup.env
-                  warning "-gfb GITHUB_FOLDER_BASE not identified for cloning ..."
+                  note "-gfb GITHUB_FOLDER_BASE not identified for cloning ..."
                   return 1
                else
                   note "cd to GITHUB_FOLDER_BASE=$GITHUB_FOLDER_BASE ..."
-                  cd /
+                  cd
                   cd "${GITHUB_FOLDER_BASE}"
                   if [ -d "${GITHUB_FOLDER_NAME:?}" ]; then  # found
-                     warning "-gfn GITHUB_FOLDER_NAME=$GITHUB_FOLDER_NAME already exists ..."
+                     note "-gfn GITHUB_FOLDER_NAME=$GITHUB_FOLDER_NAME already exists ..."
                   else
                      #if [ "${CLONE_GITHUB}" = true ]; then
                      git clone "${GITHUB_REPO_URL}" "${GITHUB_FOLDER_NAME}"
@@ -2442,7 +2464,7 @@ Clone_into_GITHUB_OR_PROJECT(){
    fi
 
 
-   ### 27. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
+   ### 27b. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
 
@@ -2515,7 +2537,86 @@ Clone_into_GITHUB_OR_PROJECT(){
 }
 Clone_into_GITHUB_OR_PROJECT
 
-echo "DEBUG AFTER CLONE"
+
+### 27c. Configure Github cert
+
+Config_GITHUB_SSH(){
+
+   # See https://wilsonmar.github.io/mac-setup/#ConfigGithubSSH
+
+   if [ ! -d "$HOME/.ssh" ]; then  # folder NOT available:
+      note "Folder \"$HOME/.ssh\" not found. Making it..."
+      mkdir -p "$HOME/.ssh"
+   fi
+
+   # Create name such as id_rsa+2404092317
+   if [ -z "${LOCAL_SSH_KEYFILE+x}" ]; then   #  not specified 
+      LOCAL_SSH_KEYFILE="${GITHUB_USER_ACCOUNT}_ed25519"+$(date +"%y%m%dT%H%M")
+      note "LOCAL_SSH_KEYFILE not specified. Created: $LOCAL_SSH_KEYFILE"
+   fi
+
+   if [ -f "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" ]; then  # folder available:
+      info "Using existing SSH key pair \"$HOME/.ssh/${LOCAL_SSH_KEYFILE}\" "
+   else
+      h2 "ssh-keygen -t rsa -f \"${LOCAL_SSH_KEYFILE}\" -C \"${GITHUB_USER_ACCOUNT}\" ..."
+      pushd "$HOME/.ssh"
+      ssh-keygen -t ed25519 -f "$LOCAL_SSH_KEYFILE" -C "${GITHUB_USER_ACCOUNT}" -N ""      
+      info "$( ls -ltaT "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" )"
+      ssh-add "$HOME/.ssh/${LOCAL_SSH_KEYFILE}"
+      pbcopy < "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub"
+         # cat "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub" | pbcopy
+
+      # To avoid "This key is not known by any other names" error
+      ssh-keyscan -H github.com >> "$HOME/.ssh/known_hosts"
+      popd
+
+      git config --global user.signingkey "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub"
+      git config --global gpg.format ssh
+
+      if [ ! -f "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" ]; then  # Create file:
+         echo "Host github.com\n  AddKeysToAgent yes\n  UseKeychain yes" > "$HOME/.ssh/config"
+      fi
+         echo "IdentityFile=$HOME/.ssh/${LOCAL_SSH_KEYFILE}" >> "$HOME/.ssh/config"
+      cat "$HOME/.gitconfig"
+          # signingkey = /Users/johndoe/.ssh/wilsonmar_ed25519+2404111333.pub
+          # [gpg]
+	       #    format = ssh
+
+      echo "Please open browser to your GitHub account \"$GITHUB_USER_ACCOUNT\" Settings \"SSH and GPG keys\" this public key content ..."
+      warning "$( cat $HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub )"
+      exit 1
+   fi
+}
+Config_GITHUB_SSH
+
+
+### 27d. Configure Github cert
+
+Config_GITHUB_GPG(){
+
+   # This is so GitHub mark your commits as "Verified" since they are signed with your GPG key.
+   # See https://wilsonmar.github.io/mac-setup/#ConfigGithubGPG
+   h2 "Config_GITHUB_GPG"
+
+   brew install gnupg2
+   if command -v gnupg2 ; then
+      note "gpg --full-generate-key"
+      gpg --full-generate-key
+   fi
+
+   # Store the GPG key password in the macOS Keychain:
+   if [ ! -f "$HOME/.gnupg/gpg-agent.conf" ]; then  # folder available:
+      fatal "/.gnupg/gpg-agent.conf not found. Exiting..."
+      exit 9
+   else
+      brew install pinentry-mac
+      if command -v pinentry-mac ; then
+         echo "pinentry-program ${BREW_PATH}/pinentry-mac" >> ~/.gnupg/gpg-agent.conf
+         gpgconf --kill gpg-agent
+      fi
+   fi
+}
+# Config_GITHUB_GPG
 
 
 ### 28. git checkout git branch if -ghb was specified
@@ -2544,8 +2645,6 @@ else  # GITHUB_BRANCH defined:
    fi
 fi  # GITHUB_BRANCH
 
-echo "DEBUG AFTER branch"
-
 
 
 ### 29. Curl file URL
@@ -2553,7 +2652,7 @@ echo "DEBUG AFTER branch"
 # ./mac-setup.zsh -pfn "work" -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.11/gatewayd-darwin-amd64-v0.8.11.tar.gz" -v
 
 if [ -z "$URL_TO_DOWNLOAD" ]; then  # -url not specified
-   note "-url \"$URL_TO_DOWNLOAD\" not specified in parms..."
+   note "-url \"$URL_TO_DOWNLOAD\" not specified in parms for curl..."
 else
    if [ -f "$URL_TO_DOWNLOAD" ]; then  # -url already exists
       note "-url \"$URL_TO_DOWNLOAD\" already exists ..."
@@ -2575,7 +2674,7 @@ fi
 ### 29. GatewayD
 
 if [ -z "$URL_TO_DOWNLOAD" ]; then  # -url not specified
-   note "-url \"$URL_TO_DOWNLOAD\" not specified in parms..."
+   note "-url \"$URL_TO_DOWNLOAD\" not specified in parms for GatewayD..."
 else
    if [ -f "$URL_TO_DOWNLOAD" ]; then  # -url already exists
       note "-url \"$URL_TO_DOWNLOAD\" already exists ..."
@@ -3790,7 +3889,7 @@ if [ "${USE_CIRCLECI}" = true ]; then   # -L
       else
          if [ "${UPDATE_PKGS}" = true ]; then
             h2 "Removing and installing circleci ..."
-            rm -rf "/usr/local/bin/circleci"
+            rm -rf "${BREW_PATH}/circleci"
             curl -fLSs https://circle.ci/cli | bash
          fi
       fi
@@ -3983,9 +4082,9 @@ if [ USE_ALWAYS = true ]; then
       fi
       
       # STEP: Call Vault to sign public key and return it as a cert:
-      h2 "Signing user ${GITHUB_ACCOUNT_NAME} public key file ${LOCAL_SSH_KEYFILE} ..."
-      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT_NAME}" \
-         -O "extension:login@github.com=${GITHUB_ACCOUNT_NAME}" "${LOCAL_SSH_KEYFILE}.pub"
+      h2 "Signing user ${GITHUB_USER_ACCOUNT} public key file ${LOCAL_SSH_KEYFILE} ..."
+      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_USER_ACCOUNT}" \
+         -O "extension:login@github.com=${GITHUB_USER_ACCOUNT}" "${LOCAL_SSH_KEYFILE}.pub"
          # RESPONSE: Signed user key test-ssh-cert.pub: id "wilson-mar" serial 0 valid forever
 
       SSH_CERT_PUB_KEYFILE="${LOCAL_SSH_KEYFILE}-cert.pub"
@@ -4003,9 +4102,9 @@ if [ USE_ALWAYS = true ]; then
    fi  # USE_VAULT
 
    if [ "${USE_VAULT}" = false ]; then   # -HV
-      h2 "Use GitHub extension to sign user public key with 1d Validity for ${GITHUB_ACCOUNT_NAME} ..."
-      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_ACCOUNT_NAME}" \
-         -O "extension:login@github.com=${GITHUB_ACCOUNT_NAME}" -V '+1d' "${LOCAL_SSH_KEYFILE}.pub"
+      h2 "Use GitHub extension to sign user public key with 1d Validity for ${GITHUB_USER_ACCOUNT} ..."
+      ssh-keygen -s "${VAULT_CA_KEY_FULLPATH}" -I "${GITHUB_USER_ACCOUNT}" \
+         -O "extension:login@github.com=${GITHUB_USER_ACCOUNT}" -V '+1d' "${LOCAL_SSH_KEYFILE}.pub"
          # 1m = 1minute, 1d = 1day
          # -n user1 user1.pub
          # RESPONSE: Signed user key test-ssh-cert.pub: id "wilsonmar" serial 0 valid from 2020-05-23T12:59:00 to 2020-05-24T13:00:46

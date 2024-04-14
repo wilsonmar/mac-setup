@@ -223,13 +223,14 @@ if [[ "$(uname)" == *"Darwin"* ]]; then  # it's on a Mac:
    # echo "Adding functions for Mac ..."
    # TODO: https://www.phillip-kruger.com/post/some_bash_functions_for_git/
    alias vers="sw_vers"
-   function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
+   function gas() { git status ;  git add . -A ; git commit -S -m "$1" ; git push; }
    function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
    function gsp() { git stash pop; }
    function gd() { # get dirty
      [[ $(git status 2> /dev/null | tail -n1) != *"working directory clean"* ]] && echo "*"
    }
 fi
+alias gc='git commit -S -m --quiet' # requires you to type a Signed commit message
 alias ga='git add . -A'  # --patch
 alias gb='git branch -avv'
 # TODO: Add date/time to update text:
@@ -239,7 +240,6 @@ alias gds="git diff --staged"
 alias get='git fetch;' # git pull + merge
 alias gf='git fetch origin master;git diff master..origin/master'
 alias gfu='git fetch upstream;git diff HEAD @{u} --name-only'
-alias gc='git commit -S -m --quiet' # requires you to type a Signed commit message
 alias gcm='git checkout master'
 alias githead="git rev-parse --short HEAD"  # current SHA commit ID
 alias gl='git log --pretty=format:"%h %s %ad" --graph --since=1.days --date=relative;git log --show-signature -n 1'

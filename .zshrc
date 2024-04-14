@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# gas "v0.27 # Add /opt/homebrew/bin for Apple Silicon ARM chips :.zshrc"
+# gas "v0.28 # fix brew complete ; Add /opt/homebrew/bin for Apple Silicon ARM chips :.zshrc"
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
 # This is explained in https://wilsonmar.github.io/zsh
 # This file is not provided by macOS by default.
@@ -27,6 +27,8 @@ export PATH="/opt/homebrew/bin;/usr/local/bin:/usr/local/opt:/usr/local/sbin:/bi
    # /usr/sbin contains macOS chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.
    # /sbin contains macOS fsck, mount, etc.
 
+export PATH="$HOME/.ssh:${PATH}"  # for SSH keys & certs.
+
 # Where Apple puts *.app program folders that come with macOS (usually invoked manually by user):
 export PATH="/Applications:$HOME/Applications:$HOME/Applications/Utilities:${PATH}"  # for apps
 
@@ -40,10 +42,6 @@ fi
 
 #### See https://wilsonmar.github.io/homebrew
 
-# Provide a separate folder to install additional apps:
-export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
-#export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
-
 echo "Apple macOS sw_vers = $(sw_vers -productVersion) / uname = $(uname -r)"  # sw_vers: 10.15.1 / uname = 21.4.0
    # See https://eclecticlight.co/2020/08/13/macos-version-numbering-isnt-so-simple/
    # See https://scriptingosx.com/2020/09/macos-version-big-sur-update/
@@ -53,17 +51,25 @@ if [[ "$(uname -m)" = *"arm64"* ]]; then
    # used by .zshrc instead of .bash_profile
    # On Apple M1 Monterey: /opt/homebrew/bin is where Zsh looks (instead of /usr/local/bin):
    export BREW_PATH="/opt/homebrew"
-   complete "${BREW_PATH}/share/zsh/site-functions"  # auto-completions in .bashrc
    eval $( "${BREW_PATH}/bin/brew" shellenv)
    # Password will be requested here.
 
 elif [[ "$(uname -m)" = *"x86_64"* ]]; then
    export BREW_PATH="/usr/local/bin"
    # used by .bashrc and .bash_profile
-
 fi
 
-echo "BREW_PATH=$BREW_PATH"
+# Provide a separate folder to install additional apps:
+export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
+#export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
+
+if ! command -v complete >/dev/null; then
+   echo "brew complete NOT installed for BREW_PATH=$BREW_PATH to $HOMEBREW_CASK_OPTS"
+else
+   echo "brew complete for BREW_PATH=$BREW_PATH to $HOMEBREW_CASK_OPTS"
+   complete "${BREW_PATH}/share/zsh/site-functions"  # auto-completions in .bashrc
+fi
+
 # Add to beginning of $PATH:
 export PATH="$BREW_PATH/bin/:$BREW_PATH/bin/share/:${PATH}"
    # /opt/homebrew/ contains folders bin, Cellar, Caskroom, completions, lib, opt, sbin, var, etc.
