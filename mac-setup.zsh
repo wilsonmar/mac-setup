@@ -13,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.198" # GITHUB SSH compaudit :mac-setup.zsh"
+SCRIPT_VERSION="v1.199" # unnatural scrolling :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -1995,6 +1995,9 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       RESULT=$( defaults read -g com.apple.mouse.scaling )
    note "Mouse Tracking speed: ${RESULT} (default is 3 in GUI) fastest 5.0"
       defaults write -g com.apple.mouse.scaling 5.0
+
+   note "Mouse Un-natural scrolling like Windows (toward direction) ..."
+      defaults write NSGlobalDomain com.apple.swipescrolldirection -bool FALSE
 
    # Explained in https://wilsonmar.github.io/dotfiles/#Trackpad
       RESULT=$( defaults read -g com.apple.trackpad.scaling )
