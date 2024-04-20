@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 # This is ~/aliases.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.zsh
+# gas "v23 akeyless to all :aliases.zsh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -223,7 +224,7 @@ if [[ "$(uname)" == *"Darwin"* ]]; then  # it's on a Mac:
    # echo "Adding functions for Mac ..."
    # TODO: https://www.phillip-kruger.com/post/some_bash_functions_for_git/
    alias vers="sw_vers"
-   function gas() { git status ;  git add . -A ; git commit -S -m "$1" ; git push; }
+   function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
    function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
    function gsp() { git stash pop; }
    function gd() { # get dirty

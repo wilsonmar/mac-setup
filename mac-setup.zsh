@@ -13,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.199" # unnatural scrolling :mac-setup.zsh"
+SCRIPT_VERSION="v1.202 keyless; kraftkit; fix ssh :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -124,6 +124,7 @@ args_prompt() {
    echo "   -dc             use docker-compose.yml file"
    echo "   -w              write image to DockerHub"
    echo "   -k8s            Kubernetes minikube & OpenShift CLI"
+   echo "   -kraft \"\"     kraftkit metro"
    echo "   -r              restart (Docker) before run"
    echo " "
    echo "   -aiac \"ec2\"     AI to create Terraform Infra as Code"
@@ -147,9 +148,8 @@ args_prompt() {
 ### 03. Usage Examples
 usage_examples() {
    echo "# USAGE EXAMPLES:"
-   echo "./mac-setup.zsh -init -v # to download mac-setup.env into \$HOME folder ${HOME}"
-   echo "./mac-setup.zsh -init -gfb \"~/github-wilsonmar\" -v  # create GITHUB_FOLDER_BASE"
-   echo "chmod +x mac-setup.zsh   # change permissions"
+   echo "./mac-setup.zsh -init -v # to download .env & aliases into \$HOME folder ${HOME}"
+   echo "./mac-setup.zsh -init -gfb \"~/github-wilsonmar\" -ssh -v  # create GITHUB_FOLDER_BASE"
    echo " "
    echo "./mac-setup.zsh -I -U -utils -v  # install or update utilities spec'd in .env file"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
@@ -184,6 +184,7 @@ usage_examples() {
    echo "./mac-setup.zsh -gatewayd \"filename.gz\"-pfn \"work\" -DB -v"
    echo "./mac-setup.zsh -down -url \"https://.../.../filename.gz\" -v"
    echo "./mac-setup.zsh -sha -pfn \"work\" -f \"filename.gz\" -unzip  -hash \"...\" -of \"gatewayd\" -v"
+   echo "./mac-setup.zsh -kraft \"fra0\" -v"
 } # usage_examples()
 
 
@@ -263,7 +264,7 @@ info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
    ENV_FOLDERPATH=""              # -envf "$HOME" or alt-folder (away from GitHub)
 
    RUN_VSCODE=false               # -VSC
-   VSCODE_EXT_FILE="vscode-ext.txt"  # "file" override in .env to Install/Upgrade VSCode extensions from/to file"
+   # ///="vscode-ext.txt"  # "file" override in .env to Install/Upgrade VSCode extensions from/to file"
   
    CONVERT_TO_ZSH=false           # -zsh
    URL_TO_DOWNLOAD=""             # -url "https://.../.../filename.gz"
@@ -374,6 +375,8 @@ SECRETS_FILE=".secrets.env.sample"
    USE_DOCSIFY=false            # -docsify
    USE_CHEZMOI=false            # -chezmoi
    USE_K8S=false                # -k8s
+   USE_KRAFTKIT=false           # -kraft 
+   KRAFTKIT_METRO=""            # -kraft "fra0"
    RUN_EKS=false                # -eks
        EKS_CRED_IS_LOCAL=true
 
@@ -691,6 +694,13 @@ while test $# -gt 0; do
       export USE_K8S=true
       shift
       ;;
+    -kraft*)
+      shift
+      export KRAFTKIT_METRO=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+         # See Available metros at https://docs.kraft.cloud/metros/
+      export USE_KRAFTKIT=true
+      shift
+      ;;
     -K)
       export KEEP_PROCESSES=true
       shift
@@ -965,11 +975,10 @@ fi
 
 ### 09. Show Operating environment information
 
-set Continue on Error and Trace
-
 # See https://wilsonmar.github.io/mac-setup/#StrictMode
 if [ "${CONTINUE_ON_ERR}" = true ]; then  # -cont
    warning "Set to continue despite error ..."
+   export CONTINUE_ON_ERR=true
 else
    note "Set -e (error stops execution) ..."
    set -e  # exits script when a command fails
@@ -978,6 +987,9 @@ fi
 if [ "${SET_TRACE}" = true ]; then
    h2 "Set -x ..."
    set -x  # (-o xtrace) to show commands for specific issues.
+   export DEBUG=TRUE
+else
+   export DEBUG=FALSE
 fi
 # set -o nounset
 
@@ -1110,6 +1122,7 @@ fi
 # https://github.com/pacoorozco/dotfiles/tree/main/backup-toolj
 
 
+
 ### 13. Read & download .env variables
 
 # See https://wilsonmar.github.io/mac-setup/#LoadConfigFile
@@ -1120,36 +1133,32 @@ download_setup(){
 # See https://wilsonmar.github.io/mac-setup/#Load_Env_files
 
    if [ -z "${ENV_FOLDERPATH}" ]; then   # not specified in parms
-      export ENV_FOLDERPATH="$HOME"              # -envf "$HOME" or alt-folder (away from GitHub)
+      export ENV_FOLDERPATH="$HOME"  # -envf "$HOME" or alt-folder (away from GitHub)
       note "-envf ENV_FOLDERPATH not defined. Hard coded ${ENV_FOLDERPATH} being used..."
    fi
 
-   if [ -d "$ENV_FOLDERPATH" ]; then  # target file exists, don't overwrite:
-      note "-envf ${ENV_FOLDERPATH} exists ..."
+   if [ -z "$1" ]; then   # not specified in parms
+      fatal "download_setup() parm \"$1\" not specified in parms. Cannot continue..."
+      return 9
    else
+      note "download_setup() parm \"$1\" being processed..."
+      ls -al "${ENV_FOLDERPATH}/$1"
+   fi
+
+   if [ ! -d "$ENV_FOLDERPATH" ]; then  # target file exists, don't overwrite:
       warning "-envf ENV_FOLDERPATH \"${ENV_FOLDERPATH}\" not found. Creating..."
       cd
       mkdir -p "${ENV_FOLDERPATH}"
    fi
    cd "${ENV_FOLDERPATH}"
-   pwd
 
-   if [ -z "$1" ]; then   # not specified in parms
-      fatal "file \"$1\" not specified in parms. Cannot continue..."
-      return 9
-   else
-      note "file \"$1\" being processed..."
-   fi
-
-   if [ -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
-      note "-envf $ENV_FOLDERPATH/$1 exists. Not downloading ..."
-   else
+   if [ ! -f "$ENV_FOLDERPATH/$1" ]; then  # target file exists, don't overwrite:
       warning "-envf $ENV_FOLDERPATH/$1 not found. Creating..."
 
       if [ -z "${GITHUB_DOWNLOAD_URL}" ]; then   # not specified in parms
          # Assuming you didn't fork this github repo:
          export GITHUB_DOWNLOAD_URL="https://raw.githubusercontent.com/wilsonmar/mac-setup/main"    
-         warning "-gdu GITHUB_DOWNLOAD_URL not defined. Hard coded ${GITHUB_DOWNLOAD_URL} being used..."
+         warning "-init : hard coded -gdu ${GITHUB_DOWNLOAD_URL} being used..."
       fi
 
       h2 "Downloading ${GITHUB_DOWNLOAD_URL}/$1 ..."
@@ -1161,29 +1170,33 @@ download_setup(){
       chmod  +x "${ENV_FOLDERPATH}/$1"
    fi
 }
-if [ "${INIT_ENV_FILES}" = true ]; then
-   download_setup ".zshrc"
-   download_setup "aliases.zsh"
-   download_setup "mac-setup.env"
-      # h2 "Now please edit the file to customize variables ..."
-      # h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
-   download_setup "mac-setup.zsh"
-   warning "Now restart Terminal, which runs .zshrc which runs aliases.zsh and mac-setup.env"
+# WARNING: This sequence is important to ensure dependencies are present:
+   download_setup "mac-setup.env"  #1 
+   download_setup "aliases.zsh"    #2 
+   download_setup ".zshrc"         #3 
+   download_setup "mac-setup.zsh"  #4 
 
+if [ "${INIT_ENV_FILES}" = true ]; then  # -init
+   warning "Now restart Terminal, which runs .zshrc which runs aliases.zsh and mac-setup.env"
+   h2 "Now please edit the file to customize variables ..."
+   h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
    # note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
    # source   "${ENV_FOLDERPATH}/$1"
-
-   # TODO: .gitconfig   
    # "Now setup SSH and upload to GITHUB.com using downloaded gh utility
    exit
+else
+   source ./mac-setup.env  #1 
+   source ./aliases.zsh    #2 
+   source ./.zshrc         #3 
+#  source ./mac-setup.zsh  #4 
 fi
-
 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
 #   note "GITHUB_USER_NAME=${GITHUB_USER_NAME}"
 #   note "GITHUB_USER_EMAIL=${GITHUB_USER_EMAIL}"
 #   note "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
 
+# TODO: .gitconfig   
 
 
 ### 14. Upgrade Bash to Zsh
@@ -1544,6 +1557,7 @@ if [ "${SHOW_DEBUG}" = true ]; then
    brew list
 fi
 
+
 if [ "${RUN_UTILS}" = true ]; then  # -utils
    if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
       # CAUTION: Install only packages that you actually use and trust!
@@ -1807,8 +1821,6 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
 fi  # RUN_UTILS
 
 
-echo "DEBUG OUT OF INSTALL"
-
 
 ### 19. Install VSCode extensions
 
@@ -2028,14 +2040,14 @@ fi  # SET_MACOS_SYSPREFS
 if [ "${USE_AKEYLESS}" = true ]; then  # -akeyless
    # https://docs.akeyless.io/docs/cli
    # Avoid using # if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
-   h2 "-akeyless install ..."
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
       if ! command -v akeyless >/dev/null; then  # command not found, so:
-         brew info akeylesslabs/tap/akeyless
+         h2 "-akeyless brew install ..."
+         brew tap akeylesslabs/tap
          brew install akeylesslabs/tap/akeyless
       else  # installed already:
          if [ "${UPDATE_PKGS}" = true ]; then  # -U
-            h2 "Brew upgrade akeyless ..."
+            h2 "-akeyless brew upgrade ..."
             brew upgrade akeyless
          fi
       fi
@@ -2067,63 +2079,147 @@ if [ "${USE_AKEYLESS}" = true ]; then  # -akeyless
          # drwxr-xr-x+ 41 wilsonmar  staff  1312 Sep  5 16:14 ..
          # -rw-r--r--   1 wilsonmar  staff   231 Sep  5 16:14 config.json
    fi
+   # See https://docs.akeyless.io/docs/cli
+
+   echo "SCRIPT_VERSION=$SCRIPT_VERSION"
 
    if [ -n "${AKEYLESS_PROFILE_PATH}" ]; then
-      note " AKEYLESS_PROFILE_PATH not specified. Using hard-coded default."
-      AKEYLESS_PROFILE_PATH="~/.akeyless/settings/profile/default.toml"
+      note "-akeyless AKEYLESS_PROFILE_PATH not specified. Using hard-coded default."
+      export AKEYLESS_PROFILE_PATH="~/.akeyless/profiles/default.toml"
    fi
-   note " AKEYLESS_PROFILE_PATH=${AKEYLESS_PROFILE_PATH} "
+   note "-akeyless AKEYLESS_PROFILE_PATH=${AKEYLESS_PROFILE_PATH} "
    if [ ! -f "${AKEYLESS_PROFILE_PATH}" ]; then  # file not found:
-      if [ -n "${AKEYLESS_ACCESS_ID}" ]; then
-         fatal " AKEYLESS_ACCESS_ID not specified in .env file. Connot continue."
-         fatal " Please see https://wilsonmar.github.io/akeyless about GitHub OIDC"
+      if [ -z "${AKEYLESS_ACCESS_ID}" ]; then
+         fatal "-akeyless AKEYLESS_ACCESS_ID not specified in .env file. Connot continue."
+         fatal "-akeyless Please see https://wilsonmar.github.io/akeyless about GitHub OIDC"
          exit
       else
-         AKEYLESS_GITHUB_URL="https://auth.akeyless.io/oidc-login?access_id=${AKEYLESS_ACCESS_ID}&redirect_uri=https%3A%2F%2Fconsole.akeyless.io%2Flogin-oidc&is_short_token=truee://newtab"
-
-         note " AKEYLESS_ACCESS_ID being used to configure oidc ..."
+         export AKEYLESS_GITHUB_URL="https://auth.akeyless.io/oidc-login?access_id=${AKEYLESS_ACCESS_ID}&redirect_uri=https%3A%2F%2Fconsole.akeyless.io%2Flogin-oidc&is_short_token=truee://newtab"
+         note "-akeyless AKEYLESS_ACCESS_ID being used to configure oidc ..."
          akeyless configure --access-id "${AKEYLESS_ACCESS_ID}" --access-type oidc
+            # Profile default successfully configured
       fi
    fi
 
    if [ "${SHOW_VERBOSE}" = true ]; then
-      note " akeyless: cat ${AKEYLESS_PROFILE_PATH} ..."
-      cat "${AKEYLESS_PROFILE_PATH}"
+      pushd ~/.akeyless
+      export AKEYLESS_SETTINGS_PATH="~/.akeyless/settings"
+      info "-akeyless: cat ${AKEYLESS_SETTINGS_PATH} ..."
+      cat settings
+          # dns="vault.akeyless.io"
+          # protocol="https"%  
+      echo " "
+  
+     # cd profiles
+     # info "-akeyless: cat ${AKEYLESS_PROFILE_PATH} ..."
+     #    # ~/.akeyless/settings/profiles/default.toml
+     # cat default.toml
+         # ["default"]
+         #   access_id = 'p-ovktoe5swyx0im'
+         #   access_type = 'oidc'
+     # echo " "
+  
+      popd
+      pwd
    fi
 
    # TODO: Create org, Access Id from https://cli.github.com/manual/gh_help_reference ?
 
-   RESULT= $( akeyless list-items | wc -l )
+   RESULT=$( akeyless list-items | wc -l )
+      # OUTPUT: Your default web browser has been opened to visit:
+      # OUTPUT: https://auth.akeyless.io/oidc-login?access_id=p-ovktoe5swyx0im&redirect_uri=http%3A%2F%2F127.0.0.1%3A11137%2F
+      # CAUTION: Manual "Reauthorization" may appear instead.
    if [ "${RESULT}" -gt "0" ]; then  # it's running
-      info "-akeyless list-items contains $RESULT lines ..."
+      info "-akeyless list-items confirms auth with return of $RESULT lines ..."
    else  # login:
-      note "AKEYLESS_GITHUB_URL used to open browser ..."
+      note " AKEYLESS_GITHUB_URL used to open browser ..."
+      echo "${AKEYLESS_GITHUB_URL}"
+         # Authentication Succeeded
+         # You may now close this tab and proceed with your session...
       open "${AKEYLESS_GITHUB_URL}"
    fi
 
-   # From earlier:
-   # AKL_SECRET_PATH="/static/OMDB"  # Online Movie Database
-   # AKL_SECRET_PATH="/static/OPENAI_API_KEY"
-   # AKL_SECRET_PATH="/static/BRASTEN_API"
-   # AKL_SECRET_PATH="/static/AWS_ACCOUNT_ID"
-   # AKL_SECRET_PATH="/static/AWS_ACCESS_KEY_ID"
-   # AKL_SECRET_PATH="/static/AWS_SECRET_ACCESS_KEY"
-   AKL_SECRET_PATH="/folder/sec1"  # from earlier
-      # Created manually earlier using: akeyless create-secret -n "${SECRET_}" -v "${SECRET_VALUE}"
-   note "-akeyless get-secret-value ${AKL_SECRET_PATH} ..."
-   SECRET_VALUE=$( akeyless get-secret-value -n "${AKL_SECRET_PATH}" )
-   note "SECRET_VALUE=$SECRET_VALUE"
-
 fi  # USE_AKEYLESS
 
+### 20c. Substitute secret for akeyless keyname 
 
-akeyless_static_key(){  # $1 = "${ARM_TENANT_ID}" containing "/mac-setup/SOME_API_KEY"
+retrieve_static_secret(){  # $1 = "${ARM_TENANT_ID}" containing "/mac-setup/SOME_API_KEY"
    # Created manually earlier using: akeyless create-secret -n "${SECRET_}" -v "${SECRET_VALUE}"
-   AKL_SECRET_PATH="$1"
-   note "-akeyless get-secret-value ${AKL_SECRET_PATH} ..."
-   export SECRET_VALUE=$( akeyless get-secret-value -n "${AKL_SECRET_PATH}" )
-   # DO NOT: note "SECRET_VALUE=$SECRET_VALUE"
-}  # $1 = "${ARM_TENANT_ID}"
+   AKEYLESS_KEY="$1"  # contains "akeyless://${AKEYLESS_ACCT}/${AKEYLESS_KEY}"
+   AKEYLESS_PREFIX="${AKEYLESS_KEY%%:*}"
+   # If first word is "akeyless:", process that:
+   if [[ ! "${AKEYLESS_PREFIX}" = "akeyless"* ]]; then # it's in the string:
+      note "-akeyless NOT processing AKEYLESS_KEY=\"${AKEYLESS_KEY}\" ..."
+      return 9
+   fi
+   note "-akeyless retrieve_static_secret() processing AKEYLESS_KEY=\"${AKEYLESS_KEY}\" ..."
+
+   # AKEYLESS_API_GW_URL is defined in mac-setup.env (or not):
+   if [ ! -z ${AKEYLESS_API_GW_URL} ] && [ -f ~/.akeyless/latest_token ]; then
+      LATEST_PROFILE=$(cat ~/.akeyless/latest_token)
+      note "-akeyless retrieve_static_secret() using \"${LATEST_PROFILE}\" ..."
+   elif [ -d ~/.akeyless/profiles/ ]; then  # contains file default.toml
+      LATEST_PROFILE=$(ls -1t ~/.akeyless/profiles/ 2>/dev/null | head -1)
+    # LATEST_PROFILE="default.toml"
+      note "-akeyless retrieve_static_secret() using LATEST_PROFILE=\"$LATEST_PROFILE\" ..."
+   else
+      fatal "-akeyless default.toml not identified. Exiting..."
+      return 9
+   fi
+
+   if [ ! -z "${LATEST_PROFILE}" ]; then
+      # Local processing flag:
+      ENV_RUNNING_FLAG="~/.akeyless/env_running"
+      # FIXME: This if statement should return file found:
+      if [ -f "${ENV_RUNNING_FLAG}" ]; then  # file found:
+         note "-akeyless : at retrieve_static_secret( \"$1\" ) with $ENV_RUNNING_FLAG ..."
+         ls -al ~/.akeyless/env_running
+      else
+         note "-akeyless : ENV_RUNNING_FLAG=\"$ENV_RUNNING_FLAG\" file not found? "
+         #  instead of touch "${ENV_RUNNING_FLAG}" which results in "No such file or directory":
+         pushd "$HOME"
+         cd ".akeyless"
+         echo "empty" > "env_running"
+         popd
+
+         # Remove the ".toml" file extension from the value within variable LATEST_PROFILE : 
+         note "-akeyless LATEST_PROFILE=$LATEST_PROFILE ..."
+         LATEST_PROFILE="${LATEST_PROFILE%.toml}"
+            # result is simply "default"
+         note "-akeyless LATEST_PROFILE=$LATEST_PROFILE ..."
+
+         # Remove PREFIX text from within AKEYLESS_KEY to yield SECRET_PATH :
+         PREFIX="akeyless:/"
+         SECRET_PATH="${AKEYLESS_KEY#$PREFIX}"
+
+         # TODO: Add loop to check multiple types:
+         SECRET_TYPE=$( akeyless describe-item --name "${SECRET_PATH}" \
+               --profile "${LATEST_PROFILE}" 2>/dev/null | jq -r .item_type )
+         if [ -z "${SECRET_TYPE}" ]; then  # not found):
+            fatal "-akeyless describe-item failed for \"${SECRET_PATH}\" ..."
+            return 9
+         fi
+         note "-akeyless describe-item \"${SECRET_PATH}\" is a \"$SECRET_TYPE\" ..."
+
+         [[ "${SECRET_TYPE}" == "DYNAMIC_SECRET" ]] && IS_DYNAMIC="dynamic-" || IS_DYNAMIC=""
+         [[ "${SECRET_TYPE}" == "ROTATED_SECRET" ]] && IS_ROTATED="rotated-" || IS_ROTATED=""
+            
+            # See akeyless command list at https://docs.akeyless.io/docs/cli-reference-rotated-secrets
+         THE_SECRET=$( akeyless get-${IS_DYNAMIC}${IS_ROTATED}secret-value \
+                  --name "${SECRET_PATH}" --profile ${LATEST_PROFILE} 2>/dev/null)
+         if [ -z "${THE_SECRET}" ]; then  # not found):
+            fatal "-akeyless get of \"${SECRET_PATH}\" failed ..."
+            return 9
+         fi
+         # rm -f "${ENV_RUNNING_FLAG}" results in parse error near  so:
+         rm -f ~/.akeyless/env_running
+
+         export THE_SECRET="${THE_SECRET}"
+         # return "${THE_SECRET}"
+      fi
+   fi
+}
+# retrieve_static_secret "${KRAFTCLOUD_TOKEN}"
 
 
 ### 22. Hashicorp Cloud using Doormat
@@ -2534,7 +2630,7 @@ Clone_into_GITHUB_OR_PROJECT(){
    cd "${PROJECT_FOLDER_PATH}"
 #   fi  # PROJECT_FOLDER_NAME
    if [ "${SHOW_DEBUG}" = true ]; then
-      note "At $PWD"
+      note "At ${PROJECT_FOLDER_PATH}=$PWD"
       ls -ltaT 
    fi
 }
@@ -2553,42 +2649,45 @@ Config_GITHUB_SSH(){
    fi
 
    # Create name such as id_rsa+2404092317
-   if [ -z "${LOCAL_SSH_KEYFILE+x}" ]; then   #  not specified 
-      LOCAL_SSH_KEYFILE="${GITHUB_USER_ACCOUNT}_ed25519"+$(date +"%y%m%dT%H%M")
-      note "LOCAL_SSH_KEYFILE not specified. Created: $LOCAL_SSH_KEYFILE"
-   fi
-
-   if [ -f "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" ]; then  # folder available:
-      info "Using existing SSH key pair \"$HOME/.ssh/${LOCAL_SSH_KEYFILE}\" "
-   else
-      h2 "ssh-keygen -t rsa -f \"${LOCAL_SSH_KEYFILE}\" -C \"${GITHUB_USER_ACCOUNT}\" ..."
-      pushd "$HOME/.ssh"
-      ssh-keygen -t ed25519 -f "$LOCAL_SSH_KEYFILE" -C "${GITHUB_USER_ACCOUNT}" -N ""      
-      info "$( ls -ltaT "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" )"
-      ssh-add "$HOME/.ssh/${LOCAL_SSH_KEYFILE}"
-      pbcopy < "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub"
-         # cat "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub" | pbcopy
-
-      # To avoid "This key is not known by any other names" error
-      ssh-keyscan -H github.com >> "$HOME/.ssh/known_hosts"
-      popd
-
-      git config --global user.signingkey "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub"
-      git config --global gpg.format ssh
-
-      if [ ! -f "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" ]; then  # Create file:
-         echo "Host github.com\n  AddKeysToAgent yes\n  UseKeychain yes" > "$HOME/.ssh/config"
+   if [ "${USE_GITHUB_SSH}" = true ]; then   # -ssh specified:
+      if [ -z "${LOCAL_SSH_KEYFILE+x}" ]; then   #  not specified 
+         LOCAL_SSH_KEYFILE="$USER_ed25519"+$(date +"%y%m%dT%H%M")
+         note "LOCAL_SSH_KEYFILE not specified. Created: $LOCAL_SSH_KEYFILE"
       fi
-         echo "IdentityFile=$HOME/.ssh/${LOCAL_SSH_KEYFILE}" >> "$HOME/.ssh/config"
-      cat "$HOME/.gitconfig"
-          # signingkey = /Users/johndoe/.ssh/wilsonmar_ed25519+2404111333.pub
-          # [gpg]
-	       #    format = ssh
 
-      echo "Please open browser to your GitHub account \"$GITHUB_USER_ACCOUNT\" Settings \"SSH and GPG keys\" this public key content ..."
-      warning "$( cat $HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub )"
-      exit 1
-   fi
+      if [ -f "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" ]; then  # folder available:
+         info "Using existing SSH key pair \"$HOME/.ssh/${LOCAL_SSH_KEYFILE}\" "
+      else
+         h2 "ssh-keygen -t rsa -f \"${LOCAL_SSH_KEYFILE}\" -C \"$USER\" ..."
+         pushd "$HOME/.ssh"
+         ssh-keygen -t ed25519 -f "$LOCAL_SSH_KEYFILE" -C "$USER" -N ""      
+         info "$( ls -ltaT "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" )"
+         ssh-add "$HOME/.ssh/${LOCAL_SSH_KEYFILE}"
+         pbcopy < "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub"
+            # cat "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub" | pbcopy
+
+         # To avoid "This key is not known by any other names" error
+         ssh-keyscan -H github.com >> "$HOME/.ssh/known_hosts"
+         popd
+
+         git config --global user.signingkey "$HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub"
+         git config --global gpg.format ssh
+
+         if [ ! -f "$HOME/.ssh/${LOCAL_SSH_KEYFILE}" ]; then  # Create file:
+            echo "Host github.com\n  AddKeysToAgent yes\n  UseKeychain yes" > "$HOME/.ssh/config"
+         fi
+            echo "IdentityFile=$HOME/.ssh/${LOCAL_SSH_KEYFILE}" >> "$HOME/.ssh/config"
+         cat "$HOME/.gitconfig"
+            # signingkey = /Users/johndoe/.ssh/wilsonmar_ed25519+2404111333.pub
+            # [gpg]
+            #    format = ssh
+
+         echo "Please open browser to your GitHub account \"$GITHUB_USER_ACCOUNT\" Settings \"SSH and GPG keys\" this public key content ..."
+         warning "$( cat $HOME/.ssh/${LOCAL_SSH_KEYFILE}.pub )"
+         exit 1
+      fi
+   fi  # if USE_GITHUB_SSH
+
 }
 Config_GITHUB_SSH
 
@@ -2655,7 +2754,7 @@ fi  # GITHUB_BRANCH
 # ./mac-setup.zsh -pfn "work" -url "https://github.com/gatewayd-io/gatewayd/releases/download/v0.8.11/gatewayd-darwin-amd64-v0.8.11.tar.gz" -v
 
 if [ -z "$URL_TO_DOWNLOAD" ]; then  # -url not specified
-   note "-url \"$URL_TO_DOWNLOAD\" not specified in parms for curl..."
+   note "-url ($URL_TO_DOWNLOAD) not specified in parms for curl..."
 else
    if [ -f "$URL_TO_DOWNLOAD" ]; then  # -url already exists
       note "-url \"$URL_TO_DOWNLOAD\" already exists ..."
@@ -2677,7 +2776,7 @@ fi
 ### 29. GatewayD
 
 if [ -z "$URL_TO_DOWNLOAD" ]; then  # -url not specified
-   note "-url \"$URL_TO_DOWNLOAD\" not specified in parms for GatewayD..."
+   note "-url (URL_TO_DOWNLOAD) not specified in parms for GatewayD..."
 else
    if [ -f "$URL_TO_DOWNLOAD" ]; then  # -url already exists
       note "-url \"$URL_TO_DOWNLOAD\" already exists ..."
@@ -3113,8 +3212,11 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
    if [ -z "${AWS_ACCOUNT_ID}" ]; then
       error "-AWS_ACCOUNT_ID (INFO) var not defined ..."
    else
-      note "AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID} for manual https://aws.amazon.com/ console login"
-      # PROTIP: This is not the preferred / secure approach.
+      note "-aws : Retrieve AWS_ACCOUNT_ID=\"${AWS_ACCOUNT_ID}\" :"
+      retrieve_static_secret "${AWS_ACCOUNT_ID}"
+      RESULT=$( echo -n "${THE_SECRET}" | wc -c )
+      export AWS_ACCOUNT_ID="${THE_SECRET}"
+      info "-aws \"AWS_ACCOUNT_ID\" contains ${RESULT} characters not printed due to security ..."
    fi
 
    # TODO: Instead, Obtain credentials from a Vault.
@@ -3126,16 +3228,21 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
       error "Required AWS_ACCESS_KEY_ID var not defined ..."
       USE_AWS_CREDS=true
    else
-      note "AWS_ACCESS_KEY_ID var found. Not displayed for security"
-         # [default]
-         # aws_access_key_id = xxxx
-         # aws_secret_access_key = xxxx
+      note "-aws : Retrieve AWS_ACCESS_KEY_ID=\"${AWS_ACCESS_KEY_ID}\" :"
+      retrieve_static_secret "${AWS_ACCESS_KEY_ID}"
+      RESULT=$( echo -n "${THE_SECRET}" | wc -c )
+      export AWS_ACCESS_KEY_ID="${THE_SECRET}"
+      info "-aws \"AWS_ACCESS_KEY_ID\" contains ${RESULT} characters not printed due to security ..."
    fi
    if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
       error "Required AWS_SECRET_ACCESS_KEY var not defined ..."
       USE_AWS_CREDS=true
    else
-      note "AWS_SECRET_ACCESS_KEY var found. Not displayed for security"
+      note "-aws : Retrieve AWS_SECRET_ACCESS_KEY=\"${AWS_SECRET_ACCESS_KEY}\" :"
+      retrieve_static_secret "${AWS_SECRET_ACCESS_KEY}"
+      RESULT=$( echo -n "${THE_SECRET}" | wc -c )
+      export AWS_SECRET_ACCESS_KEY="${THE_SECRET}"
+      info "-aws \"AWS_SECRET_ACCESS_KEY\" contains ${RESULT} characters not printed due to security ..."
    fi
 
    if [ "${USE_AWS_CREDS}" = true ]; then
@@ -3210,6 +3317,58 @@ if [ "${USE_AWS_CLOUD}" = true ]; then   # -aws
 
 fi  # USE_AWS_CLOUD
 
+
+
+#### Kraft (replacement for containers in Kubernetes)
+
+if [ "${USE_KRAFTKIT}" = true ]; then  # -kraft
+   # https://kraftkit.sh  by https://unikraft.io/ (https://www.linkedin.com/company/unikraft-sdk/)
+   # Build and use highly customized and ultra-lightweight unikernels.
+   if [ "${PACKAGE_MANAGER}" = "brew" ]; then
+      # See https://www.davehall.com.au/tags/bash
+      if ! command -v kraft >/dev/null; then  # command not found, so:
+         h2 "-kraft installing using brew ..."
+         brew install kraftkit
+            # Equivalen to curl -sSfL https://get.kraftkit.sh | sh
+            # 24-04-18 /opt/homebrew/Cellar/kraftkit/0.8.4: 3 files, 42.8MB 
+      else  # installed already:
+         if [ "${UPDATE_PKGS}" = true ]; then
+            h2 "-kraft upgrade using brew ..."
+            note "-kraft current version = $( kraft version )"
+            brew upgrade kraftkit
+         else
+            h2 "-kraft  ..."
+         fi
+      fi
+      note "-kraft version = 0.8.4 (6a9c42eb3131d68572d9d0de6a299f0e2a4dda4b) go1.22.0 2024-04-18T17:01:01Z"
+      # see https://docs.kraft.cloud
+   fi  # "${PACKAGE_MANAGER}" = "brew" ]; then
+
+   # Deploy instance (NGINX):
+   if [ -z "${KRAFTKIT_METRO}" ]; then   # NOT specified:
+      export KRAFTKIT_METRO="fra0"
+      note "-kraft KRAFTKIT_METRO not specified. Using hard-coded default \"${KRAFTKIT_METRO}\"..."
+   else
+      note "-kraft KRAFTKIT_METRO \"${KRAFTKIT_METRO}\"..."
+   fi
+
+   note "-kraft : Retrieve KRAFTCLOUD_TOKEN \"${KRAFTCLOUD_TOKEN}\" :"
+   retrieve_static_secret "${KRAFTCLOUD_TOKEN}"
+   RESULT=$( echo -n "${THE_SECRET}" | wc -c )
+   export KRAFTCLOUD_TOKEN="${THE_SECRET}"
+   info "-akeyless \"KRAFTCLOUD_TOKEN\" contains ${RESULT} characters not printed due to security ..."
+
+   note "-kraft : Deploy instance in KRAFTKIT_METRO=\"${KRAFTKIT_METRO}\" (NGINX) :"
+   #RESULT=$( 
+      kraft cloud --metro "${KRAFTKIT_METRO}" deploy -p 443:8080 nginx:latest deploy -p 443:8080 nginx:latest 
+      # )
+      # RESPONSE: <!> deploying                                                                                                                                                                    [0.9s]
+      #  could not create instance: performing the request: received an error in the response: API error: status code 400, message: {"status":"error","message":"Port 443 must use HTTP and
+      #  could not prepare deployment: could not create instance: performing the request: received an error in the response: API error: status code 400, message: {"status":"error","message":"Port 443 must use HTTP and TLS termination","errors":[{"status":400}]}
+
+   info "-kraft \"${RESULT}\" ..."
+
+fi  # USE_KRAFTKIT
 
 
 ### 30b. steampipe for aws
@@ -3381,17 +3540,23 @@ if [ "${USE_AZURE_CLOUD}" = true ]; then   # -azure
 
    azure_login(){
       # See https://learn.microsoft.com/en-us/cli/azure/?view=azure-cli-latest#az_login
-      akeyless_static_key "${ARM_TENANT_ID}"
+      retrieve_static_secret "${ARM_TENANT_ID}"
       note "SECRET_VALUE=$SECRET_VALUE"
 
       if [ -n "${ARM_TENANT_ID}" ]; then  # not found or blank
          fatal "-azure ARM_TENANT_ID not defined. az login ..."
          az login
       else         
-         note "-azure login with ARM_TENANT_ID ..."
-         az login --tenant "${ARM_TENANT_ID}"
+         note "-azure : Retrieve ARM_TENANT_ID=\"${ARM_TENANT_ID}\" :"
+         retrieve_static_secret "${ARM_TENANT_ID}"
+         RESULT=$( echo -n "${THE_SECRET}" | wc -c )
+         export ARM_TENANT_ID="${THE_SECRET}"
+         info "-azure \"ARM_TENANT_ID\" contains ${RESULT} characters not printed due to security ..."
       fi
       # Pop up web page to login.
+
+      note "-azure login with ARM_TENANT_ID ..."
+      az login --tenant "${ARM_TENANT_ID}"
 
       if [ -n "${ARM_SUBSCRIPTION_ID}" ]; then  # not found or blank
          fatal "-azure ARM_SUBSCRIPTION_ID not defined. Exiting..."
@@ -5108,7 +5273,11 @@ if [ "${USE_AIAC}" = true ]; then  # -tf
       fatal "-aiac OPENAI_API_KEY not defined. Breaking out..."
       return
    else
-      # Insecure: note "OPENAI_API_KEY=${OPENAI_API_KEY}"
+      note "-aiac : Retrieve OPENAI_API_KEY=\"${OPENAI_API_KEY}\" :"
+      retrieve_static_secret "${OPENAI_API_KEY}"
+      RESULT=$( echo -n "${THE_SECRET}" | wc -c )
+      export OPENAI_API_KEY="${THE_SECRET}"
+      info "-aiac \"OPENAI_API_KEY\" contains ${RESULT} characters not printed due to security ..."
    fi
 
    if [ "${SHOW_VERBOSE}" = true ]; then  # -v
@@ -5126,8 +5295,6 @@ if [ "${USE_AIAC}" = true ]; then  # -tf
    fi
 
    # docker run \
-   # -it \
-   # -e OPENAI_API_KEY=[PUT YOUR KEY HERE] \
    # ghcr.io/gofireflyio/aiac get terraform for ec2
    # hapex legomemnon
 
