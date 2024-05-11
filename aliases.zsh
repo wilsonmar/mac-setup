@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # This is ~/aliases.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.zsh
-# gas "v23 akeyless to all :aliases.zsh"
+# gas "v25 random mac addr :aliases.zsh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -77,6 +77,10 @@ alias listening="lsof -nP +c 15 | grep LISTEN"
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
 alias spacefree="du -h | awk 'END{print $1}'"
 
+alias randass="PASS25=$(openssl rand -base64 25);echo $PASS25"
+# See https://www.perplexity.ai/search/how-to-assign-P8L9reHhTWWlLUZ9Cj1pHg
+alias randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
+# sudo ifconfig en0 ether "{RANDMAC}"
 
 #### Define aliases to invoke GUI apps with several words:
 
@@ -277,9 +281,11 @@ alias pip="pip3"
 # https://virtualenvwrapper.readthedocs.io/en/latest/
 alias cr="cargo run --verbose"  # Rust .rs program file in folder
 # conda
+alias envs="conda env list"
+alias venl="conda env list -v -v -v | grep -v '^#' | perl -lane 'print $F[-1]' | xargs /bin/ls -lrtd"
 alias ven="virtualenv venv"
-alias vbc="source venv/bin/activate"
-alias vde="source deactivate"
+alias vba="source venv/bin/activate"
+alias vbd="source deactivate"
 
 
 #### See https://wilsonmar.github.io/hashicorp-consul#Shortcuts

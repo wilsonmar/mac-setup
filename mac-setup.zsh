@@ -13,11 +13,12 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.202 keyless; kraftkit; fix ssh :mac-setup.zsh"
+SCRIPT_VERSION="v1.204 akeyless debug :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
 # Restruc github vars : mac-setup.zsh"
+# TODO: Download $HOME folder data from local drive or internet
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
 # TODO: Add encryption of log output.
@@ -154,7 +155,8 @@ usage_examples() {
    echo "./mac-setup.zsh -I -U -utils -v  # install or update utilities spec'd in .env file"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
    echo " "
-   echo "./mac-setup.zsh -v -I -U -golang  # Install brew, plus golang"
+   echo "./mac-setup.zsh -python -I -U -file \"~/github-wilsonmar\" -v "
+   echo "./mac-setup.zsh -golang -I -U -v "
    echo "./mac-setup.zsh -v -Consul -k -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
    echo "./mac-setup.zsh -v -Consul -podman -a -K   # Use HashicorpVault in Podman for localhost Kept alive"
    echo "./mac-setup.zsh -v -k -HV -a -K   # Use HashicorpVault in Docker for localhost Kept alive"
@@ -1141,7 +1143,7 @@ download_setup(){
       fatal "download_setup() parm \"$1\" not specified in parms. Cannot continue..."
       return 9
    else
-      note "download_setup() parm \"$1\" being processed..."
+      echo_debug "-akeyless download_setup() parm \"$1\" being processed..."
       ls -al "${ENV_FOLDERPATH}/$1"
    fi
 
@@ -1469,7 +1471,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             if [ "${UPDATE_PKGS}" = true ]; then
                h2 "Brew upgrading shellcheck ..."
                brew upgrade shellcheck
-               # pip install --user --upgrade shellcheck
             fi
          fi
          note "$( shellcheck --version )"
@@ -1686,12 +1687,12 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             # Docs.app, Gmail.app, Google Drive.app, Sheets.app, Slides,app, YouTube.app
 
          h2 "-I install brew CLI utilities ..."
-         # TODO: CLI_APPS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
+         # TODO: CLI_PGMS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
          # Defined in ~/mac-setup.env :
-         # CLI_APPS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
+         # CLI_PGMS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
             # * jq manipulates JSON
             # * yq manipulates YAML
-         ARRAY=(`echo ${CLI_APPS_TO_INSTALL}`);  # from ~/mac-setup.env
+         ARRAY=(`echo ${CLI_PGMS_TO_INSTALL}`);  # from ~/mac-setup.env
          for brewname in "${ARRAY[@]}"; do
             brew install $brewname
             # NOTE: Brew updates if already installed.
@@ -1993,6 +1994,14 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       # Show remaining battery time; hide percentage
       defaults write com.apple.menuextra.battery ShowPercent -string "NO"
       defaults write com.apple.menuextra.battery ShowTime -string "YES"
+
+      # Show Bluetooth icon on Apple's Control Center (Menu Bar at top of screen):
+      # sudo defaults write /Library/Preferences/com.apple.Bluetooth ShowBluetoothInMenuBar -bool true
+      # FIXME: "Not privileged to stop service" to Restart the Bluetooth daemon:
+      # sudo launchctl stop com.apple.bluetoothd
+      # sudo launchctl start com.apple.bluetoothd
+
+      # Display Time Machine icon on menu bar
 
    # Explained in https://wilsonmar.github.io/dotfiles/#Extensions
       # Show all filename extensions:
@@ -2475,7 +2484,7 @@ Identify_GITHUB_REPO_URL(){
 
 ### 26a. Clone into local GITHUB_REPO_BASE if a -gfn GITHUB_FOLDER_NAME was specified:
 
-Clone_into_GITHUB_OR_PROJECT(){
+Clone_into_GITHUB(){
 
    if [ -z "${GITHUB_FOLDER_BASE+x}" ]; then   # not specified in mac-setup.env
       export GITHUB_FOLDER_BASE="$HOME/github-wilsonmar"
@@ -2561,11 +2570,14 @@ Clone_into_GITHUB_OR_PROJECT(){
          ls -ltaT 
       fi
    fi
-
+}
+Clone_into_GITHUB
 
    ### 27b. Clone to local Projects folder if -pfn PROJECT_FOLDER_NAME was specified:
 
    # See https://wilsonmar.github.io/mac-setup/#ProjFolder
+
+Clone_into_PROJECT(){
 
    # export PROJECT_FOLDER_BASE="$HOME/Projects"  # -pfb
    if [ ! -d "${PROJECT_FOLDER_BASE:?}" ]; then  # path NOT available
@@ -2634,7 +2646,7 @@ Clone_into_GITHUB_OR_PROJECT(){
       ls -ltaT 
    fi
 }
-Clone_into_GITHUB_OR_PROJECT
+# Clone_into_PROJECT
 
 
 ### 27c. Configure Github cert
@@ -4983,6 +4995,7 @@ fi  # RUN_CONDA
 install_miniconda
 
 
+
 ### 55. RUN_JAVA
 
 # See https://wilsonmar.github.io/java
@@ -5245,11 +5258,29 @@ if [ "${RUN_PYTHON}" = true ]; then  # -python
       fi
    fi
 
-   #if [ "${RUN_PYTHON}" = true ]; then  # -python
-      # Install image management CLI for https://www.youtube.com/watch?v=bNbN9yoEOdU
-      # Instead of https://www.ffmpeg.org/download.html
-      brew install FFMpeg
-   #fi
+   # Install image management CLI for https://www.youtube.com/watch?v=bNbN9yoEOdU
+   # Instead of https://www.ffmpeg.org/download.html
+   brew install FFMpeg
+
+
+   # https://docs.safetycli.com/safety-docs/safety-cli-3/installation-and-authentication
+   if command -v safety ; then
+      h2 "-python : Installing Safety to scan dependencies in requirements.txt ..."
+      python3 -m pip install --user --upgrade safety
+   else  # installed already:
+      if [ "${UPDATE_PKGS}" = true ]; then
+         h2 "python : Updating Safety to scan dependencies in requirements.txt ..."
+         python3 -m pip install --user --upgrade safety
+      fi
+   fi  # safety
+   if [ -d "$HOME/safety" ]; then  # defined:
+      safety --version
+      # if conda exists to run safety:
+         # python3 -m venv venv
+         # source venv/bin/activate
+      # safety auth login  # if already https://platform.safetycli.com
+      # safety check
+   fi  # safety
 
 fi  # RUN_PYTHON
 
@@ -5375,8 +5406,6 @@ do_pike(){
       fi
       cd "${PROJECT_OUTPUT_FOLDERNAME}"
       note "$( ls -ltaT )"
-
-   echo "DEBUG at pike ${PROJECT_FOLDER_PATH}";exit
 
       # Browser will refresh when the server starts?
 
