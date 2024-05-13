@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # This is ~/aliases.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.zsh
-# gas "v25 random mac addr :aliases.zsh"
+# gas "v26 randpass :aliases.zsh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -77,7 +77,7 @@ alias listening="lsof -nP +c 15 | grep LISTEN"
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
 alias spacefree="du -h | awk 'END{print $1}'"
 
-alias randass="PASS25=$(openssl rand -base64 25);echo $PASS25"
+alias randpass="echo $(openssl rand -base64 25) | pbcopy"
 # See https://www.perplexity.ai/search/how-to-assign-P8L9reHhTWWlLUZ9Cj1pHg
 alias randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
 # sudo ifconfig en0 ether "{RANDMAC}"

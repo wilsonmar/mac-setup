@@ -13,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.204 akeyless debug :mac-setup.zsh"
+SCRIPT_VERSION="v1.205 mount usb drive backup :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -53,6 +53,7 @@ args_prompt() {
    echo " "
    echo "   -I              Install brew utilities, apps"
    echo "   -U              Upgrade installed packages if already installed"
+   echo "   -mount \"abc\"    mount USB drive to backup/restore"
    echo "   -utils          install utilities we all need and love"
    echo "   -ossec          install OSSEC file integrity monitor"
    echo " "
@@ -151,6 +152,7 @@ usage_examples() {
    echo "# USAGE EXAMPLES:"
    echo "./mac-setup.zsh -init -v # to download .env & aliases into \$HOME folder ${HOME}"
    echo "./mac-setup.zsh -init -gfb \"~/github-wilsonmar\" -ssh -v  # create GITHUB_FOLDER_BASE"
+   echo "./mac-setup.zsh -mount \"HP-USB-4GB\" -DB -v  # mount USB drive and backup to it"
    echo " "
    echo "./mac-setup.zsh -I -U -utils -v  # install or update utilities spec'd in .env file"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
@@ -245,7 +247,7 @@ blank_line(){
 
 RUN_QUIET=false
 SHOW_VERBOSE=true
-info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
+info "======= ${SCRIPT_VERSION} ${LOG_DATETIME}"
 # note "Explained at https://wilsonmar.github.io/mac-setup"
 
 
@@ -261,6 +263,9 @@ info "================ ${THIS_PROGRAM} ${SCRIPT_VERSION} ${LOG_DATETIME}"
    SHOW_DEBUG=false               # -vv
    VERIFY_ENV=false               # -V
    RUN_QUIET=false                # -q
+
+   USE_MOUNT_DRIVE=false          # -mount 
+   USE_DRIVE_NAME=""  # in env file
 
    INIT_ENV_FILES=false           # -init  # to use default ENV_FOLDERPATH_BASE:
    ENV_FOLDERPATH=""              # -envf "$HOME" or alt-folder (away from GitHub)
@@ -438,7 +443,7 @@ this_ending() {
       FREE_DISKBLOCKS_END=$(read -d '' -ra df_arr < <(LC_ALL=C df -P /); echo "${df_arr[10]}" )
    fi
    FREE_DIFF=$(((FREE_DISKBLOCKS_END-FREE_DISKBLOCKS_START)))
-   MSG="End of ${THIS_PROGRAM} $SCRIPT_VERSION after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
+   MSG="Ending ${SCRIPT_VERSION} after $((EPOCH_DIFF/360)) seconds and $((FREE_DIFF*512)) bytes on disk"
    # echo 'Elapsed HH:MM:SS: ' $( awk -v t=$beg-seconds 'BEGIN{t=int(t*1000); printf "%d:%02d:%02d\n", t/3600000, t/60000%60, t/1000%60}' )
    # TODO: Delete stuff?
    success "$MSG"
@@ -709,6 +714,12 @@ while test $# -gt 0; do
       ;;
     -macos)
       export SET_MACOS_SYSPREFS=true
+      shift
+      ;;
+    -mount*)
+      shift
+      export USE_MOUNT_DRIVE=true
+      export USE_DRIVE_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -m)
@@ -1123,6 +1134,39 @@ fi
 
 # https://github.com/pacoorozco/dotfiles/tree/main/backup-toolj
 
+if [ "${USE_MOUNT_DRIVE}" = true ]; then  # -mount
+   if [ -z "${USE_DRIVE_NAME}" ]; then   # not specified in parms
+      error "-mount USE_DRIVE_NAME parameter not defined. Skipping backup to USB stick..."
+      return 9
+   else
+      echo_debug "-mount \"$USE_DRIVE_NAME\" in run parameter..."
+      RESULT=$( ls /Volumes )
+      if [ "${SHOW_DEBUG}" = true ]; then  # -vv = Show all mounts:
+         mount
+            # /dev/disk4s1 on /Volumes/HP-USB-4GB (msdos, local, nodev, nosuid, noowners, noatime, fskit)
+      fi
+      if [[ ! "${RESULT}" == *"${USE_DRIVE_NAME}"* ]]; then  # contains it:
+         error "-mount \"$USE_DRIVE_NAME\" not found among volumes: ${RESULT} ..."
+         error "-mount \"$USE_DRIVE_NAME\" not used to receive backups ..."
+         return 9
+      else
+         info "-mount \"$USE_DRIVE_NAME\" found. Password to copy ..."
+         # Create folder using time stamp:
+         MY_USB_VOLUME="/Volumes/${USE_DRIVE_NAME}/${LOG_DATETIME}"
+         sudo mkdir "${MY_USB_VOLUME}"
+
+         # TODO: Specify in .env which folders to copy into new USB volume:
+         sudo cp -a "$HOME/.ssh/." "${MY_USB_VOLUME}/.ssh"
+         note " At ${MY_USB_VOLUME} ..."
+         ls -al "${MY_USB_VOLUME}/.ssh"
+
+         sudo umount -f "/Volumes/${USE_DRIVE_NAME}"
+         note "-mount \"${USE_DRIVE_NAME}\" is now safe to remove ..."
+      fi
+   fi
+fi
+
+echo "yikes";exit
 
 
 ### 13. Read & download .env variables
