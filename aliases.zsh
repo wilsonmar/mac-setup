@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # This is ~/aliases.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.zsh
-# gas "v26 randpass :aliases.zsh"
+# gas "v27 gpr for git pull --rebase :aliases.zsh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -254,6 +254,7 @@ alias gl2="git log --graph --all --pretty=format:'%Cred%h%Creset -%C(yellow)%d%C
 alias gld="git log --pretty=format: --name-only --diff-filter=A | sort - | sed '/^$/d'"
 alias gmo='git merge origin/master'
 alias gmf='git merge --no-ff'
+alias gpr='git pull --rebase'
 alias gp='git push'
 alias gpom='git push -u origin master'
 alias grm='git rm $(git ls-files --deleted)'

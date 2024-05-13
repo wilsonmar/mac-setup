@@ -152,7 +152,7 @@ usage_examples() {
    echo "# USAGE EXAMPLES:"
    echo "./mac-setup.zsh -init -v # to download .env & aliases into \$HOME folder ${HOME}"
    echo "./mac-setup.zsh -init -gfb \"~/github-wilsonmar\" -ssh -v  # create GITHUB_FOLDER_BASE"
-   echo "./mac-setup.zsh -mount \"HP-USB-4GB\" -DB -v  # mount USB drive and backup to it"
+   echo "./mac-setup.zsh -mount \"HP-USB-4GB\" -UM -v  # mount USB drive and backup to it"
    echo " "
    echo "./mac-setup.zsh -I -U -utils -v  # install or update utilities spec'd in .env file"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
@@ -422,6 +422,7 @@ SECRETS_FILE=".secrets.env.sample"
 # Post-processing:
    DELETE_CONTAINER_AFTER=false # -DA
    REMOVE_DOCKER_IMAGES=false   # -M
+   UNMOUNT_AFTER=false          # -UM
    REMOVE_GITHUB_AFTER=false    # -R
    KEEP_PROCESSES=false         # -K
 
@@ -875,6 +876,10 @@ while test $# -gt 0; do
       export RUN_UNZIP=true
       shift
       ;;
+    -UM)
+      export UNMOUNT_AFTER=true
+      shift
+      ;;
     -u)
       export UPDATE_GITHUB=true
       shift
@@ -1152,16 +1157,26 @@ if [ "${USE_MOUNT_DRIVE}" = true ]; then  # -mount
       else
          info "-mount \"$USE_DRIVE_NAME\" found. Password to copy ..."
          # Create folder using time stamp:
-         MY_USB_VOLUME="/Volumes/${USE_DRIVE_NAME}/${LOG_DATETIME}"
-         sudo mkdir "${MY_USB_VOLUME}"
+         MY_USB_PATH="/Volumes/${USE_DRIVE_NAME}/${THIS_PROGRAM}-${LOG_DATETIME}"
 
+         sudo mkdir "${MY_USB_PATH}"
          # TODO: Specify in .env which folders to copy into new USB volume:
-         sudo cp -a "$HOME/.ssh/." "${MY_USB_VOLUME}/.ssh"
-         note " At ${MY_USB_VOLUME} ..."
-         ls -al "${MY_USB_VOLUME}/.ssh"
+         FOLDER_TO_BACKUP=".ssh"
+         if [ ! -d "$HOME/$FOLDER_TO_BACKUP" ]; then  # folder doesn't exist:
+            error " Folder \"$HOME/${FOLDER_TO_BACKUP}\" to backup not found ..."
+            return 9
+         else
+            sudo cp -a "$HOME/${FOLDER_TO_BACKUP}/." "${MY_USB_PATH}/${FOLDER_TO_BACKUP}"
+         fi
+         note " At ${MY_USB_PATH} ..."
+         if [ "${SHOW_DEBUG}" = true ]; then  # -vv = Show all mounts:
+            ls -al "${MY_USB_PATH}"
+         fi
 
-         sudo umount -f "/Volumes/${USE_DRIVE_NAME}"
-         note "-mount \"${USE_DRIVE_NAME}\" is now safe to remove ..."
+         if [ "${UNMOUNT_AFTER}" = true ]; then  # -UM
+            sudo umount -f "/Volumes/${USE_DRIVE_NAME}"
+            note "-mount \"${USE_DRIVE_NAME}\" is now safe to remove ..."
+         fi
       fi
    fi
 fi
