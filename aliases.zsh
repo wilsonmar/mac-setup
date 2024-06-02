@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # This is ~/aliases.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.zsh
-# gas "v27 gpr for git pull --rebase :aliases.zsh"
+# gas "v28 randpw using pwgen :aliases.zsh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -73,11 +73,10 @@ alias wanip6="dig @resolver1.opendns.com AAAA myip.opendns.com +short -6"
 # https://ipv4.icanhazip.com/
 alias ports="lsof -i -n -P | grep TCP"
 alias listening="lsof -nP +c 15 | grep LISTEN"
-
+   # rapportd          596 johndoe    9u     IPv6  0x93d60554f660a3a        0t0                 TCP *:50866 (LISTEN)
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
 alias spacefree="du -h | awk 'END{print $1}'"
 
-alias randpass="echo $(openssl rand -base64 25) | pbcopy"
 # See https://www.perplexity.ai/search/how-to-assign-P8L9reHhTWWlLUZ9Cj1pHg
 alias randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
 # sudo ifconfig en0 ether "{RANDMAC}"
@@ -165,6 +164,8 @@ alias tor='open -a "$HOME/Applications/Tor Browser.app"'
 #### See https://wilsonmar.github.io/1password/
 alias 1pass='open -a "/Applications/1Password 7.app"'         # Secret
 # alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
+alias randpass="echo $(openssl rand -base64 25) | pbcopy"
+alias randpw="echo $(pwgen pwgen -ns 25 1) | pbcopy"
 
 #### Data:
 alias 1drive='open -a "/Applications/OneDrive.app"'

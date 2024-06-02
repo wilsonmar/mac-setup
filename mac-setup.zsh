@@ -13,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.205 mount usb drive backup :mac-setup.zsh"
+SCRIPT_VERSION="v1.206 dotfiles APPLE_APPS_TO_REMOVE :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -1011,28 +1011,27 @@ else
 fi
 # set -o nounset
 
-
+# Works on macOS & Linux:
 note "Running in PWD=$PWD"  # $0 = script being run in Present Wording Directory.
-note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  
-   # example: 10.15.1 / 21.4.0
-note "Apple About: $( ioreg -l | grep IOPlatformSerialNumber )"
-
-# See https://wilsonmar.github.io/mac-setup/#BashTraps
-note "OS_TYPE=$OS_TYPE using $PACKAGE_MANAGER from $DISK_PCT_FREE disk free"
-HOSTNAME="$( hostname )"
-   note "on hostname=$HOSTNAME "
+   HOSTNAME="$( hostname )"
 PUBLIC_IP=$( curl -s ifconfig.me )
-INTERNAL_IP=$( ipconfig getifaddr en0 )
-   # To protect privacy security, don't expose IP address for attackers to use:
-   # note "at PUBLIC_IP=$PUBLIC_IP, internal $INTERNAL_IP"
+note "HOSTNAME=$HOSTNAME PUBLIC_IP=$PUBLIC_IP"
+   
+# See https://wilsonmar.github.io/mac-setup/#OSDetect
+   export OS_TYPE="$( uname )"
+   export OS_DETAILS=""  # default blank.
+   export PACKAGE_MANAGER=""
 
-# From https://vladiliescu.net/wiki/macos/
-note $( sysctl vm.swapusage )
-   # vm.swapusage: total = 2048.00M  used = 935.25M  free = 1112.75M  (encrypted)
+if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
+   OS_TYPE="macOS"  # Substitution!
+   PACKAGE_MANAGER="brew"
 
-if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    export MACHINE_TYPE="$(uname -m)"
-   note "OS_TYPE=$OS_TYPE MACHINE_TYPE=$MACHINE_TYPE"
+   MACOS_SERIAL_NUMBER=$( ioreg -rd1 -c IOPlatformExpertDevice | awk -F'"' '/IOPlatformSerialNumber/{print $4}')
+   note "OS_TYPE=$OS_TYPE MACHINE_TYPE=$MACHINE_TYPE MACOS_SERIAL_NUMBER=$MACOS_SERIAL_NUMBER"
+   note "Apple macOS sw_vers = $(sw_vers -productVersion) / uname -r = $(uname -r)"  
+      # example: 10.15.1 / 21.4.0
+
    if [[ "${MACHINE_TYPE}" == *"arm64"* ]]; then
       # On Apple Mx Monterey: Zsh uses /opt/homebrew/bin 
       export BREW_PATH="/opt/homebrew"
@@ -1063,35 +1062,44 @@ if [ "$OS_TYPE" = "macOS" ]; then  # it's on a Mac:
    fi
 
    # TODO: Check if BREW_PATH_OPT is in PATH within .zshrc & .bash_profile
-fi
 
-# See https://wilsonmar.github.io/mac-setup/#OSDetect
-   export OS_TYPE="$( uname )"
-   export OS_DETAILS=""  # default blank.
-   export PACKAGE_MANAGER=""
+   # See https://wilsonmar.github.io/mac-setup/#BashTraps
+   INTERNAL_IPV4=$( ipconfig getifaddr en0 )
+      # To protect privacy security, don't expose IP address for attackers to use:
+      # note "at PUBLIC_IP=$PUBLIC_IP, internal $INTERNAL_IPV4"
 
-if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
-      OS_TYPE="macOS"
-      PACKAGE_MANAGER="brew"
+   # From https://vladiliescu.net/wiki/macos/
+   note $( sysctl vm.swapusage )
+      # vm.swapusage: total = 2048.00M  used = 935.25M  free = 1112.75M  (encrypted)
 
-elif [ "${OS_TYPE}" = "Windows" ]; then
-      OS_TYPE="Windows"   # replace value!
-      PACKAGE_MANAGER="choco"  # TODO: Chocolatey or https://github.com/lukesampson/scoop
 elif [ "${OS_TYPE}" = "Linux" ]; then  # it's NOT on a Mac:
-   if command -v lsb_release ; then
-      lsb_release -a
-      OS_TYPE="Ubuntu"
-      # TODO: OS_TYPE="WSL" ???
-      PACKAGE_MANAGER="apt-get"  # or sudo snap install hub --classic
-
-      silent-apt-get-install(){  # see https://wilsonmar.github.io/bash-scripts/#silent-apt-get-install
-         if [ "${RUN_E}" = true ]; then
-            info "apt-get install $1 ... "
-            sudo apt-get install "$1"
-         else
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq "$1" < /dev/null > /dev/null
-         fi
-      }
+   INTERNAL_IPV4=$( hostname -I )  # ip addr show  & ifconfig deprecated.
+   # if command -v lsb_release ; then
+   #   lsb_release -a
+           # No LSB modules are available.
+   if [ -f "/etc/os-release" ]; then
+      . /etc/os-release  # generates fields $NAME, $VERSION
+      if [ "$NAME" = "Ubuntu" ]; then
+         OS_TYPE="Ubuntu"
+         PACKAGE_MANAGER="yum"  # or sudo snap install hub --classic
+      elif [ "$NAME" = "Debian GNU/Linux" ]; then
+         OS_TYPE="Debian"
+         PACKAGE_MANAGER="apt-get"  # or sudo snap install hub --classic
+         
+         # see https://bomonike.github.io/bash-scripts/#silent-apt-get-install
+         silent-apt-get-install(){  
+            if [ "${RUN_E}" = true ]; then
+               info "apt-get install $1 ... "
+               sudo apt-get install "$1"
+            else
+               sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq "$1" < /dev/null > /dev/null
+            fi
+         }
+      else
+         cat "/etc/os-release"
+         fatal "Linux distribution not anticipated. Please update script. Aborting."
+         exit 0
+      fi
    elif [ -f "/etc/os-release" ]; then
       OS_DETAILS=$( cat "/etc/os-release" )  # ID_LIKE="rhel fedora"
       OS_TYPE="Fedora"
@@ -1111,8 +1119,11 @@ elif [ "${OS_TYPE}" = "Linux" ]; then  # it's NOT on a Mac:
       error "Linux distribution not anticipated. Please update script. Aborting."
       exit 0
    fi
+elif [ "${OS_TYPE}" = "Windows" ]; then
+      OS_TYPE="Windows"   # replace value!
+      PACKAGE_MANAGER="choco"  # TODO: Chocolatey or https://github.com/lukesampson/scoop
 else 
-   error "Operating system not anticipated. Please update script. Aborting."
+   error "OS_TYPE \"${OS_TYPE}\" not anticipated. Please update script. Aborting."
    exit 0
 fi
 # note "OS_DETAILS=$OS_DETAILS"
@@ -1640,10 +1651,10 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
 
          h2 "-I removing Apple-created apps installed from Apple Store into /Applications/ ..."
-         # APPLE_APPS_TO_REMOVE="iMovie GarageBand Keynote Numbers Pages"
+         # MACOS_APPS_TO_REMOVE="iMovie GarageBand Keynote Numbers Pages"
          # convert to array space-separated string from mac-setup.env file:
-         ARRAY=( $APPLE_APPS_TO_REMOVE )  
-         ARRAY=(`echo ${APPLE_APPS_TO_REMOVE}`);
+         ARRAY=( $MACOS_APPS_TO_REMOVE )
+         ARRAY=(`echo ${MACOS_APPS_TO_REMOVE}`);
          for appname in "${ARRAY[@]}"; do
             if [ -d "/Applications/$appname.app:?}" ]; then   # file found:
                echo "$appname.app being removed..."
@@ -1991,111 +2002,29 @@ fi  # USE_CHEZMOI
 # See https://wilsonmar.github.io/dotfiles/
 
 if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
-   h2 "16. Override defaults in Apple macOS System Preferences:"
+   h2 "20b. Override defaults in Apple macOS System Preferences:"
    # https://www.youtube.com/watch?v=r_MpUP6aKiQ = "~/.dotfiles in 100 seconds"
-   # Patrick McDonald's $12,99 Udemy course "Dotfiles from Start to Finish" at https://bit.ly/3anaaFh
+   # See Patrick McDonald's $12,99 Udemy course "Dotfiles from Start to Finish" at https://bit.ly/3anaaFh
 
    if [ "${SHOW_DEBUG}" = true ]; then  # -vv
       note "NSGlobalDomain NSGlobalDomain before update ..."
       defaults read NSGlobalDomain # > DefaultsGlobal.txt
    fi
 
-   # Explained in https://wilsonmar.github.io/dotfiles/#general-uiux
-
-         # General Appearance: Dark
-         defaults write AppleInterfaceStyle –string "Dark";
-
-         # ========== Sidebar icon size ==========
-         # - Small
-         defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 1
-         # - Medium (the default)
-         # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 2
-         # - Large
-         # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 3
-
-         # ========== Allow Handoff between this Mac and your iCloud devices ==========
-         # - Checked
-         defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityReceivingAllowed -bool true
-         defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityAdvertisingAllowed -bool true
-         # - Unchecked (default)
-         #defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityReceivingAllowed -bool false
-         #defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityAdvertisingAllowed -bool false
-
-         # ========== Default web browser ==========
-         # - Safari (default)
-         # - Google Chrome
-         # https://github.com/ulwlu/dotfiles/blob/master/system/macos.zsh has grep error.
+   if [ -f "${mydotfile.zsh}" ]; then  # file found:
+      note " mydotfile.zsh running to change macOS system settings..."
+      chmod +x mydotfile.zsh
+      ./mydotfile.zsh
       
-      # Explained in https://wilsonmar.github.io/dotfiles/#Dock
-      # Dock (icon) Size: "smallish"
-      defaults write com.apple.dock tilesize -int 36;
-
-      # (Dock) Size (small to large, default 3)
-      defaults write com.apple.dock iconsize -integer 3
-
-      # (Dock) Position on screen: left, right, or bottom (the default):
-      defaults write com.apple.dock orientation right; 
-
-      # Automatically hide and show the Dock:
-      defaults write com.apple.dock autohide-delay -float 0; 
-
-      # remove Dock show delay:
-      defaults write com.apple.dock autohide -bool true; 
-      defaults write com.apple.dock autohide-time-modifier -float 0;
-
-      # remove icons in Dock:
-      defaults write com.apple.dock persistent-apps -array; 
-
-      # Show active apps in Dock as translucent:
-      defaults write com.apple.Dock show-hidden -bool true;
-
-      # Explained in https://wilsonmar.github.io/dotfiles/#Battery
-      # Show remaining battery time; hide percentage
-      defaults write com.apple.menuextra.battery ShowPercent -string "NO"
-      defaults write com.apple.menuextra.battery ShowTime -string "YES"
-
-      # Show Bluetooth icon on Apple's Control Center (Menu Bar at top of screen):
-      # sudo defaults write /Library/Preferences/com.apple.Bluetooth ShowBluetoothInMenuBar -bool true
-      # FIXME: "Not privileged to stop service" to Restart the Bluetooth daemon:
-      # sudo launchctl stop com.apple.bluetoothd
-      # sudo launchctl start com.apple.bluetoothd
-
-      # Display Time Machine icon on menu bar
-
-   # Explained in https://wilsonmar.github.io/dotfiles/#Extensions
-      # Show all filename extensions:
-      defaults write NSGlobalDomain AppleShowAllExtensions -bool true; 
-      defaults write -g AppleShowAllExtensions -bool true
-      # Show hidden files:
-      defaults write com.apple.finder AppleShowAllFiles YES;
-      # Show ~/Library hidden by default:
-      chflags hidden ~/Library
-
-   # Explained in https://wilsonmar.github.io/dotfiles/#Mouse
-      RESULT=$( defaults read -g com.apple.mouse.scaling )
-   note "Mouse Tracking speed: ${RESULT} (default is 3 in GUI) fastest 5.0"
-      defaults write -g com.apple.mouse.scaling 5.0
-
-   note "Mouse Un-natural scrolling like Windows (toward direction) ..."
-      defaults write NSGlobalDomain com.apple.swipescrolldirection -bool FALSE
-
-   # Explained in https://wilsonmar.github.io/dotfiles/#Trackpad
-      RESULT=$( defaults read -g com.apple.trackpad.scaling )
-   note "Trackpad Tracking speed: ${RESULT} (default is 1.5 in GUI) fastest 5.0"
-      defaults write -g com.apple.trackpad.scaling 3.0
-      # FIX: Output: 5.0\013
-
-   # Tap to click: there is always a delay (between 1/4 - 3/4 second) before a tap actually does anything."3
+      warning "Restarting the Finder for the changes to take effect..."
+      killall Finder
+   fi
 
    # See https://www.youtube.com/watch?v=8fFNVlpM-Tw
    # Changing the login screen image on Monterey.
 
    # Show the ~/Library Folder https://weibeld.net/mac/setup-new-mac.html
    chflags nohidden ~/Library
-
-    # Mute Startup Sound - just before logout, and restores the previous volume just after login. 
-   sudo defaults write com.apple.loginwindow LogoutHook "osascript -e 'set volume with output muted'"
-   sudo defaults write com.apple.loginwindow LoginHook "osascript -e 'set volume without output muted'"
 
    # Set Printers & Scanners. 
 
