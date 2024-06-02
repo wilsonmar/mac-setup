@@ -13,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.206 dotfiles APPLE_APPS_TO_REMOVE :mac-setup.zsh"
+SCRIPT_VERSION="v1.206 mydotfile.zsh APPLE_APPS_TO_REMOVE :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -2020,13 +2020,17 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       killall Finder
    fi
 
-   # See https://www.youtube.com/watch?v=8fFNVlpM-Tw
-   # Changing the login screen image on Monterey.
+   # https://www.youtube.com/watch?v=eAgfeVNKdoo macOS stores a copy of everything one prints forever
+   # https://github.com/sunknudsen/privacy-guides/tree/master/how-to-disable-cups-printer-job-history-on-macos
+   # sudo ls -al /var/spool/cups
 
-   # Show the ~/Library Folder https://weibeld.net/mac/setup-new-mac.html
-   chflags nohidden ~/Library
+   # https://www.youtube.com/watch?v=5A6-htFEyTQ How to spoof MAC address and hostname automatically at boot on macOS
 
-   # Set Printers & Scanners. 
+   # Require password when returning from hibernation https://www.youtube.com/watch?v=f69rX730vl0&ty=2m52s
+   # sudo pmset-a hibernatemode 25
+
+   # https://www.youtube.com/watch?v=ASXANpr_zX8&t=0s How to spoof MAC address and hostname at boot
+   # 
 
 fi  # SET_MACOS_SYSPREFS
 

@@ -404,6 +404,10 @@ fi
 # PATH=$PATH:~/.local/bin
 # export AIRFLOW_HOME="$HOME/airflow-tutorial"
 
+if [ -f "$HOME/first-names.txt" ]; then
+   curl --fail --output /usr/local/sbin/first-names.txt https://raw.githubusercontent.com/sunknudsen/privacy-guides/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos/first-names.txt
+fi
+
 
 ### See https://wilsonmar.github.io/mac-setup/#zsh-aliases
 source ~/aliases.zsh   # export alias variables into memory

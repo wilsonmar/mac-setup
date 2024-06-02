@@ -23,8 +23,7 @@
 # Appearance:
     defaults write AppleInterfaceStyle –string "Dark";
 
-    # ========== Sidebar icon size ==========
-    # - Small
+    # Sidebar icon size - Small
     defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 1
     # - Medium (the default)
     # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 2
@@ -35,6 +34,12 @@
 # Siri & Spotlight
 # Privacy & Security
 # Desktop & Doc
+   # Default web browser:
+      # - Safari (default)
+      # - Google Chrome
+      # - Firefox https://www.youtube.com/watch?v=NH4DdXC0RFw
+      # https://github.com/ulwlu/dotfiles/blob/master/system/macos.zsh has grep error.
+      
       # Explained in https://wilsonmar.github.io/dotfiles/#Dock
       # Dock (icon) Size: "smallish"
       defaults write com.apple.dock tilesize -int 36;
@@ -111,8 +116,6 @@
 
 ################################### Where?
 
-   # Tap to click: there is always a delay (between 1/4 - 3/4 second) before a tap actually does anything."3
-
    # See https://www.youtube.com/watch?v=8fFNVlpM-Tw
    # Changing the login screen image on Monterey.
 
@@ -124,8 +127,4 @@
     #defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityReceivingAllowed -bool false
     #defaults -currentHost write com.apple.coreservices.useractivityd.plist ActivityAdvertisingAllowed -bool false
 
-    # ========== Default web browser ==========
-    # - Safari (default)
-    # - Google Chrome
-    # https://github.com/ulwlu/dotfiles/blob/master/system/macos.zsh has grep error.
-      
+# END
