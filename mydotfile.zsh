@@ -3,6 +3,7 @@
 # Use of this is file is explained at https://wilsonmar.github.io/dotfiles
 
 # All the below is equivalent to clicking the Apple logo at the upper-left, then System Settings.
+   # https://www.youtube.com/watch?v=Kft9Y33oc2I => Mac Settings That ACTUALLY Make A Difference 
 
 # Wi-Fi
 # Bluetooth
@@ -12,6 +13,7 @@
       # sudo launchctl stop com.apple.bluetoothd
       # sudo launchctl start com.apple.bluetoothd
 # Network
+   # Firewall enable, Options, Enable stealth mode.
 # Notifications
 # Sound
     # Mute Startup Sound - just before logout, and restores the previous volume just after login. 
@@ -33,6 +35,8 @@
 # Control Center
 # Siri & Spotlight
 # Privacy & Security
+   # To avoid battery charging to 100% (https://www.youtube.com/watch?v=f69rX730vl0&t=2m12s)
+   # Allow Location Services. System Services: Details, only System Customization & Significant locations.
 # Desktop & Doc
    # Default web browser:
       # - Safari (default)

@@ -1,4 +1,23 @@
 #!/usr/bin/env zsh
+SHOW_DEBUG=true
+
+         # Extract Chrome browser bookmarks:
+         FILE_TO_BACKUP="$HOME/Library/Application Support/Google/Chrome/Default/Bookmarks"
+         MY_USB_PATH="/Volumes/${USE_DRIVE_NAME}/Bookmarks-${THIS_PROGRAM}-${LOG_DATETIME}"
+         if [ ! -f "${PATH_TO_EXTRACT}" ]; then  # file not found:
+            echo "-macos Bookmarks file not found. Not extracted. Continuing..."
+         else
+           if [ "${SHOW_DEBUG}" = true ]; then  # -vv
+               bookmarks=$(jq '.roots.bookmark_bar.children[] | recurse(.children[]) | .url, .name' "$FILE_TO_EXTRACT" | sed 'N;s/\n/ /')
+               # Print the formatted bookmarks
+               printf "%s\n" "$bookmarks"
+            fi
+            echo "-macos copying to disk..."
+            sudo cp -a "$HOME/${FILE_TO_BACKUP}" "${MY_USB_PATH}/${FOLDER_TO_BACKUP}"
+            # Extract bookmark URLs and titles using jq:
+         fi
+
+exit 9
 
 # See https://wilsonmar.github.io/mac-setup/#akeyless
 

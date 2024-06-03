@@ -13,7 +13,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.206 mydotfile.zsh APPLE_APPS_TO_REMOVE :mac-setup.zsh"
+SCRIPT_VERSION="v1.207 backup chrome bookmarks :mac-setup.zsh"
 # sudo password mac-setup.env init : mac-setup.zsh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.zsh"
@@ -28,7 +28,7 @@ SCRIPT_VERSION="v1.206 mydotfile.zsh APPLE_APPS_TO_REMOVE :mac-setup.zsh"
 ### 01. Capture time stamps to later calculate how long the script runs, no matter how it ends:
 
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
-LOG_DATETIME=$( date +%Y-%m-%dT%H:%M:%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
+LOG_DATETIME=$( date +%Y%m%dT%H%M%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
 # clear  # screen (but not history)
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
@@ -149,10 +149,10 @@ args_prompt() {
 
 ### 03. Usage Examples
 usage_examples() {
-   echo "# USAGE EXAMPLES:"
+   echo "./mac-setup.zsh -usage  # USAGE EXAMPLES:"
    echo "./mac-setup.zsh -init -v # to download .env & aliases into \$HOME folder ${HOME}"
    echo "./mac-setup.zsh -init -gfb \"~/github-wilsonmar\" -ssh -v  # create GITHUB_FOLDER_BASE"
-   echo "./mac-setup.zsh -mount \"HP-USB-4GB\" -UM -v  # mount USB drive and backup to it"
+   echo "./mac-setup.zsh -mount \"V-64G-4\" -UM -v  # mount USB drive and backup to it"
    echo " "
    echo "./mac-setup.zsh -I -U -utils -v  # install or update utilities spec'd in .env file"
    echo "# Using default configuration settings downloaed to \$HOME/mac-setup.env "
@@ -265,7 +265,7 @@ info "======= ${SCRIPT_VERSION} ${LOG_DATETIME}"
    RUN_QUIET=false                # -q
 
    USE_MOUNT_DRIVE=false          # -mount 
-   USE_DRIVE_NAME=""  # in env file
+   USE_MOUNT_NAME=""  # in env file
 
    INIT_ENV_FILES=false           # -init  # to use default ENV_FOLDERPATH_BASE:
    ENV_FOLDERPATH=""              # -envf "$HOME" or alt-folder (away from GitHub)
@@ -720,7 +720,7 @@ while test $# -gt 0; do
     -mount*)
       shift
       export USE_MOUNT_DRIVE=true
-      export USE_DRIVE_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
+      export USE_MOUNT_NAME=$( echo "$1" | sed -e 's/^[^=]*=//g' )
       shift
       ;;
     -m)
@@ -1151,42 +1151,63 @@ fi
 # https://github.com/pacoorozco/dotfiles/tree/main/backup-toolj
 
 if [ "${USE_MOUNT_DRIVE}" = true ]; then  # -mount
-   if [ -z "${USE_DRIVE_NAME}" ]; then   # not specified in parms
-      error "-mount USE_DRIVE_NAME parameter not defined. Skipping backup to USB stick..."
+   if [ -z "${USE_MOUNT_NAME}" ]; then   # not specified in parms
+      error "-mount USE_MOUNT_NAME parameter not defined. Skipping backup to USB stick..."
       return 9
    else
-      echo_debug "-mount \"$USE_DRIVE_NAME\" in run parameter..."
+      echo_debug "-mount \"$USE_MOUNT_NAME\" in run parameter..."
       RESULT=$( ls /Volumes )
       if [ "${SHOW_DEBUG}" = true ]; then  # -vv = Show all mounts:
          mount
             # /dev/disk4s1 on /Volumes/HP-USB-4GB (msdos, local, nodev, nosuid, noowners, noatime, fskit)
       fi
-      if [[ ! "${RESULT}" == *"${USE_DRIVE_NAME}"* ]]; then  # contains it:
-         error "-mount \"$USE_DRIVE_NAME\" not found among volumes: ${RESULT} ..."
-         error "-mount \"$USE_DRIVE_NAME\" not used to receive backups ..."
+      if [[ ! "${RESULT}" == *"${USE_MOUNT_NAME}"* ]]; then  # contains it:
+         error "-mount \"$USE_MOUNT_NAME\" not found among volumes: ${RESULT} ..."
+         error "-mount \"$USE_MOUNT_NAME\" not used to receive backups ..."
          return 9
       else
-         info "-mount \"$USE_DRIVE_NAME\" found. Password to copy ..."
+         info "-mount \"$USE_MOUNT_NAME\" found. Password to copy ..."
          # Create folder using time stamp:
-         MY_USB_PATH="/Volumes/${USE_DRIVE_NAME}/${THIS_PROGRAM}-${LOG_DATETIME}"
+         USB_FOLDER_PATH="/Volumes/${USE_MOUNT_NAME}/${MACOS_SERIAL_NUMBER}-backup-${LOG_DATETIME}"
+         sudo mkdir -p "${USB_FOLDER_PATH}"
 
-         sudo mkdir "${MY_USB_PATH}"
-         # TODO: Specify in .env which folders to copy into new USB volume:
          FOLDER_TO_BACKUP=".ssh"
+         sudo mkdir -p "${USB_FOLDER_PATH}/${FOLDER_TO_BACKUP}"
+         # TODO: Specify in .env which folders to copy into new USB volume:
          if [ ! -d "$HOME/$FOLDER_TO_BACKUP" ]; then  # folder doesn't exist:
-            error " Folder \"$HOME/${FOLDER_TO_BACKUP}\" to backup not found ..."
+            error "-mount folder \"$HOME/${FOLDER_TO_BACKUP}\" to backup not found ..."
             return 9
          else
-            sudo cp -a "$HOME/${FOLDER_TO_BACKUP}/." "${MY_USB_PATH}/${FOLDER_TO_BACKUP}"
+            sudo cp -a "$HOME/${FOLDER_TO_BACKUP}/." "${USB_FOLDER_PATH}/${FOLDER_TO_BACKUP}"
          fi
-         note " At ${MY_USB_PATH} ..."
+
+         # Extract Chrome browser bookmarks:
+         FILE_TO_BACKUP="$HOME/Library/Application Support/Google/Chrome/Default/Bookmarks"
+         if [ ! -f "${FILE_TO_BACKUP}" ]; then  # file not found:
+            error "-mount Bookmarks FILE_TO_BACKUP not found. Not extracted. Continuing..."
+         else
+            note "-mount copying Chrome Bookmarks file ${FILE_TO_BACKUP} to ${USB_FOLDER_PATH} ..."
+            sudo cp -a "${FILE_TO_BACKUP}" "${USB_FOLDER_PATH}/Bookmark"
+
+            # Print the formatted bookmarks:
+            if [ "${SHOW_DEBUG}" = true ]; then  # -vv
+               # Extract bookmark URLs and titles using jq:
+               bookmarks=$(jq '.roots.bookmark_bar.children[] | recurse(.children[]) | \
+                  .url, .name' "$FILE_TO_BACKUP" | sed 'N;s/\n/ /')
+               printf "%s\n" "$bookmarks"
+            fi
+         fi
+
+         # TODO: Backup other folders/files?
+
+         note " At ${USB_FOLDER_PATH} ..."
          if [ "${SHOW_DEBUG}" = true ]; then  # -vv = Show all mounts:
-            ls -al "${MY_USB_PATH}"
+            ls -al "${USB_FOLDER_PATH}"
          fi
 
          if [ "${UNMOUNT_AFTER}" = true ]; then  # -UM
-            sudo umount -f "/Volumes/${USE_DRIVE_NAME}"
-            note "-mount \"${USE_DRIVE_NAME}\" is now safe to remove ..."
+            sudo umount -f "/Volumes/${USE_MOUNT_NAME}"
+            note "-mount : \"${USE_MOUNT_NAME}\" is now safe to remove (and plug in again) ..."
          fi
       fi
    fi
@@ -2024,13 +2045,12 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
    # https://github.com/sunknudsen/privacy-guides/tree/master/how-to-disable-cups-printer-job-history-on-macos
    # sudo ls -al /var/spool/cups
 
-   # https://www.youtube.com/watch?v=5A6-htFEyTQ How to spoof MAC address and hostname automatically at boot on macOS
+   # https://www.youtube.com/watch?v=5A6-htFEyTQ How to spoof MAC address and hostname automatically at boot on macOS (not Mojave)
+   # https://github.com/sunknudsen/privacy-guides/tree/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos
+
 
    # Require password when returning from hibernation https://www.youtube.com/watch?v=f69rX730vl0&ty=2m52s
    # sudo pmset-a hibernatemode 25
-
-   # https://www.youtube.com/watch?v=ASXANpr_zX8&t=0s How to spoof MAC address and hostname at boot
-   # 
 
 fi  # SET_MACOS_SYSPREFS
 

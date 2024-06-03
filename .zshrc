@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# gas "v0.28 # fix brew complete ; Add /opt/homebrew/bin for Apple Silicon ARM chips :.zshrc"
+# gas "v0.29 Add MAC spoofing :.zshrc"
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
 # This is explained in https://wilsonmar.github.io/zsh
 # This file is not provided by macOS by default.
@@ -37,7 +37,6 @@ if [ -f "$HOME/Applications/Visual Studio Code.app" ]; then  # installed:
    export PATH="$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin:${PATH}"
       # contains folder code and code-tunnel
 fi
-
 
 
 #### See https://wilsonmar.github.io/homebrew
@@ -404,9 +403,56 @@ fi
 # PATH=$PATH:~/.local/bin
 # export AIRFLOW_HOME="$HOME/airflow-tutorial"
 
-if [ -f "$HOME/first-names.txt" ]; then
-   curl --fail --output /usr/local/sbin/first-names.txt https://raw.githubusercontent.com/sunknudsen/privacy-guides/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos/first-names.txt
+# How to spoof MAC address and hostname at boot => https://www.youtube.com/watch?v=ASXANpr_zX8
+# https://github.com/sunknudsen/privacy-guides/tree/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos
+if [ -d "/usr/local/sbin/" ]; then
+   sudo mkdir /usr/local/sbin/
 fi
+basedir="/usr/local/sbin"
+if [ ! -f "/usr/local/sbin/first-names.txt" ]; then
+   sudo curl --fail --output /usr/local/sbin/first-names.txt https://raw.githubusercontent.com/sunknudsen/privacy-guides/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos/first-names.txt
+fi
+# Spoof computer name
+first_name=$(sed "$(jot -r 1 1 2048)q;d" $basedir/first-names.txt | sed -e 's/[^a-zA-Z]//g')
+model_name=$(system_profiler SPHardwareDataType | awk '/Model Name/ {$1=$2=""; print $0}' | sed -e 's/^[ ]*//')
+computer_name="$first_name’s $model_name"
+host_name=$(echo $computer_name | sed -e 's/’//g' | sed -e 's/ /-/g')
+sudo scutil --set ComputerName "$computer_name"
+sudo scutil --set LocalHostName "$host_name"
+sudo scutil --set HostName "$host_name"
+print "Spoofed hostname = $host_name\n"
+   # such as "Cristobals-MacBook-Pro"
+# randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
+# Spoof MAC address of Wi-Fi interface - see https://www.youtube.com/watch?v=b-8hA5Qa_F8
+mac_address_prefix=$(networksetup -listallhardwareports | awk -v RS= '/en0/{print $NF}' | head -c 8)
+mac_address_suffix=$(openssl rand -hex 3 | sed 's/\(..\)/\1:/g; s/.$//')
+mac_address=$(echo "$mac_address_prefix:$mac_address_suffix" | awk '{print tolower($0)}')
+   # Such as 00:11:22:33:44:55
+
+#networksetup -setairportpower en0 on
+networksetup -setairportpower en0 off
+
+if command -v /usr/local/bin/airport >/dev/null; then  # command found, so:
+   sudo rm /usr/local/bin/airport
+fi
+# Create symlink to airport command so it can still be used even though it is deprecated:
+sudo ln -s /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport /usr/local/bin/airport
+   # WARNING: The airport command line tool is deprecated and will be removed in a future release.
+   # For diagnosing Wi-Fi related issues, use the Wireless Diagnostics app or wdutil command line tool.
+   # ifconfig: ioctl (SIOCAIFADDR): Can't assign requested address
+   # WARNING of 3rd party: brew install macchanger  then macchanger -m xx:xx:xx:xx:xx:xx en0
+   # Disconnect:
+   # sudo /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -z
+sudo /usr/local/bin/airport --disassociate
+
+# Turn off the Wi-Fi device:
+networksetup -setairportpower en0 off
+# Change the MAC address: ifconfig deprecated
+sudo ifconfig en0 ether "$mac_address"
+# Turn on the Wi-Fi device:
+networksetup -setairportpower en0 on
+print "Spoofed MAC address of en0 interface = $mac_address\n"
+
 
 
 ### See https://wilsonmar.github.io/mac-setup/#zsh-aliases
