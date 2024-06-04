@@ -1198,9 +1198,11 @@ if [ "${USE_MOUNT_DRIVE}" = true ]; then  # -mount
             #fi
          fi
 
-         # TODO: Backup other folders/files into a compressed and encrypted drive.
-
-         # TODO: Firefox config https://support.mozilla.org/en-US/kb/customizing-firefox-using-autoconfig
+         # TODO: Backup other folders/files into a compressed and encrypted drive using Veracrypt?
+         # TODO: Cloud $2mo Borgbase.com backup using deduplication encrypted compressed https://www.borgbackup.org
+                 # and https://vorta.borgbase.com GUI Fail safe vs fail secure.
+         # TODO: Rsync.net ZFS RAID-6 mirrored volume https://www.youtube.com/watch?v=1cz_ViFB6eE
+                 # https://www.youtube.com/watch?v=asZX2YbTaNE&t=108s
 
          note " At ${USB_FOLDER_PATH} ..."
          if [ "${SHOW_DEBUG}" = true ]; then  # -vv = Show all mounts:
@@ -1781,18 +1783,19 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             # Docs.app, Gmail.app, Google Drive.app, Sheets.app, Slides,app, YouTube.app
 
          h2 "-I install brew CLI utilities ..."
-         # TODO: CLI_PGMS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
+         # TODO: BREWS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
          # Defined in ~/mac-setup.env :
-         # CLI_PGMS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
+         # BREWS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
             # * jq manipulates JSON
             # * yq manipulates YAML
-         ARRAY=(`echo ${CLI_PGMS_TO_INSTALL}`);  # from ~/mac-setup.env
+         # Backups: Rsync vs Borg vs Restic.net vs Kopia.io (grigio.org - youtube.com/watch?v=abqvgU_SSWU)
+         ARRAY=(`echo ${BREWS_TO_INSTALL}`);  # from ~/mac-setup.env
          for brewname in "${ARRAY[@]}"; do
             brew install $brewname
             # NOTE: Brew updates if already installed.
          done
 
-         # Exceptions:
+         # Exceptions (to avoid issues, install on its own):
          brew install jmespath/jmespath/jp
          # https://github.com/jmespath/jp
          
@@ -1808,6 +1811,26 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
          # Replacement for ls - see https://the.exa.website/#installation
          # brew install exa
 
+         # Configure Firefox:
+         if [ ! -f "firefox-user.js" ]; then   # NOT found
+            warnng "firefox-user.js not found. Skipping Firefox config..."
+         else  # file found:
+            # Copy existing user.js in Firefox - see https://www.youtube.com/watch?v=s-vwthG28ks
+            # TODO: Backup to USB chip!
+            
+            # TODO: Install using CLI
+            # separate cookies in different accounts, 
+               # at https://addons.mozilla.org/en-US/firefox/addon/multi-account-containers/
+            # Add Privacy Badget by EFF to block invisible trackers 
+               # at https://addons.mozilla.org/en-US/firefox/addon/privacy-badger17/
+
+            # Find ???.default-release folder in "$HOME/Library/Application Support/Firefox/Profiles/"
+            ls "$HOME/Library/Application Support/Firefox/Profiles/"
+
+            note "Overwriting firefox-user.js in mac-setup from github into Firefox user.js ..."
+            # See https://github.com/arkenfox/user.js/
+            # See https://github.com/sunknudsen/privacy-guides/blob/master/how-to-configure-firefox-for-privacy-and-security/user.js
+         fi
 
          ### 18c. Define file extensions to edit using VSCode
          # https://superuser.com/questions/273756/how-to-change-default-app-for-all-files-of-particular-file-type-through-terminal
