@@ -18,6 +18,7 @@ SCRIPT_VERSION="v1.209 mac-setup.zsh to .sh :mac-setup.sh"
 # Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.sh"
 # Restruc github vars : mac-setup.sh"
+# TODO: FREE_DISKBLOCKS_END
 # TODO: Download $HOME folder data from local drive or internet
 # TODO: Remove circleci from this script.
 # TODO: Add test for duplicate run using flock https://www.baeldung.com/linux/bash-ensure-instance-running
@@ -1269,12 +1270,12 @@ download_setup(){
 }
 # WARNING: This sequence is important to ensure dependencies are present:
    download_setup "mac-setup.env"  #1 
-   download_setup "aliases.zsh"    #2 
+   download_setup "aliases.sh"    #2 
    download_setup ".zshrc"         #3 
    download_setup "mac-setup.sh"  #4 
 
 if [ "${INIT_ENV_FILES}" = true ]; then  # -init
-   warning "Now restart Terminal, which runs .zshrc which runs aliases.zsh and mac-setup.env"
+   warning "Now restart Terminal, which runs .zshrc which runs aliases.sh and mac-setup.env"
    h2 "Now please edit the file to customize variables ..."
    h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
    # note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
@@ -1283,9 +1284,9 @@ if [ "${INIT_ENV_FILES}" = true ]; then  # -init
    exit
 else
    source ./mac-setup.env  #1 
-   source ./aliases.zsh    #2 
+   source ./aliases.sh     #2 
    source ./.zshrc         #3 
-#  source ./mac-setup.sh  #4 
+#  source ./mac-setup.sh   #4 
 fi
 
 # See https://wilsonmar.github.io/mac-setup/#DisplayRunVars
