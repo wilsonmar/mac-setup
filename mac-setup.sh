@@ -4,7 +4,7 @@
 # Shell scripting techniques are explained in https://wilsonmar.github.io/shell-scripts
 # Like https://medium.com/@maxy_ermayank/developer-environment-setup-script-5fcb7b854acc
 
-# shellcheck does not work on zsh.
+# We stayed with bash instead of zsh because Shell Check does not work on zsh.
 
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so
@@ -30,6 +30,7 @@ SCRIPT_VERSION="v1.209 mac-setup.zsh to .sh :mac-setup.sh"
 
 # See https://wilsonmar.github.io/mac-setup/#StartingTimes
 LOG_DATETIME=$( date +%Y%m%dT%H%M%S%z)-$((1 + RANDOM % 1000))  # 2023-09-21T05:07:45-0600-264
+# On macOS, time zones are obtained using: sudo systemsetup -listtimezones
 # clear  # screen (but not history)
 EPOCH_START="$( date -u +%s )"  # such as 1572634619
 THIS_PROGRAM="${0##*/}" # excludes the ./ in "$0" 
@@ -1069,9 +1070,14 @@ if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
       # To protect privacy security, don't expose IP address for attackers to use:
       # note "at PUBLIC_IP=$PUBLIC_IP, internal $INTERNAL_IPV4"
 
-   # From https://vladiliescu.net/wiki/macos/
-   note $( sysctl vm.swapusage )
-      # vm.swapusage: total = 2048.00M  used = 935.25M  free = 1112.75M  (encrypted)
+   if [ "${SHOW_DEBUG}" = true ]; then  # -vv
+      # For Model Number, UUID, UDID
+      system_profiler SPHardwareDataType
+
+      # From https://vladiliescu.net/wiki/macos/
+      sysctl vm.swapusage
+         # vm.swapusage: total = 2048.00M  used = 935.25M  free = 1112.75M  (encrypted)
+   fi
 
 elif [ "${OS_TYPE}" = "Linux" ]; then  # it's NOT on a Mac:
    INTERNAL_IPV4=$( hostname -I )  # ip addr show  & ifconfig deprecated.
@@ -1218,8 +1224,6 @@ if [ "${USE_MOUNT_DRIVE}" = true ]; then  # -mount
    fi
 fi
 
-echo "yikes";exit
-
 
 ### 13. Read & download .env variables
 
@@ -1297,7 +1301,11 @@ fi
 # TODO: .gitconfig   
 
 
-### 14. Upgrade Bash to Zsh
+### 14a. Make Bash Great Again
+
+
+
+### 14b. Upgrade Bash to Zsh
 
 # Using Apple's dscl (Directory Services database Command Line) utility:
 
@@ -1305,6 +1313,7 @@ USER_SHELL_INFO="$( dscl . -read /Users/${USER} UserShell )"
 if [ "${SHOW_VERBOSE}" = true ]; then
    note "SHELL=$SHELL for USER=$USER"
 fi
+
 if [ "${CONVERT_TO_ZSH}" = true ]; then
    # Shell scripting NOTE: Double brackets and double dashes to compare strings, with space between symbols:
    if [[ "UserShell: /bin/bash" = *"${SHELL}"* ]]; then
@@ -1335,7 +1344,7 @@ fi  # CONVERT_TO_ZSH
 
 
 
-### 14. Define utility functions: kill process by name, etc.
+### 14c. Define utility functions: kill process by name, etc.
 ###     Keep-alive: update existing `sudo` time stamp until `.osx` has finished
 
 # See https://wilsonmar.github.io/mac-setup/#KeepAlive
@@ -1352,7 +1361,7 @@ ps_kill(){  # $1=process name
 
 
 
-### 15. Install installers (brew, apt-get), depending on operating system
+### 15a. Install installers (brew, apt-get), depending on operating system
 
 # See https://wilsonmar.github.io/mac-setup/#InstallInstallers
 
@@ -1530,13 +1539,15 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
 fi # if [ "${DOWNLOAD_INSTALL}"
 
 
+### 15b. Brew doctor and Cleanup 
+
 if [ "${VERIFY_ENV}" = true ]; then  # -V  (upper case)
   if command -v brew >/dev/null; then  # command found, so:
-      h2 "brew doctor for -V (Verify) (may error out script)..."
+      h2 "-V : brew doctor for -V (Verify) (may error out script)..."
       brew doctor
-         # "Your system is ready to brew."
+         # "Your system is ready to brew." is the desired response.
 
-      h2 "brew cleanup from previous install (may error out script)..."
+      h2 "-V : brew cleanup from previous install (may error out script)..."
       brew cleanup
          # RESPONSE: Pruned 4 symbolic links from /usr/local
 
@@ -1558,7 +1569,7 @@ fi
 ### 16. Install ShellCheck & bclm
 
 # See https://wilsonmar.github.io/mac-setup/#ShellCheck
-# CAUTION: shellcheck does not work on zsh files (only bash files)
+# CAUTION: Shell Check does not work on zsh files (only bash files)
 if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
    if [ "${PACKAGE_MANAGER}" = "brew" ]; then
          if ! command -v shellcheck >/dev/null; then  # command not found, so:
@@ -1576,13 +1587,6 @@ if [ "${DOWNLOAD_INSTALL}" = true ]; then  # -I
             # website: https://www.zshellcheck.net
    fi  # PACKAGE_MANAGER
 fi  # DOWNLOAD_INSTALL
-
-# TODO: (Removed because it executes even if shellcheck is not installed:
-#if [ "${CONTINUE_ON_ERR}" = false ]; then  # -cont
-#   shellcheck "$0"
-#fi
-
-# bclm removed to futures/bclm.md
 
 
 ### 17. Trace execution of this script using otel-cli

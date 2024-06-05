@@ -1,12 +1,14 @@
 #!/usr/bin/env sh
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
-# gas "v29 aliases.zsh to aliases.sh :aliases.sh"
+# gas "v31 multi-platform uname : aliases.sh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
-# LATEST: Add -S to gc to sign git commits
 
-alias now='date +"%A %Y-%m-%d %T %p %s"'
+# One reason I can jump easily between Debian, Ubuntu, mac because I
+# have customized keyboard aliases so I use the same command across machines.
+export OS_TYPE="$( uname )"
+
 alias c="clear"  # screen
 alias cd=' cd'
 alias ..=' cd ..; ls'
@@ -15,6 +17,9 @@ alias ....=' cd ..; cd ..; cd ..; ls'
 alias cd..='..'
 alias cd...='...'
 alias cd....='....'
+
+alias now='date +"%A %Y-%m-%d %T %p %s"'
+   # Wednesday 2024-06-05 08:39:37 AM 1717598377
 
 # Recap: One-key keyboard shortcuts (used most often):
 #alias d='docker'
@@ -39,7 +44,6 @@ alias kp="ps auxwww | more"  # "que pasa" processes running
 alias rs='exec -l $SHELL'    # reset shell
 alias sleepnow="pmset sleepnow"
 
-
 # Listings:
 alias lt="ls -1R | more"   # list tree
 alias ltt="ls -ltaT | more"   # list by date
@@ -51,17 +55,54 @@ alias dir='ls -alrT'         # for windows habits
 alias l='ls -FalhGT | more'         # T for year
 alias ll='ls -FalhGT | more'  # T for year
 
-# Last 50 files updated anywhere:
-alias f50='stat -f "%m%t%Sm %N" /tmp/* | sort -rn | head -50 | cut -f2- 2>/dev/null'
+#### System utilities:
+if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
+   alias automator='open -a "/System/Applications/Automator.app"'   
+      # https://support.apple.com/guide/automator/welcome/mac
+      # https://macosxautomation.com/automator/
+      # https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
+   #alias alfred='open -a "$HOME/Applications/Alfred 3.app"'
+   #alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'   # performance benchmarking
+   alias vfusion='open -a "$HOME/Applications/VMware Fusion.app"'
+fi
 
-# wireless en0, wired en1: PRIVATE_IP address:
-alias en0="ipconfig getifaddr en0"  # like 172.20.1.91 or 192.168.1.253
+#### SECRETS:  see https://wilsonmar.github.io/1password/
+alias 1pass='open -a "/Applications/1Password 7.app"'         # Secret
+# alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
+alias randpass="echo $(openssl rand -base64 25) | pbcopy"
+alias randpw="echo $(pwgen pwgen -ns 25 1) | pbcopy"
+
+##### Terminal 
+# terminal.app
+# hyper is in /usr/local/bin 
+# alias iterm='open -a "/Applications/iTerm.app"'
+# alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
+
+#### MEMORY:
+alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
+
+#### DISKSPACE:
+alias spacefree="du -h | awk 'END{print $1}'"
+if [ "${OS_TYPE}" = "Linux" ]; then  # it's NOT on a Mac:
+   alias lll="sudo du -aBM / 2>/dev/null | sort -nr | head -n 10"  # 10 largest files
+elif [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
+   # Last 50 files updated anywhere:
+   alias f50='stat -f "%m%t%Sm %N" /tmp/* | sort -rn | head -50 | cut -f2- 2>/dev/null'
+fi
+
+#### NETWORKING:
 #alias myip="ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2" 
 # ip route get 1 | awk '{print $NF;exit}'
-alias netq="networkquality"  # comes with MacOS
-# These all return the public ip like https://www.whatismyip.com/:
+if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
+   alias netq="networkquality"  # comes with MacOS
+      # Downlink: 139.896 Mbps, 358 RPM - Uplink: 10.534 Mbps, 358 RPM^C
+fi
+# wireless en0, wired en1: PRIVATE_IP address: 172.20.1.91 or 192.168.1.253
+alias privip="ipconfig getifaddr en0"
+
+# Public ip like https://www.whatismyip.com/:
 # alias mac="curl http://canhazip.com"  # public IP 
-#alias pubip="curl https://checkip.amazonaws.com"  # public IP
+# alias pubip="curl https://checkip.amazonaws.com"  # public IP
 alias pubip="curl -s ifconfig.me"  # public IP
 alias ipa="ip a"  # analyze networking
 alias ipinfo="curl ipinfo.io"  # more verbose JSON containing country and zip of IP
@@ -74,42 +115,30 @@ alias wanip6="dig @resolver1.opendns.com AAAA myip.opendns.com +short -6"
 alias ports="lsof -i -n -P | grep TCP"
 alias listening="lsof -nP +c 15 | grep LISTEN"
    # rapportd          596 johndoe    9u     IPv6  0x93d60554f660a3a        0t0                 TCP *:50866 (LISTEN)
-alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
-alias spacefree="du -h | awk 'END{print $1}'"
 
 # See https://www.perplexity.ai/search/how-to-assign-P8L9reHhTWWlLUZ9Cj1pHg
 alias randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
 # sudo ifconfig en0 ether "{RANDMAC}"
 
-#### Define aliases to invoke GUI apps with several words:
 
-#### built-in macOS system GUI apps invoke from command line:
-alias airport='open -a "/System/Applications/Utilities/Airport Utility.app"'
-alias amon='open -a "/System//Applications/Utilities/Activity Monitor.app"'  # See CPU usage by app
-alias sysinfo='open -a "/System/Applications/Utilities/System Information.app"'
-alias syspref='open -a "/System//Applications/System Preferences.app"'
+#### GUI APPS: 
+if [ "${OS_TYPE}" = "Linux" ]; then  # it's NOT on a Mac:
+   alias calc="???"
+elif [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
+   alias calc='open -a "/System/Applications/Calculator.app"'
 
-### built-in Apple apps:
-alias appstore='open -a "/System/Applications/App Store.app"'
-alias calc='open -a "/System/Applications/Calculator.app"'
-# cal = calendar 
+   #### built-in macOS system GUI apps invoke from command line:
+   alias airport='open -a "/System/Applications/Utilities/Airport Utility.app"'
+   alias amon='open -a "/System//Applications/Utilities/Activity Monitor.app"'  # See CPU usage by app
+   alias sysinfo='open -a "/System/Applications/Utilities/System Information.app"'
+   alias syspref='open -a "/System//Applications/System Preferences.app"'
 
-##### Terminal 
-# terminal.app
-# hyper is in /usr/local/bin 
-# alias iterm='open -a "/Applications/iTerm.app"'
-# alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
+   ### built-in Apple apps:
+   alias appstore='open -a "/System/Applications/App Store.app"'
+   # cal = calendar 
+fi
 
-#### System utilities:
-alias automator='open -a "/System/Applications/Automator.app"'   
-   # https://support.apple.com/guide/automator/welcome/mac
-   # https://macosxautomation.com/automator/
-   # https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
-#alias alfred='open -a "$HOME/Applications/Alfred 3.app"'
-#alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'   # performance benchmarking
-alias vfusion='open -a "$HOME/Applications/VMware Fusion.app"'
-
-##### See https://wilsonmar.github.io/text-editor
+##### TEXT EDITOR:  see https://wilsonmar.github.io/text-editor
 if [ -d "/Applications/Visual Studio Code.app" ]; then
    alias code='open -a "/Applications/Visual Studio Code.app"'
    alias vscode='open -a "/Applications/Visual Studio Code.app"'
@@ -123,9 +152,7 @@ alias ezs="$EDITOR ~/.zshrc"   # for Zsh
 alias szs='source ~/.zshrc'
 alias sshconf="$EDITOR ~/.ssh/config"
 #alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
-alias awscreds="$EDITOR ~/.aws/credentials"
-# From https://stackoverflow.com/questions/31331788/using-aws-cli-what-is-best-way-to-determine-the-current-region
-alias awsregion="aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'"
+
 # alias atom was removed from market by GitHub.
 # alias brackets='open -a "/Applications/Brackets.app"'
 # alias eclipse='open "/Applications/Eclipse.app"'
@@ -146,28 +173,15 @@ alias subl='open -a "/Applications/Sublime Text.app"'
 # alias webstorm='open -a "/Applications/Webstorm.app"'
 alias xcode='open -a /Applications/Xcode.app'
 
+##### CLOUD:
+alias awscreds="$EDITOR ~/.aws/credentials"
+# From https://stackoverflow.com/questions/31331788/using-aws-cli-what-is-best-way-to-determine-the-current-region
+alias awsregion="aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]'"
+
 # Enhanced diff: Not in brew
-alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
+# alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
 
-
-##### Internet Browsers:
-alias brave='open -a "/Applications/Brave.app"'
-# See https://wilsonmar.github.io/dotfiles/#GoogleChrome.app
-alias chrome='open -a "$HOME/Applications/Google Chrome.app"'
-alias edge='open -a "/Applications/Microsoft Edge.app"'
-alias firefox='open -a "/Applications/Firefox.app"'
-alias safari='open -a "/Applications/Safari.app"'
-alias tor='open -a "$HOME/Applications/Tor Browser.app"'
-# alias opera='open -a "$HOME/Applications/Opera.app"'
-
-
-#### See https://wilsonmar.github.io/1password/
-alias 1pass='open -a "/Applications/1Password 7.app"'         # Secret
-# alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
-alias randpass="echo $(openssl rand -base64 25) | pbcopy"
-alias randpw="echo $(pwgen pwgen -ns 25 1) | pbcopy"
-
-#### Data:
+#### CLOUD DATA:
 alias 1drive='open -a "/Applications/OneDrive.app"'
 # box
 # Google Drive
@@ -196,16 +210,15 @@ alias kindle='open -a "/Applications/Kindle.app"'
 alias reader='open -a "/Applications/Adobe Acrobat Reader DC.app"'
 # https://wilsonmar.github.io/dotfiles/#Transmission.app  # Torrent
 
+alias excel='open -a "/Applications/Microsoft Excel.app"'
+alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
+alias word='open -a "/Applications/Microsoft Word.app"'
 
 ##### Content creation (Audio/Video):
 alias obs='open -a "/Applications/OBS.app"'
 alias sketch='open -a "/Applications/Sketch.app"'
 #alias unity='open -a "$HOME/Applications/Unity.app"'
 alias audacity='open -a "/Applications/Audacity.app"'      # Audio engineering
-
-alias excel='open -a "/Applications/Microsoft Excel.app"'
-alias ppt='open -a "/Applications/Microsoft PowerPoint.app"'
-alias word='open -a "/Applications/Microsoft Word.app"'
 
 
 ##### Software development:
@@ -220,7 +233,7 @@ alias insomnia='open -a "/Applications/Insomnia.app"'
 # alias soapui='open -a "/Applications/SoapUI-5.4.0.app"'
 
 
-#### See https://wilsonmar.github.io/git-shortcuts/
+#### GIT & GITHUB: see https://wilsonmar.github.io/git-shortcuts/
 # https://coderwall.com/p/_-ypzq/git-bash-fixing-it-with-alias-and-functions
 # Only on MacOS, not git bash on Windows MINGW64:
 alias hb="hub browse"
@@ -228,7 +241,9 @@ alias hb="hub browse"
 if [[ "$(uname)" == *"Darwin"* ]]; then  # it's on a Mac:
    # echo "Adding functions for Mac ..."
    # TODO: https://www.phillip-kruger.com/post/some_bash_functions_for_git/
-   alias vers="sw_vers"
+   alias vers="system_profiler SPHardwareDataType"
+      # alias vers="sw_vers"
+         # For just ProductName: macOS, ProductVersion: 14.5, BuildVersion: 23F79
    function gas() { git status ;  git add . -A ; git commit -m "$1" ; git push; }
    function gsa() { git stash save "$1" -a; git stash list; }  # -a = all (untracked, ignored)
    function gsp() { git stash pop; }
@@ -271,13 +286,13 @@ alias grx="rm .git/merge"  # Remove merge
 # https://www.youtube.com/watch?v=YwG8C0jPapE making your own custom git commands (intermediate) by @anthonywritescode (Anthony Sottile)
 
 
-#### See https://wilsonmar.github.io/git-signing/
+#### PRIVACY:  see https://wilsonmar.github.io/git-signing/
 alias gsk="gpg --list-secret-keys --keyid-format LONG"
 alias gst="gpg show-ref --tags"
 alias sign='gpg --detach-sign --armor'
 
 
-#### See https://wilsonmar.github.io/python/
+#### PYTHON:  see https://wilsonmar.github.io/python/
 alias python="python3"
 alias pip="pip3"
 # https://virtualenvwrapper.readthedocs.io/en/latest/
@@ -290,21 +305,7 @@ alias vba="source venv/bin/activate"
 alias vbd="source deactivate"
 
 
-#### See https://wilsonmar.github.io/hashicorp-consul#Shortcuts
-alias csl="curl http://127.0.0.1:8500/v1/status/leader"
-alias cacc="consul agent -config-dir /etc/consul.d/config"
-alias ccn="consul catalog nodes"
-alias ccs="consul catalog services"
-alias cml="consul members -wan"
-alias cmld="consul members -detailed"
-alias cnl="consul namespace list"
-alias crl="consul operator raft list-peers"
-alias crj="cat /var/consul/raft/peers.json"
-
-#### See https://wilsonmar.github.io/hashicorp-boundary#Shortcuts
-alias bdy="boundary"
-
-#### See https://wilsonmar.github.io/terraform#KeyboardAliases
+#### TERRAFORM:  see https://wilsonmar.github.io/terraform#KeyboardAliases
 # Make using these tf aliases a habit for less typing and
 # to enable switch to tofu (opentofu.org) with less mistakes.
 #lias tf="tofu $1"  # provide any parameter
@@ -321,10 +322,23 @@ alias tfsl="terraform state list"
 alias tfsp="terraform state pull"
 alias tfd="time terraform destroy -auto-approve"
 
+#### CONSUL (HASHICORP): see https://wilsonmar.github.io/hashicorp-consul#Shortcuts
+alias csl="curl http://127.0.0.1:8500/v1/status/leader"
+alias cacc="consul agent -config-dir /etc/consul.d/config"
+alias ccn="consul catalog nodes"
+alias ccs="consul catalog services"
+alias cml="consul members -wan"
+alias cmld="consul members -detailed"
+alias cnl="consul namespace list"
+alias crl="consul operator raft list-peers"
+alias crj="cat /var/consul/raft/peers.json"
+
+# See https://wilsonmar.github.io/hashicorp-boundary#Shortcuts
+alias bdy="boundary"
 # sentinel   # from Hashicorp
 # alias falcon='open -a "/Applications/Falcon.app"'  # controlled by HC Infosec
 
-#### See https://wilsonmar.github.io/docker
+#### DOCKER:  see https://wilsonmar.github.io/docker
 # Because docker is both a cask and CLI formula:
 # Do not define  alias docker='open -a "$HOME/Applications/Docker.app"'
 alias ddk="killall com.docker.osx.hyperkit.linux"   # docker restart
