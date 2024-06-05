@@ -1,6 +1,6 @@
-#!/usr/bin/env zsh
-# This is ~/aliases.zsh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.zsh
-# gas "v28 randpw using pwgen :aliases.zsh"
+#!/usr/bin/env sh
+# This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
+# gas "v29 aliases.zsh to aliases.sh :aliases.sh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -381,11 +381,11 @@ alias kall='k get all -o wide --show-labels'
 
 #     catn filename to show text file without comment (#) lines:
 alias catn="grep -Ev '''^(#|$)'''"
-alias keys="catn $HOME/aliases.zsh"
+alias keys="catn $HOME/aliases.sh"
 
 # For more Mac aliases, see https://gist.github.com/natelandau/10654137
    # described at https://natelandau.com/my-mac-osx-bash_profile/
    # https://github.com/clvv/fasd
-   # Not using alias -s  # suffix alias at https://github.com/seebi/zshrc/blob/master/aliases.zsh
+   # Not using alias -s  # suffix alias at https://github.com/seebi/zshrc/blob/master/aliases.sh
 
 # END
