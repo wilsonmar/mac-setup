@@ -1,10 +1,11 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # This is mac-setup.sh from template https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh
 # Coding of this shell script is explained in https://wilsonmar.github.io/mac-setup
 # Shell scripting techniques are explained in https://wilsonmar.github.io/shell-scripts
 # Like https://medium.com/@maxy_ermayank/developer-environment-setup-script-5fcb7b854acc
 
 # We stayed with bash instead of zsh because Shell Check does not work on zsh.
+# https://medium.com/@alvyynm/how-to-change-your-default-shell-from-zsh-to-bash-on-mac-0bbd481b4a8d
 
 # After you obtain a Terminal (console) in your environment,
 # cd to folder, copy this line (without the # comment character) and paste in the terminal so

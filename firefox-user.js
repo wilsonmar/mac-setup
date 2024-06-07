@@ -23,6 +23,7 @@ user_pref("gfx.webrender.all", true);
 user_pref("network.cookie.cookieBehavior", 1);
 user_pref("network.cookie.lifetimePolicy", 2); // Used to delete cookies when Firefox is closed… set to `0` to enable default cookie persistence
 user_pref("network.proxy.socks_remote_dns", true);
+//
 user_pref("network.trr.custom_uri", "https://doh.mullvad.net/dns-query");
 user_pref("network.trr.mode", 3); // Used to enable Mullvad DNS over HTTPS… set to `5` to disable Mullvad DNS over HTTPS
 user_pref("network.trr.uri", "https://doh.mullvad.net/dns-query");

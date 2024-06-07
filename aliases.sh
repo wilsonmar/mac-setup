@@ -1,6 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
-# gas "v31 multi-platform uname : aliases.sh"
+# gas "v32 rand9 : aliases.sh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -55,7 +55,7 @@ alias dir='ls -alrT'         # for windows habits
 alias l='ls -FalhGT | more'         # T for year
 alias ll='ls -FalhGT | more'  # T for year
 
-#### System utilities:
+#### AUTOMATION:
 if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
    alias automator='open -a "/System/Applications/Automator.app"'   
       # https://support.apple.com/guide/automator/welcome/mac
@@ -66,11 +66,22 @@ if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
    alias vfusion='open -a "$HOME/Applications/VMware Fusion.app"'
 fi
 
+#### System utilities:
+# Dump of system information:
+# On Linux: 
+# On macOS: system_profiler
+
 #### SECRETS:  see https://wilsonmar.github.io/1password/
-alias 1pass='open -a "/Applications/1Password 7.app"'         # Secret
+# alias 1pass='open -a "/Applications/1Password 7.app"'       # No longer used
 # alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
+
+# Secrets should not display, so pbcopy enables pasting command+V from Clipboard:
 alias randpass="echo $(openssl rand -base64 25) | pbcopy"
-alias randpw="echo $(pwgen pwgen -ns 25 1) | pbcopy"
+# alias randpw="echo $(pwgen pwgen -ns 25 1) | pbcopy"  # removed because it requires external package
+# From https://sunknudsen.com/stories/exploring-the-password-policy-rabbit-hole
+alias rand9="cat /dev/random | LC_ALL=C tr -cd 'a-zA-Z0-9_-;:!?.@\\*/#%$' | head -c 9 | pbcopy"
+# Generate AES fixed-length 256-bit hexidecimal key for wrapping:
+alias rand32="openssl rand -hex 32 | pbcopy"
 
 ##### Terminal 
 # terminal.app
@@ -80,6 +91,7 @@ alias randpw="echo $(pwgen pwgen -ns 25 1) | pbcopy"
 
 #### MEMORY:
 alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
+# /proc & /sys folders exist in RAM Used by the kernel to store information on running processes
 
 #### DISKSPACE:
 alias spacefree="du -h | awk 'END{print $1}'"
