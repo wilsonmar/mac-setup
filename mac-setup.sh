@@ -16,7 +16,6 @@
 # This was run on macOS Mojave and Ubuntu 16.04.
 SCRIPT_VERSION="v1.209 mac-setup.zsh to .sh :mac-setup.sh"
 # sudo password mac-setup.env init : mac-setup.sh"
-# Identify latest https://github.com/balena-io/etcher/releases/download/v1.18.11/balenaEtcher-1.18.11.dmg from https://etcher.balena.io/#download-etcher
 # working github -aiac : mac-setup.sh"
 # Restruc github vars : mac-setup.sh"
 # TODO: FREE_DISKBLOCKS_END
@@ -66,12 +65,12 @@ args_prompt() {
    echo "   -od \"directory\" = output directory"
    echo "   -of \"filename\" = output file"
    echo "   -DB               Delete Before run"
-   echo "   -f \"a9y.py\"     file (program) to process"
    echo "   -P \"-v\"         Parameters controlling program called"
+   echo "   -f \"a9y.py\"     file (program) to process"
+   echo "   -vsc -f \"vscode.txt\"    install VSCODE_EXT_FILE of extensions listed in -f (file)"
    echo "   -sha            generate SHA256 from -f (file)"
    echo "   -hash \"...\"         hash to compare against the -sha downloaded"
    echo "   -unzip          unzip (untar) .zip/.gz downloaded -f (file)"
-   echo "   -vsc            install VSCode extensions listed in -f (file)"
    echo " "
    echo "   -fn \"John Doe\"  user full name"
    echo "   -n  \"weirdo\"    github.com account name"
@@ -273,7 +272,7 @@ info "======= ${SCRIPT_VERSION} ${LOG_DATETIME}"
    INIT_ENV_FILES=false           # -init  # to use default ENV_FOLDERPATH_BASE:
    ENV_FOLDERPATH=""              # -envf "$HOME" or alt-folder (away from GitHub)
 
-   RUN_VSCODE=false               # -VSC
+   RUN_VSCODE=false               # -vsc
    # ///="vscode-ext.txt"  # "file" override in .env to Install/Upgrade VSCode extensions from/to file"
   
    CONVERT_TO_ZSH=false           # -zsh
@@ -1666,23 +1665,14 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
       # CAUTION: Install only packages that you actually use and trust!
       if [ "${PACKAGE_MANAGER}" = "brew" ]; then
    
-         ########## DOTHIS: remove apps you don't want removed: ##########
+         ########## DOTHIS: remove apps you don't want: ##########
          # See https://wilsonmar.github.io/macos-homebrew/
-         h2 "Remove apps pre-installed by Apple, taking up space if they are not used ..."
+         # h2 "-utils Remove apps pre-installed by Apple, taking up space if they are not used ..."
          # set comma as internal field separator for the string list
          #Field_Separator=$IFS
          #IFS=,
    
-         # Excludes apps installed using Apple's App Store app: Amazon Prime Video, Textual, 
-            # 1Password, Flash Player, "Grammerly Desktop.app", "Google Chrome", github, Kindle Classic, 
-            # "Hidden Bar", "Home Assistant", HP Easy Scan, "Hotkey App",
-            # Speedtest, Strongbox, Telegram, Whatsapp Desktop
-            # Okta Verify, p4merge, TextEdit, XCode, zoom.us.app
-         # Response: "Lensa AI: photo editor, video", The Unarchiver.app, Pixelmator.app, "Save to Pocket", 
-            # TextWrangler.app, WriteRoom.app,
-            # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
-
-         h2 "-I removing Apple-created apps installed from Apple Store into /Applications/ ..."
+         h2 "-utils removing Apple-created apps installed from Apple Store into /Applications/ ..."
          # MACOS_APPS_TO_REMOVE="iMovie GarageBand Keynote Numbers Pages"
          # convert to array space-separated string from mac-setup.env file:
          ARRAY=( $MACOS_APPS_TO_REMOVE )
@@ -1700,9 +1690,16 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             fi
          done
 
-         h2 "-I brew install/upgrade --cask into /Applications/:"
-         # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  PowerShell"
+
+         h2 "-utils brew install/upgrade ROOT_APPS_TO_INSTALL --cask into ROOT /Applications/:"
+         # Apps in /Applications folder allows integrate more deeply with system resources, provides a security boundary:
          ARRAY=(`echo ${ROOT_APPS_TO_INSTALL}`);
+         # Example: export ROOT_APPS_TO_INSTALL="hiddenbar  Microsoft-Edge  Speedtest"
+         # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  PowerShell"
+         ROOT_PKG_ARRAY=( [amazon-prime-video]="Prime Video" [hiddenbar]="Hidden Bar" \
+           [microsoft-teams]="Microsoft Teams" [microsoft-remote-desktop]="Microsoft Remote Desktop" \
+            [zoom]="zoom.us" )
+            # Microsoft O365, download from https://www.office.com/?auth=2&home=1
          for appname in "${ARRAY[@]}"; do
             if [ -d "/Applications/$appname.app:?}" ]; then   # app found:
                if [ "${UPDATE_PKGS}" = true ]; then
@@ -1725,22 +1722,23 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             # Karabiner-Elements to "Karabiner-Elements.app"
             # Karabiner-EventViewer to "Karabiner-EventViewer.app"
                # https://www.youtube.com/watch?v=j4b_uQX3Vu0
-            # microsoft-edge to "Microsoft Edge.app"
-            # Microsoft Remote Desktop, 
-            # Microsoft Office, Microsoft PowerShell, Microsoft Teams, Microsoft Remote Desktop,
          # Installed from vendor website: Keka, Adobe, Camtasia, DiffMerge, p4merge
 
-         h2 "-I install/upgrade apps using brew --cask into $HOME/Applications/:"
-         # HOME_APPS_TO_INSTALL="1Password  Docker Firefox google-cloud-sdk Hyper Macvim"
-         # Exceptions: 
-            # google-cloud-sdk does not create a "Google Cloud SDK.app"
+         # Response: "Lensa AI: photo editor, video", The Unarchiver.app, Pixelmator.app, "Save to Pocket", 
+            # TextWrangler.app, WriteRoom.app,
+            # Texual.app, Twitter.app, Tweetdeck.app, Pocket.app, 
+
+         h2 "-utils install/upgrade HOME_APPS_TO_INSTALL using brew --cask into $HOME/Applications/:"
+         # Example export HOME_APPS_TO_INSTALL="Anki balenaetcher Brave Docker Firefox google-cloud-sdk KeepassXC Keybase LibreOffice MacVim OBS plex-media-player Signal Slack Warp"
+         # google-cloud-sdk does not create a "Google Cloud SDK.app"
                # See https://snark.github.io/jumpcut/ for more cut-and-paste.
             # hyper install stores a file in /usr/local/bin on ARM machines.
-            # No longer supported? the-unarchiver
-         # Not on my list but may be in yours: cakebrvgcew, snowflake-snowsql, geekbench, spotify, 
-            # pycharm, textmate, brave, opera, 
-         # Installed separately: 1password (1Password7.app),
-            # licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
+         # plex or plex-htpc HTPC (Home Theater PC) for where the computer is connected directly to a TV or projector.
+         # spotify, 
+         # the-unarchiver is no longer supported 
+         # Not on my list but may be in yours: cakebrvgcew, snowflake-snowsql, geekbench, 
+         # pycharm, textmate, brave, opera, 
+         # licensed "VMWare Fusion", "VMWare Horizon Client", "VMWare Remote Console",
          brew_update_app() {
             brewname=$1
             appname=$2
@@ -1758,43 +1756,46 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             # PROTIP: On Error: Directory not empty @ dir_s_rmdir - , sudo chown -R $(whoami) $(brew --prefix)/*
             # Then reboot the system
          }
-         # HOME_APPS_TO_INSTALL="1Password  Docker Firefox google-cloud-sdk Hyper Macvim"
+         # For https://etcher.balena.io/#download-etcher
+         HOME_PKG_ARRAY=([balenaetcher]="balenaEtcher" [github]="GitHub Desktop" [google-chrome]="Google Chrome" \
+           [microsoft-teams]="Microsoft Teams"  [sublime-text]="Sublime Text" \
+           [tor-browser]="Tor Browser" [visual-studio-code]="Visual Studio Code" )
          ARRAY=(`echo ${HOME_APPS_TO_INSTALL}`);
          for appname in "${ARRAY[@]}"; do
-            brew_update_app $appname $appname
+            if [[ -v "HOME_PKG_ARRAY[$appname]" ]]; then  # found in array:
+               brew_update_app $appname "${HOME_PKG_ARRAY[$appname]}"
+            else
+               brew_update_app $appname $appname
+            fi
          done
          
-         # Not specified: Jumpcut  Sketch (licensed)
-         # Exceptions:
+         # Sketch ($80/year)
+         # Error exceptions - don't install:
             # Atom has been discontinued. Use VSCode instead.
             # Keybase (licensed) has error
-            # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
-            # Microsoft O365, download from https://www.office.com/?auth=2&home=1
-            
-            brew install --cask elgato-stream-deck  # does not create a "StreamDeck.app"
-            brew install --cask miniconda
+            # NOTE: brew install --cask elgato-stream-deck  # does not create a "StreamDeck.app"
+            # brew install --cask miniconda  # installed by -conda
+               # anaconda to "Anaconda-Navigator.app" and can contain security vulnerabilities!
                # miniconda ( to '/usr/local/bin/conda') does not create a "Miniconda3.app"
 
-         # TODO: Until an array for those with different brew names than app name:
-            brew_update_app "google-chrome" "Google Chrome"
-            brew_update_app "github" "GitHub Desktop"
-            # brew_update_app "iterm2" "iTerm"
-            brew_update_app "microsoft-teams" "Microsoft Teams"
-            brew_update_app "visual-studio-code" "Visual Studio Code"
-            brew_update_app "zoom" "zoom.us"
-            brew_update_app "sublime-text" "Sublime Text"
-            #brew_update_app "tor-browser" "Tor Browser"
+         # TODO: Associate array to for those with different brew names than app name:
+         #  brew_update_app "github" "GitHub Desktop"
+         #  brew_update_app "google-chrome" "Google Chrome"
+         #  # brew_update_app [iterm2]="iTerm"
+         #  brew_update_app "microsoft-teams" "Microsoft Teams"
+         #  brew_update_app "sublime-text" "Sublime Text"
+         #  # brew_update_app "tor-browser" "Tor Browser"
+         #  brew_update_app "visual-studio-code" "Visual Studio Code"
+         #  brew_update_app "zoom" "zoom.us"
 
-         # TODO: Install Chrome Add-ons: $HOME/Applications/Chrome Apps.localized/Postman.app, 
-            # Docs.app, Gmail.app, Google Drive.app, Sheets.app, Slides,app, YouTube.app
 
-         h2 "-I install brew CLI utilities ..."
-         # TODO: BREWS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
-         # Defined in ~/mac-setup.env :
+         h2 "-utils BREWS_TO_INSTALL in mac-setup.env to install CLI utilities ..."
          # BREWS_TO_INSTALL="curl wget jp jq yq htop tree git hub ncdu docker-compose hadolint 1password-cli keepassc"
-            # * jq manipulates JSON
-            # * yq manipulates YAML
+            # jq manipulates JSON
+            # yq manipulates YAML
+            # [powershell/tap/powershell]="PowerShell"  ==> command pwsh
          # Backups: Rsync vs Borg vs Restic.net vs Kopia.io (grigio.org - youtube.com/watch?v=abqvgU_SSWU)
+         # NOTE: BREWS_TO_INSTALL=$( brew list )  # instead of brew upgrade # which does them all 
          ARRAY=(`echo ${BREWS_TO_INSTALL}`);  # from ~/mac-setup.env
          for brewname in "${ARRAY[@]}"; do
             brew install $brewname
@@ -1809,16 +1810,15 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             # Until Jul 2023 Compose was part of Docker Desktop on Mac. However,
                # See https://docs.docker.com/compose/install/
             # See https://www.upwork.com/resources/how-to-install-docker-compose
-         # Verify:
-            # docker compose version
-               # Docker Compose version v2.2.3
+            # Verify: docker-compose version
+                  # Docker Compose version v2.2.3
 
          # https://the.exa.website/
          # Replacement for ls - see https://the.exa.website/#installation
          # brew install exa
 
-         # Configure Firefox:
-         if [ ! -f "firefox-user.js" ]; then   # NOT found
+         h2 "-init Firefox-user.js:"
+         if [ ! -f "firefox-user.js" ]; then   # NOT found in curent folder obtained from github.com/wilsonmar/macs-etup/
             warnng "firefox-user.js not found. Skipping Firefox config..."
          else  # file found:
             # Copy existing user.js in Firefox - see https://www.youtube.com/watch?v=s-vwthG28ks
@@ -1838,8 +1838,13 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             # See https://github.com/sunknudsen/privacy-guides/blob/master/how-to-configure-firefox-for-privacy-and-security/user.js
          fi
 
+         # TODO: h2 "-init install Chrome Add-ons: $HOME/Applications/Chrome Apps.localized/Postman.app, 
+            # Docs.app, Gmail.app, Google Drive.app, Sheets.app, Slides,app, YouTube.app
+ 
+
          ### 18c. Define file extensions to edit using VSCode
          # https://superuser.com/questions/273756/how-to-change-default-app-for-all-files-of-particular-file-type-through-terminal
+         h2 "-init FILE_EXT_BY_VSCODE ..."
          brew install duti
          if command -v duti ; then
             FILE_EXT_BY_VSCODE=".json .md .py .sh .txt .yml .yaml .zsh" # exported from ~/mac-setup.env
@@ -1851,8 +1856,7 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             done
          fi
 
-
-      #https://www.hashicorp.com/blog/announcing-hashicorp-homebrew-tap referencing https://github.com/hashicorp/homebrew-tap
+         #https://www.hashicorp.com/blog/announcing-hashicorp-homebrew-tap referencing https://github.com/hashicorp/homebrew-tap
          if [ "${USE_VAULT}" = true ]; then   # -HV
             brew install hashicorp/tap/vault
             which vault
@@ -1872,7 +1876,7 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
          fi
 
          if [ "${RUN_TERRAFORM}" = true ]; then  # -tf
-            h2 "brew install latest Terraform with tfenv ..."
+            h2 "-init brew install latest Terraform with tfenv ..."
             brew install tfenv
             # NO brew install hashicorp/tap/terraform
             brew install tfenv      
@@ -1897,7 +1901,7 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             # which sentinel
          fi
 
-         h2 "brew install HashiCorp Consul:"
+         h2 "-init brew install HashiCorp Consul:"
          if [ "${RUN_CONSUL}" = true ]; then  # -tf
             brew install hashicorp/tap/consul-k8s
             which consul-k8s
@@ -1922,6 +1926,7 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             which nomad
          fi
 
+         # h2 "-zsh conversion"
          # brew install --cask iterm2   # for use by .oh-my-zsh
          # Path to your oh-my-zsh installation:
          # export ZSH="$HOME/.oh-my-zsh"
@@ -1935,7 +1940,7 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
             #fi
          #fi
 
-         zsh --version  # Check the installed version
+         # zsh --version  # Check the installed version
          # Custom theme from : git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
          # ZSH_THEME="powerlevel9k/powerlevel9k"
          # source ~/.zhrc  # source $ZSH/oh-my-zsh.sh
@@ -1949,7 +1954,7 @@ fi  # RUN_UTILS
 ### 19. Install VSCode extensions
 
 install_vscode_ext(){
-if [ "${RUN_VSCODE}" = true ]; then  # -VSC \"vscode-ext\" file specified:
+if [ "${RUN_VSCODE}" = true ]; then  # -vsc \"vscode-ext\" file specified:
    # For vscode CLI commands, see https://www.youtube.com/watch?v=uKCiAA4AJcI
    # https://code.visualstudio.com/docs/editor/extension-marketplace
 
