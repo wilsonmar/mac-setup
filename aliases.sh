@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
-# gas "v32 rand9 : aliases.sh"
+# gas "v33 rand5 dice : aliases.sh"
 # NOTE: Functions are in functions.zsh for Mac only.
 # Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -8,6 +8,7 @@
 # One reason I can jump easily between Debian, Ubuntu, mac because I
 # have customized keyboard aliases so I use the same command across machines.
 export OS_TYPE="$( uname )"
+echo "aliases.sh running on OS_TYPE=$OS_TYPE ..."
 
 alias c="clear"  # screen
 alias cd=' cd'
@@ -63,7 +64,9 @@ if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
       # https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
    #alias alfred='open -a "$HOME/Applications/Alfred 3.app"'
    #alias geekbench='open -a "$HOME/Applications/Geekbench 4.app"'   # performance benchmarking
-   alias vfusion='open -a "$HOME/Applications/VMware Fusion.app"'
+   if [ -d "$HOME/Applications/VMware Fusion.app" ]; then
+      alias vfusion='open -a "$HOME/Applications/VMware Fusion.app"'
+   fi
 fi
 
 #### System utilities:
@@ -73,15 +76,19 @@ fi
 
 #### SECRETS:  see https://wilsonmar.github.io/1password/
 # alias 1pass='open -a "/Applications/1Password 7.app"'       # No longer used
-# alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
+alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
 
 # Secrets should not display, so pbcopy enables pasting command+V from Clipboard:
-alias randpass="echo $(openssl rand -base64 25) | pbcopy"
-# alias randpw="echo $(pwgen pwgen -ns 25 1) | pbcopy"  # removed because it requires external package
-# From https://sunknudsen.com/stories/exploring-the-password-policy-rabbit-hole
-alias rand9="cat /dev/random | LC_ALL=C tr -cd 'a-zA-Z0-9_-;:!?.@\\*/#%$' | head -c 9 | pbcopy"
-# Generate AES fixed-length 256-bit hexidecimal key for wrapping:
-alias rand32="openssl rand -hex 32 | pbcopy"
+#if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
+   alias randpass="echo $(openssl rand -base64 25) | pbcopy"
+   # alias randpw="echo $(pwgen pwgen -ns 25 1) | pbcopy"  # removed because it requires external package
+   # From https://sunknudsen.com/stories/exploring-the-password-policy-rabbit-hole
+   alias rand9="cat /dev/random | LC_ALL=C tr -cd 'a-zA-Z0-9_-;:!?.@\\*/#%$' | head -c 9 | pbcopy"
+   # Generate AES fixed-length 256-bit hexidecimal key for wrapping:
+   alias rand32="openssl rand -hex 32 | pbcopy"
+   # Roll 5 dice: random 5-digit base-6 number: FIXME: only works first time.
+   alias rand5=$( base-6_digit(){ echo $(( RANDOM % 6 )); }; random_number=""; for i in {1..5};do random_number+=$(base-6_digit); done; echo "$random_number" | pbcopy )
+#fi
 
 ##### Terminal 
 # terminal.app
@@ -116,13 +123,13 @@ alias privip="ipconfig getifaddr en0"
 # alias mac="curl http://canhazip.com"  # public IP 
 # alias pubip="curl https://checkip.amazonaws.com"  # public IP
 alias pubip="curl -s ifconfig.me"  # public IP
-alias ipa="ip a"  # analyze networking
+# alias ipa="ip a"  # analyze networking
 alias ipinfo="curl ipinfo.io"  # more verbose JSON containing country and zip of IP
 alias ipcity="curl -s ipinfo.io | jq -r .city"
 alias wanip4="dig @resolver1.opendns.com ANY myip.opendns.com +short"
-alias wanip6="dig @resolver1.opendns.com AAAA myip.opendns.com +short -6"
+# alias wanip6="dig @resolver1.opendns.com AAAA myip.opendns.com +short -6"
 # https://blog.apnic.net/2021/06/17/how-a-small-free-ip-tool-survived/
-# https://ipv6.icanhazip.com/
+# alias wanip6="curl -s https://ipv6.icanhazip.com"
 # https://ipv4.icanhazip.com/
 alias ports="lsof -i -n -P | grep TCP"
 alias listening="lsof -nP +c 15 | grep LISTEN"
@@ -134,9 +141,7 @@ alias randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$/
 
 
 #### GUI APPS: 
-if [ "${OS_TYPE}" = "Linux" ]; then  # it's NOT on a Mac:
-   alias calc="???"
-elif [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
+if [ "${OS_TYPE}" = "Darwin" ]; then
    alias calc='open -a "/System/Applications/Calculator.app"'
 
    #### built-in macOS system GUI apps invoke from command line:
@@ -183,7 +188,9 @@ alias subl='open -a "/Applications/Sublime Text.app"'
 # alias vs='$HOME/Applications/Visual\ Studio.app/Contents/MacOS/VisualStudio &'   # from Microsoft
 # https://www.jetbrains.com/webstorm/
 # alias webstorm='open -a "/Applications/Webstorm.app"'
-alias xcode='open -a /Applications/Xcode.app'
+if [ -d "/Applications/Visual Studio Code.app" ]; then
+   alias xcode='open -a /Applications/Visual Studio Code.app'
+fi
 
 ##### CLOUD:
 alias awscreds="$EDITOR ~/.aws/credentials"
@@ -193,8 +200,11 @@ alias awsregion="aws ec2 describe-availability-zones --output text --query 'Avai
 # Enhanced diff: Not in brew
 # alias p4merge='/Applications/p4merge.app/Contents/MacOS/p4merge'
 
-#### CLOUD DATA:
-alias 1drive='open -a "/Applications/OneDrive.app"'
+#### MICROSOFT / AZURE CLOUD DATA:
+alias teams='open -a "/Applications/Microsoft Teams.app"'
+if [ -d "/Applications/OneDrive.app" ]; then
+   alias 1drive='open -a "/Applications/OneDrive.app"'
+fi
 # box
 # Google Drive
 # Apple iCloud
@@ -203,15 +213,15 @@ alias 1drive='open -a "/Applications/OneDrive.app"'
 #alias chime='open -a "/Applications/Amazon Chime.app"'
 #alias collo='open -a "/Applications/Colloquy.app"'         # Installed from Apple store 
 alias discord='open -a "/Applications/Discord.app"'       # Has security issue. Don't use.
+
 alias facetime='open -a "/System/Applications/FaceTime.app"'       # built-in from Apple
 #alias gotomeeting='open -a "/Applications/GoToMeeting.app"'
 alias messages='open -a "/System/Applications/Messages.app"'       # built-in from Apple
-alias skype='open -a "/Applications/Skype.app"'
-#alias signal='open -a "/Applications/Signal.app"'
+# alias skype='open -a "/Applications/Skype.app"'
+alias signal='open -a "/Applications/Signal.app"'
 alias slack='open -a "/Applications/Slack.app"'
 alias teams='open -a "$HOME/Applications/Microsoft Teams.app"'
 #alias telegram='open -a "$HOME/Applications/Telegram.app"'
-alias teams='open -a "/Applications/Microsoft Teams.app"'
 alias whatsapp='open -a "/Applications/Whatsapp.app"'
 alias zoom='open -a "/Applications/zoom.us.app"'
 
@@ -228,18 +238,20 @@ alias word='open -a "/Applications/Microsoft Word.app"'
 
 ##### Content creation (Audio/Video):
 alias obs='open -a "/Applications/OBS.app"'
-alias sketch='open -a "/Applications/Sketch.app"'
-#alias unity='open -a "$HOME/Applications/Unity.app"'
-alias audacity='open -a "/Applications/Audacity.app"'      # Audio engineering
+# alias sketch='open -a "/Applications/Sketch.app"'
+# alias audacity='open -a "/Applications/Audacity.app"'      # Audio engineering
+# alias unity='open -a "$HOME/Applications/Unity.app"'
 
 
 ##### Software development:
 # https://expo.dev/tools
 alias ghd='open -a "$HOME/Applications/GitHub Desktop.app"'
 alias postman='open -a "/Applications/Postman.app"'
+
 #alias postman='open -a "$HOME/Applications/Postman.app"'
 #alias postman='open -a "$HOME/Applications/Chrome Apps/Postman.app"'
-alias insomnia='open -a "/Applications/Insomnia.app"'
+# alias insomnia='open -a "/Applications/Insomnia.app"'
+
 # alias rstudio='open -a "/Applications/RStudio.app"'
 # alias jprofiler='open -a "/Applications/JProfiler.app"'
 # alias soapui='open -a "/Applications/SoapUI-5.4.0.app"'
