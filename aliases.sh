@@ -434,41 +434,41 @@ alias wmpfb="cd $PROJECT_FOLDER_BASE"
       fi
 
 # echo "GITHUB_FOLDER_BASE=${GITHUB_FOLDER_BASE}"
-   if [ ! -d "${GITHUB_FOLDER_BASE}" ]; then   # not specified in parms
-      echo "-env $GITHUB_FOLDER_BASE directory NOT found ..."
-   else
-#### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
-alias bs="wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml"
-alias wmo="cd $GITHUB_FOLDER_BASE/wilsonmar.github.io/_posts"
+if [ ! -d "${GITHUB_FOLDER_BASE}" ]; then   # not specified in parms
+   echo "-env $GITHUB_FOLDER_BASE directory NOT found ..."
+else
+   #### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
+   alias bs="wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml"
+   alias wmo="cd $GITHUB_FOLDER_BASE/wilsonmar.github.io/_posts"
 
-# FIXME: 
-# function wmio() { mdfind -onlyin "${GITHUB_FOLDER_BASE}/wilsonmar.github.io/_posts" "$1" }
+   # FIXME: 
+   # function wmio() { mdfind -onlyin "${GITHUB_FOLDER_BASE}/wilsonmar.github.io/_posts" "$1" }
 
-alias wmf="cd $GITHUB_FOLDER_BASE/futures"
+   alias wmf="cd $GITHUB_FOLDER_BASE/futures"
 
-alias wms='cd $GITHUB_FOLDER_BASE/mac-setup'
-alias wmdso='cd $GITHUB_FOLDER_BASE/DevSecOps'
-alias wm1='cd $GITHUB_FOLDER_BASE/Akl-Demo'
+   alias wms='cd $GITHUB_FOLDER_BASE/mac-setup'
+   alias wmdso='cd $GITHUB_FOLDER_BASE/DevSecOps'
+   alias wm1='cd $GITHUB_FOLDER_BASE/Akl-Demo'
 
-alias wmb='cd $GITHUB_FOLDER_BASE/DevSecOps/bash'
-alias wmz='cd $GITHUB_FOLDER_BASE/azure-quickly'
-alias wmw='cd $GITHUB_FOLDER_BASE/aws-quickly'
-alias wmp='cd $GITHUB_FOLDER_BASE/python-samples'
-alias wmg='cd $GITHUB_FOLDER_BASE/gcp-samples'
-alias wmr='cd $GITHUB_FOLDER_BASE/rustlang-samples'
-alias wmgo='cd $GITHUB_FOLDER_BASE/golang-samples'
+   alias wmb='cd $GITHUB_FOLDER_BASE/DevSecOps/bash'
+   alias wmz='cd $GITHUB_FOLDER_BASE/azure-quickly'
+   alias wmw='cd $GITHUB_FOLDER_BASE/aws-quickly'
+   alias wmp='cd $GITHUB_FOLDER_BASE/python-samples'
+   alias wmg='cd $GITHUB_FOLDER_BASE/gcp-samples'
+   alias wmr='cd $GITHUB_FOLDER_BASE/rustlang-samples'
+   alias wmgo='cd $GITHUB_FOLDER_BASE/golang-samples'
 
-alias js="cd $GITHUB_FOLDER_BASE/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental"
-# git status -s -b
+   alias js="cd $GITHUB_FOLDER_BASE/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental"
+   # git status -s -b
 
-alias wmbn='cd $HOME/bomonike/bomonike.github.io'
-alias wmh='cd $HOME/bomonike/hackproof'
+   alias wmbn='cd $HOME/bomonike/bomonike.github.io'
+   alias wmh='cd $HOME/bomonike/hackproof'
 
-   fi
+fi
 
-# For more Mac aliases, see https://gist.github.com/natelandau/10654137
-   # described at https://natelandau.com/my-mac-osx-bash_profile/
-   # https://github.com/clvv/fasd
-   # Not using alias -s  # suffix alias at https://github.com/seebi/zshrc/blob/master/aliases.sh
+   # For more Mac aliases, see https://gist.github.com/natelandau/10654137
+      # described at https://natelandau.com/my-mac-osx-bash_profile/
+      # https://github.com/clvv/fasd
+      # Not using alias -s  # suffix alias at https://github.com/seebi/zshrc/blob/master/aliases.sh
 
 # END
