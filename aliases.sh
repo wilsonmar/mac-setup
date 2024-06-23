@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
-# gas "v33 rand5 dice : aliases.sh"
-# NOTE: Functions are in functions.zsh for Mac only.
-# Both called from ~/.bash_profile for Bash or ~/.zshrc for zsh
+# gas "v34 rand5 dice : aliases.sh"
+# Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
 
 # One reason I can jump easily between Debian, Ubuntu, mac because I
@@ -420,6 +419,52 @@ alias kall='k get all -o wide --show-labels'
 #     catn filename to show text file without comment (#) lines:
 alias catn="grep -Ev '''^(#|$)'''"
 alias keys="catn $HOME/aliases.sh"
+
+   if [ -d "$HOME/.google-cloud-sdk" ]; then   # directory found:
+alias gcs='cd $HOME/.google-cloud-sdk;ls'
+   fi
+
+# Defined after creating a folder:
+#export PROJECT_FOLDER_NAME="wiz"  # should be blank
+#export PROJECT_FOLDER_PATH="$PROJECT_FOLDER_BASE/$PROJECT_FOLDER_NAME"
+#export PROJECT_FOLDER_BASE_DEFAULT="$HOME/Projects"
+#           export PROJECT_FOLDER_BASE="$HOME/Projects"  # -pcp
+      if [ -d "${PROJECT_FOLDER_BASE}" ]; then   # directory found:
+alias wmpfb="cd $PROJECT_FOLDER_BASE"
+      fi
+
+# echo "GITHUB_FOLDER_BASE=${GITHUB_FOLDER_BASE}"
+   if [ ! -d "${GITHUB_FOLDER_BASE}" ]; then   # not specified in parms
+      echo "-env $GITHUB_FOLDER_BASE directory NOT found ..."
+   else
+#### Jekyll build locally: See https://wilsonmar.github.io/jekyll-site-development/
+alias bs="wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml"
+alias wmo="cd $GITHUB_FOLDER_BASE/wilsonmar.github.io/_posts"
+
+# FIXME: 
+# function wmio() { mdfind -onlyin "${GITHUB_FOLDER_BASE}/wilsonmar.github.io/_posts" "$1" }
+
+alias wmf="cd $GITHUB_FOLDER_BASE/futures"
+
+alias wms='cd $GITHUB_FOLDER_BASE/mac-setup'
+alias wmdso='cd $GITHUB_FOLDER_BASE/DevSecOps'
+alias wm1='cd $GITHUB_FOLDER_BASE/Akl-Demo'
+
+alias wmb='cd $GITHUB_FOLDER_BASE/DevSecOps/bash'
+alias wmz='cd $GITHUB_FOLDER_BASE/azure-quickly'
+alias wmw='cd $GITHUB_FOLDER_BASE/aws-quickly'
+alias wmp='cd $GITHUB_FOLDER_BASE/python-samples'
+alias wmg='cd $GITHUB_FOLDER_BASE/gcp-samples'
+alias wmr='cd $GITHUB_FOLDER_BASE/rustlang-samples'
+alias wmgo='cd $GITHUB_FOLDER_BASE/golang-samples'
+
+alias js="cd $GITHUB_FOLDER_BASE/wilsonmar.github.io;bundle exec jekyll serve --config _config.yml --incremental"
+# git status -s -b
+
+alias wmbn='cd $HOME/bomonike/bomonike.github.io'
+alias wmh='cd $HOME/bomonike/hackproof'
+
+   fi
 
 # For more Mac aliases, see https://gist.github.com/natelandau/10654137
    # described at https://natelandau.com/my-mac-osx-bash_profile/
