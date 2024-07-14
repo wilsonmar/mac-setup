@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# gas "v0.31 ReCreate :.bash_profile"
+# gas "v0.32 Add fzf :.bash_profile"
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
@@ -196,6 +196,10 @@ complete -W "NSGlobalDomain" defaults;
 
 # Add `killall` tab completion for common apps
 complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;
+
+if command -v fzf >/dev/null; then
+   eval "$(fzf --bash)"
+Fi
 
 #### See https://wilsonmar.github.io/ruby-on-apple-mac-osx/
 # No command checking since Ruby was installed by default on Apple macOS:
