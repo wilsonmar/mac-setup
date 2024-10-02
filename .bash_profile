@@ -525,10 +525,6 @@ fi
 
 #export LIQUIBASE_HOME='/usr/local/opt/liquibase/libexec'
 
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-
 
 #### See https://wilsonmar.github.io/macos-install
 # Show aliases keys as reminder:
@@ -549,10 +545,17 @@ source ~/aliases.sh
 
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-if [ -d "$HOME/.sdkman" ]; then
-   export SDKMAN_DIR="$HOME/.sdkman"
-   #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-fi
+#if [ -d "$HOME/.sdkman" ]; then
+#   export SDKMAN_DIR="$HOME/.sdkman"
+#   #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+#fi
 
+# curl before anything else:
+export PATH="/opt/homebrew/opt/curl/bin:$PATH"
+# For compilers to find curlx:
+export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/curl/include"
+# For pkg-config to find curl:
+export PKG_CONFIG_PATH="/opt/homebrew/opt/curl/lib/pkgconfig"
 
 # END

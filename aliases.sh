@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
-# gas "v34 rand5 dice : aliases.sh"
+#
+# gas "v036 add rot13 : aliases.sh"
+#
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
 
@@ -57,7 +59,7 @@ alias ll='ls -FalhGT | more'  # T for year
 
 #### AUTOMATION:
 if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
-   alias automator='open -a "/System/Applications/Automator.app"'   
+   alias automator='open -a "/System/Applications/Automator.app"'
       # https://support.apple.com/guide/automator/welcome/mac
       # https://macosxautomation.com/automator/
       # https://www.youtube.com/watch?v=BTmZOh1GI3U&list=RDCMUC5ZoLwtjX_7Zs8LoqpiLztQ&start_radio=1&rv=BTmZOh1GI3U&t=6
@@ -68,9 +70,12 @@ if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
    fi
 fi
 
+alias rot13="tr 'A-Za-z' 'N-ZA-Mn-za-m' <<< $1"
+alias rot47="echo '$1' | tr '\!-~' 'P-~\!-O'"
+
 #### System utilities:
 # Dump of system information:
-# On Linux: 
+# On Linux:
 # On macOS: system_profiler
 
 #### SECRETS:  see https://wilsonmar.github.io/1password/
@@ -89,9 +94,9 @@ alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
    alias rand5=$( base-6_digit(){ echo $(( RANDOM % 6 )); }; random_number=""; for i in {1..5};do random_number+=$(base-6_digit); done; echo "$random_number" | pbcopy )
 #fi
 
-##### Terminal 
+##### Terminal
 # terminal.app
-# hyper is in /usr/local/bin 
+# hyper is in /usr/local/bin
 # alias iterm='open -a "/Applications/iTerm.app"'
 # alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
 
@@ -109,7 +114,7 @@ elif [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
 fi
 
 #### NETWORKING:
-#alias myip="ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2" 
+#alias myip="ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2"
 # ip route get 1 | awk '{print $NF;exit}'
 if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
    alias netq="networkquality"  # comes with MacOS
@@ -119,7 +124,7 @@ fi
 alias privip="ipconfig getifaddr en0"
 
 # Public ip like https://www.whatismyip.com/:
-# alias mac="curl http://canhazip.com"  # public IP 
+# alias mac="curl http://canhazip.com"  # public IP
 # alias pubip="curl https://checkip.amazonaws.com"  # public IP
 alias pubip="curl -s ifconfig.me"  # public IP
 # alias ipa="ip a"  # analyze networking
@@ -139,7 +144,7 @@ alias randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$/
 # sudo ifconfig en0 ether "{RANDMAC}"
 
 
-#### GUI APPS: 
+#### GUI APPS:
 if [ "${OS_TYPE}" = "Darwin" ]; then
    alias calc='open -a "/System/Applications/Calculator.app"'
 
@@ -151,7 +156,7 @@ if [ "${OS_TYPE}" = "Darwin" ]; then
 
    ### built-in Apple apps:
    alias appstore='open -a "/System/Applications/App Store.app"'
-   # cal = calendar 
+   # cal = calendar
 fi
 
 ##### TEXT EDITOR:  see https://wilsonmar.github.io/text-editor
@@ -160,8 +165,8 @@ if [ -d "/Applications/Visual Studio Code.app" ]; then
    alias vscode='open -a "/Applications/Visual Studio Code.app"'
    export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
 fi
-   # export EDITOR="/usr/local/bin/mate -w" 
-alias edit="$EDITOR"   # make a habit of using this instead program name (such as code), so you can switch default editor easier 
+   # export EDITOR="/usr/local/bin/mate -w"
+alias edit="$EDITOR"   # make a habit of using this instead program name (such as code), so you can switch default editor easier
 alias ebp="$EDITOR ~/.bash_profile && source ~/.bash_profile"
 alias sbp='source ~/.bash_profile'
 alias ezs="$EDITOR ~/.zshrc"   # for Zsh
@@ -210,7 +215,7 @@ fi
 
 #### Meetings (Communications):
 #alias chime='open -a "/Applications/Amazon Chime.app"'
-#alias collo='open -a "/Applications/Colloquy.app"'         # Installed from Apple store 
+#alias collo='open -a "/Applications/Colloquy.app"'         # Installed from Apple store
 alias discord='open -a "/Applications/Discord.app"'       # Has security issue. Don't use.
 
 alias facetime='open -a "/System/Applications/FaceTime.app"'       # built-in from Apple
@@ -327,7 +332,6 @@ alias ven="virtualenv venv"
 alias vba="source venv/bin/activate"
 alias vbd="source deactivate"
 
-
 #### TERRAFORM:  see https://wilsonmar.github.io/terraform#KeyboardAliases
 # Make using these tf aliases a habit for less typing and
 # to enable switch to tofu (opentofu.org) with less mistakes.
@@ -441,7 +445,7 @@ else
    alias bs="wm;bundle exec jekyll serve --config _config.yml,_config_dev.yml"
    alias wmo="cd $GITHUB_FOLDER_BASE/wilsonmar.github.io/_posts"
 
-   # FIXME: 
+   # FIXME:
    # function wmio() { mdfind -onlyin "${GITHUB_FOLDER_BASE}/wilsonmar.github.io/_posts" "$1" }
 
    alias wmf="cd $GITHUB_FOLDER_BASE/futures"
