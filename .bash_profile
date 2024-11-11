@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# gas "v0.32 Add fzf :.bash_profile"
+# gas "v0.31 ReCreate :.bash_profile"
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
@@ -24,8 +24,8 @@ PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin:/opt/local/bin
 
 # In .bashrc are parse_git_branch, PS1, git_completion, and extract for serverless, rvm, nvm
 # source ~/.bashrc
-   # NOTE: parse_git_branch is defined in .bash_profile, but not exported. 
-   # When you run sudo bash, it starts an nonlogin shell that sources .bashrc instead of .bash_profile. 
+   # NOTE: parse_git_branch is defined in .bash_profile, but not exported.
+   # When you run sudo bash, it starts an nonlogin shell that sources .bashrc instead of .bash_profile.
    # PS1 was exported and so is defined in the new shell, but parse_git_branch is not.
 
 # See https://eclecticlight.co/2020/08/13/macos-version-numbering-isnt-so-simple/
@@ -35,11 +35,11 @@ PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin:/opt/local/bin
 
 
 #### See https://wilsonmar.github.io/homebrew
-# For use in brew cask install 
+# For use in brew cask install
 export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
 #export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
 
-echo "Apple macOS sw_vers = $(sw_vers -productVersion) / uname = $(uname -r)" 
+echo "Apple macOS sw_vers = $(sw_vers -productVersion) / uname = $(uname -r)"
     # sw_vers: 10.15.1 / uname = 21.4.0
    # See https://eclecticlight.co/2020/08/13/macos-version-numbering-isnt-so-simple/
    # See https://scriptingosx.com/2020/09/macos-version-big-sur-update/
@@ -61,7 +61,7 @@ elif [[ "$(uname -m)" = *"x86_64"* ]]; then
    export PKG_CONFIG_PATH="$BREW_OPT/libffi/lib/pkgconfig"
 fi
 
-# For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63 
+# For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63
 #export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
 export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib"
 
@@ -96,7 +96,7 @@ echo "SHELL=$SHELL at $(which bash)..."  # $SHELL=/bin/zsh
       # Use /opt/homebrew/bin/zsh  (using homebrew or default one from Apple?)
       # Use /usr/local/bin/zsh if running Bash.
 # Set Terminal prompt that shows the Zsh % prompt rather than $ bash prompt:
-if [[ "/bin/zsh" = *"${SHELL}"* ]]; then  
+if [[ "/bin/zsh" = *"${SHELL}"* ]]; then
    echo "promptinit for zsh..."
    autoload -Uz promptinit && promptinit
    export PS1="${prompt_newline}${prompt_newline}  %11F%~${prompt_newline}%% "
@@ -121,7 +121,7 @@ sudo launchctl limit maxfiles 65536 200000
 
 export GPG_TTY=$(tty)
 export CLICOLOR=1
-export LSCOLORS="GxFxCxDxBxegedabagaced" # 
+export LSCOLORS="GxFxCxDxBxegedabagaced" #
 
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
@@ -197,17 +197,13 @@ complete -W "NSGlobalDomain" defaults;
 # Add `killall` tab completion for common apps
 complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;
 
-if command -v fzf >/dev/null; then
-   eval "$(fzf --bash)"
-Fi
-
 #### See https://wilsonmar.github.io/ruby-on-apple-mac-osx/
 # No command checking since Ruby was installed by default on Apple macOS:
 if ! command -v rbenv >/dev/null; then
    if [ -d "$HOME/.rbenv" ]; then  # Ruby environment manager (shims    version  versions)
       export PATH="$HOME/.rbenv/bin:${PATH}"
       eval "$(rbenv init -)"   # at the end of the file
-      echo "$( ruby --version) with .rbenv"  
+      echo "$( ruby --version) with .rbenv"
          # Default is ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
    fi
 
@@ -243,18 +239,18 @@ if [ ! -f "$basedir/first-names.txt" ]; then
    sudo curl --fail --output "$basedir/first-names.txt" \
       https://raw.githubusercontent.com/sunknudsen/privacy-guides/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos/first-names.txt
 fi
-first_name=$(sed "$(jot -r 1 1 2048)q;d" "$basedir/first-names.txt" | sed -e 's/[^a-zA-Z]//g')
-model_name=$(system_profiler SPHardwareDataType | awk '/Model Name/ {$1=$2=""; print $0}' | sed -e 's/^[ ]*//')
-computer_name="$first_name’s $model_name"
-host_name=$(echo $computer_name | sed -e 's/’//g' | sed -e 's/ /-/g')
-sudo scutil --set ComputerName "$computer_name"
-sudo scutil --set LocalHostName "$host_name"
-sudo scutil --set HostName "$host_name"
-echo "Spoofed hostname = $host_name\n"
+# Spoof computer name
+#first_name=$(sed "$(jot -r 1 1 2048)q;d" "$basedir/first-names.txt" | sed -e 's/[^a-zA-Z]//g')
+#model_name=$(system_profiler SPHardwareDataType | awk '/Model Name/ {$1=$2=""; print $0}' | sed -e 's/^[ ]*//')
+#computer_name="$first_name’s $model_name"
+#host_name=$(echo $computer_name | sed -e 's/’//g' | sed -e 's/ /-/g')
+#sudo scutil --set ComputerName "$computer_name"
+#sudo scutil --set LocalHostName "$host_name"
+#sudo scutil --set HostName "$host_name"
+#echo "Spoofed hostname = $host_name\n"
    # such as "Cristobals-MacBook-Pro"
-
+# randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
 # Spoof MAC address of Wi-Fi interface - see https://www.youtube.com/watch?v=b-8hA5Qa_F8
-randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
 mac_address_prefix=$(networksetup -listallhardwareports | awk -v RS= '/en0/{print $NF}' | head -c 8)
 mac_address_suffix=$(openssl rand -hex 3 | sed 's/\(..\)/\1:/g; s/.$//')
 mac_address=$(echo "$mac_address_prefix:$mac_address_suffix" | awk '{print tolower($0)}')
@@ -354,12 +350,12 @@ fi
 
 #### for Selenium
 if [ -d "$BREW_PATH/chromedriver" ]; then
-   export PATH="$PATH:/${BREW_PATH}/chromedriver"  
+   export PATH="$PATH:/${BREW_PATH}/chromedriver"
 fi
 
 
 #### See https://wilsonmar.github.io/android-install/
-#export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"      
+#export ANDROID_SDK_ROOT="/usr/local/share/android-sdk"
 #export ANDROID_HOME=/usr/local/opt/android-sdk
 #export ANDROID_NDK_HOME=/usr/local/opt/android-ndk
 #export PATH=$PATH:$ANDROID_HOME/tools
@@ -404,12 +400,12 @@ fi
 #if command -v jyenv 1>/dev/null 2>&1; then
 #  eval "$(jenv init -)"
 #fi
-#export PATH="$HOME/jmeter:$PATH" 
+#export PATH="$HOME/jmeter:$PATH"
 #### See https://wilsonmar.github.io/task-runners
 if ! command -v gradle >/dev/null; then
    echo "gradle not installed (for use with Java)..."
 else
-   # Since which gradle outputs "/opt/homebrew/bin//gradle" or 
+   # Since which gradle outputs "/opt/homebrew/bin//gradle" or
       # "/usr/local/opt/gradle" on Intel Mac:
    GRADLE_HOME=$( which gradle )
    if [ -d "${GRADLE_HOME}/bin" ]; then  # folder is there
@@ -433,7 +429,7 @@ fi
 
 #### See https://wilsonmar.github.io/airflow
 # PATH=$PATH:~/.local/bin
-# export AIRFLOW_HOME="$HOME/airflow-tutorial"  
+# export AIRFLOW_HOME="$HOME/airflow-tutorial"
 
 #### See https://wilsonmar.github.io/python-install
 export PYTHON_CONFIGURE_OPTS=--enable-unicode=ucs2
@@ -525,6 +521,10 @@ fi
 
 #export LIQUIBASE_HOME='/usr/local/opt/liquibase/libexec'
 
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
 
 #### See https://wilsonmar.github.io/macos-install
 # Show aliases keys as reminder:
@@ -545,17 +545,10 @@ source ~/aliases.sh
 
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-#if [ -d "$HOME/.sdkman" ]; then
-#   export SDKMAN_DIR="$HOME/.sdkman"
-#   #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-#fi
+if [ -d "$HOME/.sdkman" ]; then
+   export SDKMAN_DIR="$HOME/.sdkman"
+   #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
 
-# curl before anything else:
-export PATH="/opt/homebrew/opt/curl/bin:$PATH"
-# For compilers to find curlx:
-export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/curl/include"
-# For pkg-config to find curl:
-export PKG_CONFIG_PATH="/opt/homebrew/opt/curl/lib/pkgconfig"
 
 # END

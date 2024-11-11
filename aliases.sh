@@ -70,6 +70,7 @@ if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
    fi
 fi
 
+# Cyphers From https://en.wikipedia.org/wiki/ROT13
 alias rot13="tr 'A-Za-z' 'N-ZA-Mn-za-m' <<< $1"
 alias rot47="echo '$1' | tr '\!-~' 'P-~\!-O'"
 
