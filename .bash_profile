@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# gas "v0.31 ReCreate :.bash_profile"
+# git commit -m "v0.33 rm write to clipboard :.bash_profile"
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
@@ -455,22 +455,24 @@ if [ -d "$HOME/.pyenv" ]; then  # folder was created for Python3, so:
    fi
 fi
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/opt/homebrew/Caskroom/miniconda/base/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh" ]; then
-        . "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh"
-    else
-        export PATH="/opt/homebrew/Caskroom/miniconda/base/bin:$PATH"
-    fi
+CONDA_FOLDER="/opt/homebrew/Caskroom/miniconda/base"
+if [ -d "$CONDA_FOLDER/bin/pip3" ]; then  # folder was created:
+   # >>> conda initialize >>>
+   # !! Contents within this block are managed by 'conda init' !!
+   __conda_setup="$('$CONDA_FOLDER/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+   if [ $? -eq 0 ]; then
+      eval "$__conda_setup"
+   else
+      if [ -f "$CONDA_FOLDER/etc/profile.d/conda.sh" ]; then
+         . "$CONDA_FOLDER/etc/profile.d/conda.sh"
+      else
+         export PATH="$CONDA_FOLDER/bin:$PATH"
+      fi
+   fi
+   unset __conda_setup
+   # <<< conda initialize <<<
+   # conda activate py3k
 fi
-unset __conda_setup
-# <<< conda initialize <<<
-# conda activate py3k
-
 
 #### See https://wilsonmar.github.io/golang
 # This is a custom path:
@@ -526,17 +528,6 @@ export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 
-#### See https://wilsonmar.github.io/macos-install
-# Show aliases keys as reminder:
-source ~/aliases.sh
-#     catn filename to show text file without comment (#) lines:
-#alias catn="grep -Ev '''^(#|$)'''"
-#catn ~/aliases.sh
-# For more Mac aliases, see https://gist.github.com/natelandau/10654137
-   # described at https://natelandau.com/my-mac-osx-bash_profile/
-# https://github.com/clvv/fasd
-
-
 # Position to most frequently used:
 #cd ~/github-wilsonmar/wilsonmar.github.io/_posts
 # gsl  # alias for "git status list"
@@ -549,6 +540,16 @@ if [ -d "$HOME/.sdkman" ]; then
    export SDKMAN_DIR="$HOME/.sdkman"
    #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 fi
+
+#### See https://wilsonmar.github.io/macos-install
+# Show aliases keys as reminder:
+source ~/aliases.sh
+#     catn filename to show text file without comment (#) lines:
+#alias catn="grep -Ev '''^(#|$)'''"
+#catn ~/aliases.sh
+# For more Mac aliases, see https://gist.github.com/natelandau/10654137
+   # described at https://natelandau.com/my-mac-osx-bash_profile/
+# https://github.com/clvv/fasd
 
 
 # END
