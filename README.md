@@ -1,129 +1,220 @@
-Here is the quickest way to get started with a macOS laptop (new or old) to work as a developer of several popular stacks and in several clouds."
+Here is the quickest way to automate the install of a macOS machine with <a href="#UtilitiesInstalled">all the stacks of tools most developer wants</a> to work locally and in several clouds.
 
-## TL;DR: Run!
-
-This approach is faster and repeatable than manually clicking through everything.
-It's less error-prone because we've worked out the dependency clashes for you.
-We created the script to automatically take care of workarounds to known issues. 
-
-To avoid repeating myself, all you need is follow my 
-<a target="_blank" href="https://wilsonmar.github.io/mac-setup">step-by-step instructions at<br />
-https://wilsonmar.github.io/mac-setup</a>
+This has been refined over several years.What was formerly at <a target="_blank" href="https://wilsonmar.github.io/mac-setup">wilsonmar.github.io/mac-setup</a> has been incorporated into this document.
 
 
 <a name="Why"></a>
 
 ## Why?
 
-Most tutorials ask you to <strong>manually type</strong> or copy and paste strings from web pages (often with missing steps), which can take time, and be error-prone. And most webinar demos seem to brag rather than teach skills. To be more helpful, this repo <strong>talks with code</strong> by including manual documentation in the "configuration as code" movement for minimizing risk and ensuring consistency.
+This repo enables you to get up and running on a new mac machine in a matter of minutes rather than days. Being able to get started quickly means that you can get working with applications.
 
-## Roadmap
+This helps developers skip wasted days installing (and doing it differently than colleagues).
 
-Scripts in this repo gives you a way to install, configure,  start, and clean-up after a large set of programs runs code for several languages in various "stacks":
+In contrast to most tutorials, docs, and videos that wastes your time to <strong>manually type</strong> or copy and paste strings (often with missing steps), automation here is less error-prone and faster because we've worked out the dependency clashes for you. In each stage, our script detects what has already been installed and verifies the success ofeach step. So it can perform workarounds for known issues.
 
-   * MEAN (MongoDB, Express, Angular, NodeJs) with the <a target="_blank" href="http://meanjs.org/">MeanJs sample app</a>
-   * <a target="_blank" href="http://mern.io/">MERN</a> (MongoDB, Express, React/Redux, NodeJs) for "Universal" apps, including WebPack
-   * PERN (PostgreSQL, Express, React, Node-postgres) with utilities <a target="_blank" href="https://www.pgadmin.org/">PGAdmin</a>, <a target="_blank" href="https://postgresapp.com/">Postgresapp</a>, <a target="_blank" href="https://react-bootstrap.github.io/">react-bootstrap</a>, <a target="_blank" href="https://www.npmjs.com/package/pg">nodemon</a>, (<a target="_blank" href="https://medium.com/bb-tutorials-and-thoughts/how-to-dockerize-pern-stack-afcd824a785f">Dockerized</a>)
+You can use this script to <strong>upgrade</strong> or <strong>remove</strong> apps and modules by changing the list of apps in the script.
 
-   * JAM (Jekyll, APIs, Markup) with a sample Github.io website
-   * MAMP (Macintosh, Apache/Nginx, MySQL, PHP) for WordPress websites
-   * Elastic (ELK) stack (Elasticsearch, Logstash, Kibana, etc.)
-   * Serverless on Amazon Lambda, Azure Functions, Google Actions, Iron.io, etc.
-   * <a target="_blank" href="https://www.cncf.io/">CNCF (Cloud Native Computing Foundation)</a> stack of Kubernetes, Prometheus monitoring, OpenTracing, JeagerTracing, FluentD log collector, and other projects
-   * DevSecOps "stack" of Git, Nexus/Artifactory, Jenkins, MVN, Vagrant, Docker, etc.
-   * Cloud management tools Terraform, AWS Cloud Formation, etc.
 
-This repo enables you to get the above up and running in a matter of minutes.
-Being able to get started quickly means that you can get working with the application rather than the ceremonies of installation.
+### For teamwork
 
-This repo brings to Mac users the "frequent, small, and reversible changes" for Agile.
+This automation enables teamwork by providing a common set of tools for working together: keyboard shortcuts (aliases), apps, etc.
 
-In this course, well-known DevOps practitioners Ernest Mueller and James Wickett provide an overview of the DevOps movement, focusing on the core value of CAMS (culture, automation, measurement, and sharing)
+This implements what well-known DevOps practitioners Ernest Mueller and James Wickett advocate in their book "The DevOps Handbook" and <a target="_blank" href="https://devops-handbook.com/">The DevOps Handbook</a> (<a target="_blank" href="https://www.oreilly.com/library/view/the-devops-handbook/9781491922921/">on OReilly.com</a>): "focus on the core value of CAMS (culture, automation, measurement, and sharing)".
 
-<a name="LimitedMemory"></a>
 
-### Limited Memory
+<a name="FastChange"></a>
 
-If you're now thinking "a Mac can't run every one of these programs" you're correct. A Mac has 16 GB - 32 GB of RAM.
+### Fast Change!
 
-This repo isn't designed to run every service, but to enable you to <strong>use one at a time</strong>.
+Apps and modules can be installed by simply adding a keyword in a control file recognized by the automation, which installs and configures them quickly and reliably.
 
-The advantage gained by this script is <strong>fast change</strong>. This script enables you to <strong>switch quickly</strong> among sets of programs to <strong>quickly evaluate</strong> the technical aspects of each stack actually running -- not just conceptually -- but really working together at the same time.
+This automated approach also enables you to update all apps and modules to the latest version with a single command - on a daily basis if you want.This helps meet cybersecurity directives to keep software up-to-date.
 
 Scripts here are <strong>modular</strong>. Its default setting is to not install everything. It installs only what you tell it to by adding a keyword in the control file.
 
-Keywords to trigger install are specified in category variables:
+This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing individual components.
 
-<a name="Categories"></a>
+<hr />
 
-* MAC_TOOLS <a href="#Homebrew">Homebrew</a>, <a href="#mas">mas</a>, Ansible, 1Password, PowerShell, etc.
-* DATA_TOOLS MongoDB, postgresql, mysql, mariadb, graphql?
-* EDITORS Atom, Code, Eclipse, Emacs, IntelliJ, Macvim, STS, Sublime, Textmate, vim
-* BROWSERS chrome, firefox, brave, phantomjs
-* GIT_CLIENTS git, cola, github, gitkraken, smartgit, sourcetree, tower, magit, gitup
-* GIT_TOOLS hooks, tig, lfs, diff-so-fancy, grip, p4merge, git-flow, signing, hub
+## Summary of stages
 
-* JAVA_TOOLS Maven, Ant, Gradle, TestNG, Cucumber, Junit4, Junit5, Yarn, dbunit, Mockito,
-          JMeter, GCViewer, JProfiler, etc.
-* PYTHON_TOOLS Virtualenv, jupyter, anaconda, ipython, numpy, scipy, matplotlib, pytest, robotframework, etc.
-* NODE_TOOLS Bower, gulp, gulp-cli, npm-check, jscs, less, jshint, eslint, webpack, etc.
+Here is a summary of the stages of the script.
 
-* LOCALHOSTS Apache (httpd, apachectl), iron
-* TEST_TOOLS selenium, sikulix, golum, dbunit?
-* CLOUD_TOOLS aws, gcp, azure, cf, heroku, docker, vagrant, terraform, serverless
+1. <a href="#NewMachine">New Machine Manual Setup</a>.
+1. <a href="#TimeMachine">Time Machine Backup</a>.
+1. <a href="#ViewREADME">View this README in Safari</a>.
+1. <a href="#mac-setup.sh">View mac-setup.sh automation script</a>
+1. <a href="#Terminal">Open Terminal app</a>.
+1. <a href="#mac-setup.parms">View mac-setup.sh parameters</a>.
 
-* MON_TOOLS (for monitoring) WireShark, Prometheus, others
-* VIZ_TOOLS (for visualization) Grafana, others (Prometheus, Kibana, Graphite)
+1. <a href="#mac-setup.sh">Use of Bash vs Zsh script mac-setup.sh</a>.
 
-* COLAB_TOOLS (for collaboration) google-hangouts, hipchat, joinme, keybase, microsoft-lync, skype, slack, teamviewer, whatsapp, sococo, zoom
-* MEDIA_TOOLS Camtasia, Kindle (others: Snagit, etc.)
-<br /><br />
+1. <a href="#UtilitiesInstalled">Utilities Installed</a>.
+1. <a href="#AppsInstalled">Apps Installed</a>.
+1. <a href="#FinalSteps">Final Steps</a>.
 
-Links for individual apps above take you to technical descriptions about that technology.
+<hr />
 
-The categories are run in dependency sequence. MAC_TOOLS are installed to provide underlying utilities, then DATA_TOOLS provides databases, then servers are installed, etc.
+<a name="NewMachine"></a>
 
-### Run types
+## New Machine Manual Setup
 
-"Genius bars" providing support to laptop users make use of this to quickly ready a <strong>new</strong> laptop for developers joining their organization. This helps developers skip wasted days installing (and doing it differently than colleagues).
+1. See my article about considerations of different hardware at<br />
+<a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>,
 
-This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing faulty components.
+1. See my article about the <a target="_blank" href="https://wilsonmar.github.io/macos-bootup/">macOS boot-up process</a>.
 
-But you don't have to start from scratch.
+1. After boot-up, select the new machine's language, time zone, keyboard layout, icloud email & password,user name & password are manual first steps.
 
-This script also performs <strong>updates</strong> and <strong>uninstall</strong> too.
-Although you may use Apple's Time Machine app to backup everything to a USB drive or AirPort Time Capsule, you may want a way to <strong>keep up with the latest changes</strong> in apps updated to the latest version. Remember the "openssl" update scare?
+1. When prompted to upgrade your Mac, choose to upgrade to the latest version (which may take several minutes) to get your Mac up to date.
 
-This script upgrades all programs it knows about if you run the script with the RUNTYPE set to "upgrade". Use this script to install and configure what you need at the moment.
+Once keyboard and mouse control is available:
 
-Change the RUNTYPE to "remove" and it clears up disk space.
-(But be careful that overuse can fragment your disk space)
+We use apps and utilities installed by default to install and configure apps and modules that may replace the ones installed by default.
+
+   * Instead of <a href="#SafariBrowser">Safari browser</a>: Google Chrome, Firefox, Microsoft Edge, Brave,etc.
+   * Instead of <a href="#Terminal">Terminal</a>: iTerm2, Warp, etc.
+   * Instead of vim: VSCode, Windsurf, Cursor, etc.
+
+Default apps can be specified for removal (to save disk space) by changing a list of apps in the script.
 
 
-### Servers to work offline
+<a name="TimeMachine"></a>
 
-This bash script enables you to <strong>work offline</strong> because it installs several servers. You manage allocation of port numbers in <strong>one place</strong>:
+### Time Machine Backup
 
-   <pre>
-   ELASTIC_PORT="9200"    # DATA_TOOLS from default 9200
-   GRAFANA_PORT="8089"    # VIZ_TOOLS from default 8080
-   JEKYLL_PORT="4000"     # LOCAOHOSTS from default 4000
-   JENKINS_PORT="8088"    # LOCALHOSTS from default 8080
-   KIBANA_PORT="5601"     # DATA_TOOLS default 5601
-   MYSQL_PORT="3060"      # DATA_TOOLS default 3060
-   MEANJS_PORT="3000"     # NODE_TOOLS from default 3000
-   MINIKUBE_PORT="8083"   # LOCAOHOSTS from default 8080
-   NEO4J_PORT="7474"      # DATA_TOOL default 7474 HTTPS: 7473
-   NGINX_PORT="8086"      # LOCALHOSTS from default 8080
-   PACT_PORT="6666"       # TEST_TOOLS from default 6666
-   POSTGRESQL_PORT="5432" # DATA_TOOLS default 5432
-   PROMETHEUS_PORT="9090" # MON_TOOLS default 9090
-   REDIS_PORT="6379"      # DATA_TOOLS default 6379
-   SONAR_PORT="9000"      # DATA_TOOLS default 9000
-   TOMCAT_PORT="8087"     # LOCALHOSTS from default 8080
-   </pre>
+Backups are used to completely restore a computer to the state captured  by Time Machine. 
 
-   Docker instances use the same ports.
+CAUTION PROTIP: Complete backups are often NOT restored when malware may have been added and thus present in the backup files restored.
+
+PROTIP: Our automation scripts also copies specific folders and text files to an external USB drive so they can be used to build a new machine <strong>from scratch</strong> after examination.
+
+1. Buy a new external USB NVMe SSD drive. They are $106 for 1TB at Costco.
+1. Plug in the new USB drive for storing backups. This you keep at home.
+
+1. Open Time Machine by clicking the Launchpad icon for a list of apps.
+1. Type "Time" to click on the "Time Machine" app icon.
+1. Select a location to store backups.
+1. Click "Add Backup Disk..." icon at the right side of the screen.
+1. Select the drive you just plugged in.
+1. Click "Add"
+1. Name the backup drive.
+
+   PROTIP: Name the drive such as "1TB-MacMini24" to designate the size of the drive and the year of the machine it is being installed on.
+
+1. Encrypt the drive by clicking the "Encrypt" icon at the right side of the screen.
+1. Enter a password for the drive.
+1. Click "Encrypt"
+1. Click "Done".
+1. Click "Done" again.
+1. Click "Start Backup" to begin the backup process.
+
+PROTIP: Tak a Backup again to establish a new baseline before and after you upgrade your machine.
+
+<hr />
+
+<a name="ViewREADME"></a>
+
+## View this README in Safari
+
+1. To open Safara, near the left among the default list of apps at the bottom of the screen, click on the "Safari" browser icon.
+
+1. Click on the middle field to type on top of "Search or enter website name".
+
+1. Type in this URL to reach this README file:
+
+   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md#ViewREADME">https://github.com/wilsonmar/mac-setup/blob/main/README.md#ViewREADME</a>
+
+1. Scroll down to this section:
+
+
+<a name="ViewREADME"></a>
+
+## View this README in Safari
+
+1. Type in this URL to reach the automation to setup a new machine:
+
+   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh</a>
+
+   CAUTION: The remainder of this article explains how to run the script. 
+
+   PROTIP: Use of such a powerful technique should be preceded by a thorough vetting of that script.
+   Before actual execution, read through the steps below and examine the script.
+
+   That automation script is manually invoked several times using different parameters on the Terminal command line, each time for a different phase of installation.
+
+   This script uses Bash (.sh) rather than Zsh (.zsh) in order for the script to possibly be adapted for work on Linux and Windows machines as well.
+
+   However, we can use script mac-setup.sh to upgrade Bash to the latest Bash version.
+
+1. Switch to the Terminal by holding down command and pressing Tab repeatedly until it rests on the Termial icon.
+
+
+<a name="mac-setup.parms"></a>
+
+### View mac-setup.sh parameters
+
+1. We want to upgrade Bash to the latest version.
+
+
+<a name="Terminal"></a>
+
+## Open Terminal app
+
+To invoke the built-in Terminal.app:
+
+1. Hold down the <strong>Command</strong> key and press <strong>spacebar</strong> to pop up the Spotlight Search modal dialog.
+
+1. Type on top of "Spotlight Search" <strong>Ter</strong> so enough of "Terminal.app" appears to press Enter to select it in the drop-down.
+
+1. When "Terminal.app" is highlighted, click it with your mouse or press the <strong>return</strong> key to launch the Terminal program.
+
+   The prompt shown is the <tt>$HOME</tt> variable's value.
+   
+   We will see later in this article how to customize the prompt shown. 
+
+1. Type <tt>pwd</tt> to see the "present working directory", which is the current folder you are in. The path shown is also stored in a variable named <tt>$HOME</tt>.
+
+1. Type <tt>ls -al</tt> to see the default folders and files in your $HOME folder. The <tt>-al</tt> parameter specifies to show all folders and files as a list.
+
+   PROTIP: Automation scripts will install use keyboard aliases to reduce typing.
+
+   The first part of each line defines its attribures (permissions and ownership).
+
+   Lines beginning with "d" define directories (folders). 
+   Default folders:
+
+   * .Trash
+   * .zsh_sessions
+   * Desktop
+   * Documents
+   * Downloads
+   * Movies
+   * Music
+   * Pictures
+   * Public
+
+   NOTE: Folder and file names beginning with a "." are hidden by default.
+
+1. Switch from and back to the Terminal by holding down the Command key and pressing Tab repeatedly until it rests on the Termial icon.
+
+
+
+<a name="mac-setup.parms"></a>
+
+### View mac-setup.sh parameters
+
+1. We want to upgrade Bash to the latest version.
+
+<a name="PhasesOfInstallation"></a>
+
+## Phases of installation 
+
+zzz
+
+
+## secrets.sh
 
 The above list is from the <strong>secrets.sh</strong> file in your $HOME folder, which
 you edit to specify which port numbers and <strong>keywords to specify apps</strong> you want installed.
@@ -131,9 +222,10 @@ you edit to specify which port numbers and <strong>keywords to specify apps</str
    The file's name is suffixed with ".sh" because it is a runnable script that establishes memory variables for a <a href="#MainScript">Setup script</a> to reference.
 
 
+
 <a name="Homebrew"></a>
 
-### Homebrew
+## Homebrew
 
 Most of the apps installed make use of installation code defined in the Homebrew repository online. There is a file (of Ruby code) for each brew install formula at:<br />
 
@@ -168,8 +260,6 @@ Yes, you can just run brew yourself, one at a time. But logic in the script goes
 ## Make this work for you
 
 The section below explains to someone relatively new to Mac machines the steps to automate installation of additional MacOS application programs. Along the way, we explore basic skills to use a command-line Terminal and common commands.
-
-1. Get <a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>, <a target="_blank" href="https://wilsonmar.github.io/macos-bootup/">boot-up</a>
 
 1. Obtain the Mac's Launch bar by positioning your mouse at the bottom edge of the screen until it appears.
 
