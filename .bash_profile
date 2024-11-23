@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v0.33 rm write to clipboard :.bash_profile"
+# git commit -m "v0.33 FIXME rm write to clipboard :.bash_profile"
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
@@ -256,8 +256,10 @@ mac_address_suffix=$(openssl rand -hex 3 | sed 's/\(..\)/\1:/g; s/.$//')
 mac_address=$(echo "$mac_address_prefix:$mac_address_suffix" | awk '{print tolower($0)}')
    # Such as 00:11:22:33:44:55
 
-#networksetup -setairportpower en0 on
-networksetup -setairportpower en0 off
+if command -v networksetup >/dev/null; then  # command found, so:
+   #networksetup -setairportpower en0 on
+   networksetup -setairportpower en0 off
+fi
 
 #if command -v /usr/local/bin/airport >/dev/null; then  # command found, so:
 #   sudo rm /usr/local/bin/airport
@@ -349,7 +351,7 @@ fi
 
 
 #### for Selenium
-if [ -d "$BREW_PATH/chromedriver" ]; then
+if [ -d "$BREW_PATH/chromedriver" ]; then  # for Selenium
    export PATH="$PATH:/${BREW_PATH}/chromedriver"
 fi
 
@@ -362,7 +364,6 @@ fi
 #export PATH=$PATH:$ANDROID_HOME/platform-tools
 #export PATH=$PATH:$ANDROID_HOME/build-tools/19.1.0
 
-# export PATH="$PATH:/usr/local/bin/chromedriver"  # for Selenium
 
 #### See https://wilsonmar/github.io/jmeter-install ::
 #export PATH="/usr/local/Cellar/jmeter/3.3/libexec/bin:$PATH"
@@ -381,12 +382,14 @@ fi
 
 
 #### See https://wilsonmar.github.io/salesforce-npsp-performance/
+#if command -v jyenv 1>/dev/null 2>&1; then
 # export GATLING_HOME=/usr/local/opt/gatling
 
 #### See https://wilsonmar.github.io/neo4j
 # export NEO4J_HOME=/usr/local/opt/neo4j
 # export NEO4J_CONF=/usr/local/opt/neo4j/libexec/conf/
 
+#if ! command -v /usr/local/opt/postgresql@9.6/bin >/dev/null; then
 #export PATH="/usr/local/opt/postgresql@9.6/bin:$PATH"
 
 #### See https://wilsonmar.github.io/airflow  # ETL
@@ -523,9 +526,16 @@ fi
 
 #export LIQUIBASE_HOME='/usr/local/opt/liquibase/libexec'
 
+
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+if [ -d "$HOME/.sdkman" ]; then
+   export SDKMAN_DIR="$HOME/.sdkman"
+   #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
 
 
 # Position to most frequently used:
@@ -534,12 +544,6 @@ export SDKMAN_DIR="$HOME/.sdkman"
 #export PATH="$PATH:$HOME/github-wilsonmar/tf-samples"
 #export PATH="$PATH:$HOME/github-wilsonmar/python-samples"
 
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-if [ -d "$HOME/.sdkman" ]; then
-   export SDKMAN_DIR="$HOME/.sdkman"
-   #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-fi
 
 #### See https://wilsonmar.github.io/macos-install
 # Show aliases keys as reminder:
