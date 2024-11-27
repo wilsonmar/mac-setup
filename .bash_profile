@@ -460,14 +460,12 @@ fi
 
 CONDA_FOLDER="/opt/homebrew/Caskroom/miniconda/base"
 if [ -d "$CONDA_FOLDER/bin/pip3" ]; then  # folder was created:
-   # >>> conda initialize >>>
-   # !! Contents within this block are managed by 'conda init' !!
    __conda_setup="$('$CONDA_FOLDER/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
    if [ $? -eq 0 ]; then
       eval "$__conda_setup"
    else
       if [ -f "$CONDA_FOLDER/etc/profile.d/conda.sh" ]; then
-         . "$CONDA_FOLDER/etc/profile.d/conda.sh"
+         source "$CONDA_FOLDER/etc/profile.d/conda.sh"
       else
          export PATH="$CONDA_FOLDER/bin:$PATH"
       fi

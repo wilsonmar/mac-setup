@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-# git commit -m "v036 add rot13 : aliases.sh"
+# git commit -m "v037 + claude : aliases.sh"
 #
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -161,10 +161,14 @@ if [ "${OS_TYPE}" = "Darwin" ]; then
 fi
 
 ##### TEXT EDITOR:  see https://wilsonmar.github.io/text-editor
+if [ -d "$HOME//Applications/Claude.app" ]; then
+   export EDITOR="claude"  # code = Visual Studio Code; subl = Sublime Text
+   alias claude='open -a "$HOME//Applications/Claude.app"'
+fi
 if [ -d "/Applications/Visual Studio Code.app" ]; then
+   export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
    alias code='open -a "/Applications/Visual Studio Code.app"'
    alias vscode='open -a "/Applications/Visual Studio Code.app"'
-   export EDITOR="code"  # code = Visual Studio Code; subl = Sublime Text
 fi
    # export EDITOR="/usr/local/bin/mate -w"
 alias edit="$EDITOR"   # make a habit of using this instead program name (such as code), so you can switch default editor easier
