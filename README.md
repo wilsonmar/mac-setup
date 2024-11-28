@@ -1,34 +1,51 @@
 <!--
-git commit -m"v026 update from github.io :mac-setup :README.md"
+git commit -m"v027 + resume entry :README.md"
 -->
 
-Here is the quickest way to automate the install of a macOS machine with <a href="#UtilitiesInstalled">all the stacks of tools most developer wants</a> to work locally and in several clouds.
+Here is the quickest way to automate get a new macOS running with <a href="#UtilitiesInstalled">all the stacks of tools most developer wants</a> to work locally and in several clouds.
 
-This has been refined over several years. What was formerly at <a target="_blank" href="https://wilsonmar.github.io/mac-setup">wilsonmar.github.io/mac-setup</a> has been incorporated into this document.
+After you complete this, step by step, you can add to your resume or LinkedIn profile:
 
-## Summary Table of Contents
+   <ul>Configured new Mac Mini M4, from scratch, a full set of utilities and AI apps and cloud services.
+   Bash script automation was used to reduce the effort to within an hour.
+   Documentation of each step were documented and validated by others.
+   The entire team can now pair program together efficiently with a common set of tools.
+   </ul>
 
-1. <a href="#Why">Why</a>: <a href="#ForTeamwork">For teamwork</a>, <a href="#FastChange">Fast Change!</a>.
+This has been refined over several years. 
+What was formerly at <a target="_blank" href="https://wilsonmar.github.io/mac-setup">wilsonmar.github.io/mac-setup</a> has been incorporated into this document.
 
-1. <a href="#Monitor">Monitor selection</a>
+## Summary of Stages
+
+1. <a href="#Why">Know Why</a>: <a href="#ForTeamwork">For teamwork</a>, <a href="#FastChange">Fast Change!</a>.
+1. <a href="#Hardware">Hardware selection and connection</a>.
 1. <a href="#NewMachine">New Machine Manual Setup</a>.
 1. <a href="#TimeMachine">Time Machine Backup</a>.
 1. <a href="#ResetToFactorySettings">Reset to Factory Settings</a>.
 
 1. <a href="#SystemSettings">Shortcut to System Settings</a>.
+1. <a href="#LoginItems">Login items</a>.
+1. <a href="#Passkey">Passkey</a>.
+1. <a href="#GitHubAccount">Setup GitHub account</a>.
 
-1. <a href="#ViewREADME">View this README in Safari</a>.
-1. <a href="#ViewSetup">View mac-setup.sh automation script</a>
 1. <a href="#Terminal">Learn the Terminal app</a>.
-1. <a href="#Finder">Learn the Finder app</a>.
+1. <a href="#Finder">Learn the Finder and Folders $PATH</a>.
+1. <a href="#ViewREADME">View this README in Safari</a>.
+1. <a href="#Bash">Get .bash_profile</a>.
 
+1. <a href="#ForkAndClone">Load gh to fork & clone mac-setup automation folder</a>
+1. <a href="#Homebrew">Use Homebrew</a>.
+<!-- TODO: + Git fork & clone using gh utilitiy. https://www.youtube.com/watch?v=2WiBRNydhTk -->
+1. <a href="#curl">Edit mac-setup.env settings in $HOME</a>.
 1. <a href="#mac-setup.sh">View mac-setup.sh parameters</a>.
 
-1. <a href="#mac-setup.sh">Use of Bash vs Zsh script mac-setup.sh</a>.
+1. <a href="#Dotfiles">Configure using Apple Script in Dotfiles</a>.
 
-1. <a href="#Homebrew">Use of Homebrew</a>.
+
 1. <a href="#UtilitiesInstalled">Utilities Installed</a>.
+
 1. <a href="#AppsInstalled">Apps Installed</a>.
+
 1. <a href="#FinalSteps">Final Steps</a>.
 
 <hr />
@@ -78,28 +95,42 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
 
 <hr />
 
-<a name="Monitor"></a>
+<a name="Hardware"></a>
 
-## Monitor selection
+## Hardware selection and connection
 
-Although an HDMI cable can connect the Mac Mini to a TV,
-some TVs do not show the top of the screen where the menu bar and Mission Control are displayed. Mission Control is a built-in feature of macOS
-to switch between groups of open apps and windows (using control + up arrow) and control + down arrow).
+1. See my article about considerations of different hardware at<br />
+<a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>,
 
-So we recommend using a monitor with the version of HTMI cable it supports.
+1. Connect the computer to the monitor with (in order of preference): Thunderbot 4 or 5 cable; Display Port; HDMI 3; USB-C.
 
-The back of the Mac Mini has USB-C ports that supports <strong>Lightning 4</strong> cables, which transfers data at 40Gbps and powers up to 100W.
-The front of the Mac Mini has USB-C ports that supports <strong>HDMI v3.2</strong> cables, which transfers data at 40Gbps and powers up to 100W.
+   The back of the Mac Mini has USB-C ports that supports <strong>Lightning 4</strong> cables, which transfers data at 40Gbps and powers up to 100W. 
+   
+   The front of the Mac Mini has USB-C ports that supports <strong>HDMI v3.2</strong> cables, which transfers data at 40Gbps and powers up to 100W.
 
-So make sure you use the correct cables.
+   Although an HDMI cable can connect the Mac Mini to a TV,
+   we recommend using a monitor with the version of HTMI cable it supports.
+
+   Some TVs do not show the top of the screen where the menu bar and Mission Control are displayed. Mission Control is a built-in feature of macOS
+   to switch between groups of open apps and windows (using control + up arrow) and control + down arrow).
+
+1. If you have a Bluetooth keyboard, you can use the USB port for something else. 
+
+   PROTIP: A keyboard with a "delete" key is useful especially if you are used to working with Windows.
+   The macOS keyboard requires users to awarkly press "fn" key and then "delete" key to delete.
+
+   Some <a target="_blank" href="https://www.logitech.com/en-us/products/keyboards/mice/keyboard-mice.html">Logitech USB keyboard and mouse models</a> come with a USB dongle.
+
+   See my article about the <a target="_blank" href="https://wilsonmar.github.io/macos-keyboard/">macOS keyboards</a>.
+
+1. Consider an ergonoic mouse. If you are right-handed, consider a left-handed mouse so that you write with your right hand while you use the mouse.
 
 
 <a name="NewMachine"></a>
 
 ## New Machine Manual Setup
 
-1. See my article about considerations of different hardware at<br />
-<a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>,
+1. Press the power button on the monitor.
 
 1. See my article about the <a target="_blank" href="https://wilsonmar.github.io/macos-bootup/">macOS boot-up process</a>.
 
@@ -185,17 +216,63 @@ You can now confidently reset the machine to factory settings, which erases all 
 
 PROTIP:For some strange reason, Apple does not provide a default direct keyboard shortcut for System Settings. So create one:
 
-   1. Click the Apple icon on the upper left corner of the screen.
+   1. Click the Apple icon on the upper left corner of the screen. 
    1. Click the "System Settings...".
    1. Type "Keyboard shortcuts".
    1. Click Keyboard Shortcuts.
    1. Click "App Shortcuts" on the left menu and click the + button.
    1. For "Applications", select "System Settings".
    1. In Menu title at the right, type "System Settings..." (make sure to include the ellipsis).
-   1. For Keyboard shortcut, press <strong>CommandCommand + Option + Shift + P</strong>
+   1. For Keyboard shortcut, press <strong>CommandCommand + Option + Shift + P</strong> 
    1. Click "Done" to save the shortcut.
 
    1. Try it out by clicking on the Apple icon on the upper left corner to see the keystrokes for "System Settings...". Try the keyboard sequence shown.
+
+
+<a name="LoginItems"></a>
+
+### Login items
+
+PROTIP: Review this once a month to ensure that you have control of your machine. Here is where malicious software can get access.
+
+1. Within Apple System Settings, click the "Search" text within the field at the upper-left corner.
+1. Type "Login" on top of "Search".
+1. If you don't want to have a program Open at Login, click on that app and click the "-" button.
+1. If you want to have Allow in the Background a program, click on the toggle to its left.
+
+<a name="Passkey"></a>
+
+### TODO: Install Passkey
+
+
+<a name="DefaultBrowser"></a>
+
+## Default Browser
+
+Safari is the default browser on MacOS.
+
+The automation script will install other browsers if specified.
+
+1. To ensure that cookies in the browser are not confused, open the browser you want to use. Select the browser profile you want to use.
+
+   You may need tonavigate to that browser's settings and make that the default and profile. For example: chrome://settings/defaultBrowser
+   
+
+
+<a name="GitHubAccount"></a>
+
+## GitHub account
+
+If you have not yet obtained a GitHub account, 
+
+1. In a web browser, sign up for one with your email address at 
+
+   <a target="_blank" href="https://github.com/">https://github.com/</a>
+
+1. We recommend installing Twillo's Authy app for two-factor authentication.
+
+1. TODO: Configure SSH and GPG keys.
+
 
 
 <a name="ViewREADME"></a>
@@ -219,14 +296,13 @@ So you can click links within this README file on the target machine:
 
 ## View the mac-setup.sh automation script in Safari
 
-1. Type in this URL to review the automation to setup a new machine:
+PROTIP: This approach is designed so that you can examine the script before running it.
+
+1. To review the automation files to setup a new machine, click this link:
 
    <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh</a>
 
-   CAUTION: The remainder of this article explains how to run the script.
-
-   PROTIP: Use of such a powerful technique should be preceded by a thorough vetting of that script.
-   Before actual execution, read through the steps below and examine the script.
+   CAUTION: The remainder of this article explains how to run the script. 
 
    That automation script is manually invoked several times using different parameters on the Terminal command line, each time for a different phase of installation.
 
@@ -234,16 +310,16 @@ So you can click links within this README file on the target machine:
 
    However, script mac-setup.sh can upgrade Bash to the latest version.
 
-   Before we get that script onto your machine:
+1. Click "fork" to copy the script to your own GitHub account.
+
+Next, let's get that script onto your machine using "Bash" CLI (Command Line Interface) commands within the Terminal app.
 
 
 <a name="Terminal"></a>
 
 ## Learn the Terminal app
 
-To start the built-in Terminal.app:
-
-The Terminal program is called a "Bash" shell, which is a contraction of the term "Bourne-agan shell", which is a play on words.
+The built-inTerminal program is called a "Bash" shell, which is a contraction of the term "Bourne-agan shell", which is a play on words.
 
 1. Hold down the <strong>Command</strong> key and press <strong>spacebar</strong> to pop up the Spotlight Search modal dialog.
 
@@ -252,27 +328,33 @@ The Terminal program is called a "Bash" shell, which is a contraction of the ter
 1. When "Terminal.app" is highlighted, click it with your mouse or press the <strong>return</strong> key to launch the Terminal.app program selected.
 
    The default Terminal CLI (Command Line Interface) prompt shown begins with the <strong>user name</strong>.
-
+   
    We will later customize the prompt shown by changing the <tt>PS1</tt> variable.
 
 1. Type <tt>pwd</tt> to see the "present working directory", which is the current folder you are in. The path shown is also stored in a variable named <tt>$HOME</tt>.
 
 1. Type <tt>ls -al</tt> to see the default folders and files in your $HOME folder. The <tt>-al</tt> parameter specifies to show all folders and files as a list.
 
-   PROTIP: The automation script will install keyboard aliases to improve typing speed and accuracy. These aliases are stored in the <tt>aliases.sh</tt> file in the $HOME folder:
+1. To reduce text wrapping the next line, expand the width of your Terminal window by dragging the right edge with your mouse.
+
+   <a name="KeyboardAliases"></a>
+
+   ### keyboard aliases (shortcuts)
+
+   PROTIP: The automation script installs keyboard aliases (shortcuts) you can use to improve typing speed and accuracy. Examples:
 
    * <tt>alias ll="ls -al"</tt>
    * <tt>alias l="ls -l"</tt>
    * <tt>alias h="history"</tt>
 
-1. To reduce text wrapping the next line, expand the width of your Terminal window by dragging the right edge with your mouse.
+   These aliases are stored in the <tt>aliases.sh</tt> file called by .bash_profile in the $HOME folder. 
 
    <a name="UserHomeFolders"></a>
-
+   
    ### User $HOME folders
 
-   The first part of each line defines its attributes (permissions and ownership). Lines beginning with "d" define directories (folders).
-
+   The first part of each line defines its attributes (permissions and ownership). Lines beginning with "d" define directories (folders). 
+   
    * .Trash
    * .zsh_sessions
    * Desktop
@@ -283,37 +365,123 @@ The Terminal program is called a "Bash" shell, which is a contraction of the ter
    * Pictures
    * Public
 
-1. Switch to the Terminal by holding down command and pressing Tab repeatedly until it rests on the Terminal icon.
 
+<a name="ForkAndClone"></a>
+
+## Fork and Clone usingthe GH CLI
+
+1. Open the Terminal app and type:
+   ```
+   gh auth login --web
+   ```
+   The response:
+   ```
+   ? What is your preferred protocol for Git operations on this host?  [Use arrows to move, type to filter]
+   > HTTPS
+   SSH
+   ```
+1. Press Enter to accept "HTTPS" as the preferred protocol.
+   ```
+   ? What is your preferred protocol for Git operations on this host? HTTPS
+   ? Authenticate Git with your GitHub credentials? (Y/n) 
+   ```
+1. Press Enter to accept the default capitalized "Y" to authenticate Git with your GitHub credentials.
+   The response:
+   ```
+   ! First copy your one-time code: 17B4-A882
+   Press Enter to open https://github.com/login/device in your browser... 
+   ```
+1. Highlight the code and press Command+C to copy it to your invisible Clipboard.
+1. Press Enter for GitHub "Device Activation" page to appear in whatever is set as default browser.
+
+1. Click the button associated with the account you want to use, such as "Continue".
+1. In the "Device Activation" page that appears, click on the first box and press command+V to paste the 8-digit code from your invisible Clipboard.
+1. Click "Continue".
+1. Click "Authorize github".
+1. Click "Use passkey" and touch your fingerprint for "Congratulations, you're all set!"
+1. Press command+W to close the "Device Activation" page.
+
+1. Switch to the Terminal by holding down command and pressing Tab repeatedly until it rests on the Terminal icon.
+   ```
+   ✓ Authentication complete.
+   - gh config set -h github.com git_protocol https
+   ✓ Configured git protocol
+   ✓ Logged in as wmjomt
+   ```
+1. Type the GitHub account name you want to fork to, such as:
+   ```
+   GH_ACCT="wmjomt"
+   ```
+1. Fork and clone in this one command:
+   ```
+   gh repo fork "https://github.com/wilsonmar/mac-setup" --clone
+   ```
+   The response at time of writing:
+   ```
+   ✓ Created fork wmjomt/mac-setup
+   Cloning into 'mac-setup'...
+   remote: Enumerating objects: 4255, done.
+   remote: Counting objects: 100% (1303/1303), done.
+   remote: Compressing objects: 100% (500/500), done.
+   remote: Total 4255 (delta 821), reused 1268 (delta 789), pack-reused 2952 (from 1)
+   Receiving objects: 100% (4255/4255), 13.01 MiB | 12.71 MiB/s, done.
+   Resolving deltas: 100% (1125/1125), done.
+   From https://github.com/wilsonmar/mac-setup
+   * [new branch]      main       -> upstream/main
+   * [new branch]      master     -> upstream/master
+   ✓ Cloned fork
+   ! Repository wilsonmar/mac-setup set as the default repository. To learn more about the default repository, run: gh repo set-default --help
+   ```
 
 <a name="Finder"></a>
-
-### Learn the Finder app
+   
+### Learn Finder & Folders
 
 The Finder app is the default app for opening files and folders.
 So it is the one default app that can't be removed.
 
 1. Open the Finder app.
 
+1. Arrange the left panel to display the folders in the order you prefer.
+
 1. From the $HOME folder, press <strong>command + up</strong> to display the previous level, where a "Shared" folder is shown.
 
-1. Press <strong>command + up</strong> again to display the level  c containing folders references by the operating system:
+1. The same can be done on the Terminal by typing:
+   ```
+   cd ..
+   ```
+
+1. Press <strong>command + up</strong> again to display the level containing folders referenced by the operating system:
 
     * Applications
-    * <strong>Library</strong> holds application files
+    * <strong>Library</strong> folder holds application files
     * System
     * Users
 
+1. Switch to the Terminal. To see the folder for each application:
+   ```
+   ls -al "$HOME/Library/Application Support"
+   ```
+   Notice that the the "$HOME" variable and the space within "Application Support" require double-quotation marks. 
+   
+   REMEMBER:The folder for an application is not deleted when the application is deleted.
+   
+1. Switch back to the Finder GUI.
 1. Press <strong>command + up</strong> again to display the top level containing "Macintosh HD" and "Network" folders.
 
    PROTIP: Installers of apps being installed are shown in this folder.
 
+1. Switch to the Terminal to get the disk space used by this folder using this command:
+   ```
+   du -sh "$HOME"
+   ```
+1. Switch back to the Finder GUI.
 1. Press <strong>command + down</strong> to go down a level.
 
 1. Manually arrange to your liking the sequence of folders on the left panel of Finder.
 
    ### Added in $HOME folder
-
+   
    NOTE: Folder and file names beginning with a "." are hidden by default.
    Press <strong>command + shift + .</strong> to toggle the display of hidden files and folders.
 
@@ -341,7 +509,7 @@ So it is the one default app that can't be removed.
 
    * github-wilsonmar (or whatever is your user account on GitHub.com holding code)
    * gh-wmjtm (another user name on GitHub)
-
+   
    * go
    * gopkgs
 
@@ -351,7 +519,7 @@ So it is the one default app that can't be removed.
 
 <a name="PhasesOfInstallation"></a>
 
-## Phases of installation
+## Phases of installation 
 
 1. Download from GitHub mac-setup.sh automation script
 1. Edit settings in mac-setup.env (using textedit or VSCode)
@@ -428,7 +596,7 @@ The section below explains to someone relatively new to Mac machines the steps t
 
    <pre><strong>bash --version | grep 'bash'
    </strong></pre>
-
+ 
    Hold the Shift key to press the | (called pipe) key at the upper-right of the keyboard.
 
    The <tt>grep 'bash'</tt> is needed to filter out lines that do not contain the word "bash" in the response such as:
