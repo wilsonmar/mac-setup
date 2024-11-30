@@ -1,5 +1,5 @@
 ---
-lastchange: "v033 + homebrew steps :README.md"
+lastchange: "v033 + backup strategy :README.md"
 ---
 
 <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md ">This article</a>
@@ -28,17 +28,18 @@ We make use of automation so it's less error-prone and faster because we've work
 ## Stages of Action
 
 1. <a href="#Hardware">Hardware selection and connection</a>
+1. <a href="#ResetToFactorySettings">Reset to Factory Settings</a>
+1. <a href="#BackupStrategy">Backup Media/Strategy</a>
 1. <a href="#NewMachine">New Machine Bootup</a>
 1. <a href="#TimeMachine">Time Machine Backup</a>
-1. <a href="#ResetToFactorySettings">Reset to Factory Settings</a>
 
 1. <a href="#SystemSettings">Shortcut to System Settings</a>
 1. <a href="#AltClick">Change Annoying Defaults</a>
 1. <a href="#LoginItems">System Login items</a>
 
 1. <a href="#DefaultBrowser">Default Browser</a>
+1. <a href="#GitHubAccount">GitHub Account to Fork</a>
 1. <a href="#ViewREADME">View files in browser</a>
-1. <a href="#GitHubAccount">GitHub Account</a>
 
 1. <a href="#Finder">Learn the Finder app & Folders</a>
 1. <a href="#Passkeys">Install Passkeys</a>
@@ -105,14 +106,14 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
 
    PROTIP: CAUTION: A hub may slow down the machine. Get a hub with its own power supply.
 
-   [_] If you must use a hub, get one that supports the fastest connection:
+   [_] If you must use a hub, get one that supports the fastest connection (Thunderbolt).
 
    ### Monitor cables
    
    Use the appropriate type and version of cables. REMEMBER: If you have a Mac Mini:
    <a target="_blank" href="https://res.cloudinary.com/dcajqrroq/image/upload/v1731683979/mac-mini-front-back_fup4cz.png"><img src="https://res.cloudinary.com/dcajqrroq/image/upload/v1731683979/mac-mini-front-back_fup4cz.png"></a>
 
-   The front panel has USB-C ports that supports <strong>USB-C</strong> cables which transfers data at 10Gbps and powers up to 100W.
+   The front panel has USB-C ports that supports <strong>USB-C 3.2 Gen 2x2</strong> cables which transfers data at 10Gbps and powers up to 100W.
    The back panel has Thunderbolt ports:
    * The Mac Mini base model supports <strong>Thunderbolt 4</strong> cables which transfers data at 40Gbps and powers up to 100W for dual 4K displays.
    * The Mac Mini Pro  model supports <strong>Thunderbolt 5</strong> cables which transfers data at 120Gbps and powers up to 250W for dual 6K displays. 
@@ -124,22 +125,112 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
 
    ### Keyboards
 
-1. If you have a Bluetooth keyboard, you can use the USB port for something else. 
+1. If you have a Bluetooth keyboard, you can use the USB ports for something else. 
+
+   However, some <a target="_blank" href="https://www.logitech.com/en-us/products/keyboards/mice/keyboard-mice.html">Logitech USB keyboard and mouse models</a> come with a USB dongle.
 
    PROTIP: A keyboard with a "delete" key is useful especially if you are used to working with Windows.
    The macOS keyboard requires users to awarkly press "fn" key and then "delete" key to delete.
-
-   Some <a target="_blank" href="https://www.logitech.com/en-us/products/keyboards/mice/keyboard-mice.html">Logitech USB keyboard and mouse models</a> come with a USB dongle.
 
    See my article about the <a target="_blank" href="https://wilsonmar.github.io/macos-keyboard/">macOS keyboards</a>.
 
    <a target="_blank" href="https://www.apple.com/support/keyboard/">Keyboards from Apple</a> are different from generic USB keyboards for Windows:
 
-   * Some don't have a "delete" key. Instead hold down the "fn" key and press the "delete" key.
+   * Some keyboards don't have a "delete" key. Instead hold down the "fn" key and press the "delete" key.
    * The button at the upper-right is a fingerprint reader and on/off button
    * The modifier keys Command is used instead of Control.
 
 1. Consider an ergonomic mouse. If you are right-handed, consider a left-handed mouse so that you write with your right hand while you use the mouse.
+
+
+<a name="BackupStrategy"></a>
+
+## Backup Media/Strategy
+
+Apple's built-in Time Machine app backs up files and folders so you can <strong>completely restore</strong> the whole computer to the state when the last backup occured. This is after complete hardware failure or loss.
+
+PROTIP: Complete backups should NOT be used to restore you computer when <strong>malware</strong> may have been added and thus present in the backup files. That's pretty much should be the presumption.
+Also, when restoring, avoid restoring to the same drive you are using.
+Complete restores should be to identical hardware.
+
+PROTIP: The preferred way to restore is to use the automation scripts described below, which copies specific folders and files to an external USB drive so they can be used to rebuild a new machine <strong>from scratch</strong>.
+
+[_] One of the reasons to purchase more storage on board the computer is for <strong>dual-booting</strong> to Windows and/or Linux (using Parallels, QEMU, or VirtualBox). 
+
+   <ul>
+   The other reason is have room to create a <strong>mirror drive</strong> which immediately stores changes to data reduandancy on two different physical drives.
+
+   A "RAID" (Redundant Array of Independent Disks) created using Apple's Disk Utility duplicates two or more <strong>entire</strong> entire physical drives (all folders in it). 
+   
+   PROTIP: Since much data do not change, you may prefer to <strong>mirror specific folders</strong> using <a target="_blank" href="https://forums.macrumors.com/threads/i-need-a-software-to-set-up-a-mirror-raid-for-two-drives-any-options.2384176/">SoftRAID</a>, <a target="_blank" href="https://www.econtechnologies.com/chronosync/overview.html">$50 Chronosync</a> from Econ Technologies, <a target="_blank" href="https://bombich.com/">$40 Carbon Copy Cloner</a>, or <a target="_blank" href="https://rsync.samba.org/documentation.html">freeware rsync</a> Unix CLI utility (after upgrade).
+   </ul>
+
+1. [_] Buy a new USB drive to store backups externally. Apple's Time Machine app makes backups automatically (in the background) to disk. PROTIP: Make a backup to external USB drive before you take your Mac out of the house, before upgrading, before replacing components, etc.
+   <ul>
+   Apple's Time Machine app makes backups to the disk with <a target="_blank" href="https://www.apple.com/support/time-machine/">these Time Machine settings</a>.
+
+   NVMe SSD (Solid-State drives) are <a target="_blank" href="https://www.youtube.com/watch?v=xA9Xq7hb6Q0">more durable and faster</a> than magnetic (spinning) mechanical hard drives. "Modern SSDs should last 5-10 years. Magnetic hard drives hold data for 3-7 years" (unless SpinRight is used on them periodically).
+   
+   "P68" rated enclosures are dust and water resistant. Higher capacity and faster read/write speeds are more expensive:
+   </ul>
+
+   * <a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Portable-Dragon-%E2%80%8ESDSSDE30-1T00-GD25/dp/B0D5FR51QD/">$79.99</a> for 1TB at 800MB/s through USB 3.2 Gen 2 cables
+   * <a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Portable-SSD-SDSSDE30-2T00-G26/dp/B0C5JNWF58/">$109.99</a> for 2TB at 800MB/s through USB 3.2 Gen 2 cables
+   * <a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Extreme-Portable-SDSSDE81-1T00-G25/dp/B08GV9M64L/">$109.99</a> for 1TB at 2000MB/s through USB 3.2 Gen 2x2 cables
+
+   * <a target="_blank" href="https://www.amazon.com/Transcend-USB-3-2-Gen-2-Cable/dp/B07V7F4G3S/">$130</a> for 2TB at 1050MB/s through USB 3.2 Gen 2 cables
+   * <a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Extreme-Portable-SDSSDE81-2T00-G25/dp/B08GV4YYV7/">$157.78</a> for 2TB at 2000MB/s through USB 3.2 Gen 2x2 cables
+
+   * <a target="_blank" href="https://www.amazon.com/SanDisk-4TB-Extreme-Portable-SDSSDE61-4T00-G25/dp/B08RX4QKXS/">$229.99</a> for 4TB at 1050MB/s through USB 3.2 Gen 2 cables
+   * <a target="_blank" href="https://www.amazon.com/SanDisk-Professional-PRO-Blade-Transport-SDPM2NB-004T-GBAND/dp/B0B3RMGKBS/">$299.99</a> for 4TB at 2000MB/s through USB 3.2 Gen 2x2 cables
+   * <a target="_blank" href="https://www.amazon.com/SanDisk-Professional-4TB-PRO-G40-SDPS31H-004T-GBCND/dp/B0BW6715SV/">$324.99</a> for 4TB at 3000MB/s through Thunderbolt 3 or USB-C 10Gbps cables
+
+   * <a target="_blank" href="https://www.amazon.com/SanDisk-8TB-Desk-Drive-SDSSDT40-8T00-NA25/dp/B0CJG3Q7JW/">$499.99</a> for 8TB at 1000MB/s through USB-C 3.2 Gen 2 cables
+
+1. [_] Have a fire-resistant vault to store backup media.
+
+1. [_] For lower cost than a spectrum analyzer to capture emissions on several frequencies, put a cell phone inside which has been installed with the <a target="_blank" href="https://velter.co/en-en/blogs/blog/shielding-tester-a-pocket-sized-faraday-cage-tester-for-android-and-ios">"Shielding Tester" app (from Velter KZ)</a> to detect Wi-Fi and cell signals.
+
+1. [_] Get a "Faraday dry sack" to keep the USB drive dry, dust-free, unconnected, and free from electromagnetic fields. <a target="_blank" href="https://www.youtube.com/watch?v=EPVQ8m_yBVA">VIDEO</a>:
+   * Mylar blankets -8 dBm (not much protection)
+   * Aluminum foil -17 dBm
+   * Metal boxes (Ammo cans) -30 dBm
+   * -40 dBm is minimal level needed to block WiFi signals
+   * Mission Darkness bag -45 dBm
+   * NEST Z-bag with zip closure -51 dBm <a target="_blank" href="https://www.youtube.com/watch?v=eyIl7FfwXbs">VIDEO</a>
+   * Faraday Defense NX single-layer fold-over bag -60 dBm (99.9% of signals are blocked)
+
+   -80 dBm (all signals are blocked) by these bags law enforcement use to store evidence:
+   * <a target="_blank" href="https://www.faradaydefense.com/products/nx3">Faraday Defense NX3</a> double-layer fold-over bag, 
+   * <a target="_blank" href="https://www.amazon.com/Faraday-Defense-17L-Waterproof-Backpack/dp/B08TMYC3RY/">$175 dry bag</a>, tower bag
+
+
+<a name="ResetToFactorySettings"></a>
+
+## Reset to Factory Settings
+
+These steps confirm your ability to confidently wipe your computer of all data and settings before you transfer it to a new owner or when you want to ensure no malware is lurking on your computer.
+
+Many enterprises and organizations have strict policies that require you to <strong>schedule on your calendar</strong> a reset of your computer to factory settings periodically (such as once per quarter).
+
+Later in this document, automation script can restore your computer to your customized state.
+
+1. Shut down your Mac.
+1. Turn it on and immediately press and hold the Command (⌘) + R keys.
+1. Keep holding until you see the Apple logo or a spinning globe. This will boot your Mac into macOS Recovery.
+1. Select Disk Utility and click Continue.
+1. In Disk Utility, select your main drive (usually named Macintosh HD) from the list on the left.
+1. Click the Erase button at the top of the window.
+1. Name: You should leave it as "Macintosh HD" because it's the "Startup Volume"s.
+1. Format: Choose APFS (for most modern Macs) or Mac OS Extended (Journaled) for older Macs.
+1. Scheme: Choose GUID Partition Map.
+1. Click Erase to wipe the drive.
+1. Close Disk Utility to return to the macOS Utilities window.
+1. Select Reinstall macOS and click Continue.
+1. Follow the on-screen instructions to reinstall the operating system. This may take some time, depending on your internet speed and the version of macOS being installed.
+1. Once the macOS installation is complete, your Mac will restart and you’ll see the Setup Assistant.
+
+   If you're selling or giving away the Mac, don’t complete the setup process. Simply press Command + Q and select Shut Down. The new owner can complete the setup with their own information.
 
 
 <a name="NewMachine"></a>
@@ -156,44 +247,22 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
 
    PROTIP: Write down the secrets along with the computer's serial number, etc. to help you deal with insurance and replacements if needed.
 
-1. When prompted to upgrade your Mac, choose to upgrade to the latest version (which may take several minutes) to get your Mac up to date.
+   <a name="Upgrade"></a>
+
+   ### Upgrade
+
+1. When prompted to <strong>upgrade</strong> your Mac, choose to upgrade to the latest version (which may take several minutes) to get your Mac up to date.
 
 
-<a name="TimeMachine"></a>
+   <a name="TimeMachine"></a>
 
-## Time Machine Backup
+   ## Time Machine Backup
 
-The built-in Time Machine app backs up files and folders so you can completely restore the whole computer to the state when backup occured.
-
-CAUTION PROTIP: Complete backups are often NOT restored when malware may have been added and thus present in the backup files restored.
-
-PROTIP: Our automation scripts also copies specific folders and text files to an external USB drive so they can be used to build a new machine <strong>from scratch</strong> after examination.
-
-1. [_] Buy a new external USB NVMe SSD drive, which are more durable than magnetic (spinning) hard drives. P68 rated T7 are $126 for 2TB at Costco.
-1. [_] Have a fire-resistant vault to store backup media.
-1. [_] For lower cost than a spectrum analyzer to capture emissions on several frequencies, put a cell phone inside which has been installed with the <a target="_blank" href="https://velter.co/en-en/blogs/blog/shielding-tester-a-pocket-sized-faraday-cage-tester-for-android-and-ios">"Shielding Tester" app (from Velter KZ)</a> to detect Wi-Fi and cell signals.
-1. [_] Get a "Faraday dry sack" to keep the USB drive dry, dust-free, and free from electromagnetic fields. <a target="_blank" href="https://www.youtube.com/watch?v=EPVQ8m_yBVA">VIDEO</a>:
-   * Mylar blankets -8 dBm (not much protection)
-   * Aluminum foil -17 dBm
-   * Metal boxes (Ammo cans) -30 dBm
-   * -40 dBm is minimal level needed to block WiFi signals
-   * Mission Darkness bag -45 dBm
-   * NEST Z-bag with zip closure -51 dBm <a target="_blank" href="https://www.youtube.com/watch?v=eyIl7FfwXbs">VIDEO</a>
-   * Faraday Defense NX single-layer fold-over bag -60 dBm (99.9% of signals are blocked)
-   * <a target="_blank" href="https://www.faradaydefense.com/products/nx3">Faraday Defense NX3</a> double-layer fold-over bag, <a target="_blank" href="https://www.amazon.com/Faraday-Defense-17L-Waterproof-Backpack/dp/B08TMYC3RY/">$175 dry bag</a>, tower bag: -80 dBm (all signals are blocked) 
-
-1. Plug in the new USB drive for storing backups.
-
-
-   ### Dock
-
-   The default app icons displayed on the bottom of the screen is called the "Dock".
-
-   Click on any icon to open that application.
+1. Plug in the external USB drive for storing backups.
 
 1. Open Time Machine by clicking the Launchpad icon on the Dock displaying a list of apps, then click on the "Time Machine" app icon.
 
-   The Dock is by default always visible on the bottom of the screen, but the automation script move it to the right side and appears when you hover over the right side of the screen.
+   The Dock is by default always visible on the bottom of the screen, but the automation script can move it to the right side and also hide it to appear only when you mouse over where it should appear.
 
 1. Click "Add Backup Disk..." icon at the right side of the screen.
 1. Select the drive you just plugged in.
@@ -212,34 +281,6 @@ PROTIP: Our automation scripts also copies specific folders and text files to an
 PROTIP: Take a Backup again to establish a new baseline before and after you upgrade your machine.
 
 NOTE: The automation script is installed, it can do a Time Machine backup.
-
-
-<a name="ResetToFactorySettings"></a>
-
-## Reset to Factory Settings
-
-You can now confidently reset the machine to factory settings, which erases all data.
-
-Finishing this enables you to confirm your ability to restore your computer to the state when the backup was taken.
-
-1. Shut down your Mac.
-1. Turn it on and immediately press and hold the Command (⌘) + R keys.
-1. Keep holding until you see the Apple logo or a spinning globe. This will boot your Mac into macOS Recovery.
-1. Select Disk Utility and click Continue.
-1. In Disk Utility, select your main drive (usually named Macintosh HD) from the list on the left.
-1. Click the Erase button at the top of the window.
-1. Name: You should leave it as "Macintosh HD" because it's the "Startup Volume"s.
-1. Format: Choose APFS (for most modern Macs) or Mac OS Extended (Journaled) for older Macs.
-1. Scheme: Choose GUID Partition Map.
-1. Click Erase to wipe the drive.
-1. Close Disk Utility to return to the macOS Utilities window.
-1. Select Reinstall macOS and click Continue.
-1. Follow the on-screen instructions to reinstall the operating system. This may take some time, depending on your internet speed and the version of macOS being installed.
-1. Once the macOS installation is complete, your Mac will restart and you’ll see the Setup Assistant.
-
-   A. If you're selling or giving away the Mac, don’t complete the setup process. Simply press Command + Q and select Shut Down. The new owner can complete the setup with their own information.
-
-   B. If you want to restore your Mac, Shut down your Mac, plug in your backup media, and press the start button. When the boot-up screen appears, select the backup media and press the start button.
 
 <hr />
 
@@ -307,6 +348,33 @@ The automation script will install other browsers if specified.
    You may need tonavigate to that browser's settings and make that the default and profile. For example: chrome://settings/defaultBrowser
 
 
+
+<a name="GitHubAccount"></a>
+
+### GitHub Account to Fork
+
+Repositories defined as "Public" can be downloaded without creating a GitHub account.
+
+But if you have not yet obtained a GitHub account:
+
+1. We recommend installing Twillo's Authy app on your smart phone for two-factor authentication.
+
+1. In a web browser, sign up for one with your email address at
+
+   <a target="_blank" href="https://github.com/">https://github.com/</a>
+
+1. Sign in with your email address and password.
+
+1. Define the GitHub account name and email you want the the automation script to use, such as:
+   ```
+   [user]
+   email = John Doe
+   name = johndoe+github@gmail.com
+   ```
+
+1. TODO: Configure SSH and GPG keys.
+
+
 <a name="ViewREADME"></a>
 
 ## View files in browser
@@ -323,29 +391,6 @@ So you can click links within this README file on the target machine:
 
 1. Read through to this section for manual instructions.
 
-
-<a name="GitHubAccount"></a>
-
-### GitHub Account
-
-Repositories defined as "Public" can be downloaded without creating a GitHub account.
-
-But if you have not yet obtained a GitHub account,
-
-1. In a web browser, sign up for one with your email address at
-
-   <a target="_blank" href="https://github.com/">https://github.com/</a>
-
-1. We recommend installing Twillo's Authy app for two-factor authentication.
-
-1. Define the GitHub account name and email you want the the automation script to use, such as:
-   ```
-   [user]
-   email = John Doe
-   name = johndoe+github@gmail.com
-   ```
-
-1. TODO: Configure SSH and GPG keys.
 
 
 <a name="Finder"></a>
