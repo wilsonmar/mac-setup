@@ -1,8 +1,6 @@
-<!--
-
-git commit -m"v031 + hardware :README.md"
-
--->
+---
+lastchange: "v032 + headers & download zip steps :README.md"
+---
 
 <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md ">This article</a>
 has been <a target="_blank" href="https://wilsonmar.github.io/mac-setup">
@@ -29,24 +27,34 @@ We make use of automation so it's less error-prone and faster because we've work
 
 ## Stages of Action
 
-1. <a href="#ViewREADME">View this README in Safari</a>
 
 1. <a href="#Hardware">Hardware selection and connection</a>
-1. <a href="#NewMachine">New Machine & Account Setup</a>
+1. <a href="#NewMachine">New Machine Bootup</a>
 1. <a href="#TimeMachine">Time Machine Backup</a>
 1. <a href="#ResetToFactorySettings">Reset to Factory Settings</a>
 
 1. <a href="#SystemSettings">Shortcut to System Settings</a>
-1. <a href="#LoginItems">Login items</a>
-1. <a href="#Finder">Learn the Finder and Folders $PATH</a>
+1. <a href="#AltClick">Change Annoying Defaults</a>
+1. <a href="#LoginItems">System Login items</a>
 
 1. <a href="#DefaultBrowser">Default Browser</a>
+1. <a href="#ViewREADME">View files in browser</a>
+1. <a href="#GitHubAccount">GitHub Account</a>
+
+1. <a href="#Finder">Learn the Finder app & Folders</a>
+
 1. <a href="#Passkey">Passkey</a>
 
+1. <a href="#DownloadZip">Download zip of mac-setup</a>
+1. <a href="#BashVsZsh">Bash vs. Zsh</a>
+1. <a href="#ViewMacSetupFolder">View mac-setup folder</a>
+
+1. <a href="#TextEditors">Default Text Editors</a>
+
 1. <a href="#Terminal">Learn the Terminal app</a>
-1. <a href="#Download">Download mac-setup zip</a>
-1. <a href="#mac-setup.sh">View mac-setup.sh</a>
-1. <a href="#Bash">View .bash_profile</a>
+
+1. <a href="#mac-setup.sh">View mac-setup folder</a>
+1. <a href="#BashVsZsh">View .bash_profile</a>
 
 1. <a href="#GitHubAccount">Setup GitHub account</a>
 
@@ -56,6 +64,8 @@ We make use of automation so it's less error-prone and faster because we've work
 1. <a href="#Dotfiles">Configure using AppleScript in a Dotfile</a>
 1. <a href="#EditEnv">Edit mac-setup.env settings in $HOME</a>
 1. <a href="#UtilitiesInstalled">Utilities Installed</a>
+
+1. Move Home directory to External SSD?
 
 1. <a href="#FinalSteps">Final Steps</a>
 
@@ -254,9 +264,27 @@ PROTIP:For some strange reason, Apple does not provide a default direct keyboard
 <a target="_blank" href="https://www.youtube.com/watch?v=dxjTPYUiLpQ">VIDEO</a>: Similarly, <strong>Shift + Option + Command + V</strong> performs "Paste and Match Style" shown in Finder > Edit. 
 
 
+<a name="AltClick"></a>
+
+## Change Annoying Defaults
+
+Most System Settings can also be changed programmatically by commands in <a href="#Dotfiles">mydotfile</a> specification automation described later in this README file. 
+
+However, some default settings are so annoying that most users want to change them right away:
+
+1. Click the Apple icon on the upper left corner of the screen.
+1. Click the "System Settings...".
+1. Scroll down to click "Mouse".
+
+1. For "Tracking speed", drag the dot closer to "Fast" on the right.
+1. For "Secondary Click", select "Click Right Side" (which is why it's called "Right-Click").
+
+1. Exit the dialog.
+
+
 <a name="LoginItems"></a>
 
-### Login items
+### System Login items
 
 PROTIP: Review this once a month to ensure that you have control of your machine. Here is where malicious software can get access.
 
@@ -264,49 +292,6 @@ PROTIP: Review this once a month to ensure that you have control of your machine
 1. Type "Login" on top of "Search".
 1. If you don't want to have a program Open at Login, click on that app and click the "-" button.
 1. If you want to have Allow in the Background a program, click on the toggle to its left.
-
-
-<a name="Dotfiles"></a>
-
-## Setup using AppleScript in a Dotfile
-
-Most System Settings can also be changed programmatically by commands in the dotfilespecification script:
-
-   <ul><a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh">https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh</a>
-   </ul>
-
-The sequence of commands is the structure of the Apple System Setting app GUI tree.
-
-
-<a name="Finder"></a>
-
-## Learn Finder & Folders
-
-The default GUI app for opening files and folders is the Finder GUI app.
-
-It is the one default app that can't be removed.
-
-1. Open the Finder app by clicking on the Finder icon (on the Dock).
-
-1. To see what's in the invisible Clipboard, click on the Edit menu item, then "Show Clipboard".
-
-1. Folders on the left panel may be rearranged by being dragged and dropped.
-
-1. Click the "Go" menu at the top.
-   <a target="_blank" href="https://res.cloudinary.com/dcajqrroq/image/upload/v1732811817/macos-finder-keys_rsoadf.png"><img align="right" alt="macos-finder-keys.png" width="100" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1732811817/macos-finder-keys_rsoadf.png" /></a>
-
-   REMEMBER: If you want the speed of using keyboard shortcuts Apple created,
-   memorize these entries and right-click to remove each from the Folder's left menu.
-
-1. From the $HOME folder, press <strong>command + up</strong> to display the previous level, where a "Shared" folder is shown along with each user account defined.
-
-1. Press <strong>command + up</strong> again to display the "root" level containing folders referenced with a "/" slash character:
-
-   * <tt>/Applications</tt> contain apps that can be opened by any user and also<br /><tt>/Applications/Utilities</tt> containing what Apple provides, such as the Terminal app.
-   * <tt>/Library</tt> contains data for each application
-   * <tt>/System</tt>
-   * <tt>/Users</tt> contains a folder for each user account, such as<br /><tt>/Users/johndoe/Applications</tt> containing apps that can only be used by that user.
-
 
 
 <a name="DefaultBrowser"></a>
@@ -320,6 +305,124 @@ The automation script will install other browsers if specified.
 1. To ensure that cookies in the browser are not confused, open the browser you want to use. Select the browser profile you want to use.
 
    You may need tonavigate to that browser's settings and make that the default and profile. For example: chrome://settings/defaultBrowser
+
+
+<a name="ViewREADME"></a>
+
+## View files in browser
+
+So you can click links within this README file on the target machine:
+
+1. To open Safari, near the left among the default list of apps at the bottom of the screen, click on the "Safari" browser icon.
+
+1. Click on the middle field to type on top of "Search or enter website name".
+
+1. Type in this URL to reach this README file:
+
+   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md#ViewREADME">https://github.com/wilsonmar/mac-setup/blob/main/README.md#ViewREADME</a>
+
+1. Read through to this section for manual instructions.
+
+
+<a name="GitHubAccount"></a>
+
+### GitHub Account
+
+Repositories defined as "Public" can be downloaded without creating a GitHub account.
+
+But if you have not yet obtained a GitHub account,
+
+1. In a web browser, sign up for one with your email address at
+
+   <a target="_blank" href="https://github.com/">https://github.com/</a>
+
+1. We recommend installing Twillo's Authy app for two-factor authentication.
+
+1. Define the GitHub account name and email you want the the automation script to use, such as:
+   ```
+   [user]
+   email = John Doe
+   name = johndoe+github@gmail.com
+   ```
+
+1. TODO: Configure SSH and GPG keys.
+
+
+<a name="Finder"></a>
+
+## Learn Finder app & Folders
+
+The default GUI app for opening files and folders is the Finder GUI app.
+
+It is the one default app that can't be removed.
+
+1. Open the Finder app by clicking on the Finder icon (on the Dock).
+
+1. To see what's in the invisible Clipboard, click on the Edit menu item, then "Show Clipboard".
+
+1. Click the "Go" menu at the top.
+   <a target="_blank" href="https://res.cloudinary.com/dcajqrroq/image/upload/v1732811817/macos-finder-keys_rsoadf.png"><img align="right" alt="macos-finder-keys.png" width="100" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1732811817/macos-finder-keys_rsoadf.png" /></a>
+
+1. Folders on the left panel may be rearranged by being dragged and dropped.
+
+1. If you want the speed of using keyboard shortcuts Apple created,
+   <strong>memorize</strong> the Go keyboard shortcut keys and right-click to remove each from the Folder's left menu Side Bar.
+
+   Entries on the left Side Bar makes it convenient to drop files into that folder from another Finder folder.
+
+1. As the "Go" menu show, click the shortcut keys to reach the "Computer": Press 
+   
+   <strong>Shift + Command + C</strong>
+
+   This is the very top level. "Macintosh HD" not a folder but the drive.
+   "Network".
+
+1. Click on "Macintosh HD" to display the top "root" level folders defined by Apple, referenceable with a "/" slash character:
+
+   * <tt>/Applications</tt> contain apps that can be opened by any user and also<br /><tt>/Applications/Utilities</tt> containing what Apple provides, such as the Terminal app.
+   * <tt>/Library</tt> contains data for each application
+   * <tt>/System</tt>
+   * <tt>/Users</tt> contains a folder for <strong>each user account</strong> created.
+   
+1. Click on "Users", then your user name (such as "johndoe") to display the $HOME level folders Apple creates for each new user. Examples:
+
+   * <tt>/Users/johndoe/</tt> contains apps that can only be used by a user hypothetically named "johndoe". An Application folder is automatically created for each user account.
+
+1. Drag your user name folder (such as "johndoe") and drop it at the top of the left Side Bar.
+
+1. Click the user name folder (such as "johndoe") to display the $HOME level folders Apple creates for each new user. Examples:
+
+   * <tt>/Users/johndoe/Applications</tt> containing apps that can only be used by a user hypothetically named "johndoe". Other default folders:
+
+   * Desktop
+   * Documents
+   * Downloads
+   * Movies
+   * Music
+   * Pictures
+   * Public
+
+1. Create an folder within your $HOME folder by clicking the round icon with three dots, and select "New Folder" to create a new folder named "untitled folder".
+
+1. Rename that name to contain "gh-" and your GitHub user account name. Here is where you Git clone into. For example, if your GitHub user account is "johndoe", create a folder named:
+
+   <tt>gh-johndoe</tt>
+
+1. Press <strong>shift + command + .</strong> (period key) to display <strong>hidden</strong> files and folders named with a "." character.
+
+   Many 3rd-party modules (such as Git) install create a hidden folder such as ".git" to store application data related to the user.
+
+
+<a name="Dotfiles"></a>
+
+## Setup using AppleScript in a Dotfile
+
+Most System Settings can also be changed programmatically by commands in the dotfilespecification script:
+
+   <ul><a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh">https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh</a>
+   </ul>
+
+The sequence of commands is the structure of the Apple System Setting app GUI tree.
 
 
 <a name="Passkey"></a>
@@ -375,26 +478,11 @@ Enable iCloud Keychain:
 <hr />
 
 
-<a name="ViewREADME"></a>
-
-## View this README in Safari
-
-So you can click links within this README file on the target machine:
-
-1. To open Safari, near the left among the default list of apps at the bottom of the screen, click on the "Safari" browser icon.
-
-1. Click on the middle field to type on top of "Search or enter website name".
-
-1. Type in this URL to reach this README file:
-
-   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md#ViewREADME">https://github.com/wilsonmar/mac-setup/blob/main/README.md#ViewREADME</a>
-
-1. Read through to this section.
-
-
-<a name="Download"></a>
+<a name="DownloadZip"></a>
 
 ## Download mac-setup zip
+
+PROTIP: This approach is designed so that you can examine the script before running it.
 
 1. In a browser window, click this link or highlight and copy the URL and paste in the browser URL address bar to navigate to the GitHub repository that contains the mac-setup files:
 
@@ -404,27 +492,60 @@ So you can click links within this README file on the target machine:
 
 1. Click the green "Code" button to the right of the URL.
 
-1. Select "Download ZIP" and save the file to your Downloads folder.
+1. Select "Download ZIP" to see the animation to the your Downloads folder.
+
+1. Specify the default "main" branch of the GitHub repository that contains the mac-setup files.
+
+1. Click the "Downloads" icon at the lower-right of the screen to double-click "mac-setup-main".
 
 1. In the Downloads folder, unzip the file and open the mac-setup folder by <strong>double-clicking</strong> the folder icon. Or, right-click and select "Open" to open the folder.
 
-PROTIP: This approach is designed so that you can examine the script before running it.
+   Later in this document, this folder will replaced by a version-controlled folder created by the Git clone utility.
+
+
+<a name="Bash"></a>
+
+## Bash vs Zsh
+
+File names ending with ".sh" uses the Bash interpreter.<br />File names ending with ".zsh" uses the Zsh interpreter. 
+
+In this project, we use Bash rather than Zsh in order for the script to possibly be adapted for work on Linux and Windows machines as well. ".sh" is a contraction of the term "shell" based on the 
+"Bash" language (aa contraction of the term "Bourne-agan shell" -- a play on words).
+   
+The automation script upgrades the "Bash" interpreter to the latest version because
+Apple stopped upgrading Bash due to licensing issues and switched to Zsh as the default macOS shell interpreter since macOS 12 Monterey.
+
+
+<a name="ViewMacSetupFolder"></a>
+
+## View the mac-setup folder
+
+The mac-setup folder contains the following Bash script files (among other files explained later):
+
+   * <a href="#Bash">.bash_profile</a> contains what is executed before each Terminal session opens.
+   * <a href="#Dotfiles">mydotfile.sh</a> contains the commands to change Apple System Settings.
+   * <a href="#Aliases">aliases.sh</a> contains the keyboard aliases created before each Terminal session.
+
+   * <a href="#mac-setup.sh">mac-setup.sh</a> is the main automation script that runs based on the specifications defined in the above files.
+
+   * <a href="#EditEnv">mac-setup.env</a> contains the environment variables used by the mac-setup.sh script. The automation script can make a folder to hold the folder (GitHub repository) that can version control files, based on the folder name you specify in the mac-setup.env configuration file.
 
 
 <a name="TextEditors"></a>
 
 ## Default Text Editors
 
-???
+There are several text editors that come pre-loaded with macOS, including TextEdit, Sublime Text, and Atom. You can use any of these editors to edit files.
+
+However, you may prefer to use a more powerful text editor (VSCode, etc.) by first running the "mac-setup.sh" script to install them.
 
 
 <a name="Terminal"></a>
 
 ## Learn the Terminal app
 
-The built-in Terminal utility app executes shell scripts like on Linux machines.
+The built-in Terminal utility app is used to execute shell scripts like on Linux machines.
 
-Bash which is a contraction of the term "Bourne-agan shell" (a play on words).
 
 1. Hold down the <strong>Command</strong> key and press <strong>spacebar</strong> to pop up the Spotlight Search modal dialog.
 
@@ -492,29 +613,15 @@ Bash which is a contraction of the term "Bourne-agan shell" (a play on words).
 
    ### PATH environment variable
 
-   TODO: $PATH folders separated by semicolons.
-
-
-<a name="ViewSetup"></a>
-
-## View the mac-setup folder
-
-The mac-setup folder contains the following files:
-
-* <a href="#EditEnv">mac-setup.env</a> contains the environment variables used by the mac-setup.sh script.
-* <a href="#Bash">.bash_profile</a> contains what is executed before each Terminal session opens.
-* <a href="#Dotfiles">mydotfile.sh</a> contains the commands to change Apple System Settings.
-* <a href="#Aliases">aliases.sh</a> contains the keyboard aliases created before each Terminal session.
-
-* <a href="#mac-setup.sh">mac-setup.sh</a> is the main automation script that runs based on the specifications defined in the above files:
+   TODO: $PATH folders separated by semicolons
    
+zzz
+
    <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh</a>
 
    CAUTION: The remainder of this article explains how to run the script.
 
    That automation script is manually invoked several times using different parameters on the Terminal command line, each time for a different phase of installation.
-
-   This script uses Bash (.sh) rather than Zsh (.zsh) in order for the script to possibly be adapted for work on Linux and Windows machines as well.
 
    However, script mac-setup.sh can upgrade Bash to the latest version.
 
@@ -534,22 +641,6 @@ Next, let's get that script onto your machine using "Bash" CLI (Command Line Int
    mkdir -p "$HOME/gh-wmjtm"
    ```
 
-
-
-
-<a name="GitHubAccount"></a>
-
-## GitHub account
-
-If you have not yet obtained a GitHub account,
-
-1. In a web browser, sign up for one with your email address at
-
-   <a target="_blank" href="https://github.com/">https://github.com/</a>
-
-1. We recommend installing Twillo's Authy app for two-factor authentication.
-
-1. TODO: Configure SSH and GPG keys.
 
 
 <a name="ForkAndClone"></a>
