@@ -1,5 +1,5 @@
 ---
-lastchange: "v032 + headers & download zip steps :README.md"
+lastchange: "v033 + homebrew steps :README.md"
 ---
 
 <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md ">This article</a>
@@ -27,7 +27,6 @@ We make use of automation so it's less error-prone and faster because we've work
 
 ## Stages of Action
 
-
 1. <a href="#Hardware">Hardware selection and connection</a>
 1. <a href="#NewMachine">New Machine Bootup</a>
 1. <a href="#TimeMachine">Time Machine Backup</a>
@@ -42,25 +41,25 @@ We make use of automation so it's less error-prone and faster because we've work
 1. <a href="#GitHubAccount">GitHub Account</a>
 
 1. <a href="#Finder">Learn the Finder app & Folders</a>
-
-1. <a href="#Passkey">Passkey</a>
+1. <a href="#Passkeys">Install Passkeys</a>
 
 1. <a href="#DownloadZip">Download zip of mac-setup</a>
 1. <a href="#BashVsZsh">Bash vs. Zsh</a>
-1. <a href="#ViewMacSetupFolder">View mac-setup folder</a>
+1. <a href="#PATHEnv">$PATH environment variable</a>
+1. <a href="#MacSetupFolders">mac-setup folders</a>
 
 1. <a href="#TextEditors">Default Text Editors</a>
-
 1. <a href="#Terminal">Learn the Terminal app</a>
+   * <a href="#KeyboardAliases">Keyboard Aliases (Shortcuts)</a>
+   * <a href="#UserHomeFolders">User Home Folders</a>
+   * <a href="#FolderPermissionAttributes">Folder Permission Attributes</a>
+   * <a href="#PATHEnv">$PATH environment variable</a>
 
-1. <a href="#mac-setup.sh">View mac-setup folder</a>
-1. <a href="#BashVsZsh">View .bash_profile</a>
+1. <a href="#CreateFolders">Create Folders</a>
 
-1. <a href="#GitHubAccount">Setup GitHub account</a>
-
-1. <a href="#Homebrew">Use Homebrew</a>
-1. <a href="#ForkAndClone">Load gh to fork & clone mac-setup automation folder</a>
-1. <a href="#AppsInstalled">Apps Installed</a>
+1. <a href="#Homebrew">Use of Homebrew (brew command)</a>
+1. <a href="#ForkAndClone">Fork and Clone using the GH CLI</a>
+1. <a href="#AppsInstalled">Apps Installed by mac-setup.env</a>
 1. <a href="#Dotfiles">Configure using AppleScript in a Dotfile</a>
 1. <a href="#EditEnv">Edit mac-setup.env settings in $HOME</a>
 1. <a href="#UtilitiesInstalled">Utilities Installed</a>
@@ -68,6 +67,7 @@ We make use of automation so it's less error-prone and faster because we've work
 1. Move Home directory to External SSD?
 
 1. <a href="#FinalSteps">Final Steps</a>
+
 
 <hr />
 
@@ -101,7 +101,7 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
    * <a target="_blank" href="https://bomonike.github.io/mac-mini/">Mac Mini hardware</a>
    * <a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>
 
-   ### Hubs 
+   ### Hubs
 
    PROTIP: CAUTION: A hub may slow down the machine. Get a hub with its own power supply.
 
@@ -388,6 +388,10 @@ It is the one default app that can't be removed.
 
    * <tt>/Users/johndoe/</tt> contains apps that can only be used by a user hypothetically named "johndoe". An Application folder is automatically created for each user account.
 
+   <a name="UserHomeFolders"></a>
+
+   ### User Home Folders
+
 1. Drag your user name folder (such as "johndoe") and drop it at the top of the left Side Bar.
 
 1. Click the user name folder (such as "johndoe") to display the $HOME level folders Apple creates for each new user. Examples:
@@ -410,7 +414,7 @@ It is the one default app that can't be removed.
 
 1. Press <strong>shift + command + .</strong> (period key) to display <strong>hidden</strong> files and folders named with a "." character.
 
-   Many 3rd-party modules (such as Git) install create a hidden folder such as ".git" to store application data related to the user.
+   Many 3rd-party CLI modules (such as Git) install create a hidden folder such as ".git" to store application data related to the user.
 
 
 <a name="Dotfiles"></a>
@@ -425,11 +429,11 @@ Most System Settings can also be changed programmatically by commands in the dot
 The sequence of commands is the structure of the Apple System Setting app GUI tree.
 
 
-<a name="Passkey"></a>
+<a name="Passkeys"></a>
 
-### Install Passkey
+### Install Passkeys
 
-https://wilsonmar.github.io/passkeys/
+See https://wilsonmar.github.io/passkeys/
 
 Even complex passwords can easily be cracked within seconds.
 So traditional passwords are replaced with biometric fingerprint Touch ID, Face ID, or Windows Hello to authenticate your identity. Biometrics are used instead of having to using an additional app such as Authy.
@@ -516,9 +520,9 @@ The automation script upgrades the "Bash" interpreter to the latest version beca
 Apple stopped upgrading Bash due to licensing issues and switched to Zsh as the default macOS shell interpreter since macOS 12 Monterey.
 
 
-<a name="ViewMacSetupFolder"></a>
+<a name="MacSetupFolders"></a>
 
-## View the mac-setup folder
+## mac-setup folders
 
 The mac-setup folder contains the following Bash script files (among other files explained later):
 
@@ -529,6 +533,7 @@ The mac-setup folder contains the following Bash script files (among other files
    * <a href="#mac-setup.sh">mac-setup.sh</a> is the main automation script that runs based on the specifications defined in the above files.
 
    * <a href="#EditEnv">mac-setup.env</a> contains the environment variables used by the mac-setup.sh script. The automation script can make a folder to hold the folder (GitHub repository) that can version control files, based on the folder name you specify in the mac-setup.env configuration file.
+
 
 
 <a name="TextEditors"></a>
@@ -592,10 +597,9 @@ The built-in Terminal utility app is used to execute shell scripts like on Linux
 
    <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh">https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh</a>
 
+   <a name="FolderPermissionAttributes"></a>
 
-   <a name="UserHomeFolders"></a>
-
-   ### User $HOME folders
+   ### Folder Permission Attributes
 
    The first part of each line defines its attributes (permissions and ownership). Lines beginning with "d" define directories (folders).
 
@@ -610,13 +614,12 @@ The built-in Terminal utility app is used to execute shell scripts like on Linux
    * Public
 
 
+   <a name="PATHEnv"></a>
 
    ### PATH environment variable
 
    TODO: $PATH folders separated by semicolons
    
-zzz
-
    <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh</a>
 
    CAUTION: The remainder of this article explains how to run the script.
@@ -638,8 +641,43 @@ Next, let's get that script onto your machine using "Bash" CLI (Command Line Int
 
 1. Open the Terminal app and type:
    ```
-   mkdir -p "$HOME/gh-wmjtm"
+   mkdir -p "$HOME/gh-johndoe"
    ```
+
+
+
+<a name="Homebrew"></a>
+
+## Use of Homebrew (brew command)
+
+Most of the apps installed make use of installers defined in the Homebrew repository online. There is a file (of Ruby code) for each brew install formula at:<br />
+
+   <a target="_blank" href="
+   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb">
+   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb</a>
+
+   PROTIP: Before downloads a brew formula, we recommend that you look at its Ruby code to verify what really occurs and especially where files come from.
+
+   <pre><strong>brew edit ___</strong></pre>
+
+   We recommend that you install a binary repository proxy that supply you vetted files from a trusted server instead of retrieving whatever is the latest on the public Homebrew server.
+
+   Homebrew has over 4,500 formulas the last time we checked.
+
+To install and configure programs which don't have brew installation formulas,
+various Libux utility commands such as curl, sed, cut, etc. are used in this automation script.
+
+Yes, you can just run brew yourself, one at a time. But logic in the script goes beyond what Homebrew does, and <strong>configures</strong> the component just installed:
+
+   * Undo a brew error (such as needing an unset)
+   * Install dependent components where necessary
+   * Display the version number installed (to a log)
+   * Add alias and paths in <strong>.bash_profile</strong> (if needed)
+   * Perform configuration (such as adding a missing file needed for mariadb to start)
+   * Edit configuration settings (such as changing default port within Nginx within config.conf file)
+   * Upgrade and uninstall if that is available
+   * Run a demo using the component to ensure that what has been installed actually works.
+   <br /><br />
 
 
 
@@ -721,24 +759,6 @@ Next, let's get that script onto your machine using "Bash" CLI (Command Line Int
 
 1. Manually arrange to your liking the sequence of folders on the left panel of Finder.
 
-   ### Added in $HOME folder
-
-   NOTE: Folder and file names beginning with a "." are hidden by default.
-   Press <strong>command + shift + .</strong> to toggle the display of hidden files and folders.
-
-   The macsetup.sh automation script adds these files:
-
-   * mac-setup.env
-   * aliases.sh
-
-   * .bash_profile
-   * .bashrc
-
-   * .zshrc
-   * .zshenv
-   * .zprofile
-   * .zshrc
-
    * keepa.kdbx (Keepass database)
 
    The mac-setup.sh script adds these folders:
@@ -755,47 +775,6 @@ Next, let's get that script onto your machine using "Bash" CLI (Command Line Int
    * gopkgs
 
 1. Switch to the Terminal by holding down the Command key and pressing Tab repeatedly until it rests on the Termial icon.
-
-
-<a name="mac-setup.parms"></a>
-
-### View mac-setup.sh parameters
-
-1. We want to upgrade Bash to the latest version.
-
-
-<a name="Homebrew"></a>
-
-## Use of Homebrew
-
-Most of the apps installed make use of installers defined in the Homebrew repository online. There is a file (of Ruby code) for each brew install formula at:<br />
-
-   <a target="_blank" href="
-   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb">
-   https://github.com/Homebrew/homebrew-core/blob/master/Formula/httpd.rb</a>
-
-   PROTIP: Before downloads a brew formula, we recommend that you look at its Ruby code to verify what really occurs and especially where files come from.
-
-   <pre><strong>brew edit ___</strong></pre>
-
-   We recommend that you install a binary repository proxy that supply you vetted files from a trusted server instead of retrieving whatever is the latest on the public Homebrew server.
-
-   Homebrew has over 4,500 formulas the last time we checked.
-
-To install and configure programs which don't have brew installation formulas,
-various Libux utility commands such as curl, sed, cut, etc. are used in this automation script.
-
-Yes, you can just run brew yourself, one at a time. But logic in the script goes beyond what Homebrew does, and <strong>configures</strong> the component just installed:
-
-   * Undo a brew error (such as needing an unset)
-   * Install dependent components where necessary
-   * Display the version number installed (to a log)
-   * Add alias and paths in <strong>.bash_profile</strong> (if needed)
-   * Perform configuration (such as adding a missing file needed for mariadb to start)
-   * Edit configuration settings (such as changing default port within Nginx within config.conf file)
-   * Upgrade and uninstall if that is available
-   * Run a demo using the component to ensure that what has been installed actually works.
-   <br /><br />
 
 
 <a name="secrets.sh"></a>
