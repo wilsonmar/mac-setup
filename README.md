@@ -1,74 +1,65 @@
 <!--
-git commit -m"v028 updt go shortcuts :README.md"
+
+git commit -m"v031 + hardware :README.md"
+
 -->
 
-Here is the quickest way to automate get a new macOS running with <a href="#UtilitiesInstalled">all the stacks of tools most developer wants</a> to work locally and in several clouds.
+<a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md ">This article</a>
+has been <a target="_blank" href="https://wilsonmar.github.io/mac-setup">
+refined over several years</a> to provide the the <strong>fastest</strong> way to get a new macOS machine up and running.
 
-After you complete this, step by step, you can add to your resume or LinkedIn profile:
+After you complete the steps below, you can legitimately add to your resume or LinkedIn profile:
 
-   <ul>Configured new Mac Mini M4, from scratch with a full set of utilities and AI apps and access to AWS, Azure, and Google cloud services. Time for this was reduced from days to less than an hour though custom shell script automation. Documentation of each step were documented and validated by others.
-   The entire team can now pair program together efficiently with a common set of tools.
+   <ul>Configured new Macs, from scratch, with a full set of
+   <a href="#UtilitiesInstalled">utilities</a>, AI apps, and access to
+   AWS, Azure, and Google cloud services.
+   Our use of custom shell script automation reduced onboarding time
+   <strong>from days to less than an hour</strong>
+   Documentation of each step were documented and validated by others.
+   With a common set of tools, the entire team can now pair program together efficiently.
+   This declarative approach updates all apps and modules with a single command, which meets cybersecurity directives to keep software up-to-date frequently.
    </ul>
 
-This has been refined over several years.
-What was formerly at <a target="_blank" href="https://wilsonmar.github.io/mac-setup">wilsonmar.github.io/mac-setup</a> has been incorporated into this document.
+<a href="#Actions">Manual actions</a> described below have you customize configuration files that control automation scripts you run in a Terminal.
 
-## Summary of Stages
+We make use of automation so it's less error-prone and faster because we've worked out the dependency clashes for you. In each stage, our script detects what has already been installed and verifies the success of each step. So it can perform workarounds for known issues.
 
-1. <a href="#Why">Know Why</a>: <a href="#ForTeamwork">For teamwork</a>, <a href="#FastChange">Fast Change!</a>.
+
+<a name="Actions"></a>
+
+## Stages of Action
+
+1. <a href="#ViewREADME">View this README in Safari</a>
+
 1. <a href="#Hardware">Hardware selection and connection</a>
-1. <a href="#NewMachine">New Machine Manual Setup</a>
+1. <a href="#NewMachine">New Machine & Account Setup</a>
 1. <a href="#TimeMachine">Time Machine Backup</a>
 1. <a href="#ResetToFactorySettings">Reset to Factory Settings</a>
 
 1. <a href="#SystemSettings">Shortcut to System Settings</a>
 1. <a href="#LoginItems">Login items</a>
+1. <a href="#Finder">Learn the Finder and Folders $PATH</a>
+
+1. <a href="#DefaultBrowser">Default Browser</a>
 1. <a href="#Passkey">Passkey</a>
-1. <a href="#GitHubAccount">Setup GitHub account</a>
 
 1. <a href="#Terminal">Learn the Terminal app</a>
-1. <a href="#Finder">Learn the Finder and Folders $PATH</a>
-1. <a href="#ViewREADME">View this README in Safari</a>
-1. <a href="#Bash">Get .bash_profile</a>
+1. <a href="#Download">Download mac-setup zip</a>
+1. <a href="#mac-setup.sh">View mac-setup.sh</a>
+1. <a href="#Bash">View .bash_profile</a>
 
-1. <a href="#ForkAndClone">Load gh to fork & clone mac-setup automation folder</a>
+1. <a href="#GitHubAccount">Setup GitHub account</a>
+
 1. <a href="#Homebrew">Use Homebrew</a>
-<!-- TODO: + Git fork & clone using gh utilitiy. https://www.youtube.com/watch?v=2WiBRNydhTk -->
-1. <a href="#curl">Edit mac-setup.env settings in $HOME</a>
-1. <a href="#mac-setup.sh">View mac-setup.sh parameters</a>
-
-1. <a href="#Dotfiles">Configure using Apple Script in Dotfiles</a>
-
-
-1. <a href="#UtilitiesInstalled">Utilities Installed</a>
-
+1. <a href="#ForkAndClone">Load gh to fork & clone mac-setup automation folder</a>
 1. <a href="#AppsInstalled">Apps Installed</a>
+1. <a href="#Dotfiles">Configure using AppleScript in a Dotfile</a>
+1. <a href="#EditEnv">Edit mac-setup.env settings in $HOME</a>
+1. <a href="#UtilitiesInstalled">Utilities Installed</a>
 
 1. <a href="#FinalSteps">Final Steps</a>
 
 <hr />
-
-
-<a name="Why"></a>
-
-## Why?
-
-This repo enables you to get up and running on a new mac machine in a matter of minutes rather than days. Being able to get started quickly means that you can get working with applications.
-
-This helps developers skip wasted days installing (and doing it differently than colleagues).
-
-In contrast to most tutorials, docs, and videos that wastes your time to <strong>manually type</strong> or copy and paste strings (often with missing steps), automation here is less error-prone and faster because we've worked out the dependency clashes for you. In each stage, our script detects what has already been installed and verifies the success ofeach step. So it can perform workarounds for known issues.
-
-You can use this script to <strong>upgrade</strong> or <strong>remove</strong> apps and modules by changing the list of apps in the script.
-
-
-<a name="ForTeamwork"></a>
-
-### For teamwork
-
-This automation enables teamwork by providing a common set of tools for working together: keyboard shortcuts (aliases), apps, etc.
-
-This implements what well-known DevOps practitioners Ernest Mueller and James Wickett advocate in their book "The DevOps Handbook" and <a target="_blank" href="https://devops-handbook.com/">The DevOps Handbook</a> (<a target="_blank" href="https://www.oreilly.com/library/view/the-devops-handbook/9781491922921/">on OReilly.com</a>): "focus on the core value of CAMS (culture, automation, measurement, and sharing)".
 
 
 <a name="FastChange"></a>
@@ -85,8 +76,6 @@ Instead of or in addition to the default apps, you can specify additional apps t
 
 Default apps can be specified for removal (to save disk space) by changing a list of apps in the script.
 
-This automated approach also enables you to update all apps and modules to the latest version with a single command - on a daily basis if you want.This helps meet cybersecurity directives to keep software up-to-date.
-
 Scripts here are <strong>modular</strong>. It installs only what you tell it to by adding a keyword in the control file.
 
 This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing individual components.
@@ -97,22 +86,35 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
 
 ## Hardware selection and connection
 
-1. See my article about considerations of different hardware at<br />
-<a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>,
+1. See my article about considerations of different hardware at:<br />
 
-1. Connect the computer to the monitor with (in order of preference): Thunderbot 4 or 5 cable; Display Port; HDMI 3; USB-C.
+   * <a target="_blank" href="https://bomonike.github.io/mac-mini/">Mac Mini hardware</a>
+   * <a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>
 
-   The back of the Mac Mini has USB-C ports that supports <strong>Lightning 4</strong> cables, which transfers data at 40Gbps and powers up to 100W.
+   ### Hubs 
 
-   The front of the Mac Mini has USB-C ports that supports <strong>HDMI v3.2</strong> cables, which transfers data at 40Gbps and powers up to 100W.
+   PROTIP: CAUTION: A hub may slow down the machine. Get a hub with its own power supply.
 
-   Although an HDMI cable can connect the Mac Mini to a TV,
-   we recommend using a monitor with the version of HTMI cable it supports.
+   [_] If you must use a hub, get one that supports the fastest connection:
+
+   ### Monitor cables
+   
+   Use the appropriate type and version of cables. REMEMBER: If you have a Mac Mini:
+   <a target="_blank" href="https://res.cloudinary.com/dcajqrroq/image/upload/v1731683979/mac-mini-front-back_fup4cz.png"><img src="https://res.cloudinary.com/dcajqrroq/image/upload/v1731683979/mac-mini-front-back_fup4cz.png"></a>
+
+   The front panel has USB-C ports that supports <strong>USB-C</strong> cables which transfers data at 10Gbps and powers up to 100W.
+   The back panel has Thunderbolt ports:
+   * The Mac Mini base model supports <strong>Thunderbolt 4</strong> cables which transfers data at 40Gbps and powers up to 100W for dual 4K displays.
+   * The Mac Mini Pro  model supports <strong>Thunderbolt 5</strong> cables which transfers data at 120Gbps and powers up to 250W for dual 6K displays. 
+   
+   * <strong>HDMI v3.2</strong> cables are needed to support 4K displays.
 
    Some TVs do not show the top of the screen where the menu bar and Mission Control are displayed. Mission Control is a built-in feature of macOS
    to switch between groups of open apps and windows (using control + up arrow) and control + down arrow).
 
-1. If you have a Bluetooth keyboard, you can use the USB port for something else.
+   ### Keyboards
+
+1. If you have a Bluetooth keyboard, you can use the USB port for something else. 
 
    PROTIP: A keyboard with a "delete" key is useful especially if you are used to working with Windows.
    The macOS keyboard requires users to awarkly press "fn" key and then "delete" key to delete.
@@ -121,32 +123,35 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
 
    See my article about the <a target="_blank" href="https://wilsonmar.github.io/macos-keyboard/">macOS keyboards</a>.
 
-1. Consider an ergonoic mouse. If you are right-handed, consider a left-handed mouse so that you write with your right hand while you use the mouse.
+   <a target="_blank" href="https://www.apple.com/support/keyboard/">Keyboards from Apple</a> are different from generic USB keyboards for Windows:
+
+   * Some don't have a "delete" key. Instead hold down the "fn" key and press the "delete" key.
+   * The button at the upper-right is a fingerprint reader and on/off button
+   * The modifier keys Command is used instead of Control.
+
+1. Consider an ergonomic mouse. If you are right-handed, consider a left-handed mouse so that you write with your right hand while you use the mouse.
 
 
 <a name="NewMachine"></a>
 
-## New Machine Manual Setup
+## New Machine & Account Setup
 
-1. Press the power button on the monitor.
+1. Connect the computer to power. Connect the monitor, keyboard, mouse, etc. 
+
+1. [_] Connect to a UPS (Uninterruptible Power Supply) which ensures clean power and protects from power surges. Abrupt power loss is a common cause of data loss. A UPS also enables you to power on and off all components with one button. Press the power buttons.
 
 1. See my article about the <a target="_blank" href="https://wilsonmar.github.io/macos-bootup/">macOS boot-up process</a>.
 
 1. After boot-up, select the new machine's language, time zone, keyboard layout, icloud email & password,user name & password are manual first steps.
 
+   PROTIP: Write down the secrets along with the computer's serial number, etc. to help you deal with insurance and replacements if needed.
+
 1. When prompted to upgrade your Mac, choose to upgrade to the latest version (which may take several minutes) to get your Mac up to date.
-
-Once keyboard and mouse control is available:
-
-<a target="_blank" href="https://www.apple.com/support/keyboard/">Keyboards from Apple</a> are different from generic USB keyboards for Windows:
-   * Some don't have a "delete" key. Instead hold down the "fn" key and press the "delete" key.
-   * The button at the upper-right is a fingerprint reader and on/off button
-   * The modifier keys Command is used instead of Control.
 
 
 <a name="TimeMachine"></a>
 
-### Time Machine Backup
+## Time Machine Backup
 
 The built-in Time Machine app backs up files and folders so you can completely restore the whole computer to the state when backup occured.
 
@@ -154,14 +159,32 @@ CAUTION PROTIP: Complete backups are often NOT restored when malware may have be
 
 PROTIP: Our automation scripts also copies specific folders and text files to an external USB drive so they can be used to build a new machine <strong>from scratch</strong> after examination.
 
-1. Buy a new external USB NVMe SSD drive. They are $106 for 1TB at Costco.
-1. Plug in the new USB drive for storing backups. This you keep at home.
+1. [_] Buy a new external USB NVMe SSD drive, which are more durable than magnetic (spinning) hard drives. P68 rated T7 are $126 for 2TB at Costco.
+1. [_] Have a fire-resistant vault to store backup media.
+1. [_] For lower cost than a spectrum analyzer to capture emissions on several frequencies, put a cell phone inside which has been installed with the <a target="_blank" href="https://velter.co/en-en/blogs/blog/shielding-tester-a-pocket-sized-faraday-cage-tester-for-android-and-ios">"Shielding Tester" app (from Velter KZ)</a> to detect Wi-Fi and cell signals.
+1. [_] Get a "Faraday dry sack" to keep the USB drive dry, dust-free, and free from electromagnetic fields. <a target="_blank" href="https://www.youtube.com/watch?v=EPVQ8m_yBVA">VIDEO</a>:
+   * Mylar blankets -8 dBm (not much protection)
+   * Aluminum foil -17 dBm
+   * Metal boxes (Ammo cans) -30 dBm
+   * -40 dBm is minimal level needed to block WiFi signals
+   * Mission Darkness bag -45 dBm
+   * NEST Z-bag with zip closure -51 dBm <a target="_blank" href="https://www.youtube.com/watch?v=eyIl7FfwXbs">VIDEO</a>
+   * Faraday Defense NX single-layer fold-over bag -60 dBm (99.9% of signals are blocked)
+   * <a target="_blank" href="https://www.faradaydefense.com/products/nx3">Faraday Defense NX3</a> double-layer fold-over bag, <a target="_blank" href="https://www.amazon.com/Faraday-Defense-17L-Waterproof-Backpack/dp/B08TMYC3RY/">$175 dry bag</a>, tower bag: -80 dBm (all signals are blocked) 
 
-1. Open Time Machine by clicking the Launchpad icon on the Dock for a list of apps, then click on the "Time Machine" app icon.
+1. Plug in the new USB drive for storing backups.
+
+
+   ### Dock
+
+   The default app icons displayed on the bottom of the screen is called the "Dock".
+
+   Click on any icon to open that application.
+
+1. Open Time Machine by clicking the Launchpad icon on the Dock displaying a list of apps, then click on the "Time Machine" app icon.
 
    The Dock is by default always visible on the bottom of the screen, but the automation script move it to the right side and appears when you hover over the right side of the screen.
 
-1. Select a location to store backups.
 1. Click "Add Backup Disk..." icon at the right side of the screen.
 1. Select the drive you just plugged in.
 1. Click "Add"
@@ -180,11 +203,14 @@ PROTIP: Take a Backup again to establish a new baseline before and after you upg
 
 NOTE: The automation script is installed, it can do a Time Machine backup.
 
+
 <a name="ResetToFactorySettings"></a>
 
 ## Reset to Factory Settings
 
 You can now confidently reset the machine to factory settings, which erases all data.
+
+Finishing this enables you to confirm your ability to restore your computer to the state when the backup was taken.
 
 1. Shut down your Mac.
 1. Turn it on and immediately press and hold the Command (⌘) + R keys.
@@ -205,7 +231,6 @@ You can now confidently reset the machine to factory settings, which erases all 
 
    B. If you want to restore your Mac, Shut down your Mac, plug in your backup media, and press the start button. When the boot-up screen appears, select the backup media and press the start button.
 
-
 <hr />
 
 <a name="SystemSettings"></a>
@@ -214,17 +239,19 @@ You can now confidently reset the machine to factory settings, which erases all 
 
 PROTIP:For some strange reason, Apple does not provide a default direct keyboard shortcut for System Settings. So create one:
 
-   1. Click the Apple icon on the upper left corner of the screen.
+   1. Click the Apple icon on the upper left corner of the screen. 
    1. Click the "System Settings...".
    1. Type "Keyboard shortcuts".
    1. Click Keyboard Shortcuts.
    1. Click "App Shortcuts" on the left menu and click the + button.
    1. For "Applications", select "System Settings".
    1. In Menu title at the right, type "System Settings..." (make sure to include the ellipsis).
-   1. For Keyboard shortcut, press <strong>CommandCommand + Option + Shift + P</strong>
+   1. For Keyboard shortcut, press <strong>Shift + Option + Command + P</strong> (use your left pinky finger to press Shift and right finger to press P).
    1. Click "Done" to save the shortcut.
 
    1. Try it out by clicking on the Apple icon on the upper left corner to see the keystrokes for "System Settings...". Try the keyboard sequence shown.
+
+<a target="_blank" href="https://www.youtube.com/watch?v=dxjTPYUiLpQ">VIDEO</a>: Similarly, <strong>Shift + Option + Command + V</strong> performs "Paste and Match Style" shown in Finder > Edit. 
 
 
 <a name="LoginItems"></a>
@@ -237,6 +264,63 @@ PROTIP: Review this once a month to ensure that you have control of your machine
 1. Type "Login" on top of "Search".
 1. If you don't want to have a program Open at Login, click on that app and click the "-" button.
 1. If you want to have Allow in the Background a program, click on the toggle to its left.
+
+
+<a name="Dotfiles"></a>
+
+## Setup using AppleScript in a Dotfile
+
+Most System Settings can also be changed programmatically by commands in the dotfilespecification script:
+
+   <ul><a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh">https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh</a>
+   </ul>
+
+The sequence of commands is the structure of the Apple System Setting app GUI tree.
+
+
+<a name="Finder"></a>
+
+## Learn Finder & Folders
+
+The default GUI app for opening files and folders is the Finder GUI app.
+
+It is the one default app that can't be removed.
+
+1. Open the Finder app by clicking on the Finder icon (on the Dock).
+
+1. To see what's in the invisible Clipboard, click on the Edit menu item, then "Show Clipboard".
+
+1. Folders on the left panel may be rearranged by being dragged and dropped.
+
+1. Click the "Go" menu at the top.
+   <a target="_blank" href="https://res.cloudinary.com/dcajqrroq/image/upload/v1732811817/macos-finder-keys_rsoadf.png"><img align="right" alt="macos-finder-keys.png" width="100" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1732811817/macos-finder-keys_rsoadf.png" /></a>
+
+   REMEMBER: If you want the speed of using keyboard shortcuts Apple created,
+   memorize these entries and right-click to remove each from the Folder's left menu.
+
+1. From the $HOME folder, press <strong>command + up</strong> to display the previous level, where a "Shared" folder is shown along with each user account defined.
+
+1. Press <strong>command + up</strong> again to display the "root" level containing folders referenced with a "/" slash character:
+
+   * <tt>/Applications</tt> contain apps that can be opened by any user and also<br /><tt>/Applications/Utilities</tt> containing what Apple provides, such as the Terminal app.
+   * <tt>/Library</tt> contains data for each application
+   * <tt>/System</tt>
+   * <tt>/Users</tt> contains a folder for each user account, such as<br /><tt>/Users/johndoe/Applications</tt> containing apps that can only be used by that user.
+
+
+
+<a name="DefaultBrowser"></a>
+
+## Default Browser
+
+Safari is the default browser on MacOS.
+
+The automation script will install other browsers if specified.
+
+1. To ensure that cookies in the browser are not confused, open the browser you want to use. Select the browser profile you want to use.
+
+   You may need tonavigate to that browser's settings and make that the default and profile. For example: chrome://settings/defaultBrowser
+
 
 <a name="Passkey"></a>
 
@@ -281,42 +365,14 @@ Enable iCloud Keychain:
 
 1. Select "Create Passkey" when prompted.
 
-1. Authenticate using Touch ID or your device passcode23
+1. Authenticate using Touch ID or your device passcode.
 
 1. Use the standalone Passwords app in the Applications folder
 1. Click on the Passkeys tab and select "Add New Passkey"
 1. Follow on-screen instructions to complete setup.
 
 
-
-<a name="DefaultBrowser"></a>
-
-## Default Browser
-
-Safari is the default browser on MacOS.
-
-The automation script will install other browsers if specified.
-
-1. To ensure that cookies in the browser are not confused, open the browser you want to use. Select the browser profile you want to use.
-
-   You may need tonavigate to that browser's settings and make that the default and profile. For example: chrome://settings/defaultBrowser
-
-
-
-<a name="GitHubAccount"></a>
-
-## GitHub account
-
-If you have not yet obtained a GitHub account,
-
-1. In a web browser, sign up for one with your email address at
-
-   <a target="_blank" href="https://github.com/">https://github.com/</a>
-
-1. We recommend installing Twillo's Authy app for two-factor authentication.
-
-1. TODO: Configure SSH and GPG keys.
-
+<hr />
 
 
 <a name="ViewREADME"></a>
@@ -333,30 +389,33 @@ So you can click links within this README file on the target machine:
 
    <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md#ViewREADME">https://github.com/wilsonmar/mac-setup/blob/main/README.md#ViewREADME</a>
 
-1. Scroll down to this section:
+1. Read through to this section.
 
 
-<a name="ViewSetup"></a>
+<a name="Download"></a>
 
-## View the mac-setup.sh automation script in Safari
+## Download mac-setup zip
+
+1. In a browser window, click this link or highlight and copy the URL and paste in the browser URL address bar to navigate to the GitHub repository that contains the mac-setup files:
+
+   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/">https://github.com/wilsonmar/mac-setup/</a>
+
+   <a target="_blank" href="https://res.cloudinary.com/dcajqrroq/image/upload/v1732937627/github-code-920x836_pff2d3.png"><img alt="github-code-920x836.png" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1732937627/github-code-920x836_pff2d3.png"></a>
+
+1. Click the green "Code" button to the right of the URL.
+
+1. Select "Download ZIP" and save the file to your Downloads folder.
+
+1. In the Downloads folder, unzip the file and open the mac-setup folder by <strong>double-clicking</strong> the folder icon. Or, right-click and select "Open" to open the folder.
 
 PROTIP: This approach is designed so that you can examine the script before running it.
 
-1. To review the automation files to setup a new machine, click this link:
 
-   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh</a>
+<a name="TextEditors"></a>
 
-   CAUTION: The remainder of this article explains how to run the script.
+## Default Text Editors
 
-   That automation script is manually invoked several times using different parameters on the Terminal command line, each time for a different phase of installation.
-
-   This script uses Bash (.sh) rather than Zsh (.zsh) in order for the script to possibly be adapted for work on Linux and Windows machines as well.
-
-   However, script mac-setup.sh can upgrade Bash to the latest version.
-
-1. Click "fork" to copy the script to your own GitHub account.
-
-Next, let's get that script onto your machine using "Bash" CLI (Command Line Interface) commands within the Terminal app.
+???
 
 
 <a name="Terminal"></a>
@@ -366,8 +425,6 @@ Next, let's get that script onto your machine using "Bash" CLI (Command Line Int
 The built-in Terminal utility app executes shell scripts like on Linux machines.
 
 Bash which is a contraction of the term "Bourne-agan shell" (a play on words).
-
-There are several ways to
 
 1. Hold down the <strong>Command</strong> key and press <strong>spacebar</strong> to pop up the Spotlight Search modal dialog.
 
@@ -386,9 +443,23 @@ There are several ways to
 
 1. To reduce <strong>text wrapping</strong> of long lines, expand the width of your Terminal window by dragging the right edge with your mouse.
 
+1. To specify a folder containing a space character, add double-quote to the string:
+   ```
+   ls -al "/Library/Application Support"
+   ```
+   Alternately, if that space character is specified as an escape character using the "\" escape command:
+   ```
+   ls -al /Library/Application\ Support
+   ```
+   REMEMBER: Typing the "~" variable is the same as typing the "$HOME" variable.
+   Typing a space character within "Application Support" require double-quotation marks unless
+   that space is preceded by the "\" escape command.
+
+   REMEMBER: The folder for an app is not deleted when the application is deleted.
+
    <a name="KeyboardAliases"></a>
 
-   ### keyboard aliases (shortcuts)
+   ### Keyboard aliases (shortcuts)
 
    PROTIP: The automation script installs keyboard aliases (shortcuts) you can use to improve typing speed and accuracy. Examples:
 
@@ -399,8 +470,6 @@ There are several ways to
 1. View all the aliases defined in the <tt>aliases.sh</tt> file called from within .bash_profile in the $HOME folder:
 
    <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh">https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh</a>
-
-   The
 
 
    <a name="UserHomeFolders"></a>
@@ -419,7 +488,68 @@ There are several ways to
    * Pictures
    * Public
 
+
+
+   ### PATH environment variable
+
    TODO: $PATH folders separated by semicolons.
+
+
+<a name="ViewSetup"></a>
+
+## View the mac-setup folder
+
+The mac-setup folder contains the following files:
+
+* <a href="#EditEnv">mac-setup.env</a> contains the environment variables used by the mac-setup.sh script.
+* <a href="#Bash">.bash_profile</a> contains what is executed before each Terminal session opens.
+* <a href="#Dotfiles">mydotfile.sh</a> contains the commands to change Apple System Settings.
+* <a href="#Aliases">aliases.sh</a> contains the keyboard aliases created before each Terminal session.
+
+* <a href="#mac-setup.sh">mac-setup.sh</a> is the main automation script that runs based on the specifications defined in the above files:
+   
+   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh</a>
+
+   CAUTION: The remainder of this article explains how to run the script.
+
+   That automation script is manually invoked several times using different parameters on the Terminal command line, each time for a different phase of installation.
+
+   This script uses Bash (.sh) rather than Zsh (.zsh) in order for the script to possibly be adapted for work on Linux and Windows machines as well.
+
+   However, script mac-setup.sh can upgrade Bash to the latest version.
+
+1. Click "fork" to copy the script to your own GitHub account.
+
+Next, let's get that script onto your machine using "Bash" CLI (Command Line Interface) commands within the Terminal app.
+
+
+<a name="CreateFolders"></a>
+
+## Create Folders
+
+1. Define the .env files
+
+1. Open the Terminal app and type:
+   ```
+   mkdir -p "$HOME/gh-wmjtm"
+   ```
+
+
+
+
+<a name="GitHubAccount"></a>
+
+## GitHub account
+
+If you have not yet obtained a GitHub account,
+
+1. In a web browser, sign up for one with your email address at
+
+   <a target="_blank" href="https://github.com/">https://github.com/</a>
+
+1. We recommend installing Twillo's Authy app for two-factor authentication.
+
+1. TODO: Configure SSH and GPG keys.
 
 
 <a name="ForkAndClone"></a>
@@ -489,71 +619,14 @@ There are several ways to
    ! Repository wilsonmar/mac-setup set as the default repository. To learn more about the default repository, run: gh repo set-default --help
    ```
 
-<a name="Finder"></a>
-
-## Learn Finder & Folders
-
-The Finder app is the default GUI app for opening files and folders.
-So it is the one default app that can't be removed.
-
-1. Open the Finder app.
-
-1. Folders on the left panel may be rearranged by being dragged and dropped.
-
-1. Click the "Go" menu at the top.
-   <img align="right" alt="macos-finder-keys.png" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1732811817/macos-finder-keys_rsoadf.png" />
-
-   If you prefer the speed of using keyboard shortcuts Apple created,
-   those entries can be deleted.
-
-1. From the $HOME folder, press <strong>command + up</strong> to display the previous level, where a "Shared" folder is shown.
-
-1. The same can be done on the Terminal by typing:
-   ```
-   cd ..
-   ```
-
-1. Press <strong>command + up</strong> again to display the level containing folders referenced by the operating system:
-
-   * <strong>Applications</strong> contain apps that can be opened by any user. There is also a
-   * <strong>Library</strong> folder holds application files
-   * System
-   * Users
-
-   REMEMBER: There are several <strong>Applications</strong> folders:
-   * Folder "/Applications" contain apps that can be opened by any user.
-   * Folder "/Users/___/Applications" contain apps that can only be used by that user.
-   * Folder "/Applications/Utilities" contain apps Apple provides, such as the Terminal app.
-
-
-
-
-1. Switch to the Terminal. To see the folder for each application:
-   ```
-   ls -al "$HOME/Library/Application Support"
-   ```
-   Alternately:
-   ```
-   ls -al ~/Library/Application\ Support
-   ```
-
-   REMEMBER: Typing the "~" variable is the same as typing the "$HOME" variable.
-   Typing a space character within "Application Support" require double-quotation marks unless
-   that space is preceded by the "\" escape command.
-
-   REMEMBER: The folder for an application is not deleted when the application is deleted.
-
-1. Switch back to the Finder GUI.
 1. Press <strong>command + up</strong> again to display the top level containing "Macintosh HD" and "Network" folders.
+
+   The Go menu shows the shortcut keys to reach this folder as: Command + Shift + G
+
+   "Macintosh HD" contains the folder for the current user account, such as "Users/johndoe".
 
    PROTIP: Installers of apps being installed are shown in this folder.
 
-1. Switch to the Terminal to get the disk space used by this folder using this command:
-   ```
-   du -sh "$HOME"
-   ```
-1. Switch back to the Finder GUI.
-1. Press <strong>command + down</strong> to go down a level.
 
 1. Manually arrange to your liking the sequence of folders on the left panel of Finder.
 
@@ -593,31 +666,11 @@ So it is the one default app that can't be removed.
 1. Switch to the Terminal by holding down the Command key and pressing Tab repeatedly until it rests on the Termial icon.
 
 
-
-<a name="PhasesOfInstallation"></a>
-
-## Phases of installation
-
-1. Download from GitHub mac-setup.sh automation script
-1. Edit settings in mac-setup.env (using textedit or VSCode)
-1. Install Homebrew and use it to install utilities Bash, Git, etc.
-1. Install and configure apps
-
-
 <a name="mac-setup.parms"></a>
 
 ### View mac-setup.sh parameters
 
 1. We want to upgrade Bash to the latest version.
-
-
-## secrets.sh
-
-The above list is from the <strong>secrets.sh</strong> file in your $HOME folder, which
-you edit to specify which port numbers and <strong>keywords to specify apps</strong> you want installed.
-
-   The file's name is suffixed with ".sh" because it is a runnable script that establishes memory variables for a <a href="#MainScript">Setup script</a> to reference.
-
 
 
 <a name="Homebrew"></a>
@@ -652,6 +705,16 @@ Yes, you can just run brew yourself, one at a time. But logic in the script goes
    * Upgrade and uninstall if that is available
    * Run a demo using the component to ensure that what has been installed actually works.
    <br /><br />
+
+
+<a name="secrets.sh"></a>
+
+## secrets.sh
+
+The above list is from the <strong>secrets.sh</strong> file in your $HOME folder, which
+you edit to specify which port numbers and <strong>keywords to specify apps</strong> you want installed.
+
+   The file's name is suffixed with ".sh" because it is a runnable script that establishes memory variables for a <a href="#MainScript">Setup script</a> to reference.
 
 
 <a name="MakeThisWorkForYou"></a>
@@ -936,4 +999,15 @@ Here are other scripts to install on Mac:
 * More at https://github.com/thoughtbot/laptop/blob/master/mac
 * https://github.com/ghaiklor/iterm-fish-fisherman-osx described at https://ghaiklor.github.io/iterm-fish-fisherman-osx/ and https://blog.ghaiklor.com/bootstrap-your-terminal-environment-in-macos-with-a-single-bash-script-ea1ca445f0a5
 * https://github.com/why-jay/osx-init/blob/master/install.sh
+
+## Extras
+
+1. Switch back to the Finder GUI.
+
+1. To get the disk space used by this folder using this command:
+   ```
+   du -sh "$HOME"
+   ```
+1. Switch back to the Finder GUI.
+1. Press <strong>command + down</strong> to go down a level.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v0.33 FIXME rm write to clipboard :.bash_profile"
+# git commit -m "v0.34 FIXME \n after :.bash_profile"
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
@@ -281,7 +281,7 @@ networksetup -setairportpower en0 off
    # FIXME: ifconfig: ioctl (SIOCAIFADDR): Can't assign requested address
 # Turn on the Wi-Fi device:
 networksetup -setairportpower en0 on
-echo "Spoofed MAC address of en0 interface = $mac_address\n"
+echo "Spoofed MAC address of en0 interface = $mac_address"
 
 
 
