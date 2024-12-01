@@ -1,5 +1,5 @@
 ---
-lastchange: "v033 + backup strategy :README.md"
+lastchange: "v034 + diskutil imgs :README.md"
 ---
 
 <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md ">This article</a>
@@ -18,7 +18,7 @@ After you complete the steps below, you can legitimately add to your resume or L
    This declarative approach updates all apps and modules with a single command, which meets cybersecurity directives to keep software up-to-date frequently.
    </ul>
 
-<a href="#Actions">Manual actions</a> described below have you customize configuration files that control automation scripts you run in a Terminal.
+<a href="#Actions">Manual actions</a> described below have you customize configuration files that control automation scripts you run in a Terminal app.
 
 We make use of automation so it's less error-prone and faster because we've worked out the dependency clashes for you. In each stage, our script detects what has already been installed and verifies the success of each step. So it can perform workarounds for known issues.
 
@@ -35,7 +35,6 @@ We make use of automation so it's less error-prone and faster because we've work
 
 1. <a href="#SystemSettings">Shortcut to System Settings</a>
 1. <a href="#AltClick">Change Annoying Defaults</a>
-1. <a href="#LoginItems">System Login items</a>
 
 1. <a href="#DefaultBrowser">Default Browser</a>
 1. <a href="#GitHubAccount">GitHub Account to Fork</a>
@@ -67,29 +66,8 @@ We make use of automation so it's less error-prone and faster because we've work
 
 1. Move Home directory to External SSD?
 
+1. <a href="#LoginItems">System Login items</a>
 1. <a href="#FinalSteps">Final Steps</a>
-
-
-<hr />
-
-
-<a name="FastChange"></a>
-
-### Fast Change!
-
-Apps and modules can be installed by simply adding a keyword in a control file recognized by the automation, which installs and configures them quickly and reliably.
-
-Instead of or in addition to the default apps, you can specify additional apps to install:
-
-   * <a href="#SafariBrowser">Safari browser</a>: Google Chrome, Firefox, Microsoft Edge, Brave,etc.
-   * <a href="#Terminal">Terminal.app</a>: iTerm2, Warp, etc.
-   * <a href="#Editors">Editors vim</a>: VSCode, Windsurf, Cursor, etc.
-
-Default apps can be specified for removal (to save disk space) by changing a list of apps in the script.
-
-Scripts here are <strong>modular</strong>. It installs only what you tell it to by adding a keyword in the control file.
-
-This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing individual components.
 
 <hr />
 
@@ -111,19 +89,22 @@ This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to Ma
    ### Monitor cables
    
    Use the appropriate type and version of cables. REMEMBER: If you have a Mac Mini:
+
    <a target="_blank" href="https://res.cloudinary.com/dcajqrroq/image/upload/v1731683979/mac-mini-front-back_fup4cz.png"><img src="https://res.cloudinary.com/dcajqrroq/image/upload/v1731683979/mac-mini-front-back_fup4cz.png"></a>
 
-   The front panel has USB-C ports that supports <strong>USB-C 3.2 Gen 2x2</strong> cables which transfers data at 10Gbps and powers up to 100W.
-   The back panel has Thunderbolt ports:
-   * The Mac Mini base model supports <strong>Thunderbolt 4</strong> cables which transfers data at 40Gbps and powers up to 100W for dual 4K displays.
-   * The Mac Mini Pro  model supports <strong>Thunderbolt 5</strong> cables which transfers data at 120Gbps and powers up to 250W for dual 6K displays. 
+   Ports on the Mac Mini front panel supports <strong>USB-C 3.2 Gen 2x2</strong> cables which transfers data at up to 10Gbps and powers up to 100W.
+
+   Ports on the Mac Mini back panel supports Thunderbolt ports:
+   * The Mac Mini <strong>base</strong> model supports <strong>Thunderbolt 4</strong> cables which transfers data at up to 40Gbps and powers up to 100W for dual 4K displays.
+   * The Mac Mini <strong>Pro </strong> model supports <strong>Thunderbolt 5</strong> cables which transfers data at up to 120Gbps and powers up to 250W for dual 6K displays. 
    
    * <strong>HDMI v3.2</strong> cables are needed to support 4K displays.
 
-   Some TVs do not show the top of the screen where the menu bar and Mission Control are displayed. Mission Control is a built-in feature of macOS
-   to switch between groups of open apps and windows (using control + up arrow) and control + down arrow).
+   WARNING: Some TVs do not show the pixels where the menu bar and Mission Control are displayed. Mission Control is a built-in feature of macOS to switch between groups of open apps and windows (using control + up arrow) and control + down arrow.
 
    ### Keyboards
+
+   Noise from the keyboard is a major consideration.
 
 1. If you have a Bluetooth keyboard, you can use the USB ports for something else. 
 
@@ -160,9 +141,15 @@ PROTIP: The preferred way to restore is to use the automation scripts described 
    <ul>
    The other reason is have room to create a <strong>mirror drive</strong> which immediately stores changes to data reduandancy on two different physical drives.
 
-   A "RAID" (Redundant Array of Independent Disks) created using Apple's Disk Utility duplicates two or more <strong>entire</strong> entire physical drives (all folders in it). 
+   A "RAID" (Redundant Array of Independent Disks) created using Apple's <strong>Disk Utility</strong> duplicates two or more <strong>entire</strong> entire physical drives (all folders in it). 
    
-   PROTIP: Since much data do not change, you may prefer to <strong>mirror specific folders</strong> using <a target="_blank" href="https://forums.macrumors.com/threads/i-need-a-software-to-set-up-a-mirror-raid-for-two-drives-any-options.2384176/">SoftRAID</a>, <a target="_blank" href="https://www.econtechnologies.com/chronosync/overview.html">$50 Chronosync</a> from Econ Technologies, <a target="_blank" href="https://bombich.com/">$40 Carbon Copy Cloner</a>, or <a target="_blank" href="https://rsync.samba.org/documentation.html">freeware rsync</a> Unix CLI utility (after upgrade).
+   PROTIP: Since much data do not change, you may prefer to <strong>mirror specific folders</strong> using <a target="_blank" href="https://forums.macrumors.com/threads/i-need-a-software-to-set-up-a-mirror-raid-for-two-drives-any-options.2384176/">SoftRAID</a>, <a target="_blank" href="https://www.econtechnologies.com/chronosync/overview.html">$50 (Lifetime subscription) Chronosync</a> from Econ Technologies, <a target="_blank" href="https://bombich.com/">$40 Carbon Copy Cloner</a>, or <a target="_blank" href="https://rsync.samba.org/documentation.html">freeware rsync</a> Unix CLI utility (after upgrade).
+
+   DEFINITION: Within macOS, The APFS (Apple File System) is used by macOS 10.13 and later as the overall structure that manages how data is stored and retrieved on a <strong>storage device</strong>.
+   With APFS, each physical <strong>partition drive</strong> on a disk typically contains a single <strong>fixed-size container</strong>, (disk 0, 1, 2) which is a logical collection of <strong>dynamic volumes</strong> (such as "Macintosh HD") defined by a GUID Partition Map. Each volume can use a different APFS format (e.g., encrypted, case-sensitive).
+   <strong>Devices</strong>?
+   <img alt="mac-diskutil-media.png" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1733022118/mac-diskutil-media_b8fhvm.png" /><br />
+   <img alt="mac-diskutil-vols.png" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1733022118/mac-diskutil-vols_apwyy4.png" />
    </ul>
 
 1. [_] Buy a new USB drive to store backups externally. Apple's Time Machine app makes backups automatically (in the background) to disk. PROTIP: Make a backup to external USB drive before you take your Mac out of the house, before upgrading, before replacing components, etc.
@@ -171,14 +158,16 @@ PROTIP: The preferred way to restore is to use the automation scripts described 
 
    NVMe SSD (Solid-State drives) are <a target="_blank" href="https://www.youtube.com/watch?v=xA9Xq7hb6Q0">more durable and faster</a> than magnetic (spinning) mechanical hard drives. "Modern SSDs should last 5-10 years. Magnetic hard drives hold data for 3-7 years" (unless SpinRight is used on them periodically).
    
-   "P68" rated enclosures are dust and water resistant. Higher capacity and faster read/write speeds are more expensive:
+   "P68" rated enclosures are dust and water resistant. 
+   
+   Higher capacity and faster read/write speeds are more expensive.
    </ul>
 
    * <a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Portable-Dragon-%E2%80%8ESDSSDE30-1T00-GD25/dp/B0D5FR51QD/">$79.99</a> for 1TB at 800MB/s through USB 3.2 Gen 2 cables
    * <a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Portable-SSD-SDSSDE30-2T00-G26/dp/B0C5JNWF58/">$109.99</a> for 2TB at 800MB/s through USB 3.2 Gen 2 cables
    * <a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Extreme-Portable-SDSSDE81-1T00-G25/dp/B08GV9M64L/">$109.99</a> for 1TB at 2000MB/s through USB 3.2 Gen 2x2 cables
 
-   * <a target="_blank" href="https://www.amazon.com/Transcend-USB-3-2-Gen-2-Cable/dp/B07V7F4G3S/">$130</a> for 2TB at 1050MB/s through USB 3.2 Gen 2 cables
+   * <a target="_blank" href="https://www.amazon.com/Transcend-USB-3-2-Gen-2-Cable/dp/B07V7F4G3S/">$129.99</a> for 2TB at 1050MB/s through USB 3.2 Gen 2 cables
    * <a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Extreme-Portable-SDSSDE81-2T00-G25/dp/B08GV4YYV7/">$157.78</a> for 2TB at 2000MB/s through USB 3.2 Gen 2x2 cables
 
    * <a target="_blank" href="https://www.amazon.com/SanDisk-4TB-Extreme-Portable-SDSSDE61-4T00-G25/dp/B08RX4QKXS/">$229.99</a> for 4TB at 1050MB/s through USB 3.2 Gen 2 cables
@@ -200,7 +189,7 @@ PROTIP: The preferred way to restore is to use the automation scripts described 
    * NEST Z-bag with zip closure -51 dBm <a target="_blank" href="https://www.youtube.com/watch?v=eyIl7FfwXbs">VIDEO</a>
    * Faraday Defense NX single-layer fold-over bag -60 dBm (99.9% of signals are blocked)
 
-   -80 dBm (all signals are blocked) by these bags law enforcement use to store evidence:
+   -80 dBm (all signals are blocked) by these bags law enforcement use to store electronic devices as evidence:
    * <a target="_blank" href="https://www.faradaydefense.com/products/nx3">Faraday Defense NX3</a> double-layer fold-over bag, 
    * <a target="_blank" href="https://www.amazon.com/Faraday-Defense-17L-Waterproof-Backpack/dp/B08TMYC3RY/">$175 dry bag</a>, tower bag
 
@@ -215,17 +204,17 @@ Many enterprises and organizations have strict policies that require you to <str
 
 Later in this document, automation script can restore your computer to your customized state.
 
-1. Shut down your Mac.
+1. Power down your Mac.
 1. Turn it on and immediately press and hold the Command (⌘) + R keys.
 1. Keep holding until you see the Apple logo or a spinning globe. This will boot your Mac into macOS Recovery.
-1. Select Disk Utility and click Continue.
+1. Select "Disk Utility" and click Continue.
 1. In Disk Utility, select your main drive (usually named Macintosh HD) from the list on the left.
-1. Click the Erase button at the top of the window.
+1. Click the "Erase" button at the top of the window.
 1. Name: You should leave it as "Macintosh HD" because it's the "Startup Volume"s.
 1. Format: Choose APFS (for most modern Macs) or Mac OS Extended (Journaled) for older Macs.
 1. Scheme: Choose GUID Partition Map.
-1. Click Erase to wipe the drive.
-1. Close Disk Utility to return to the macOS Utilities window.
+1. Click "Erase" to wipe the drive.
+1. Close "Disk Utility" to return to the macOS Utilities window.
 1. Select Reinstall macOS and click Continue.
 1. Follow the on-screen instructions to reinstall the operating system. This may take some time, depending on your internet speed and the version of macOS being installed.
 1. Once the macOS installation is complete, your Mac will restart and you’ll see the Setup Assistant.
@@ -246,6 +235,7 @@ Later in this document, automation script can restore your computer to your cust
 1. After boot-up, select the new machine's language, time zone, keyboard layout, icloud email & password,user name & password are manual first steps.
 
    PROTIP: Write down the secrets along with the computer's serial number, etc. to help you deal with insurance and replacements if needed.
+
 
    <a name="Upgrade"></a>
 
@@ -309,12 +299,12 @@ PROTIP:For some strange reason, Apple does not provide a default direct keyboard
 
 ## Change Annoying Defaults
 
-Most System Settings can also be changed programmatically by commands in <a href="#Dotfiles">mydotfile</a> specification automation described later in this README file. 
+Most System Settings can be changed programmatically by commands in <a href="#Dotfiles">mydotfile.sh</a> specification automation described later in this README file. 
 
 However, some default settings are so annoying that most users want to change them right away:
 
 1. Click the Apple icon on the upper left corner of the screen.
-1. Click the "System Settings...".
+1. Click "System Settings...".
 1. Scroll down to click "Mouse".
 
 1. For "Tracking speed", drag the dot closer to "Fast" on the right.
@@ -323,37 +313,27 @@ However, some default settings are so annoying that most users want to change th
 1. Exit the dialog.
 
 
-<a name="LoginItems"></a>
-
-### System Login items
-
-PROTIP: Review this once a month to ensure that you have control of your machine. Here is where malicious software can get access.
-
-1. Within Apple System Settings, click the "Search" text within the field at the upper-left corner.
-1. Type "Login" on top of "Search".
-1. If you don't want to have a program Open at Login, click on that app and click the "-" button.
-1. If you want to have Allow in the Background a program, click on the toggle to its left.
-
-
 <a name="DefaultBrowser"></a>
 
 ## Default Browser
 
-Safari is the default browser on MacOS.
+Safari is the default internet browser on MacOS.
 
 The automation script will install other browsers if specified.
+That replaces these manual steps:
 
 1. To ensure that cookies in the browser are not confused, open the browser you want to use. Select the browser profile you want to use.
 
    You may need tonavigate to that browser's settings and make that the default and profile. For example: chrome://settings/defaultBrowser
 
 
-
 <a name="GitHubAccount"></a>
 
-### GitHub Account to Fork
+## Get GitHub Account for Forking
 
 Repositories defined as "Public" can be downloaded without creating a GitHub account.
+
+A GitHub account is needed to fork repositories to their account.
 
 But if you have not yet obtained a GitHub account:
 
@@ -424,18 +404,47 @@ It is the one default app that can't be removed.
 
 1. Click on "Macintosh HD" to display the top "root" level folders defined by Apple, referenceable with a "/" slash character:
 
-   * <tt>/Applications</tt> contain apps that can be opened by any user and also<br /><tt>/Applications/Utilities</tt> containing what Apple provides, such as the Terminal app.
-   * <tt>/Library</tt> contains data for each application
-   * <tt>/System</tt>
+   * <tt>/Applications</tt> contain apps that can be opened by any user and also<br /><tt>/Applications/Utilities</tt> containing what Apple provides, such as the Terminal app, Disk Utility, etc.
+   * <tt>/Library</tt> contains folders used by the operating system
+   * <tt>/System</tt> contains folders restricted from view
    * <tt>/Users</tt> contains a folder for <strong>each user account</strong> created.
    
-1. Click on "Users", then your user name (such as "johndoe") to display the $HOME level folders Apple creates for each new user. Examples:
+   ### Hidden Files
 
-   * <tt>/Users/johndoe/</tt> contains apps that can only be used by a user hypothetically named "johndoe". An Application folder is automatically created for each user account.
+1. Press <strong>shift + command + .</strong> (period key) to display <strong>hidden</strong> files and folders named with a "." character. You should now see additional folders such as:
+
+   * <tt>/bin</tt> contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.
+   * <tt>/etc</tt> 
+   * <tt>/opt</tt> contains user-installed optimization utilities
+   * <tt>/sbin</tt> contains macOS utilities fsck, mount, etc.
+   * <tt>/tmp</tt>
+   * <tt>/usr</tt> and its subfolders contain folders and files controlled by the user, so does not require sudo to access
+   * <tt>/usr/sbin</tt> contains macOS chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.
+   * <tt>/var</tt>
+
+   * <tt>usr/local/bin</tt> contains pgms installed using brew, so should be first to override libraries
+   * <tt>opt/homebrew</tt> is added in front of /usr/local/bin by brew on Apple M1/2 machines.
+
+   Additionally, many 3rd-party CLI modules (such as Git) install create a hidden folder such as ".git" to store application data related to the user.
+
 
    <a name="UserHomeFolders"></a>
 
    ### User Home Folders
+
+   To find programs with the above folders, programs intuitively know to look within the <tt>$PATH</tt> system variable. That is defined within the <tt>.bash_profile</tt> file in each user's <tt>$HOME</tt> folder.
+
+1. View
+
+   <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile">https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile</a>
+
+1. Notice in the file the base <tt>$PATH</tt> variable:
+
+   <tt>PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin</tt>
+
+1. Click on "Users", then your user name (such as "johndoe") to display the <tt>$HOME</tt> level folders Apple creates for each new user. Examples:
+
+   <tt>/Users/johndoe/</tt> contains apps that can only be used by a user hypothetically named "johndoe". A Application folder is one of several automatically created for each user account.
 
 1. Drag your user name folder (such as "johndoe") and drop it at the top of the left Side Bar.
 
@@ -451,22 +460,21 @@ It is the one default app that can't be removed.
    * Pictures
    * Public
 
+
+   ### GitHub Files
+
 1. Create an folder within your $HOME folder by clicking the round icon with three dots, and select "New Folder" to create a new folder named "untitled folder".
 
 1. Rename that name to contain "gh-" and your GitHub user account name. Here is where you Git clone into. For example, if your GitHub user account is "johndoe", create a folder named:
 
    <tt>gh-johndoe</tt>
 
-1. Press <strong>shift + command + .</strong> (period key) to display <strong>hidden</strong> files and folders named with a "." character.
-
-   Many 3rd-party CLI modules (such as Git) install create a hidden folder such as ".git" to store application data related to the user.
-
 
 <a name="Dotfiles"></a>
 
 ## Setup using AppleScript in a Dotfile
 
-Most System Settings can also be changed programmatically by commands in the dotfilespecification script:
+Most System Settings can also be changed programmatically by commands in the <tt>mydotfile.sh</tt> specification script. A template of that file is at:
 
    <ul><a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh">https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh</a>
    </ul>
@@ -663,7 +671,7 @@ The built-in Terminal utility app is used to execute shell scripts like on Linux
 
    ### PATH environment variable
 
-   TODO: $PATH folders separated by semicolons
+   Notice that <tt>$PATH</tt> folder is separated by colons (rather than semicolons used in Windows).
    
    <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh">https://github.com/wilsonmar/mac-setup/blob/main/mac-setup.sh</a>
 
@@ -1126,3 +1134,81 @@ Here are other scripts to install on Mac:
 1. Switch back to the Finder GUI.
 1. Press <strong>command + down</strong> to go down a level.
 
+
+
+<a name="LoginItems"></a>
+
+### System Login items
+
+PROTIP: Put on your calendar to repeat this once a month to ensure that you have control of your machine. Here is where malicious software can get access.
+
+1. Within Apple System Settings, click the "Search" text within the field at the upper-left corner.
+1. On top of "Search" type "Login" to select 'Login Items & Extensions".
+1. If you don't want to have a program Open at Login, click on that app and click the "-" button.
+1. If you want to Allow in the Background a program, click on the toggle to its left.
+   
+   These I allow to run in the background:
+   * Corsair Memory, Inc. makes Elgato Stream Deck, prevents the app from shutting down unexpectedly.
+   * Docker
+
+   These I do NOT allow in the background when I'm not using them:
+   * Faithlife Corporation
+   * fixGpgHome
+   * Google LLC
+   * GPG Suite in /Library/LaunchAgents
+   * Grammarly, Inc in ~/Library/LaunchAgents
+   * ignition.sh (server)
+   * Keybase, Inc. in ~/Library/LaunchAgents
+   * <a target="_blank" href="https://support.microsoft.com/en-us/office/allow-microsoft-autoupdate-to-run-in-the-background-on-macos-93b5dd2a-2395-4780-80b6-00811b774f06?OCID=MacOffice_AutoUpdateOff_ErrorHelpLink">Microsoft AutoUpdate</a>
+   * Microsoft Corporation
+   * Microsoft Office Licensing
+   * Microsoft OneDrive in /Library/LaunchAgents
+   * nginx (server) in /Library/LaunchDaemons
+   * OneDrive in /Library/LaunchAgents
+   * shutdown-pgp-agent
+   * WireShark Foundation in /Library/LaunchDaemons
+   * Zoom.us in /Library/LaunchDaemons
+
+1. To see what Login Items are installed, in a Terminal window, type:
+   ```
+   sfltool dumpbtm
+   ```
+1. Type in your password for the computer.
+
+1. Look for .plist files to remove within:
+   * ~/Library/LaunchAgents
+   * /Library/LaunchAgents
+   * /Library/LaunchDaemons
+
+
+
+<a name="FastChange"></a>
+
+### Fast Change!
+
+Apps and modules can be installed by simply adding a keyword in a control file recognized by the automation, which installs and configures them quickly and reliably.
+
+Instead of or in addition to the default apps, you can specify additional apps to install:
+
+   * <a href="#SafariBrowser">Safari browser</a>: Google Chrome, Firefox, Microsoft Edge, Brave,etc.
+   * <a href="#Terminal">Terminal.app</a>: iTerm2, Warp, etc.
+   * <a href="#Editors">Editors vim</a>: VSCode, Windsurf, Cursor, etc.
+
+Default apps can be specified for removal (to save disk space) by changing a list of apps in the script.
+
+Scripts here are <strong>modular</strong>. It installs only what you tell it to by adding a keyword in the control file.
+
+This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing individual components.
+
+
+## Rip DVD to disk
+
+To rip DVDs, install <a target="_blank" href="https://www.burnerxp.com/">BurnerXP</a> from https://www.burnerxp.com/
+
+[_] Bought a <a target="_blank" href="https://www.bhphotovideo.com/c/product/1520040-REG/pioneer_bdr_xs07uhd_6x_slot_loading_portable.html?ap=y&smp=Y&utm_source=Perplexity&utm_medium=referral">$174.99</a> <a target="_blank" href="https://www.pioneer.com/products/pioneer-bdr-xs07">Pioneer BDR-XS07 6X slim portable 4K UHD Blu-ray burner</a> supports Windows 7+ & MacOS 10.11+, 10Gbps, 8K 10Gbps, 4K 2.5Gbps, 8K 2.5Gbps, M-DISC for long-term data archival to DVD. Comes with a USB-C 3.1 Gen 1 cable.
+
+[_] Download and install MakeMKV from <a target="_blank" href="https://www.makemkv.com/">https://www.makemkv.com</a> generates the unencrypted folder structure then create an ISO of the folder contents.
+
+   There's also AnyDVD.
+
+   jellyfin
