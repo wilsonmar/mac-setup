@@ -145,8 +145,11 @@ PROTIP: The preferred way to restore is to use the automation scripts described 
    
    PROTIP: Since much data do not change, you may prefer to <strong>mirror specific folders</strong> using <a target="_blank" href="https://forums.macrumors.com/threads/i-need-a-software-to-set-up-a-mirror-raid-for-two-drives-any-options.2384176/">SoftRAID</a>, <a target="_blank" href="https://www.econtechnologies.com/chronosync/overview.html">$50 (Lifetime subscription) Chronosync</a> from Econ Technologies, <a target="_blank" href="https://bombich.com/">$40 Carbon Copy Cloner</a>, or <a target="_blank" href="https://rsync.samba.org/documentation.html">freeware rsync</a> Unix CLI utility (after upgrade).
 
-   DEFINITION: Within macOS, The APFS (Apple File System) is used by macOS 10.13 and later as the overall structure that manages how data is stored and retrieved on a <strong>storage device</strong>.
-   With APFS, each physical <strong>partition drive</strong> on a disk typically contains a single <strong>fixed-size container</strong>, (disk 0, 1, 2) which is a logical collection of <strong>dynamic volumes</strong> (such as "Macintosh HD") defined by a GUID Partition Map. Each volume can use a different APFS format (e.g., encrypted, case-sensitive).
+   <a target="_blank" href="https://eclecticlight.co/2024/04/02/apfs-containers-and-volumes/">DEFINITION</a>: Within macOS, The APFS (Apple File System) is used by macOS 10.13 and later as the overall structure that manages how data is stored and retrieved on a <strong>storage device</strong>.
+   Unlike conventional reference to partitions, APFS holds a single  <strong>fixed-sized container</strong> contiguous addresses mapped using a GPT (GUID Partition Table) aka Partition Map. 
+
+   Which each container are several logical <strong>dynamic volumes</strong> (such as "Macintosh HD"). 
+   Each volume can use a different APFS format (e.g., encrypted, case-sensitive).
    <strong>Devices</strong>?
    <img alt="mac-diskutil-media.png" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1733022118/mac-diskutil-media_b8fhvm.png" /><br />
    <img alt="mac-diskutil-vols.png" src="https://res.cloudinary.com/dcajqrroq/image/upload/v1733022118/mac-diskutil-vols_apwyy4.png" />
@@ -214,6 +217,9 @@ Later in this document, automation script can restore your computer to your cust
 1. Format: Choose APFS (for most modern Macs) or Mac OS Extended (Journaled) for older Macs.
 1. Scheme: Choose GUID Partition Map.
 1. Click "Erase" to wipe the drive.
+
+   Click "Security Options" to select a number of passes to overwrite the drive with. One pass should be good enough.
+
 1. Close "Disk Utility" to return to the macOS Utilities window.
 1. Select Reinstall macOS and click Continue.
 1. Follow the on-screen instructions to reinstall the operating system. This may take some time, depending on your internet speed and the version of macOS being installed.
@@ -577,7 +583,7 @@ Apple stopped upgrading Bash due to licensing issues and switched to Zsh as the 
 
 ## mac-setup folders
 
-The mac-setup folder contains the following Bash script files (among other files explained later):
+After automation script <tt>mac-setup.sh</tt> is run, the user's $HOME folder shold contain the following folders:
 
    * <a href="#Bash">.bash_profile</a> contains what is executed before each Terminal session opens.
    * <a href="#Dotfiles">mydotfile.sh</a> contains the commands to change Apple System Settings.
@@ -586,8 +592,9 @@ The mac-setup folder contains the following Bash script files (among other files
    * <a href="#mac-setup.sh">mac-setup.sh</a> is the main automation script that runs based on the specifications defined in the above files.
 
    * <a href="#EditEnv">mac-setup.env</a> contains the environment variables used by the mac-setup.sh script. The automation script can make a folder to hold the folder (GitHub repository) that can version control files, based on the folder name you specify in the mac-setup.env configuration file.
+   The file is in the $HOME folder so that it is not eligible for upload to GitHub within a repository.
 
-
+   Thus, provision is needed to back it up in case of loss of the machine.
 
 <a name="TextEditors"></a>
 
@@ -800,6 +807,30 @@ Yes, you can just run brew yourself, one at a time. But logic in the script goes
    ✓ Cloned fork
    ! Repository wilsonmar/mac-setup set as the default repository. To learn more about the default repository, run: gh repo set-default --help
    ```
+
+<a name="AppsInstalled"></a>
+
+## Apps Installed in mac-setup.env
+
+The automation script, installs apps by reading keywords in file <tt>mac-setup.env</tt>:
+
+
+
+Instead of or in addition to the default apps, you can specify additional apps to install:
+
+   * <a href="#SafariBrowser">Safari browser</a>: Google Chrome, Firefox, Microsoft Edge, Brave,etc.
+   * <a href="#Terminal">Terminal.app</a>: iTerm2, Warp, etc.
+   * <a href="#Editors">Editors vim</a>: VSCode, Windsurf, Cursor, etc.
+
+Default apps can be specified for removal (to save disk space) by changing a list of apps in the script.
+
+Scripts here are <strong>modular</strong>. It installs only what you tell it to by adding a keyword in the control file.
+
+This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing individual components.
+
+
+
+
 
 1. Press <strong>command + up</strong> again to display the top level containing "Macintosh HD" and "Network" folders.
 
@@ -1179,26 +1210,6 @@ PROTIP: Put on your calendar to repeat this once a month to ensure that you have
    * ~/Library/LaunchAgents
    * /Library/LaunchAgents
    * /Library/LaunchDaemons
-
-
-
-<a name="FastChange"></a>
-
-### Fast Change!
-
-Apps and modules can be installed by simply adding a keyword in a control file recognized by the automation, which installs and configures them quickly and reliably.
-
-Instead of or in addition to the default apps, you can specify additional apps to install:
-
-   * <a href="#SafariBrowser">Safari browser</a>: Google Chrome, Firefox, Microsoft Edge, Brave,etc.
-   * <a href="#Terminal">Terminal.app</a>: iTerm2, Warp, etc.
-   * <a href="#Editors">Editors vim</a>: VSCode, Windsurf, Cursor, etc.
-
-Default apps can be specified for removal (to save disk space) by changing a list of apps in the script.
-
-Scripts here are <strong>modular</strong>. It installs only what you tell it to by adding a keyword in the control file.
-
-This repo brings DevSecOps-style <strong>"immutable architecture"</strong> to MacOS laptops. Immutability means replacing the whole machine instance instead of upgrading or repairing individual components.
 
 
 ## Rip DVD to disk
