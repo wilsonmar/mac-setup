@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
-# git commit -m "v0.36 + order by $PATH :.bash_profile"
+# git commit -m "v0.36 + order by PATH :.bash_profile"
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
 
 # This PATH should also be in ~/.zshenv
-PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin
+PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin
    # Note colons separate items in $PATH.
    # /usr/local/bin contains pgms installed using brew, so should be first to override libraries
    # /usr/bin contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.
-   # /usr/sbin contains macOS chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.
+   # /usr/sbin contains system binaries: chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.
    # /bin contains macOS bash, zsh, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, conda, ...
    # /sbin contains macOS fsck, mount, etc.
    # /usr/local/sbin contains java, javac, javadoc, javap, etc.
+
    # /usr/local/opt contains folders for brew-installed apps, such as /usr/local/opt/openssl@1.1
    # /opt/local/bin
    # /opt/local/sbin
 
-   # /opt/homebrew/ is added in front of /usr/local/bin by brew on Apple M1/2 machines.
+   # /opt/homebrew/ is added by brew in front of /usr/local/bin on Apple M1/2 machines.
 
    # /usr/bin/python:/usr/local/bin/python3:
    # /usr/local/bin before usr/bin so Homebrew stuff is found first
