@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v040 + .ssh from .zshrc :.bash_profile"
+# git commit -m "v041 - gradle msg :.bash_profile"
 # Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
@@ -451,9 +451,7 @@ fi
 
 
 #### See https://wilsonmar.github.io/task-runners
-if ! command -v gradle >/dev/null; then
-   echo "gradle not installed (for use with Java)..."
-else
+if command -v gradle >/dev/null; then
    # Since which gradle outputs "/opt/homebrew/bin//gradle" or
       # "/usr/local/opt/gradle" on Intel Mac:
    GRADLE_HOME=$( which gradle )
