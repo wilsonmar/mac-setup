@@ -1,8 +1,8 @@
 ---
-lastchange: "v034 + diskutil imgs :README.md"
+lastchange: "v037 + cp to user home :README.md"
 ---
 
-<a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md ">This article</a>
+<a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md "><img align="right" width="100" height="100" alt="mac-setup-readme-qr-500x500.png" src="https://github.com/wilsonmar/mac-setup/blob/main/images/mac-setup-readme-qr.png?raw=true" />This article</a>
 has been <a target="_blank" href="https://wilsonmar.github.io/mac-setup">
 refined over several years</a> to provide the the <strong>fastest</strong> way to get a new macOS machine up and running.
 
@@ -44,16 +44,16 @@ We make use of automation so it's less error-prone and faster because we've work
 1. <a href="#Passkeys">Install Passkeys</a>
 
 1. <a href="#DownloadZip">Download zip of mac-setup</a>
-1. <a href="#BashVsZsh">Bash vs. Zsh</a>
 1. <a href="#PATHEnv">$PATH environment variable</a>
-1. <a href="#MacSetupFolders">mac-setup folders</a>
-
+1. <a href="#BashVsZsh">Bash vs. Zsh</a>
 1. <a href="#TextEditors">Default Text Editors</a>
 1. <a href="#Terminal">Learn the Terminal app</a>
+
+1. <a href="#Copy2Home">Copy files to $HOME</a>
+
    * <a href="#KeyboardAliases">Keyboard Aliases (Shortcuts)</a>
    * <a href="#UserHomeFolders">User Home Folders</a>
    * <a href="#FolderPermissionAttributes">Folder Permission Attributes</a>
-   * <a href="#PATHEnv">$PATH environment variable</a>
 
 1. <a href="#CreateFolders">Create Folders</a>
 
@@ -80,11 +80,40 @@ We make use of automation so it's less error-prone and faster because we've work
    * <a target="_blank" href="https://bomonike.github.io/mac-mini/">Mac Mini hardware</a>
    * <a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>
 
+   ### Touch ID Keyboard
+
+   Unlike Mac Pro laptops, the Mac Mini does not come with a keyboard with a Touch ID fingerprint reader on the top right corner. 
+   
+   The macOS keyboard is the most convenient way to unlock the computer.
+   
+   There are not many viable options to Apple's lock-in:
+
+   [_] Get a (wireless Bluetooth) Apple Magic Keyboard with Touch ID for Mac Models with Apple Silicon <a target="_blank" href="https://www.amazon.com/Apple-Magic-Keyboard-Models-Silicon/dp/B0DL6KW75T/">$149 from Amazon</a> and <a target="_blank" href="https://www.apple.com/shop/product/MXCK3LL/A/magic-keyboard-with-touch-id-for-mac-models-with-apple-silicon-usb-c-us-english/">Apple</a> (it's quieter than the previous version and comes with a USB-C cable).
+      <ul>
+      CAUTION: The one not compatible is the<a target="_blank" href="https://www.apple.com/shop/product/MXCL3LL/A/magic-keyboard-usb-c-us-english">$99 one</a>.
+
+      PROTIP: This keyboard's flat design is NOT ergonomic. It is not easy to reach the "delete" key. 
+      
+      And it's NOT backlit. That may not be an issue for touch typists and those with a monitor-mounted light.
+
+      Alternately, <a target="_blank" href="https://www.youtube.com/watch?v=nl-3-w-riQ8">VIDEO</a>: Take apart a keyboard to extract the Touch ID and put it in a <a target="_blank" href="https://www.thingiverse.com/thing:5582281">3D printed case</a> for attaching to an iPad. Whew.
+      </ul>
+
    ### Hubs
 
+   My rig makes use of several USB ports:
+   
+   [_] FIDO2 fingerprint key for authentication, such as the <a target="_blank" href="https://www.adafruit.com/product/3363">$14 Adafruit</a> small shape or Yubikey's larger shape.
+   [_] Mouse
+   [_] Camera
+   [_] DVD drive
+   [_] Elgato Stream Deck
+   [_] PROTIP: Elgato Foot pad, which I need for the constant use of Esc and Tab, and Right to control AI assistants.
+   
    PROTIP: CAUTION: A hub may slow down the machine. Get a hub with its own power supply.
+   If you must use a hub, get one that supports the fastest connection (Thunderbolt).
 
-   [_] If you must use a hub, get one that supports the fastest connection (Thunderbolt).
+   <a target="_blank" href="https://www.apple.com/shop/buy-mac/hub">Apple Hub</a>
 
    ### Monitor cables
    
@@ -136,7 +165,7 @@ Complete restores should be to identical hardware.
 
 PROTIP: The preferred way to restore is to use the automation scripts described below, which copies specific folders and files to an external USB drive so they can be used to rebuild a new machine <strong>from scratch</strong>.
 
-[_] One of the reasons to purchase more storage on board the computer is for <strong>dual-booting</strong> to Windows and/or Linux (using Parallels, QEMU, or VirtualBox). 
+[_] One of the reasons to purchase more storage on board the computer is for <strong>dual-booting</strong> to Windows and/or Linux (using Parallels, VMWare,QEMU, or VirtualBox). 
 
    <ul>
    The other reason is have room to create a <strong>mirror drive</strong> which immediately stores changes to data reduandancy on two different physical drives.
@@ -161,16 +190,15 @@ PROTIP: The preferred way to restore is to use the automation scripts described 
 
    NVMe SSD (Solid-State drives) are <a target="_blank" href="https://www.youtube.com/watch?v=xA9Xq7hb6Q0">more durable and faster</a> than magnetic (spinning) mechanical hard drives. "Modern SSDs should last 5-10 years. Magnetic hard drives hold data for 3-7 years" (unless SpinRight is used on them periodically).
    
-   "P68" rated enclosures are dust and water resistant. 
-   
    Higher capacity and faster read/write speeds are more expensive.
-   </ul>
 
+   SanDisk SSDs are rated "P68" for dust and water resistance. $x.76 for Cyber Monday instead of $x.99 on Back Friday.
+   </ul>
    * <a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Portable-Dragon-%E2%80%8ESDSSDE30-1T00-GD25/dp/B0D5FR51QD/">$79.99</a> for 1TB at 800MB/s through USB 3.2 Gen 2 cables
    * <a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Portable-SSD-SDSSDE30-2T00-G26/dp/B0C5JNWF58/">$109.99</a> for 2TB at 800MB/s through USB 3.2 Gen 2 cables
    * <a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Extreme-Portable-SDSSDE81-1T00-G25/dp/B08GV9M64L/">$109.99</a> for 1TB at 2000MB/s through USB 3.2 Gen 2x2 cables
 
-   * <a target="_blank" href="https://www.amazon.com/Transcend-USB-3-2-Gen-2-Cable/dp/B07V7F4G3S/">$129.99</a> for 2TB at 1050MB/s through USB 3.2 Gen 2 cables
+   * <a target="_blank" href="https://www.amazon.com/Transcend-USB-3-2-Gen-2-Cable/dp/B07V7F4G3S/">$129.76</a> for 2TB at 1050MB/s through USB 3.2 Gen 2 cables
    * <a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Extreme-Portable-SDSSDE81-2T00-G25/dp/B08GV4YYV7/">$157.78</a> for 2TB at 2000MB/s through USB 3.2 Gen 2x2 cables
 
    * <a target="_blank" href="https://www.amazon.com/SanDisk-4TB-Extreme-Portable-SDSSDE61-4T00-G25/dp/B08RX4QKXS/">$229.99</a> for 4TB at 1050MB/s through USB 3.2 Gen 2 cables
@@ -218,7 +246,9 @@ Later in this document, automation script can restore your computer to your cust
 1. Scheme: Choose GUID Partition Map.
 1. Click "Erase" to wipe the drive.
 
-   Click "Security Options" to select a number of passes to overwrite the drive with. One pass should be good enough.
+   Click "Security Options" to select a number of passes to overwrite the drive with. One pass should be good enough.  
+
+   WARNING: Do not perform a secure erase on a solid-state drive, such as the ones built into modern MacBooks since you will just shorten the drive's lifespan for no advantage.
 
 1. Close "Disk Utility" to return to the macOS Utilities window.
 1. Select Reinstall macOS and click Continue.
@@ -579,22 +609,26 @@ The automation script upgrades the "Bash" interpreter to the latest version beca
 Apple stopped upgrading Bash due to licensing issues and switched to Zsh as the default macOS shell interpreter since macOS 12 Monterey.
 
 
-<a name="MacSetupFolders"></a>
+<a name="Copy2Home"></a>
 
-## mac-setup folders
+### Copy files to $HOME
 
-After automation script <tt>mac-setup.sh</tt> is run, the user's $HOME folder shold contain the following folders:
+<a href="#mac-setup.sh">mac-setup.sh</a> is the main automation script that runs based on the specifications defined in the above files.
+
+When the automation script <tt>mac-setup.sh</tt> is run, it moves these files to the user's $HOME folder:
 
    * <a href="#Bash">.bash_profile</a> contains what is executed before each Terminal session opens.
+
+   * .bashrc contains what is executed before each Terminal session opens.
+
    * <a href="#Dotfiles">mydotfile.sh</a> contains the commands to change Apple System Settings.
+
    * <a href="#Aliases">aliases.sh</a> contains the keyboard aliases created before each Terminal session.
 
-   * <a href="#mac-setup.sh">mac-setup.sh</a> is the main automation script that runs based on the specifications defined in the above files.
-
-   * <a href="#EditEnv">mac-setup.env</a> contains the environment variables used by the mac-setup.sh script. The automation script can make a folder to hold the folder (GitHub repository) that can version control files, based on the folder name you specify in the mac-setup.env configuration file.
+   * <a href="#EditEnv">mac-setup.env</a> holds the environment variables used by the mac-setup.sh script. The automation script can make a folder to hold the folder (GitHub repository) that can version control files, based on the folder name you specify in the mac-setup.env configuration file.
    The file is in the $HOME folder so that it is not eligible for upload to GitHub within a repository.
-
    Thus, provision is needed to back it up in case of loss of the machine.
+
 
 <a name="TextEditors"></a>
 
