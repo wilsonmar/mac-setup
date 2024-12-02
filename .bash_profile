@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# git commit -m "v039 + from .bashrc :.bash_profile"
+# git commit -m "v040 + .ssh from .zshrc :.bash_profile"
+# Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
@@ -7,8 +8,8 @@
 # This PATH should also be in ~/.zshenv
 PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin
    # Note colons separate items in $PATH.
-   # /usr/local/bin contains pgms installed using brew, so should be first to override libraries
-   # /usr/local/bin before usr/bin so Homebrew stuff is found first
+   # /usr/local/bin & /opt/homebrew do not require sudo, so that's why brew installs pgms there.
+      # so should be first in PATH so Homebrew stuff is found first.
    # /usr/bin contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.
    # /usr/sbin contains system binaries: chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.
    # /bin contains macOS bash, zsh, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, conda, ...
@@ -71,9 +72,20 @@ elif [[ "$(uname -m)" = *"x86_64"* ]]; then
    export BREW_OPT="/usr/local/opt"
    export PKG_CONFIG_PATH="$BREW_OPT/libffi/lib/pkgconfig"
 fi
+if [ ! -d "$BREW_OPT" ]; then  # installed:
+   echo "Creating $BREW_OPT"
+   mkdir "$BREW_OPT"
+fi
+export PATH="$BREW_OPT:$BREW_OPT/bin:$PATH"
+
+export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
+export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib"
+if [ -d "$HOME/.ssh" ]; then  # installed:
+   export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
+fi
 
 # For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63
-#export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
+export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
 export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib"
   # export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
 # export CPPFLAGS="-I/opt/homebrew/opt/curl/include"
@@ -190,6 +202,8 @@ if type _git &> /dev/null && [ -f /usr/local/etc/bash_completion.d/git-completio
 fi
 
 
+# Where Apple puts *.app program folders that come with macOS (usually invoked manually by user):
+export PATH="/Applications:$HOME/Applications:$HOME/Applications/Utilities:${PATH}"  # for apps
 # Per https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line
 if [ -f "$HOME/Applications/Visual Studio Code.app" ]; then  # installed:
    export PATH="$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin:${PATH}"
@@ -197,13 +211,18 @@ if [ -f "$HOME/Applications/Visual Studio Code.app" ]; then  # installed:
 fi
 
 
-# https://gist.github.com/sindresorhus/98add7be608fad6b5376a895e5a59972
-# Add tab completion for SSH hostnames based on ~/.ssh/config, ignoring wildcards
-[ -e "$HOME/.ssh/config" ] && complete -o "default" -o "nospace" -W "$(grep "^Host" ~/.ssh/config | grep -v "[?*]" | cut -d " " -f2- | tr ' ' '\n')" scp sftp ssh;
+if [ -d "$HOME/.ssh" ]; then  # installed:
+   export PATH="$HOME/.ssh:${PATH}"  # for SSH keys & certs.
+   # https://gist.github.com/sindresorhus/98add7be608fad6b5376a895e5a59972
+   # Add tab completion for SSH hostnames based on ~/.ssh/config, ignoring wildcards
+   [ -e "$HOME/.ssh/config" ] && complete -o "default" -o "nospace" -W "$(grep "^Host" ~/.ssh/config | grep -v "[?*]" | cut -d " " -f2- | tr ' ' '\n')" scp sftp ssh;
+fi
+
 
 # Add tab completion for `defaults read|write NSGlobalDomain`
 # You could just use `-g` instead, but I like being explicit
 complete -W "NSGlobalDomain" defaults;
+
 
 # Add `killall` tab completion for common apps
 complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;
