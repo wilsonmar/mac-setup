@@ -1,13 +1,14 @@
 #!/usr/bin/env sh
 # This is https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh
 #
-# git commit -m"v117 + note + echo :mydotfile.sh"
+# git commit -m"v118 + echo for cmds :mydotfile.sh"
 #
 # Use of this is file is explained at https://wilsonmar.github.io/dotfiles
 
 # All the below is equivalent to clicking the Apple logo at the upper-left, then System Settings
    # or shift + option + command + P
-   # https://www.youtube.com/watch?v=Kft9Y33oc2I => Mac Settings That ACTUALLY Make A Difference
+
+# See https://www.youtube.com/watch?v=Kft9Y33oc2I => Mac Settings That ACTUALLY Make A Difference
 
 # Wi-Fi
 # Bluetooth
@@ -17,13 +18,14 @@
       # sudo launchctl stop com.apple.bluetoothd
       # sudo launchctl start com.apple.bluetoothd
 # Network
-   # Firewall enable, Options, Enable stealth mode.
+      # Firewall enable, Options, Enable stealth mode.
 # Battery
 
 # General
 # Accessibility
 # Appearance:
-    defaults write AppleInterfaceStyle –string "Dark";
+   echo "Appearance: AppleInterfaceStyle –string "Dark" "
+   defaults write AppleInterfaceStyle –string "Dark";
 
     # Sidebar icon size - Small
     defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 1
