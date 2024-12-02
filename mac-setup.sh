@@ -14,7 +14,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v1.210 fix zsh to sh in comment :mac-setup.sh"
+SCRIPT_VERSION="v211 speedtest :mac-setup.sh"
 # sudo password mac-setup.env init : mac-setup.sh"
 # working github -aiac : mac-setup.sh"
 # Restruc github vars : mac-setup.sh"
@@ -79,7 +79,7 @@ args_prompt() {
    echo "   -golang         install Golang language"
    echo "   -ruby           install Ruby and Refinery"
    echo "   -js             install JavaScript (NodeJs) app (no MongoDB/PostgreSQL)"
-   echo "   -java           install Java and __"
+   echo "   -java           install Java, gradle, scala"
    echo " "
    echo "   -conda          install Miniconda to run Python (instead of VirtualEnv)"
    echo "   -venv           install Python to run in conda venv (pipenv is default)"
@@ -92,6 +92,7 @@ args_prompt() {
    echo "   -a              actually run server (not dry run)"
    echo "   -sd             sd card initialize locally"
    echo " "
+   echo "   -speed          speedtest"
    echo "   -aws            AWS cloud"
    echo "   -eks            eks (Elastic Kubernetes Service) in AWS cloud"
    echo "   -azure          Azure cloud"
@@ -335,6 +336,7 @@ SECRETS_FILE=".secrets.env.sample"
    APP1_FOLDER=""          # custom specified
    OPEN_APP=false               # -o
 
+   RUN_SPEEDTEST=false          # -speed
    USE_STEAMPIPE=false          # -steampipe
 
    USE_AKEYLESS=false           # -akeyless
@@ -848,6 +850,10 @@ while test $# -gt 0; do
       export GEN_SHA=true
       shift
       ;;
+    -speed)
+      export RUN_SPEEDTEST=true
+      shift
+      ;;
     -ssh)
       export USE_GITHUB_SSH=true
       shift
@@ -1040,16 +1046,16 @@ if [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
       export BREW_PATH="/opt/homebrew"
       export BREW_PATH_OPT="/opt/homebrew/opt"
       eval $( "${BREW_PATH}/bin/brew" shellenv)
-      export BASHFILE="~/.zshrc"
+      # export BASHFILE=".zshrc"
    elif [[ "${MACHINE_TYPE}" == *"x86_64"* ]]; then
       # On Intel macs, it's /usr/local/bin
       export BREW_PATH="/usr/local/bin"
       export BREW_PATH_OPT="/usr/local/opt"
-      export BASHFILE="$HOME/.bash_profile"
+      # export BASHFILE="$HOME/.bash_profile"
 
       #BASHFILE="$HOME/.bashrc"  # on Linux
    fi  # MACHINE_TYPE
-
+   export BASHFILE="$HOME/.bash_profile"
    note "BASHFILE at $BASHFILE"
    note "BREW_PATH=$BREW_PATH & BREW_PATH_OPT=$BREW_PATH_OPT"
 
@@ -1245,7 +1251,7 @@ download_setup(){
       return 9
    else
       echo_debug "-akeyless download_setup() parm \"$1\" being processed..."
-      ls -al "${ENV_FOLDERPATH}/$1"
+      # FIXME: ls -al "${ENV_FOLDERPATH}/$1"
    fi
 
    if [ ! -d "$ENV_FOLDERPATH" ]; then  # target file exists, don't overwrite:
@@ -1276,11 +1282,11 @@ download_setup(){
 # WARNING: This sequence is important to ensure dependencies are present:
    download_setup "mac-setup.env"  #1
    download_setup "aliases.sh"    #2
-   download_setup ".zshrc"         #3
+   # download_setup ".zshrc"         #3
    download_setup "mac-setup.sh"  #4
 
 if [ "${INIT_ENV_FILES}" = true ]; then  # -init
-   warning "Now restart Terminal, which runs .zshrc which runs aliases.sh and mac-setup.env"
+   warning "Now restart Terminal to run $BASHFILE which runs aliases.sh and mac-setup.env"
    h2 "Now please edit the file to customize variables ..."
    h2 "See https://wilsonmar.github.io/mac-setup/#EditEnv ..."
    # note "-envf ENV_FOLDERPATH ${ENV_FOLDERPATH}/$1 source'd to load variables ..."
@@ -1290,7 +1296,8 @@ if [ "${INIT_ENV_FILES}" = true ]; then  # -init
 else
    source ./mac-setup.env  #1
    source ./aliases.sh     #2
-   source ./.zshrc         #3
+   # source ./.bash_profil   #3
+   # source ./.zshrc         #3
 #  source ./mac-setup.sh   #4
 fi
 
@@ -1361,7 +1368,6 @@ ps_kill(){  # $1=process name
 }
 
 
-
 ### 15a. Install installers (brew, apt-get), depending on operating system
 
 # See https://wilsonmar.github.io/mac-setup/#InstallInstallers
@@ -1386,13 +1392,12 @@ function BASHFILE_EXPORT() {
    # example: BASHFILE_EXPORT "gitup" "open -a /Applications/GitUp.app"
    name=$1
    value=$2
-
    if grep -q "export $name=" "$BASHFILE" ; then
       note "$name alias already in $BASHFILE"
    else
       note "Adding $name in $BASHFILE..."
       # Do it now:
-            export "$name=$value"
+      export "$name=$value"
       # For after a Terminal is started:
       echo "export $name='$value'" >>"$BASHFILE"
    fi
@@ -2017,7 +2022,6 @@ if [ "${RUN_VSCODE}" = true ]; then  # -vsc \"vscode-ext\" file specified:
    done < "${VSCODE_EXT_FILE}"
 fi  # RUN_VSCODE
 }
-
 # Install VSCode extensions:
 install_vscode_ext
 
@@ -2055,7 +2059,32 @@ if [ "${USE_CHEZMOI}" = true ]; then  # -chezmoi
 fi  # USE_CHEZMOI
 
 
-### 20b. Override defaults in Apple macOS System Preferences:"
+### 20b. Run speedtest to measure internet speed
+
+function speedtest() {
+   note "Inside speedtest ..."
+   if [ -z "$SPEEDTEST_SERVER_ID" ]; then  # variable was defined in mac-setup.env
+      note "SPEEDTEST_SERVER_ID=$SPEEDTEST_SERVER_ID ..."
+      if ! command -v speedtest >/dev/null; then  # NOT installed:
+         error "speedtest command not available!"
+      else
+         note "Running speedtest ..."
+         ISO_TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%S%z") # 2024-12-01T22:25:04-0700 with tz GMT offset
+         speedtest --json --server-id="${SPEEDTEST_SERVER_ID}" >"speedtest-${ISO_TIMESTAMP}.json"
+         cat "speedtest-${ISO_TIMESTAMP}.json"
+      fi
+   # else SPEEDTEST_SERVER_ID not loaded from mac-setup.env
+   fi
+}
+if [ "${RUN_SPEEDTEST}" = true ]; then  # -speed
+   note "Running speedtest ..."
+   speedtest
+else
+   note "NOT Running speedtest ..."
+fi
+
+
+### 20c. Override defaults in Apple macOS System Preferences:"
 
 # See https://wilsonmar.github.io/mac-setup/#SysPrefs
 # See https://wilsonmar.github.io/dotfiles/
@@ -2070,10 +2099,10 @@ if [ "${SET_MACOS_SYSPREFS}" = true ]; then  # -macos
       defaults read NSGlobalDomain # > DefaultsGlobal.txt
    fi
 
-   if [ -f "${mydotfile.zsh}" ]; then  # file found:
-      note " mydotfile.zsh running to change macOS system settings..."
-      chmod +x mydotfile.zsh
-      ./mydotfile.zsh
+   if [ -f "${mydotfile.sh}" ]; then  # file found:
+      note " mydotfile.sh running to change macOS system settings..."
+      chmod +x mydotfile.sh
+      ./mydotfile.sh
 
       warning "Restarting the Finder for the changes to take effect..."
       killall Finder
