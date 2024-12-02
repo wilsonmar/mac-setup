@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 # This is https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh
 #
-# git commit -m"v116 + key alias with Sequoia :mydotfile.sh"
+# git commit -m"v117 + note + echo :mydotfile.sh"
+#
 # Use of this is file is explained at https://wilsonmar.github.io/dotfiles
 
 # All the below is equivalent to clicking the Apple logo at the upper-left, then System Settings
@@ -105,15 +106,15 @@
 # Mouse
    # Explained in https://wilsonmar.github.io/dotfiles/#Mouse
       RESULT=$( defaults read -g com.apple.mouse.scaling )
-   note "Mouse Tracking speed: ${RESULT} (default is 3 in GUI) fastest 5.0"
+   echo "Mouse Tracking speed: ${RESULT} (default is 3 in GUI) fastest 5.0"
       defaults write -g com.apple.mouse.scaling 5.0
 
-   note "Mouse Un-natural scrolling like Windows (toward direction) ..."
+   echo "Mouse Un-natural scrolling like Windows (toward direction) ..."
       defaults write NSGlobalDomain com.apple.swipescrolldirection -bool FALSE
 # Trackpad
    # Explained in https://wilsonmar.github.io/dotfiles/#Trackpad
       RESULT=$( defaults read -g com.apple.trackpad.scaling )
-   note "Trackpad Tracking speed: ${RESULT} (default is 1.5 in GUI) fastest 5.0"
+   echo "Trackpad Tracking speed: ${RESULT} (default is 1.5 in GUI) fastest 5.0"
       defaults write -g com.apple.trackpad.scaling 3.0
       # FIX: Output: 5.0\013
 # Printers & Scanners
