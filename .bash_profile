@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v038 :.bash_profile"
+# git commit -m "v039 + from .bashrc :.bash_profile"
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
@@ -96,6 +96,19 @@ if [[ "UserShell: /bin/bash" = *"${USER_SHELL_INFO}"* ]]; then
    # Password will be requested here.
    exit 9  # to restart
 fi
+
+
+# Copied from alias-functions.sh at https://github.com/wilsonmar/git-utilities
+#For use on Mac only (not Windows Git Bash):
+function parse_git_branch() {  # to show "main" (formerly "master") or other current git branch:
+# git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(gd)/"
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1/"
+# git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+# macOS is different from Linux in that a terminal emulator starts a login shell instead of an ordinary interactive shell.
+# So a good practice is to put the definitions in .bashrc, then source .bashrc from .bash_profile.
+export PS1="\n\n  \w\[\033[33m\] \$(parse_git_branch)\[\033[00m\]\n$ "
+
 # if Zsh:
 echo "SHELL=$SHELL at $(which bash)..."  # $SHELL=/bin/zsh
       # or SHELL=/opt/homebrew/bin/bash at /opt/homebrew/bin//bash
@@ -170,16 +183,11 @@ if which brew &> /dev/null && [ -f "$(brew --prefix)/share/bash-completion/bash_
 	source "$(brew --prefix)/share/bash-completion/bash_completion";
 elif [ -f /etc/bash_completion ]; then
 	source /etc/bash_completion;
-fi;
+fi
 # Enable tab completion for `g` by marking it as an alias for `git`
 if type _git &> /dev/null && [ -f /usr/local/etc/bash_completion.d/git-completion.bash ]; then
 	complete -o default -o nospace -F _git g;
-fi;
-
-# Added by ./mac-setup-all.sh for use on .zsh:
-#if [ -f $HOME/.git-completion.bash ]; then
-#      . $HOME/.git-completion.bash
-#fi
+fi
 
 
 # Per https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line
@@ -187,6 +195,7 @@ if [ -f "$HOME/Applications/Visual Studio Code.app" ]; then  # installed:
    export PATH="$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin:${PATH}"
       # contains folder code and code-tunnel
 fi
+
 
 # https://gist.github.com/sindresorhus/98add7be608fad6b5376a895e5a59972
 # Add tab completion for SSH hostnames based on ~/.ssh/config, ignoring wildcards
@@ -202,25 +211,38 @@ complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes Syste
 
 #### See https://wilsonmar.github.io/ruby-on-apple-mac-osx/
 # No command checking since Ruby was installed by default on Apple macOS:
-if ! command -v rbenv >/dev/null; then
+if ! command -v rbenv >/dev/null; then  # NOT rbenv 1.3.0
    if [ -d "$HOME/.rbenv" ]; then  # Ruby environment manager (shims    version  versions)
       export PATH="$HOME/.rbenv/bin:${PATH}"
       eval "$(rbenv init -)"   # at the end of the file
       echo "$( ruby --version) with .rbenv"
          # Default is ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
    fi
+fi
 
-   if [ -d "$HOME/.rvm" ]; then  # Ruby version manager
-      #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin:${PATH}"
-      #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-      echo "$( ruby --version) with .rvm"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
-   fi
-
-   #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin"
+if [ -d "$HOME/.rvm" ]; then  # Ruby version manager
+   #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin:${PATH}"
    #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-   export LC_ALL=en_US.utf-8
-   #export PATH="$HOME/.rbenv/bin:$PATH"
-   #eval "$(rbenv init -)"   # at the end of the file
+   echo "$( ruby --version) with .rvm"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
+   # OUTPUT: ruby 2.6.10p210 (2022-04-12 revision 67958) [universal.arm64e-darwin24]
+fi
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+#if -d "$HOME/.rvm/bin" then
+#   export PATH="$PATH:$HOME/.rvm/bin"
+#fi
+
+# added by travis gem for CI/CD:
+#if -f "~/.travis/travis.sh" then
+#   [ -f ~/.travis/travis.sh ] && source ~/.travis/travis.sh
+#fi
+
+#export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin"
+#[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+export LC_ALL=en_US.utf-8
+
+#export PATH="$HOME/.rbenv/bin:$PATH"
+#eval "$(rbenv init -)"   # at the end of the file
 
 
 #### See https://wilsonmar.github.io/rustlang
@@ -234,6 +256,9 @@ if [ -d "$HOME/.nvm" ]; then  # Ruby version manager
    export NVM_DIR="$HOME/.nvm"
    source "$HOME/.nvm/nvm.sh"  # instead of "$BREW_OPT/nvm/nvm.sh"
    #export PATH=$PATH:$HOME/.nvm/versions/node/v9.11.1/lib/node_modules
+   # [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM$
+   # [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+   # [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 fi
 
 
@@ -524,6 +549,7 @@ fi
 # export PATH="$HOME/.func-e/versions/1.20.1/bin/:${PATH}"  # contains envoy
 # Inserted by: consul -autocomplete-install
 # complete -o nospace -C "${BREW_PATH}/consul" consul
+# complete -C /usr/local/bin/consul consul
 
 
 #export LIQUIBASE_HOME='/usr/local/opt/liquibase/libexec'
