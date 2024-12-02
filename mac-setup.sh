@@ -14,7 +14,7 @@
 
 # This downloads and installs all the utilities, then invokes programs to prove they work
 # This was run on macOS Mojave and Ubuntu 16.04.
-SCRIPT_VERSION="v211 speedtest :mac-setup.sh"
+SCRIPT_VERSION="v212 - speedtest :mac-setup.sh"
 # sudo password mac-setup.env init : mac-setup.sh"
 # working github -aiac : mac-setup.sh"
 # Restruc github vars : mac-setup.sh"
@@ -92,7 +92,6 @@ args_prompt() {
    echo "   -a              actually run server (not dry run)"
    echo "   -sd             sd card initialize locally"
    echo " "
-   echo "   -speed          speedtest"
    echo "   -aws            AWS cloud"
    echo "   -eks            eks (Elastic Kubernetes Service) in AWS cloud"
    echo "   -azure          Azure cloud"
@@ -336,7 +335,6 @@ SECRETS_FILE=".secrets.env.sample"
    APP1_FOLDER=""          # custom specified
    OPEN_APP=false               # -o
 
-   RUN_SPEEDTEST=false          # -speed
    USE_STEAMPIPE=false          # -steampipe
 
    USE_AKEYLESS=false           # -akeyless
@@ -848,10 +846,6 @@ while test $# -gt 0; do
       ;;
     -sha)
       export GEN_SHA=true
-      shift
-      ;;
-    -speed)
-      export RUN_SPEEDTEST=true
       shift
       ;;
     -ssh)
@@ -1700,7 +1694,7 @@ if [ "${RUN_UTILS}" = true ]; then  # -utils
          h2 "-utils brew install/upgrade ROOT_APPS_TO_INSTALL --cask into ROOT /Applications/:"
          # Apps in /Applications folder allows integrate more deeply with system resources, provides a security boundary:
          ARRAY=(`echo ${ROOT_APPS_TO_INSTALL}`);
-         # Example: export ROOT_APPS_TO_INSTALL="hiddenbar  Microsoft-Edge  Speedtest"
+         # Example: export ROOT_APPS_TO_INSTALL="hiddenbar  Microsoft-Edge "
          # ROOT_APPS_TO_INSTALL="Keybase  DiffMerge  NordVPN  PowerShell"
          ROOT_PKG_ARRAY=( [amazon-prime-video]="Prime Video" [hiddenbar]="Hidden Bar" \
            [microsoft-teams]="Microsoft Teams" [microsoft-remote-desktop]="Microsoft Remote Desktop" \
@@ -2057,31 +2051,6 @@ if [ "${USE_CHEZMOI}" = true ]; then  # -chezmoi
 #fi  # DOWNLOAD_INSTALL
 
 fi  # USE_CHEZMOI
-
-
-### 20b. Run speedtest to measure internet speed
-
-function speedtest() {
-   note "Inside speedtest ..."
-   if [ -z "$SPEEDTEST_SERVER_ID" ]; then  # variable was defined in mac-setup.env
-      note "SPEEDTEST_SERVER_ID=$SPEEDTEST_SERVER_ID ..."
-      if ! command -v speedtest >/dev/null; then  # NOT installed:
-         error "speedtest command not available!"
-      else
-         note "Running speedtest ..."
-         ISO_TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%S%z") # 2024-12-01T22:25:04-0700 with tz GMT offset
-         speedtest --json --server-id="${SPEEDTEST_SERVER_ID}" >"speedtest-${ISO_TIMESTAMP}.json"
-         cat "speedtest-${ISO_TIMESTAMP}.json"
-      fi
-   # else SPEEDTEST_SERVER_ID not loaded from mac-setup.env
-   fi
-}
-if [ "${RUN_SPEEDTEST}" = true ]; then  # -speed
-   note "Running speedtest ..."
-   speedtest
-else
-   note "NOT Running speedtest ..."
-fi
 
 
 ### 20c. Override defaults in Apple macOS System Preferences:"
