@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v043 + bash ver check no sudo :.bash_profile"
+# git commit -m "v044 + exit on no bash, rm shopt :.bash_profile"
 # Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
@@ -39,6 +39,7 @@ if [[ "bash" = *"${RESULT}"* ]]; then
   echo "*** $(bash --version | head -n 1)."
 else
   echo "*** Current shell is $RESULT (not bash)!"
+  exit 9
   # bash pipeline commands run in subshells. However,
      # the last command in Zsh can affect the main execution environment.
 fi
@@ -175,11 +176,11 @@ unset file;
 # shopt builtin command of the Bash shell that enables or disables options for the current shell session:
 # See https://www.computerhope.com/unix/bash/shopt.htm
 # Case-insensitive globbing (used in pathname expansion)
-shopt -s nocaseglob;
+#shopt -s nocaseglob;
 # Append to the Bash history file, rather than overwriting it:
-shopt -s histappend;
+#shopt -s histappend;
 # Autocorrect typos in path names when using `cd`:
-shopt -s cdspell;
+#shopt -s cdspell;
 
 
 # Enable some Bash 4 features when possible:
