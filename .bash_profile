@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v041 - gradle msg :.bash_profile"
+# git commit -m "v043 + bash ver check no sudo :.bash_profile"
 # Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
@@ -31,6 +31,19 @@ PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin
    # PS1 was exported and so is defined in the new shell, but parse_git_branch is not.
 
 
+
+### Ensure bash is the shell running (not Zsh):
+RESULT="$0"
+# ps -o comm= -p $$
+if [[ "bash" = *"${RESULT}"* ]]; then
+  echo "*** $(bash --version | head -n 1)."
+else
+  echo "*** Current shell is $RESULT (not bash)!"
+  # bash pipeline commands run in subshells. However,
+     # the last command in Zsh can affect the main execution environment.
+fi
+
+
 ### See https://wilsonmar.github.io/mac-setup/
 # Customized from https://github.com/wilsonmar/mac-setup/blob/master/.zshrc
 if [ -f "$HOME/mac-setup.env" ]; then
@@ -45,7 +58,8 @@ else
   echo "Touch ID is not enabled for sudo. run-after-macos-update.sh"
 fi
 
-sudo launchctl limit maxfiles 65536 200000
+
+# sudo launchctl limit maxfiles 65536 200000
    # Password will be requested here due to sudo.
 
 
@@ -157,6 +171,7 @@ done;
 unset file;
 
 
+# TODO: Run this only if under Bash (not .zsh):
 # shopt builtin command of the Bash shell that enables or disables options for the current shell session:
 # See https://www.computerhope.com/unix/bash/shopt.htm
 # Case-insensitive globbing (used in pathname expansion)
@@ -281,10 +296,12 @@ if [ -d "$HOME/.nvm" ]; then  # Ruby version manager
 fi
 
 
-# spoof MAC address and hostname at boot => https://www.youtube.com/watch?v=ASXANpr_zX8
+#### Spoof MAC address and hostname at boot => https://www.youtube.com/watch?v=ASXANpr_zX8
 # https://github.com/sunknudsen/privacy-guides/tree/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos
+# TODO: Get first-names.txt from mac-setup repo.
+
 if [ ! -d "/usr/local/sbin/" ]; then
-   sudo mkdir /usr/local/sbin/
+   mkdir /usr/local/sbin/
 fi
 basedir="/usr/local/sbin"
 if [ ! -f "$basedir/first-names.txt" ]; then
@@ -337,11 +354,14 @@ fi
 
 
 #### See https://wilsonmar.github.io/maven  since which maven doesn't work:
-#export M2_HOME=/usr/local/Cellar/maven/3.5.0/libexec
-#export M2=$M2_HOME/bin
-#export PATH=$PATH:$M2_HOME/bin
-#export MAVEN_HOME=/usr/local/opt/maven
-#export PATH=$MAVEN_HOME/bin:$PATH
+#if command -v maven >/dev/null; then  # found:
+   #MAVEN_VER=
+   #export M2_HOME=/usr/local/Cellar/maven/$MAVEN_VER/libexec
+   #export M2=$M2_HOME/bin
+   #export PATH=$PATH:$M2_HOME/bin
+   #export MAVEN_HOME=/usr/local/opt/maven
+   #export PATH=$MAVEN_HOME/bin:$PATH
+#fi
 
 
 ### See https://wilsonmar.github.io/sonar
