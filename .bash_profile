@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v0.36 + order by PATH :.bash_profile"
+# git commit -m "v038 :.bash_profile"
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
@@ -8,45 +8,52 @@
 PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin
    # Note colons separate items in $PATH.
    # /usr/local/bin contains pgms installed using brew, so should be first to override libraries
+   # /usr/local/bin before usr/bin so Homebrew stuff is found first
    # /usr/bin contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.
    # /usr/sbin contains system binaries: chown, cron, disktutil, expect, fdisk, mkfile, softwareupdate, sysctl, etc.
    # /bin contains macOS bash, zsh, chmod, cat, cp, date, echo, ls, rm, kill, link, mkdir, rmdir, conda, ...
    # /sbin contains macOS fsck, mount, etc.
    # /usr/local/sbin contains java, javac, javadoc, javap, etc.
 
-   # /usr/local/opt contains folders for brew-installed apps, such as /usr/local/opt/openssl@1.1
-   # /opt/local/bin
-   # /opt/local/sbin
-
    # /opt/homebrew/ is added by brew in front of /usr/local/bin on Apple M1/2 machines.
-
-   # /usr/bin/python:/usr/local/bin/python3:
-   # /usr/local/bin before usr/bin so Homebrew stuff is found first
+      # obtained from echo $(brew --prefix)
    # alias fix_brew='sudo chown -R $USER /usr/local/'export PATH="/usr/local/bin:$PATH"
-   # For homebrew:
-   # $(brew --prefix)/sbin
+   # /usr/local/opt contains folders for brew-installed apps, such as /usr/local/opt/openssl@1.1
+
+   # /opt/someapp is where to install unbundled packages, each in its own subdirectory.
+   # /etc/opt/someapp/foo.conf contains its configuration files
+   # /var/opt/someapp/logs/foo.access would house its log files
 
 # In .bashrc are parse_git_branch, PS1, git_completion, and extract for serverless, rvm, nvm
-# source ~/.bashrc
-   # NOTE: parse_git_branch is defined in .bash_profile, but not exported.
+   # parse_git_branch is defined in .bash_profile, but not exported.
    # When you run sudo bash, it starts an nonlogin shell that sources .bashrc instead of .bash_profile.
    # PS1 was exported and so is defined in the new shell, but parse_git_branch is not.
 
-# See https://eclecticlight.co/2020/08/13/macos-version-numbering-isnt-so-simple/
-# https://scriptingosx.com/2020/09/macos-version-big-sur-update/
-# For sw_vers -productVersion  => 10.16
-# export SYSTEM_VERSION_COMPAT=1
+
+### See https://wilsonmar.github.io/mac-setup/
+# Customized from https://github.com/wilsonmar/mac-setup/blob/master/.zshrc
+if [ -f "$HOME/mac-setup.env" ]; then
+    source "$HOME/mac-setup.env"
+fi
 
 
-#### See https://wilsonmar.github.io/homebrew
-# For use in brew cask install
-export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
-#export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
+### See https://gist.github.com/fraune/0831edc01fa89f46ce43b8bbc3761ac7
+if grep -q 'auth sufficient pam_tid.so' /etc/pam.d/sudo; then
+  echo "Touch ID is enabled for sudo."
+else
+  echo "Touch ID is not enabled for sudo. run-after-macos-update.sh"
+fi
 
+sudo launchctl limit maxfiles 65536 200000
+   # Password will be requested here due to sudo.
+
+
+#### See https://wilsonmar.github.io/macos-versions ???
 echo "Apple macOS sw_vers = $(sw_vers -productVersion) / uname = $(uname -r)"
-    # sw_vers: 10.15.1 / uname = 21.4.0
+   # OUTPUT: Apple macOS sw_vers = 15.1.1 / uname = 24.1.0
    # See https://eclecticlight.co/2020/08/13/macos-version-numbering-isnt-so-simple/
    # See https://scriptingosx.com/2020/09/macos-version-big-sur-update/
+   # export SYSTEM_VERSION_COMPAT=1
 
 if [[ "$(uname -m)" = *"arm64"* ]]; then
    # used by .zshrc instead of .bash_profile
@@ -68,21 +75,16 @@ fi
 # For compilers to find sqlite and openssl per https://qiita.com/nahshi/items/fcf4898f7c45f11a5c63
 #export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
 export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib"
+  # export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
+# export CPPFLAGS="-I/opt/homebrew/opt/curl/include"
 
+export GPG_TTY=$(tty)
+export CLICOLOR=1
+export LSCOLORS="GxFxCxDxBxegedabagaced" #
+export GREP_OPTIONS='--color=auto'
+#source ~/sf-secrets.shCreated by git-flow.sh
+#export PATH="$BREW_OPT/postgresql@9.6/bin:$PATH"
 
-### See https://wilsonmar.github.io/mac-setup/
-# Customized from https://github.com/wilsonmar/mac-setup/blob/master/.zshrc
-if [ -f "$HOME/mac-setup.env" ]; then
-    source $HOME/mac-setup.env
-fi
-
-
-if ! command -v complete >/dev/null; then
-   echo "brew complete NOT installed for BREW_PATH=$BREW_PATH to $HOMEBREW_CASK_OPTS"
-else
-   echo "brew complete for BREW_PATH=$BREW_PATH to $HOMEBREW_CASK_OPTS"
-   complete "${BREW_PATH}/share/zsh/site-functions"  # auto-completions in .bashrc
-fi
 
 # Upgrade by setting Apple Directory Services database Command Line utility:
 USER_SHELL_INFO="$( dscl . -read /Users/$USER UserShell )"   # UserShell: /bin/zsh
@@ -120,12 +122,6 @@ fi
 #COMMON_APPS="Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter"
 #complete -o "nospace" -W "$COMMON_APPS" killall;
 
-sudo launchctl limit maxfiles 65536 200000
-   # Password will be requested here due to sudo.
-
-export GPG_TTY=$(tty)
-export CLICOLOR=1
-export LSCOLORS="GxFxCxDxBxegedabagaced" #
 
 # Load the shell dotfiles, and then some:
 # * ~/.path can be used to extend `$PATH`.
@@ -134,6 +130,7 @@ for file in ~/.{path,bash_prompt,exports,aliases,functions,extra}; do
 	[ -r "$file" ] && [ -f "$file" ] && source "$file";
 done;
 unset file;
+
 
 # shopt builtin command of the Bash shell that enables or disables options for the current shell session:
 # See https://www.computerhope.com/unix/bash/shopt.htm
@@ -144,9 +141,6 @@ shopt -s histappend;
 # Autocorrect typos in path names when using `cd`:
 shopt -s cdspell;
 
-export GREP_OPTIONS='--color=auto'
-#source ~/sf-secrets.shCreated by git-flow.sh
-#export PATH="$BREW_OPT/postgresql@9.6/bin:$PATH"
 
 # Enable some Bash 4 features when possible:
 # * `autocd`, e.g. `**/qux` will enter `./foo/bar/baz/qux`
@@ -155,7 +149,19 @@ for option in autocd globstar; do
 	shopt -s "$option" 2> /dev/null;
 done;
 
-# Copied from https://github.com/wilsonmar/git-utilities:
+
+#### See https://wilsonmar.github.io/homebrew
+# For use in brew cask install
+export HOMEBREW_CASK_OPTS="--appdir=~/Applications --caskroom=~/Caskroom"
+
+if ! command -v complete >/dev/null; then
+   echo "brew complete NOT installed for BREW_PATH=$BREW_PATH to $HOMEBREW_CASK_OPTS"
+else
+   echo "brew complete for BREW_PATH=$BREW_PATH to $HOMEBREW_CASK_OPTS"
+   complete "${BREW_PATH}/share/zsh/site-functions"  # auto-completions in .bashrc
+fi
+
+# See https://github.com/wilsonmar/git-utilities:
 #export PATH="$HOME/gits:$PATH"
 #export PATH="$HOME/gits/wilsonmar/git-utilities/git-custom-commands:$PATH"
 #export WM="$HOME/gits/wilsonmar/wilsonmar.github.io"
@@ -176,14 +182,6 @@ fi;
 #fi
 
 
-### See https://gist.github.com/fraune/0831edc01fa89f46ce43b8bbc3761ac7
-#if grep -q 'auth sufficient pam_tid.so' /etc/pam.d/sudo; then
-#  echo "Touch ID is enabled for sudo."
-#else
-#  echo "Touch ID is not enabled for sudo. run-after-macos-update.sh"
-#fi
-
-
 # Per https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line
 if [ -f "$HOME/Applications/Visual Studio Code.app" ]; then  # installed:
    export PATH="$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin:${PATH}"
@@ -201,6 +199,7 @@ complete -W "NSGlobalDomain" defaults;
 # Add `killall` tab completion for common apps
 complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;
 
+
 #### See https://wilsonmar.github.io/ruby-on-apple-mac-osx/
 # No command checking since Ruby was installed by default on Apple macOS:
 if ! command -v rbenv >/dev/null; then
@@ -216,13 +215,18 @@ if ! command -v rbenv >/dev/null; then
       #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
       echo "$( ruby --version) with .rvm"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
    fi
-fi
 
-#export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin"
-#[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-export LC_ALL=en_US.utf-8
-#export PATH="$HOME/.rbenv/bin:$PATH"
-#eval "$(rbenv init -)"   # at the end of the file
+   #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin"
+   #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+   export LC_ALL=en_US.utf-8
+   #export PATH="$HOME/.rbenv/bin:$PATH"
+   #eval "$(rbenv init -)"   # at the end of the file
+
+
+#### See https://wilsonmar.github.io/rustlang
+if [ -d "$HOME/.cargo/bin" ]; then
+   export PATH="$HOME/.cargo/bin:$PATH"
+fi
 
 
 #### See https://wilsonmar.github.io/node-install after brew install nodejs
@@ -263,30 +267,29 @@ mac_address=$(echo "$mac_address_prefix:$mac_address_suffix" | awk '{print tolow
 if command -v networksetup >/dev/null; then  # command found, so:
    #networksetup -setairportpower en0 on
    networksetup -setairportpower en0 off
+
+   #if command -v /usr/local/bin/airport >/dev/null; then  # command found, so:
+   #   sudo rm /usr/local/bin/airport
+   #fi
+   # Create symlink to airport command so it can still be used even though it is deprecated:
+   #sudo ln -s /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport /usr/local/bin/airport
+      # WARNING: The airport command line tool is deprecated and will be removed in a future release.
+      # For diagnosing Wi-Fi related issues, use the Wireless Diagnostics app or wdutil command line tool.
+      # ifconfig: ioctl (SIOCAIFADDR): Can't assign requested address
+      # WARNING of 3rd party: brew install macchanger  then macchanger -m xx:xx:xx:xx:xx:xx en0
+      # Disconnect:
+      # sudo /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -z
+   #sudo /usr/local/bin/airport --disassociate
+
+   # Turn off the Wi-Fi device:
+   networksetup -setairportpower en0 off
+   # Change the MAC address: ifconfig deprecated
+   #sudo ifconfig en0 ether "$mac_address"
+      # FIXME: ifconfig: ioctl (SIOCAIFADDR): Can't assign requested address
+   # Turn on the Wi-Fi device:
+   networksetup -setairportpower en0 on
+   echo "Spoofed MAC address of en0 interface = $mac_address"
 fi
-
-#if command -v /usr/local/bin/airport >/dev/null; then  # command found, so:
-#   sudo rm /usr/local/bin/airport
-#fi
-# Create symlink to airport command so it can still be used even though it is deprecated:
-#sudo ln -s /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport /usr/local/bin/airport
-   # WARNING: The airport command line tool is deprecated and will be removed in a future release.
-   # For diagnosing Wi-Fi related issues, use the Wireless Diagnostics app or wdutil command line tool.
-   # ifconfig: ioctl (SIOCAIFADDR): Can't assign requested address
-   # WARNING of 3rd party: brew install macchanger  then macchanger -m xx:xx:xx:xx:xx:xx en0
-   # Disconnect:
-   # sudo /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -z
-#sudo /usr/local/bin/airport --disassociate
-
-# Turn off the Wi-Fi device:
-networksetup -setairportpower en0 off
-# Change the MAC address: ifconfig deprecated
-#sudo ifconfig en0 ether "$mac_address"
-   # FIXME: ifconfig: ioctl (SIOCAIFADDR): Can't assign requested address
-# Turn on the Wi-Fi device:
-networksetup -setairportpower en0 on
-echo "Spoofed MAC address of en0 interface = $mac_address"
-
 
 
 #### See https://wilsonmar.github.io/maven  since which maven doesn't work:
@@ -296,8 +299,9 @@ echo "Spoofed MAC address of en0 interface = $mac_address"
 #export MAVEN_HOME=/usr/local/opt/maven
 #export PATH=$MAVEN_HOME/bin:$PATH
 
+
 ### See https://wilsonmar.github.io/sonar
-export PATH="$PATH:$HOME/onpath/sonar-scanner/bin"
+#export PATH="$PATH:$HOME/onpath/sonar-scanner/bin"
 
 
 #### See https://wilsonmar.github.io/azure after brew install dotnet
@@ -322,10 +326,14 @@ fi
 
 
 #### See https://wilsonmar.github.io/aws-onboarding/
-complete -C aws_completer aws
-export AWS_DEFAULT_REGION="us-west-2"
-export EC2_URL="https://${AWS_DEFAULT_REGION}.console.aws.amazon.com/ec2/v2/home?region=${AWS_DEFAULT_REGION}#Instances:sort=instanceId"
-alias ec2="open ${EC2_URL}"
+if command -v aws >/dev/null; then  # found:
+   # From brew install awscli to /opt/homebrew/Cellar/awscli
+   complete -C aws_completer aws
+   # Using AWS_DEFAULT_REGION defined in mac-setup.env:
+   export AWS_DEFAULT_REGION="us-west-2"
+   export EC2_URL="https://${AWS_DEFAULT_REGION}.console.aws.amazon.com/ec2/v2/home?region=${AWS_DEFAULT_REGION}#Instances:sort=instanceId"
+   alias ec2="open ${EC2_URL}"
+fi
 
 
 #### See https://wilsonmar.github.io/gcp
@@ -341,15 +349,6 @@ if command -v gcloud >/dev/null; then  # found:
       # source "/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
       # source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
       # source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
-fi
-
-
-#### See https://wilsonmar.github.io/aws-onboarding/
-if [ -d "$HOME/aws" ]; then  # folder was created for AWS cloud, so:
-   complete -C aws_completer aws
-   # export AWS_DEFAULT_REGION="us-west-2" is defined in mac-setup.env
-   export EC2_URL="https://${AWS_DEFAULT_REGION}.console.aws.amazon.com/ec2/v2/home?region=${AWS_DEFAULT_REGION}#Instances:sort=instanceId"
-   alias ec2="open ${EC2_URL}"
 fi
 
 
@@ -392,25 +391,21 @@ fi
 #if command -v jyenv 1>/dev/null 2>&1; then
 # export GATLING_HOME=/usr/local/opt/gatling
 
+
 #### See https://wilsonmar.github.io/neo4j
 # export NEO4J_HOME=/usr/local/opt/neo4j
 # export NEO4J_CONF=/usr/local/opt/neo4j/libexec/conf/
 
+
 #if ! command -v /usr/local/opt/postgresql@9.6/bin >/dev/null; then
 #export PATH="/usr/local/opt/postgresql@9.6/bin:$PATH"
 
-#### See https://wilsonmar.github.io/airflow  # ETL
+
+#### See https://wilsonmar.github.io/airflow  # ETL tool
 # PATH=$PATH:~/.local/bin
 # export AIRFLOW_HOME="$HOME/airflow-tutorial"
 
-#### See https://wilsonmar.github.io/scala
-# export SCALA_HOME=/usr/local/opt/scala/libexec
-# export JAVA_HOME generated by jenv, =/Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home
-#export JENV_ROOT="$(which jenv)" # /usr/local/var/jenv
-#if command -v jyenv 1>/dev/null 2>&1; then
-#  eval "$(jenv init -)"
-#fi
-#export PATH="$HOME/jmeter:$PATH"
+
 #### See https://wilsonmar.github.io/task-runners
 if ! command -v gradle >/dev/null; then
    echo "gradle not installed (for use with Java)..."
@@ -422,33 +417,34 @@ else
       export PATH="$GRADLE_HOME/bin:${PATH}"  # contains gradle file.
    fi
 fi
+#### See https://wilsonmar.github.io/scala
+# export SCALA_HOME=/usr/local/opt/scala/libexec
+# export JAVA_HOME generated by jenv, =/Library/Java/JavaVirtualMachines/jdk1.8.0_162.jdk/Contents/Home
+#export JENV_ROOT="$(which jenv)" # /usr/local/var/jenv
+#if command -v jyenv 1>/dev/null 2>&1; then
+#  eval "$(jenv init -)"
+#fi
+#export PATH="$HOME/jmeter:$PATH"
+
 
 #### R language:
 # export PATH="$PATH:/usr/local/Cellar/r/3.4.4/lib/R/bin"
 # alias rv34='/usr/local/Cellar/r/3.4.4/lib/R/bin/R'
 
-### See https://wilsonmar.github.io/ruby-on-apple-mac-osx/
-if command -v rbenv 1>/dev/null 2>&1; then
-  eval "$(rbenv init -)"
-fi
-
-#### See https://wilsonmar.github.io/rustlang
-if [ -d "$HOME/.cargo/bin" ]; then
-   export PATH="$HOME/.cargo/bin:$PATH"
-fi
 
 #### See https://wilsonmar.github.io/airflow
 # PATH=$PATH:~/.local/bin
 # export AIRFLOW_HOME="$HOME/airflow-tutorial"
 
+
 #### See https://wilsonmar.github.io/python-install
 export PYTHON_CONFIGURE_OPTS=--enable-unicode=ucs2
+# PYTHONPATH specifies directories where Python should import custom modules and packages.
 # export PYTHONPATH="/usr/local/Cellar/python/3.6.5/bin/python3:$PYTHONPATH"
 # python=/usr/local/bin/python3
-#alias python=python3
+# alias python=python3
 # export PATH="$PATH:$HOME/Library/Caches/AmlWorkbench/Python/bin"
 # export PATH="$PATH:/usr/local/anaconda3/bin"  # for conda
-
 
 #### See https://wilsonmar.github.io/python-install/#pyenv-install
 if [ -d "$HOME/.pyenv" ]; then  # folder was created for Python3, so:
@@ -481,6 +477,7 @@ if [ -d "$CONDA_FOLDER/bin/pip3" ]; then  # folder was created:
    # <<< conda initialize <<<
    # conda activate py3k
 fi
+
 
 #### See https://wilsonmar.github.io/golang
 # This is a custom path:
@@ -532,30 +529,20 @@ fi
 #export LIQUIBASE_HOME='/usr/local/opt/liquibase/libexec'
 
 
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 if [ -d "$HOME/.sdkman" ]; then
    export SDKMAN_DIR="$HOME/.sdkman"
-   #[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+   [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 fi
-
-
-# Position to most frequently used:
-#cd ~/github-wilsonmar/wilsonmar.github.io/_posts
-# gsl  # alias for "git status list"
-#export PATH="$PATH:$HOME/github-wilsonmar/tf-samples"
-#export PATH="$PATH:$HOME/github-wilsonmar/python-samples"
 
 
 #### See https://wilsonmar.github.io/macos-install
 # Show aliases keys as reminder:
 source ~/aliases.sh
-#     catn filename to show text file without comment (#) lines:
 #alias catn="grep -Ev '''^(#|$)'''"
 #catn ~/aliases.sh
+#     catn filename to show text file without comment (#) lines:
 # For more Mac aliases, see https://gist.github.com/natelandau/10654137
    # described at https://natelandau.com/my-mac-osx-bash_profile/
 # https://github.com/clvv/fasd
