@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v044 + exit on no bash, rm shopt :.bash_profile"
+# git commit -m "v045 - ulimit :.bash_profile"
 # Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
@@ -58,10 +58,6 @@ if grep -q 'auth sufficient pam_tid.so' /etc/pam.d/sudo; then
 else
   echo "Touch ID is not enabled for sudo. run-after-macos-update.sh"
 fi
-
-
-# sudo launchctl limit maxfiles 65536 200000
-   # Password will be requested here due to sudo.
 
 
 #### See https://wilsonmar.github.io/macos-versions ???
