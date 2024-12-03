@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # This is https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.sh
 #
-# git commit -m"v118 + echo for cmds :mydotfile.sh"
+# git commit -m"v119 + no max-limits :mydotfile.sh"
 #
 # Use of this is file is explained at https://wilsonmar.github.io/dotfiles
 
@@ -121,6 +121,7 @@
       # FIX: Output: 5.0\013
 # Printers & Scanners
 
+
 # GPG Suite
 
 # Finder app:
@@ -144,3 +145,5 @@
 
 # END
 # Passwords
+   # For Sequoia after after, Passwords settings moved to a separate app.
+   # (https://www.youtube.com/watch?v=5A6-htFEyTQ) 
