@@ -1,5 +1,5 @@
 ---
-lastchange: "v037 + cp to user home :README.md"
+lastchange: "v040 + SSD drives :README.md"
 ---
 
 <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md "><img align="right" width="100" height="100" alt="mac-setup-readme-qr-500x500.png" src="https://github.com/wilsonmar/mac-setup/blob/main/images/mac-setup-readme-qr.png?raw=true" />This article</a>
@@ -11,16 +11,16 @@ After you complete the steps below, you can legitimately add to your resume or L
    <ul>Configured new Macs, from scratch, with a full set of
    <a href="#UtilitiesInstalled">utilities</a>, AI apps, and access to
    AWS, Azure, and Google cloud services.
-   Our use of custom shell script automation reduced onboarding time
-   <strong>from days to less than an hour</strong>
-   Documentation of each step were documented and validated by others.
+   The custom automation reduced onboarding errors and time
+   <strong>from days to less than an hour</strong>.
+   Documentation of steps were validated by others.
    With a common set of tools, the entire team can now pair program together efficiently.
    This declarative approach updates all apps and modules with a single command, which meets cybersecurity directives to keep software up-to-date frequently.
    </ul>
 
 <a href="#Actions">Manual actions</a> described below have you customize configuration files that control automation scripts you run in a Terminal app.
 
-We make use of automation so it's less error-prone and faster because we've worked out the dependency clashes for you. In each stage, our script detects what has already been installed and verifies the success of each step. So it can perform workarounds for known issues.
+This automation works out dependency clashes for you. In each stage, the script detects what has already been installed, then verifies the success of each step. It performs workarounds for known issues.
 
 
 <a name="Actions"></a>
@@ -80,7 +80,11 @@ We make use of automation so it's less error-prone and faster because we've work
    * <a target="_blank" href="https://bomonike.github.io/mac-mini/">Mac Mini hardware</a>
    * <a target="_blank" href="https://wilsonmar.github.io/apple-macbook-hardware/">Mac laptop hardware</a>
 
-   ### Touch ID Keyboard
+   <a name="Keyboards"></a>
+
+   ### Keyboard Selection
+
+   Noise from the keyboard is a major consideration.
 
    Unlike Mac Pro laptops, the Mac Mini does not come with a keyboard with a Touch ID fingerprint reader on the top right corner. 
    
@@ -99,19 +103,45 @@ We make use of automation so it's less error-prone and faster because we've work
       Alternately, <a target="_blank" href="https://www.youtube.com/watch?v=nl-3-w-riQ8">VIDEO</a>: Take apart a keyboard to extract the Touch ID and put it in a <a target="_blank" href="https://www.thingiverse.com/thing:5582281">3D printed case</a> for attaching to an iPad. Whew.
       </ul>
 
+1. If you have a Bluetooth keyboard, you can use the USB ports for something else. 
+
+   However, some <a target="_blank" href="https://www.logitech.com/en-us/products/keyboards/mice/keyboard-mice.html">Logitech USB keyboard and mouse models</a> come with a USB dongle.
+
+   PROTIP: A keyboard with a "delete" key is useful especially if you are used to working with Windows.
+   The macOS keyboard requires users to awarkly press "fn" key and then "delete" key to delete.
+
+   See my article about the <a target="_blank" href="https://wilsonmar.github.io/macos-keyboard/">macOS keyboards</a>.
+
+   <a target="_blank" href="https://www.apple.com/support/keyboard/">Keyboards from Apple</a> are different from generic USB keyboards for Windows:
+
+   * Some keyboards don't have a "delete" key. Instead hold down the "fn" key and press the "delete" key.
+   * The button at the upper-right is a fingerprint reader and on/off button
+   * The modifier keys Command is used instead of Control.
+
    ### Hubs
 
-   My rig makes use of several USB ports:
-   
+   PROTIP: Some monitors have USB ports (act as a hub). 
+   Here are needs for ports:
+
+   [_] <a href="#Keyboards">Keyboard</a>
+   [_] <a href="#Mouse">Mouse</a> (if it doesnt connect via Bluetooth)
+
    [_] FIDO2 fingerprint key for authentication, such as the <a target="_blank" href="https://www.adafruit.com/product/3363">$14 Adafruit</a> small shape or Yubikey's larger shape.
-   [_] Mouse
-   [_] Camera
+
+   For fastest speed, some devices should be plugged into the CPU's Thunderbolt port:
+   [_] External SSD drive <a target="_blank" href="https://www.youtube.com/watch?v=cwqg4Bu81S0">VIDEO</a>
    [_] DVD drive
+   [_] Micro SD carde
+   [_] Camera
    [_] Elgato Stream Deck
-   [_] PROTIP: Elgato Foot pad, which I need for the constant use of Esc and Tab, and Right to control AI assistants.
+   [_] PROTIP: Elgato Foot pad, which I need for the constant use of Esc and Tab, and Right to control AI assistants.   
+   [_] Printer
    
    PROTIP: CAUTION: A hub may slow down the machine. Get a hub with its own power supply.
    If you must use a hub, get one that supports the fastest connection (Thunderbolt).
+
+   <a target="_blank" href="https://www.amazon.com/Elgato-USB-Hub-USB-Delivery/dp/B0D7M984R2/">$72.30 Elgato USB Hub</a> adds a USB port to the back of their Stream Deck. Brilliant.
+
 
    <a target="_blank" href="https://www.apple.com/shop/buy-mac/hub">Apple Hub</a>
 
@@ -131,26 +161,15 @@ We make use of automation so it's less error-prone and faster because we've work
 
    WARNING: Some TVs do not show the pixels where the menu bar and Mission Control are displayed. Mission Control is a built-in feature of macOS to switch between groups of open apps and windows (using control + up arrow) and control + down arrow.
 
-   ### Keyboards
+   [_] Have a safe way to clean the surface of the monitor. Scratches will drive some people crazy.
 
-   Noise from the keyboard is a major consideration.
 
-1. If you have a Bluetooth keyboard, you can use the USB ports for something else. 
-
-   However, some <a target="_blank" href="https://www.logitech.com/en-us/products/keyboards/mice/keyboard-mice.html">Logitech USB keyboard and mouse models</a> come with a USB dongle.
-
-   PROTIP: A keyboard with a "delete" key is useful especially if you are used to working with Windows.
-   The macOS keyboard requires users to awarkly press "fn" key and then "delete" key to delete.
-
-   See my article about the <a target="_blank" href="https://wilsonmar.github.io/macos-keyboard/">macOS keyboards</a>.
-
-   <a target="_blank" href="https://www.apple.com/support/keyboard/">Keyboards from Apple</a> are different from generic USB keyboards for Windows:
-
-   * Some keyboards don't have a "delete" key. Instead hold down the "fn" key and press the "delete" key.
-   * The button at the upper-right is a fingerprint reader and on/off button
-   * The modifier keys Command is used instead of Control.
+   <a name="Mouse"></a>
+   
+   ### Mouse & Trackpad
 
 1. Consider an ergonomic mouse. If you are right-handed, consider a left-handed mouse so that you write with your right hand while you use the mouse.
+
 
 
 <a name="BackupStrategy"></a>
@@ -192,17 +211,22 @@ PROTIP: The preferred way to restore is to use the automation scripts described 
    
    Higher capacity and faster read/write speeds are more expensive.
 
-   SanDisk SSDs are rated "P68" for dust and water resistance. $x.76 for Cyber Monday instead of $x.99 on Back Friday.
+   PROTIP: Apple does not support USB 3.2 Gen 2x2, which boosts speeds on paper.
+   
+   <a target="_blank" href="https://www.youtube.com/watch?v=ugX84OjS-bs">VIDEO</a>:
+   SanDisk rate their Extreme SSDs at "P68" for dust and water resistance. 
+   BEWARE: Reports of failure seem high for 4TB. Samsung SSDs seem to be more durable.
+   $x.76 for Cyber Monday instead of $x.99 on Back Friday.
    </ul>
    * <a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Portable-Dragon-%E2%80%8ESDSSDE30-1T00-GD25/dp/B0D5FR51QD/">$79.99</a> for 1TB at 800MB/s through USB 3.2 Gen 2 cables
    * <a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Portable-SSD-SDSSDE30-2T00-G26/dp/B0C5JNWF58/">$109.99</a> for 2TB at 800MB/s through USB 3.2 Gen 2 cables
-   * <a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Extreme-Portable-SDSSDE81-1T00-G25/dp/B08GV9M64L/">$109.99</a> for 1TB at 2000MB/s through USB 3.2 Gen 2x2 cables
+   * <strike><a target="_blank" href="https://www.amazon.com/SanDisk-1TB-Extreme-Portable-SDSSDE81-1T00-G25/dp/B08GV9M64L/">$109.99</a> for 1TB at 2000MB/s through USB 3.2 Gen 2x2 cables</strike>
 
    * <a target="_blank" href="https://www.amazon.com/Transcend-USB-3-2-Gen-2-Cable/dp/B07V7F4G3S/">$129.76</a> for 2TB at 1050MB/s through USB 3.2 Gen 2 cables
-   * <a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Extreme-Portable-SDSSDE81-2T00-G25/dp/B08GV4YYV7/">$157.78</a> for 2TB at 2000MB/s through USB 3.2 Gen 2x2 cables
+   * <strike><a target="_blank" href="https://www.amazon.com/SanDisk-2TB-Extreme-Portable-SDSSDE81-2T00-G25/dp/B08GV4YYV7/">$157.78</a> for 2TB at 2000MB/s through USB 3.2 Gen 2x2 cables</strike>
 
    * <a target="_blank" href="https://www.amazon.com/SanDisk-4TB-Extreme-Portable-SDSSDE61-4T00-G25/dp/B08RX4QKXS/">$229.99</a> for 4TB at 1050MB/s through USB 3.2 Gen 2 cables
-   * <a target="_blank" href="https://www.amazon.com/SanDisk-Professional-PRO-Blade-Transport-SDPM2NB-004T-GBAND/dp/B0B3RMGKBS/">$299.99</a> for 4TB at 2000MB/s through USB 3.2 Gen 2x2 cables
+   * <strike><a target="_blank" href="https://www.amazon.com/SanDisk-Professional-PRO-Blade-Transport-SDPM2NB-004T-GBAND/dp/B0B3RMGKBS/">$299.99</a> for 4TB at 2000MB/s through USB 3.2 Gen 2x2 cables</strike>
    * <a target="_blank" href="https://www.amazon.com/SanDisk-Professional-4TB-PRO-G40-SDPS31H-004T-GBCND/dp/B0BW6715SV/">$324.99</a> for 4TB at 3000MB/s through Thunderbolt 3 or USB-C 10Gbps cables
 
    * <a target="_blank" href="https://www.amazon.com/SanDisk-8TB-Desk-Drive-SDSSDT40-8T00-NA25/dp/B0CJG3Q7JW/">$499.99</a> for 8TB at 1000MB/s through USB-C 3.2 Gen 2 cables
@@ -271,6 +295,8 @@ Later in this document, automation script can restore your computer to your cust
 1. After boot-up, select the new machine's language, time zone, keyboard layout, icloud email & password,user name & password are manual first steps.
 
    PROTIP: Write down the secrets along with the computer's serial number, etc. to help you deal with insurance and replacements if needed.
+
+1. PROTIP: If you plan on taking Prometric Vue exams, create another user account called "exam". This ensures that you have a pristine environment to run their fussy exam software.
 
 
    <a name="Upgrade"></a>
@@ -380,13 +406,7 @@ But if you have not yet obtained a GitHub account:
    <a target="_blank" href="https://github.com/">https://github.com/</a>
 
 1. Sign in with your email address and password.
-
-1. Define the GitHub account name and email you want the the automation script to use, such as:
-   ```
-   [user]
-   email = John Doe
-   name = johndoe+github@gmail.com
-   ```
+1. In your email, verify your email address to activate your account.
 
 1. TODO: Configure SSH and GPG keys.
 
@@ -499,11 +519,15 @@ It is the one default app that can't be removed.
 
    ### GitHub Files
 
-1. Create an folder within your $HOME folder by clicking the round icon with three dots, and select "New Folder" to create a new folder named "untitled folder".
+   Within Finder, you can create a new folder (with default name "untitled folder) by clicking the round icon with three dots, and select "New Folder". But the automation will do that if you just specify the folder name in the mac-setup.env file.
 
-1. Rename that name to contain "gh-" and your GitHub user account name. Here is where you Git clone into. For example, if your GitHub user account is "johndoe", create a folder named:
-
-   <tt>gh-johndoe</tt>
+   The script creates a folder for each user account named for the GitHub account name you specify in the mac-setup.env file.
+   In the GitHub folder for the account, it creates a "config" file with content such as:
+   ```
+   [user]
+   email = John Doe
+   name = johndoe+github@gmail.com
+   ```
 
 
 <a name="Dotfiles"></a>
@@ -529,7 +553,7 @@ So traditional passwords are replaced with biometric fingerprint Touch ID, Face 
 
 Passkeys was introduced in 2022 for Apple Safari on macOS 13 Ventura and later.
 
-macOS 15 (Sequoia) introduced a standalone Passwords app, providing a more refined passkey management interface.
+In 2024, macOS 15 (Sequoia) introduced the standalone <strong>Passwords.app</strong>, providing a more refined passkey management interface.
    1. Open the Passwords app from your Applications folder.
    1. Click on the Passkeys tab and select Add New Passkey.
    1. Follow the on-screen instructions to complete the setup, using biometric verification or your device password.
