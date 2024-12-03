@@ -168,3 +168,5 @@ jspm_packages
 .node_repl_history
 
 .gitsecret/keys/random_seed
+
+venv
