@@ -1,5 +1,6 @@
 ---
-lastchange: "v040 + SSD drives :README.md"
+url: "https://github.com/wilsonmar/mac-setup/blob/main/README.md"
+lastchange: "v041 + magic keyboard :README.md"
 ---
 
 <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md "><img align="right" width="100" height="100" alt="mac-setup-readme-qr-500x500.png" src="https://github.com/wilsonmar/mac-setup/blob/main/images/mac-setup-readme-qr.png?raw=true" />This article</a>
@@ -84,15 +85,14 @@ This automation works out dependency clashes for you. In each stage, the script 
 
    ### Keyboard Selection
 
-   Noise from the keyboard is a major consideration.
+   Noise from keyboard keypresses is a major annoyance for some.
 
    Unlike Mac Pro laptops, the Mac Mini does not come with a keyboard with a Touch ID fingerprint reader on the top right corner. 
    
-   The macOS keyboard is the most convenient way to unlock the computer.
-   
-   There are not many viable options to Apple's lock-in:
+   There are not many viable options to Apple's lock-in strategy:
 
-   [_] Get a (wireless Bluetooth) Apple Magic Keyboard with Touch ID for Mac Models with Apple Silicon <a target="_blank" href="https://www.amazon.com/Apple-Magic-Keyboard-Models-Silicon/dp/B0DL6KW75T/">$149 from Amazon</a> and <a target="_blank" href="https://www.apple.com/shop/product/MXCK3LL/A/magic-keyboard-with-touch-id-for-mac-models-with-apple-silicon-usb-c-us-english/">Apple</a> (it's quieter than the previous version and comes with a USB-C cable).
+   [_] Get a "Apple Magic Keyboard with Touch ID for Mac Models with Apple Silicon" 
+   <a target="_blank" href="https://www.amazon.com/Apple-Magic-Keyboard-Models-Silicon/dp/B0DL6KW75T/">$149 from Amazon</a> and <a target="_blank" href="https://www.apple.com/shop/product/MXCK3LL/A/magic-keyboard-with-touch-id-for-mac-models-with-apple-silicon-usb-c-us-english/">Apple</a> (it's quieter than the previous version and comes with a USB-C cable).
       <ul>
       CAUTION: The one not compatible is the<a target="_blank" href="https://www.apple.com/shop/product/MXCL3LL/A/magic-keyboard-usb-c-us-english">$99 one</a>.
 
@@ -101,6 +101,13 @@ This automation works out dependency clashes for you. In each stage, the script 
       And it's NOT backlit. That may not be an issue for touch typists and those with a monitor-mounted light.
 
       Alternately, <a target="_blank" href="https://www.youtube.com/watch?v=nl-3-w-riQ8">VIDEO</a>: Take apart a keyboard to extract the Touch ID and put it in a <a target="_blank" href="https://www.thingiverse.com/thing:5582281">3D printed case</a> for attaching to an iPad. Whew.
+
+      The Touch ID on the macOS keyboard is the most convenient way to unlock the computer.
+      PROTIP: When the keyboard switch is set ON, if "Magic keyboard:" isn't recognized, 
+      connect it using a USB-C to Lightning cable to initiate pairing, then disconnect to use wirelessly.
+   
+      To <a target="_blank" href="https://geometricgoods.com/blogs/apple-news/magic-keyboard-with-touch-id-setup-and-troubleshooting">
+      setup Touch ID</a> go to Apple menu > System Preferences > "Touch ID & Password".
       </ul>
 
 1. If you have a Bluetooth keyboard, you can use the USB ports for something else. 
