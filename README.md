@@ -152,8 +152,10 @@ This automation works out dependency clashes for you. In each stage, the script 
 
    <a target="_blank" href="https://www.apple.com/shop/buy-mac/hub">Apple Hub</a>
 
-   ### Monitor cables
+   ### Monitors & cabling
    
+   REMEMBER: To run multiple display monitors, each display hardware needs to support DSC (Display Stream Compression).
+
    Use the appropriate type and version of cables. REMEMBER: If you have a Mac Mini:
 
    <a target="_blank" href="https://res.cloudinary.com/dcajqrroq/image/upload/v1731683979/mac-mini-front-back_fup4cz.png"><img src="https://res.cloudinary.com/dcajqrroq/image/upload/v1731683979/mac-mini-front-back_fup4cz.png"></a>
@@ -169,7 +171,6 @@ This automation works out dependency clashes for you. In each stage, the script 
    WARNING: Some TVs do not show the pixels where the menu bar and Mission Control are displayed. Mission Control is a built-in feature of macOS to switch between groups of open apps and windows (using control + up arrow) and control + down arrow.
 
    [_] Have a safe way to clean the surface of the monitor. Scratches will drive some people crazy.
-
 
    <a name="Mouse"></a>
    
