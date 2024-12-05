@@ -1,6 +1,6 @@
 ---
 url: "https://github.com/wilsonmar/mac-setup/blob/main/README.md"
-lastchange: "v041 + magic keyboard :README.md"
+lastchange: "v042 + measure data transfer :README.md"
 ---
 
 <a target="_blank" href="https://github.com/wilsonmar/mac-setup/blob/main/README.md "><img align="right" width="100" height="100" alt="mac-setup-readme-qr-500x500.png" src="https://github.com/wilsonmar/mac-setup/blob/main/images/mac-setup-readme-qr.png?raw=true" />This article</a>
@@ -255,6 +255,13 @@ PROTIP: The preferred way to restore is to use the automation scripts described 
    * <a target="_blank" href="https://www.faradaydefense.com/products/nx3">Faraday Defense NX3</a> double-layer fold-over bag, 
    * <a target="_blank" href="https://www.amazon.com/Faraday-Defense-17L-Waterproof-Backpack/dp/B08TMYC3RY/">$175 dry bag</a>, tower bag
 
+1. [_] Measure data transfer speeds. <a target="_blank" href="https://www.youtube.com/watch?v=nHqrvxcRc7o">VIDEO</a>
+
+   To measure speed of random read and write on macOS, <a target="_blank" href="https://apps.apple.com/us/app/amorphousdiskmark/id1168254295?mt=12">install from Mac App Store</a> the Amorphous Disk Mark from Katsura Shareware
+
+   To measure speeds of sequential read and write large files on macOS, click through install from the Apple Store <a target="_blank" href="https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://apps.apple.com/us/app/blackmagic-disk-speed-test/id425264550%3Fmt%3D12&ved=2ahUKEwja1rr2-JCKAxXgGDQIHSTmGVIQFnoECBkQAQ&usg=AOvVaw2Z-pC4aYkV4KoJftFgaUXi">BlackMagic Disk Speed Test</a> app from BlackMagicDesigns.com (makers of DaVinci Resolve software and professional recording equipment).
+
+   
 
 <a name="ResetToFactorySettings"></a>
 
