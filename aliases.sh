@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-# git commit -m "v037 + claude : aliases.sh"
+# git commit -m "v038 + ssha : aliases.sh"
 #
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -177,6 +177,8 @@ alias sbp='source ~/.bash_profile'
 alias ezs="$EDITOR ~/.zshrc"   # for Zsh
 alias szs='source ~/.zshrc'
 alias sshconf="$EDITOR ~/.ssh/config"
+alias ssha='eval $(ssh-agent) && ssh-add'
+
 #alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 
 # alias atom was removed from market by GitHub.
