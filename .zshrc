@@ -1,11 +1,12 @@
 #!/usr/bin/env zsh
 # gas "v0.29 Add MAC spoofing :.zshrc"
+# Using .bash_profile because shellshock scanner doesn't recognize Zsh.
 # This is file ~/.zshrc from template at https://github.com/wilsonmar/mac-setup/blob/main/.zshrc
 # This is explained in https://wilsonmar.github.io/zsh
 # This file is not provided by macOS by default.
 # This gets loaded after .zprofile is loaded when a new terminal window is opened.
 # This sets the environment for interactive shells.
-# It's typically a place where you "set it and forget it" type of parameters like 
+# It's typically a place where you "set it and forget it" type of parameters like
 # $PATH, $PROMPT, aliases, and functions you would like to have in both login and interactive shells.
 # This was migrated from ~/.bash_profile
 echo "At ~/.zshrc to set environment variables for interactive shells."
@@ -16,7 +17,7 @@ echo "At ~/.zshrc to set environment variables for interactive shells."
 
 # Colons separate items in $PATH (semicolons as in Windows will cause error):
    # /usr/local/bin contains user-installed pgms (using brew) so should be first to override libraries
-   # but only on Intel Macs. 
+   # but only on Intel Macs.
 export PATH="/opt/homebrew/bin;/usr/local/bin:/usr/local/opt:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:/sbin:${PATH}"
    # /opt/homebrew/ is added in front of /usr/local/bin by brew on Apple M1/2 machines.
    # /usr/local/bin contains pgms installed using brew, so should be first to override libraries
@@ -99,7 +100,7 @@ echo "SHELL=$SHELL at $(which zsh)"  # $SHELL=/bin/zsh
       # Use /opt/homebrew/bin/zsh  (using homebrew or default one from Apple?)
       # Use /usr/local/bin/zsh if running Bash.
 # Set Terminal prompt that shows the Zsh % prompt rather than $ bash prompt:
-if [[ "/bin/zsh" = *"${SHELL}"* ]]; then  
+if [[ "/bin/zsh" = *"${SHELL}"* ]]; then
    autoload -Uz promptinit && promptinit
    export PS1="${prompt_newline}${prompt_newline}  %11F%~${prompt_newline}%% "
       # %11F = yellow. %~ = full path, %% for the Zsh prompt (instead of $ prompt for bash)
@@ -171,7 +172,7 @@ if ! command -v rbenv >/dev/null; then
    if [ -d "$HOME/.rbenv" ]; then  # Ruby environment manager (shims    version  versions)
       export PATH="$HOME/.rbenv/bin:${PATH}"
       eval "$(rbenv init -)"   # at the end of the file
-      echo "$( ruby --version) with .rbenv"  
+      echo "$( ruby --version) with .rbenv"
          # Default is ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
    fi
 
@@ -295,7 +296,7 @@ fi
 
 #### for Selenium
 if [ -d "$BREW_PATH/chromedriver" ]; then
-   export PATH="$PATH:/${BREW_PATH}/chromedriver"  
+   export PATH="$PATH:/${BREW_PATH}/chromedriver"
 fi
 
 #### See https://wilsonmar/github.io/jmeter-install ::
