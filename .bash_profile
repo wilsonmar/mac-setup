@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# git commit -m "v045 - ulimit :.bash_profile"
+# git commit -m "v046 + GRPC_PYTHON_BUILD_SYSTEM_OPENSSL for M4 :.bash_profile"
 # Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
@@ -75,6 +75,9 @@ if [[ "$(uname -m)" = *"arm64"* ]]; then
    # Password will be requested here.
    export ARCHFLAGS="-arch arm64"
    export BREW_OPT="/opt/homebrew"
+   # See https://github.com/grpc/grpc/issues/25082 
+   export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+   export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 
 elif [[ "$(uname -m)" = *"x86_64"* ]]; then
    export BREW_PATH="/usr/local/bin"
