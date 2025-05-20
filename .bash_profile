@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# git commit -m "v046 + GRPC_PYTHON_BUILD_SYSTEM_OPENSSL for M4 :.bash_profile"
+# date: "2025-05-19"
+# git commit -m "v047 + uv python install 3.12.10 :.bash_profile"
 # Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
@@ -500,13 +501,20 @@ fi
 
 
 #### See https://wilsonmar.github.io/python-install
-export PYTHON_CONFIGURE_OPTS=--enable-unicode=ucs2
+# Configure Python internal string representation to use UCS-2 (2-byte) Unicode encoding instead of UCS-4 (4-byte),
+# For backward comptibility with some older legacy systems:
+# export PYTHON_CONFIGURE_OPTS=--enable-unicode=ucs2
+
 # PYTHONPATH specifies directories where Python should import custom modules and packages.
 # export PYTHONPATH="/usr/local/Cellar/python/3.6.5/bin/python3:$PYTHONPATH"
 # python=/usr/local/bin/python3
 # alias python=python3
 # export PATH="$PATH:$HOME/Library/Caches/AmlWorkbench/Python/bin"
 # export PATH="$PATH:/usr/local/anaconda3/bin"  # for conda
+
+if command -v uv >/dev/null; then
+   # For uv python install 3.12.10 --preview --default
+   export PATH="$HOME/.local/bin:$PATH"
 
 #### See https://wilsonmar.github.io/python-install/#pyenv-install
 if [ -d "$HOME/.pyenv" ]; then  # folder was created for Python3, so:
