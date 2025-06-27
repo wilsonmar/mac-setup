@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-# git commit -m "v038 + ssha : aliases.sh"
+# changedate: "2025-06-26"
+# git commit -m "v039 + gxp :aliases.sh"
 #
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -319,6 +320,11 @@ alias gss='git stash show'
 alias gtf='git ls-tree --full-tree --name-only -r HEAD'
 alias grx="rm .git/merge"  # Remove merge
 # https://www.youtube.com/watch?v=YwG8C0jPapE making your own custom git commands (intermediate) by @anthonywritescode (Anthony Sottile)
+function git-add-commit-push(){
+    local input="$1"
+    git add ${input#*:};git commit -m "$1";git push
+}
+alias gxp='git-add-commit-push $1'
 
 
 #### PRIVACY:  see https://wilsonmar.github.io/git-signing/
