@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# gxp "v004 + timings :pre-commit.sh"
+# gxp "v005 + echo line :pre-commit.sh"
 
 # This is from https://github.com/wilsonmar/mac-setup/blob/main/pre-commit.sh
 # Explained at https://wilsonmar.github.io/python-scans
@@ -8,25 +8,29 @@
 
 # At your repo's folder (where its .git is listed):
 # Copy this file to your repo's .git/hooks/pre-commit  # file name without an extension
+# git clone https://github.com/wilsonmar/known-bad
+# cd known-bad
+# # From https://github.com/wilsonmar/mac-setup/blob/main/pre-commit.sh
 # cp ../mac-setup/pre-commit.sh .
 # cp pre-commit.sh .git/hooks/pre-commit
+# ls -al .git/hooks/pre-commit
 # chmod +x .git/hooks/pre-commit
+# # Create condition in error:
 # echo "\n#" >> temp1.py
 # git add temp1.py;git commit -m"test temp1.py"
 
+echo "Running pre-commit.sh from .git/hooks/pre-commit"
+
 START=$(date +%s)
 #START=$(date +%s%3N)  # for millisecond precision
-handle_error() {
+echo_run_stats() {
    #END=$(date +%s%3N)
    END=$(date +%s)
    DURATION=$((END - START))
-   echo "Elapsed Time: $DURATION milliseconds"
+   echo -e "\nElapsed Time: $DURATION seconds"
    exit 1
 }
-trap 'handle_error' ERR
-
-echo "Running pre-commit.sh from .git/hooks/pre-commit"
-
+trap 'echo_run_stats' ERR
 set -eo pipefail
 
 # Install the latest: 
@@ -62,9 +66,6 @@ if [[ -n "$PY_FILES" ]]; then
    #fi
 fi
 
-END=$(date +%s)
-DURATION=$((END - START))
-echo "pre-commit.sh elapsed Time: $DURATION seconds"
-
-
 # brew install snyk-cli
+
+echo_run_stats
