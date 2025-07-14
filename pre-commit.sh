@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# gxp "v005 + echo line :pre-commit.sh"
+# gxp "v006 + safety scan can't register :pre-commit.sh"
 
 # This is from https://github.com/wilsonmar/mac-setup/blob/main/pre-commit.sh
 # Explained at https://wilsonmar.github.io/python-scans
@@ -37,12 +37,12 @@ set -eo pipefail
 # if ! command -v flake8 >/dev/null; then  # command not found, so:
 # brew install ggshield
 
-brew install safety
-safety check
-if [ $? -ne 0 ]; then
-    echo "Safety found vulnerabilities found. Commit aborted."
-    exit 1
-fi
+#brew install safety
+#safety scan
+#if [ $? -ne 0 ]; then
+#    echo "Safety scan found vulnerabilities found. Commit aborted."
+#    exit 1
+#fi
 
 # Find all staged Python files:
 CHANGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR)
