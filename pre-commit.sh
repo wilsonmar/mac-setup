@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# gxp "v001 + new :pre-commit.sh"
+# gxp "v002 rm exit :pre-commit.sh"
 
 # This is from https://github.com/wilsonmar/mac-setup/blob/main/pre-commit.sh
 # to scan only files which have been git commit applied.
@@ -13,7 +13,6 @@
 # git add temp1.py;git commit -m"test temp1.py"
 
 echo "Running pre-commit.sh from .git/hooks/pre-commit"
-exit
 
 set -eo pipefail
 
