@@ -1,9 +1,13 @@
 #!/usr/bin/env sh
-# This is https://github.com/wilsonmar/mac-setup/blob/main/dotfiles.zsh
+# lastchange: git commit -m"v003 + driesvints :mydotfile.zsh"
+# This is https://github.com/wilsonmar/mac-setup/blob/main/mydotfile.zsh
 # Use of this is file is explained at https://wilsonmar.github.io/dotfiles
 
 # All the below is equivalent to clicking the Apple logo at the upper-left, then System Settings.
-   # https://www.youtube.com/watch?v=Kft9Y33oc2I => Mac Settings That ACTUALLY Make A Difference 
+   # https://www.youtube.com/watch?v=Kft9Y33oc2I => Mac Settings That ACTUALLY Make A Difference
+
+# At the bottom of this file are configurations for commonly installed apps:
+   # See https://github.com/driesvints/dotfiles/blob/main/.macos
 
 # Wi-Fi
 # Bluetooth
@@ -16,7 +20,7 @@
    # Firewall enable, Options, Enable stealth mode.
 # Notifications
 # Sound
-    # Mute Startup Sound - just before logout, and restores the previous volume just after login. 
+    # Mute Startup Sound - just before logout, and restores the previous volume just after login.
    sudo defaults write com.apple.loginwindow LogoutHook "osascript -e 'set volume with output muted'"
    sudo defaults write com.apple.loginwindow LoginHook "osascript -e 'set volume without output muted'"
 # Focus
@@ -43,7 +47,7 @@
       # - Google Chrome
       # - Firefox https://www.youtube.com/watch?v=NH4DdXC0RFw
       # https://github.com/ulwlu/dotfiles/blob/master/system/macos.zsh has grep error.
-      
+
       # Explained in https://wilsonmar.github.io/dotfiles/#Dock
       # Dock (icon) Size: "smallish"
       defaults write com.apple.dock tilesize -int 36;
@@ -52,17 +56,17 @@
       defaults write com.apple.dock iconsize -integer 3
 
       # (Dock) Position on screen: left, right, or bottom (the default):
-      defaults write com.apple.dock orientation right; 
+      defaults write com.apple.dock orientation right;
 
       # Automatically hide and show the Dock:
-      defaults write com.apple.dock autohide-delay -float 0; 
+      defaults write com.apple.dock autohide-delay -float 0;
 
       # remove Dock show delay:
-      defaults write com.apple.dock autohide -bool true; 
+      defaults write com.apple.dock autohide -bool true;
       defaults write com.apple.dock autohide-time-modifier -float 0;
 
       # remove icons in Dock:
-      defaults write com.apple.dock persistent-apps -array; 
+      defaults write com.apple.dock persistent-apps -array;
 
       # Show active apps in Dock as translucent:
       defaults write com.apple.Dock show-hidden -bool true;
@@ -108,7 +112,7 @@
    # Open a Finder window by clicking the Finder icon in the Dock.
    # Explained in https://wilsonmar.github.io/dotfiles/#Extensions
       # Show all filename extensions:
-      defaults write NSGlobalDomain AppleShowAllExtensions -bool true; 
+      defaults write NSGlobalDomain AppleShowAllExtensions -bool true;
       defaults write -g AppleShowAllExtensions -bool true
       # Show hidden files:
       defaults write com.apple.finder AppleShowAllFiles YES;

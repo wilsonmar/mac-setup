@@ -514,10 +514,11 @@ fi
 # export PATH="$PATH:$HOME/Library/Caches/AmlWorkbench/Python/bin"
 # export PATH="$PATH:/usr/local/anaconda3/bin"  # for conda
 
-if command -v uv >/dev/null; then
-   # For uv python install 3.12.10 --preview --default
-   export PATH="$HOME/.local/bin:$PATH"
-fi
+# 2025-05-25:
+#if command -v uv >/dev/null; then
+#   # For uv python install 3.12.10 --preview --default
+#   export PATH="$HOME/.local/bin:$PATH"
+#fi
 
 #### See https://wilsonmar.github.io/python-install/#pyenv-install
 if [ -d "$HOME/.pyenv" ]; then  # folder was created for Python3, so:

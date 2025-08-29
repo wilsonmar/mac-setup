@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-# changedate: "2025-06-26"
-# git commit -m "v039 + gxp :aliases.sh"
+# gxp "25-08-29 v041 bees=Beekeeper Studio.app :aliases.sh"
 #
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -179,7 +178,6 @@ alias ezs="$EDITOR ~/.zshrc"   # for Zsh
 alias szs='source ~/.zshrc'
 alias sshconf="$EDITOR ~/.ssh/config"
 alias ssha='eval $(ssh-agent) && ssh-add'
-
 #alias ohmyzsh="$EDITOR ~/.oh-my-zsh"
 
 # alias atom was removed from market by GitHub.
@@ -203,6 +201,10 @@ alias subl='open -a "/Applications/Sublime Text.app"'
 if [ -d "/Applications/Visual Studio Code.app" ]; then
    alias xcode='open -a /Applications/Visual Studio Code.app'
 fi
+
+alias db4s='open "$HOME/Applications/DB Browser for SQLite.app"'
+# https://docs.beekeeperstudio.io/getting-started-guide/
+alias bees='open "/Applications/Beekeeper Studio.app"'
 
 ##### CLOUD:
 alias awscreds="$EDITOR ~/.aws/credentials"

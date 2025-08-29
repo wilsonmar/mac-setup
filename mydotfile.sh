@@ -5,10 +5,26 @@
 #
 # Use of this is file is explained at https://wilsonmar.github.io/dotfiles
 
-# All the below is equivalent to clicking the Apple logo at the upper-left, then System Settings
-   # or shift + option + command + P
+# At the bottom of this file are configurations for commonly installed apps:
+   # Thanks to Mathias Bynens! ~/.macos — https://mths.be/macos
+   # See https://github.com/driesvints/dotfiles/blob/main/.macos
 
-# See https://www.youtube.com/watch?v=Kft9Y33oc2I => Mac Settings That ACTUALLY Make A Difference
+#### Preparations:
+
+# Close any open System Preferences panes, to prevent them from overriding
+# settings we’re about to change:
+osascript -e 'tell application "System Preferences" to quit'
+
+# Ask for the administrator password upfront:
+sudo -v
+
+# Keep-alive: update existing `sudo` time stamp until this has finished:
+# while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+
+
+#### Executing the CLI commands below is equivalent to clicking the Apple logo at the upper-left, then System Settings
+   # or shift + option + command + P
+   # See https://www.youtube.com/watch?v=Kft9Y33oc2I => Mac Settings That ACTUALLY Make A Difference
 
 # Wi-Fi
 # Bluetooth
@@ -27,12 +43,14 @@
    echo "Appearance: AppleInterfaceStyle –string "Dark" "
    defaults write AppleInterfaceStyle –string "Dark";
 
-    # Sidebar icon size - Small
-    defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 1
-    # - Medium (the default)
-    # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 2
-    # - Large
-    # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 3
+   # Set sidebar icon size to Small (2=Medium):
+   defaults write NSGlobalDomain NSTableViewDefaultSizeMode -int 1
+   # Sidebar icon size - Small
+   defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 1
+   # - Medium (the default)
+   # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 2
+   # - Large
+   # defaults write .GlobalPreferences NSTableViewDefaultSizeMode -int 3
 # Siri
 # Control Center
 # Desktop & Dock
@@ -80,6 +98,9 @@
     # Mute Startup Sound - just before logout, and restores the previous volume just after login.
    sudo defaults write com.apple.loginwindow LogoutHook "osascript -e 'set volume with output muted'"
    sudo defaults write com.apple.loginwindow LoginHook "osascript -e 'set volume without output muted'"
+
+   # Disable sound effects on boot:
+   sudo nvram SystemAudioVolume=" "
 # Focus
 # Screen Time
 
@@ -120,6 +141,11 @@
       defaults write -g com.apple.trackpad.scaling 3.0
       # FIX: Output: 5.0\013
 # Printers & Scanners
+   # Expand print panel by default:
+   defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
+   defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
+   # Automatically quit printer app once the print jobs complete:
+   defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
 
 
 # GPG Suite
@@ -146,4 +172,4 @@
 # END
 # Passwords
    # For Sequoia after after, Passwords settings moved to a separate app.
-   # (https://www.youtube.com/watch?v=5A6-htFEyTQ) 
+   # (https://www.youtube.com/watch?v=5A6-htFEyTQ)
