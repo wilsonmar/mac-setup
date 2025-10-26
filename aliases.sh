@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-# gxp "25-08-29 v042 sqlitebrowser url :aliases.sh"
+lastchange="25-10-25 v045 docker aliases :aliases.sh"
+echo "$lastchange"
+# cp aliases.sh ~  # then reboot or source ~/aliases.sh
 #
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
@@ -144,7 +146,6 @@ alias listening="lsof -nP +c 15 | grep LISTEN"
 alias randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
 # sudo ifconfig en0 ether "{RANDMAC}"
 
-
 #### GUI APPS:
 if [ "${OS_TYPE}" = "Darwin" ]; then
    alias calc='open -a "/System/Applications/Calculator.app"'
@@ -191,7 +192,8 @@ alias ssha='eval $(ssh-agent) && ssh-add'
 # alias sts='open -a "/Applications/STS.app"'
 # See https://wilsonmar.github.io/dotfiles/#SublimeText.app
 alias subl='open -a "/Applications/Sublime Text.app"'
-# alias textedit='open -a "/Applications/TextEdit.app"'
+# alias warpe='open -a "/Applications/Warp.app"'
+alias textedit='open -a "/Applications/TextEdit.app"'
 # alias sourcetree='open -a "$HOME/Applications/Sourcetree.app"'
 # alias vi="nvim"
 # alias vim="nvim"
@@ -380,27 +382,9 @@ alias bdy="boundary"
 # sentinel   # from Hashicorp
 # alias falcon='open -a "/Applications/Falcon.app"'  # controlled by HC Infosec
 
-#### DOCKER:  see https://wilsonmar.github.io/docker
-# Because docker is both a cask and CLI formula:
-# Do not define  alias docker='open -a "$HOME/Applications/Docker.app"'
-alias ddk="killall com.docker.osx.hyperkit.linux"   # docker restart
-alias dps="docker ps"                               # docker processes list
-# CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
-alias dports='docker ps --format "table {{.Names}}\t{{.Ports}}"'
-alias dcmds='docker ps --format "table {{.Names}}\t{{.Commands}}"'
-
-alias dcl="docker container ls -aq"                 # docker list active container
-alias dcp="docker container prune --force"          # Remove all stopped containers
-# Total reclaimed space: 0B
-# To avoid "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
-if [ -f "/var/run/docker.pid" ]; then  # NOT found:
-   alias dsa="docker stop $(docker container ls -aq )" # docker stop active container
-   alias dpx="docker rm -v $(docker ps -aq -f status=exited)"  # Remove stopped containers
-fi
-alias dcu="docker compose up"
-alias dcp="docker compose ps"
-alias dcd="docker compose down -v"
-# docker inspect $CONTAINER_NAME
+#     catn filename to show text file without comment (#) lines:
+alias catn="grep -Ev '''^(#|$)'''"
+alias keys="catn $HOME/aliases.sh"
 
 # TODO: If Linux for: cat myfile.txt | pbcopy
 # First: sudo apt-get install xclip -y
@@ -413,37 +397,84 @@ alias dcd="docker compose down -v"
 # alias pbcopy='xclip -selection clipboard'
 # alias pbpaste='xclip -selection clipboard -o'
 
-#### See https://wilsonmar.github.io/kubernetes
-alias kubec="$EDITOR ~/.kube/conf"
-# FIXME: complete -F __start_kubectl k
-alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
-# See https://wilsonmar.github.io/kubernetes-operators/#KeyboardAlias
-alias o="operator-sdk"
-# From https://github.com/sidd-harth/kubernetes
-alias k="kubectl"
-# Show current context and namespace details:
-alias kc='k config get-contexts'
-# Change context to use namespace: kn default:
-alias kn='k config set-context --current --namespace '
-alias kd='k -o yaml --dry-run=client'
-alias kall='k get all -o wide --show-labels'
+#### DOCKER:  see https://wilsonmar.github.io/docker
+# Because docker is both a cask and CLI formula:
+# Do not define alias docker='open -a "$HOME/Applications/Docker.app"'
 
-#if command -v docker >/dev/null; then  # installed in /usr/local/bin/docker
-#   echo "Docker installed, so ..."
-#   alias dockx="docker stop $(docker ps -a -q);docker rm -f $(docker ps -a -q)"
-#fi
+if ! command -v docker >/dev/null; then  # installed in /usr/local/bin/docker
+   echo "Docker NOT installed ..."
+else
+   echo "Docker CLI is installed ..."
+   if docker info > /dev/null 2>&1; then
+      echo "Docker Desktop is running ... dockx / docker desktop stop"
+      alias dockx="docker stop $(docker ps -a -q);docker rm -f $(docker ps -a -q)"
+      alias dps="docker ps"                               # docker processes list
+      # CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+      alias dports='docker ps --format "table {{.Names}}\t{{.Ports}}"'
+      alias dcmds='docker ps --format "table {{.Names}}\t{{.Commands}}"'
+      alias dcl="docker container ls -aq"                 # docker list active container
+      alias dcp="docker container prune --force"          # Remove all stopped containers
+      # Total reclaimed space: 0B
+      # To avoid "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+      if [ -f "/var/run/docker.pid" ]; then  # NOT found:
+         alias dsa="docker stop $(docker container ls -aq )" # docker stop active container
+         alias dpx="docker rm -v $(docker ps -aq -f status=exited)"  # Remove stopped containers
+      fi
+      alias dcu="docker compose up"
+      alias dcp="docker compose ps"
+      alias dcd="docker compose down -v"
+   else
+      echo "Docker Desktop is NOT running ... docker desktop start"
+      alias ddk="killall com.docker.osx.hyperkit.linux"   # docker restart
+   fi
+fi
+# docker inspect $CONTAINER_NAME
 # See https://github.com/ysmike/dotfiles/blob/master/bash/.aliases
 # More: https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html
 
-#     catn filename to show text file without comment (#) lines:
-alias catn="grep -Ev '''^(#|$)'''"
-alias keys="catn $HOME/aliases.sh"
+#### See https://wilsonmar.github.io/kubernetes
+alias kubec="$EDITOR ~/.kube/conf"
 
+if command -v minikube >/dev/null; then  # installed:
+   response=$( minikube status )
+   search="kubelet: Running"
+   if [[ "$response" == *"$search"* ]]; then
+      echo "kubelet: Running!"
+      export use_minikube="True"
+   else
+      export use_minikube="False"
+      echo "kubelet: NOT Running! Run mk8s"
+      alias mk8s="minikube delete;minikube start --driver=docker --memory=4096"
+      alias k="kubectl"
+   fi
+else
+   export use_minikube="False"
+   echo "minikube not installed!"
+fi
+
+if [[ "$use_minikube" == "True" ]]; then
+   alias k="minikube kubectl -- $1"
+else
+   echo "minikube not being used!..."
+   # From https://github.com/sidd-harth/kubernetes
+   alias k="kubectl"
+   # Show current context and namespace details:
+   alias kc='k config get-contexts'
+   # Change context to use namespace: kn default:
+   alias kn='k config set-context --current --namespace '
+   alias kd='k -o yaml --dry-run=client'
+   alias kall='k get all -o wide --show-labels'
+   # See https://wilsonmar.github.io/kubernetes-operators/#KeyboardAlias
+   alias o="operator-sdk"
+fi
+
+
+#### See https://wilsonmar.github.io/gcp
    if [ -d "$HOME/.google-cloud-sdk" ]; then   # directory found:
 alias gcs='cd $HOME/.google-cloud-sdk;ls'
    fi
 
-# Defined after creating a folder:
+#### Defined after creating a folder:
 #export PROJECT_FOLDER_NAME="wiz"  # should be blank
 #export PROJECT_FOLDER_PATH="$PROJECT_FOLDER_BASE/$PROJECT_FOLDER_NAME"
 #export PROJECT_FOLDER_BASE_DEFAULT="$HOME/Projects"
@@ -482,12 +513,11 @@ else
 
    alias wmbn='cd $HOME/bomonike/bomonike.github.io'
    alias wmh='cd $HOME/bomonike/hackproof'
-
 fi
 
-   # For more Mac aliases, see https://gist.github.com/natelandau/10654137
-      # described at https://natelandau.com/my-mac-osx-bash_profile/
-      # https://github.com/clvv/fasd
-      # Not using alias -s  # suffix alias at https://github.com/seebi/zshrc/blob/master/aliases.sh
+# For more Mac aliases, see https://gist.github.com/natelandau/10654137
+   # described at https://natelandau.com/my-mac-osx-bash_profile/
+   # https://github.com/clvv/fasd
+   # Not using alias -s  # suffix alias at https://github.com/seebi/zshrc/blob/master/aliases.sh
 
 # END
