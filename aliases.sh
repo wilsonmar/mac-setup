@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-lastchange="25-10-25 v045 docker aliases :aliases.sh"
+lastchange="25-10-26 v046 mkd docker aliases :aliases.sh"
 echo "$lastchange"
 # cp aliases.sh ~  # then reboot or source ~/aliases.sh
 #
@@ -453,11 +453,19 @@ else
 fi
 
 if [[ "$use_minikube" == "True" ]]; then
+       # kstr also starts Docker:
+   alias kstr="minikube start"
+   alias kstp="minikube stop"
+       # kgp = Get Processes (all of them):
+   alias kgp="minikube kubectl -- get po -A"
    alias k="minikube kubectl -- $1"
+   alias mkd="minikube dashboard"
+      # http://127.0.0.1:49392/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/#/workloads?namespace=default
 else
    echo "minikube not being used!..."
    # From https://github.com/sidd-harth/kubernetes
    alias k="kubectl"
+   alias kgp="kubectl -- get po -A"
    # Show current context and namespace details:
    alias kc='k config get-contexts'
    # Change context to use namespace: kn default:
