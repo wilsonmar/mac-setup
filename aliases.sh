@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-lastchange="25-10-26 v046 mkd docker aliases :aliases.sh"
+lastchange="26-02-03 v047 neofetch :aliases.sh"
 echo "$lastchange"
 # cp aliases.sh ~  # then reboot or source ~/aliases.sh
 #
@@ -98,6 +98,7 @@ alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
 #fi
 
 ##### Terminal
+alias neofetch='fastfetch'
 # terminal.app
 # hyper is in /usr/local/bin
 # alias iterm='open -a "/Applications/iTerm.app"'
