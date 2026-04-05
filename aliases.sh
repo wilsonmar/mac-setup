@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-lastchange="26-02-03 v047 neofetch :aliases.sh"
+lastchange="26-04-05 v049 git-add-commit-push from colon to @aliases.sh"
 echo "$lastchange"
 # cp aliases.sh ~  # then reboot or source ~/aliases.sh
 #
@@ -98,7 +98,7 @@ alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
 #fi
 
 ##### Terminal
-alias neofetch='fastfetch'
+alias neofetch='fastfetch &1'
 # terminal.app
 # hyper is in /usr/local/bin
 # alias iterm='open -a "/Applications/iTerm.app"'
@@ -327,7 +327,8 @@ alias grx="rm .git/merge"  # Remove merge
 # https://www.youtube.com/watch?v=YwG8C0jPapE making your own custom git commands (intermediate) by @anthonywritescode (Anthony Sottile)
 function git-add-commit-push(){
     local input="$1"
-    git add ${input#*:};git commit -m "$1";git push
+    # ${input#*@} means extract characters followed by @ char:
+    git add ${input#*@};git commit -m "$1";git push
 }
 alias gxp='git-add-commit-push $1'
 
