@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-lastchange="26-05-10 v050 esa tree @aliases.sh"
+lastchange="26-05-10 v051 esa tree $1 parms @aliases.sh"
 echo "$lastchange"
 # cp aliases.sh ~  # then reboot or source ~/aliases.sh
 #
@@ -57,8 +57,7 @@ if ! command -v eza >/dev/null; then
    brew install eza
 fi
 alias lsx="eza --group-directories-first --group --color=always --classify --binary"
-alias tree="eza $1"
-alias treeb="eza --tree --group-directories-first --ignore-glob 'node_modules|bower_components|.git'"
+alias tree="eza $1 --tree --group-directories-first --ignore-glob 'node_modules|bower_components|.git'"
 
 alias lf="ls -p | more"      # list folders only
 alias dir='ls -alrT'         # for windows habits
