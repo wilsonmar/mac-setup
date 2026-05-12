@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-lastchange="26-05-10 v051 esa tree $1 parms @aliases.sh"
+lastchange="26-05-12 v052 umd @aliases.sh"
 echo "$lastchange"
-# cp aliases.sh ~  # then reboot or source ~/aliases.sh
-#
+# source ~/aliases.sh    # or reboot
+# cp aliases.sh ~/github-wilsonmar/mac-setup/aliases.sh
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
 # on both MacOS and git bash on Windows.
 
@@ -121,6 +121,8 @@ elif [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
    # Last 50 files updated anywhere:
    alias f50='stat -f "%m%t%Sm %N" /tmp/* | sort -rn | head -50 | cut -f2- 2>/dev/null'
 fi
+# umd = Unmount Drives:
+alias umd="osascript -e 'tell application "Finder" to eject (every disk whose ejectable is true)'"
 
 #### NETWORKING:
 #alias myip="ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2"
