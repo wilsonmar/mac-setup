@@ -2,13 +2,14 @@
 # This is brewin.sh from https://github.com/wilsonmar/mac-setup/blob/main/brewin.sh
 # It wraps `brew install` to capture and save Homebrew-downloaded bottle files locally.
 # Techniques for shell scripting used here are explained at https://wilsonmar.github.io/shell-scripts
+# This was created entirely by Warp.CLI Oz without human editing.
 #
 # HOW IT WORKS:
 #   1. Snapshots $(brew --cache)/downloads/ before any download.
 #   2. Runs `brew fetch <pkg>` to pull the bottle into Homebrew's cache.
 #   3. Diffs the cache (before vs. after) to identify newly downloaded files.
 #      Both the bottle tarball (*.bottle.tar.gz) and manifest JSON are captured.
-#   4. Copies new files to SAVE_DIR (default: ~/brew-bottles).
+#   4. Copies new files to SAVE_DIR (default: ~/brewin).
 #   5. Runs `brew install` unless -fetch (download-only) is set.
 #
 # USAGE:
@@ -51,14 +52,14 @@ args_prompt() {
    echo "   -q              quiet (suppress section headings)"
    echo " "
    echo "   -pkg \"wget\"     package name to fetch/install (or supply as positional arg)"
-   echo "   -savedir \"path\" folder to save downloaded bottles (default: ~/brew-bottles)"
+   echo "   -savedir \"path\" folder to save downloaded bottles (default: ~/brewin)"
    echo "   -fetch          download only — do NOT install"
    echo "   -deps           also fetch/save dependency bottles"
    echo "   -list           list bottles already saved in savedir, then exit"
    echo " "
    echo "USAGE EXAMPLES:"
    echo "  ./brewin.sh wget"
-   echo "  ./brewin.sh -pkg wget -savedir ~/offline-bottles -v"
+   echo "./brewin.sh -pkg wget -savedir ~/offline-bottles -v  # custom dir"
    echo "  ./brewin.sh -pkg wget -fetch          # download only"
    echo "  ./brewin.sh -pkg wget -deps -v        # include deps"
    echo "  ./brewin.sh -list                     # show saved bottles"
@@ -72,7 +73,7 @@ usage_examples() {
    echo "EXTENDED USAGE EXAMPLES: ${SCRIPT_VERSION}"
    echo " "
    echo "# --- Basic install & save ---"
-   echo "./brewin.sh wget                          # fetch+install wget; save bottle to ~/brew-bottles"
+   echo "./brewin.sh wget                          # fetch+install wget; save bottle to ~/brewin"
    echo "./brewin.sh -pkg wget -v                  # same with verbose output"
    echo "./brewin.sh -pkg wget -q                  # same, quiet (no section headings)"
    echo " "
@@ -90,7 +91,7 @@ usage_examples() {
    echo "done"
    echo " "
    echo "# --- Inspect saved bottles ---"
-   echo "./brewin.sh -list                         # list bottles in ~/brew-bottles"
+   echo "./brewin.sh -list                         # list bottles in ~/brewin"
    echo "./brewin.sh -list -savedir ~/offline-bottles"
    echo " "
    echo "# --- Force re-download of an already-cached bottle ---"
@@ -114,7 +115,7 @@ FETCH_ONLY=false        # -fetch
 INCLUDE_DEPS=false      # -deps
 LIST_SAVED=false        # -list
 PACKAGE_NAME=""         # -pkg or positional
-SAVE_DIR="${HOME}/brew-bottles"   # -savedir
+SAVE_DIR="${HOME}/brewin"   # -savedir
 
 
 ### 04. Color-coded output helpers

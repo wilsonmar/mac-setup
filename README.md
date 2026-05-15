@@ -1053,12 +1053,12 @@ or simply keeping a reproducible cache of versioned binaries.
 ```bash
 chmod +x brewin.sh           # one-time: make executable
 
-./brewin.sh wget             # fetch + install wget; save bottle to ~/brew-bottles
+./brewin.sh wget             # fetch + install wget; save bottle to ~/brewin
 ./brewin.sh -pkg wget -v     # same, with verbose output
 ./brewin.sh -pkg wget -fetch # download only — do NOT install
 ./brewin.sh -pkg wget -deps  # include all dependency bottles
 ./brewin.sh -pkg wget -savedir /Volumes/USB/brew-cache   # save to USB drive
-./brewin.sh -list            # list bottles already saved in ~/brew-bottles
+./brewin.sh -list            # list bottles already saved in ~/brewin
 ./brewin.sh -usage           # show extended usage examples
 ```
 
@@ -1067,7 +1067,7 @@ chmod +x brewin.sh           # one-time: make executable
 | Flag | Description |
 |------|-------------|
 | `-pkg "name"` | Package to fetch/install (or supply as a positional arg) |
-| `-savedir "path"` | Where to save bottles (default: `~/brew-bottles`) |
+| `-savedir "path"` | Where to save bottles (default: `~/brewin`) |
 | `-fetch` | Download only — skip `brew install` |
 | `-deps` | Also fetch and save dependency bottles |
 | `-list` | List previously saved bottles, then exit |
@@ -1077,7 +1077,7 @@ chmod +x brewin.sh           # one-time: make executable
 
 Bottles are saved with their original Homebrew content-hash filenames, e.g.:
 ```
-~/brew-bottles/
+~/brewin/
   0c87f5ac...--tree--2.3.2.arm64_sequoia.bottle.tar.gz
   30c8727a...--tree-2.3.2.bottle_manifest.json
 ```
