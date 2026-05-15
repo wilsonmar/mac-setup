@@ -229,6 +229,7 @@ This summarizes the manual actions to customize the configuration files that con
 1. <a href="#CreateFolders">Create Folders</a>
 
 1. <a href="#Homebrew">Use of Homebrew (brew command)</a>
+1. <a href="#BrewIn">brewin.sh — Save Homebrew Bottle Downloads</a>
 1. <a href="#ForkAndClone">Fork and Clone using the GH CLI</a>
 1. <a href="#AppsInstalled">Apps Installed by mac-setup.env</a>
 1. <a href="#Dotfiles">Configure using AppleScript in a Dotfile</a>
@@ -1032,6 +1033,59 @@ Yes, you can just run brew yourself, one at a time. But logic in the script goes
    <br /><br />
 
 
+
+<a name="BrewIn"></a>
+
+## brewin.sh — Save Homebrew Bottle Downloads
+
+`brewin.sh` wraps `brew install` to capture and keep a local copy of every bottle
+(pre-compiled binary) that Homebrew downloads, before installing it.
+This is useful for offline re-installation, USB transfer to air-gapped machines,
+or simply keeping a reproducible cache of versioned binaries.
+
+**How it works:**
+1. Snapshots `$(brew --cache)/downloads/` before any network activity.
+2. Runs `brew fetch <pkg>` to pull the bottle into Homebrew's cache.
+3. Diffs the cache (before vs. after) to find newly downloaded files.
+4. Copies those files (bottle tarball + manifest JSON) to a local save directory.
+5. Runs `brew install` (skipped with `-fetch` for download-only mode).
+
+```bash
+chmod +x brewin.sh           # one-time: make executable
+
+./brewin.sh wget             # fetch + install wget; save bottle to ~/brew-bottles
+./brewin.sh -pkg wget -v     # same, with verbose output
+./brewin.sh -pkg wget -fetch # download only — do NOT install
+./brewin.sh -pkg wget -deps  # include all dependency bottles
+./brewin.sh -pkg wget -savedir /Volumes/USB/brew-cache   # save to USB drive
+./brewin.sh -list            # list bottles already saved in ~/brew-bottles
+./brewin.sh -usage           # show extended usage examples
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-pkg "name"` | Package to fetch/install (or supply as a positional arg) |
+| `-savedir "path"` | Where to save bottles (default: `~/brew-bottles`) |
+| `-fetch` | Download only — skip `brew install` |
+| `-deps` | Also fetch and save dependency bottles |
+| `-list` | List previously saved bottles, then exit |
+| `-v` / `-vv` | Verbose / very verbose output |
+| `-cont` | Continue despite errors (skip failed copies) |
+| `-x` | Trace every shell command (`set -x`) |
+
+Bottles are saved with their original Homebrew content-hash filenames, e.g.:
+```
+~/brew-bottles/
+  0c87f5ac...--tree--2.3.2.arm64_sequoia.bottle.tar.gz
+  30c8727a...--tree-2.3.2.bottle_manifest.json
+```
+
+To force a re-copy of an already-cached bottle:
+```bash
+brew fetch --force wget && ./brewin.sh -pkg wget -v
+```
 
 <a name="ForkAndClone"></a>
 
