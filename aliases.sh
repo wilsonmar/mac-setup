@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
 #
-lastchange="26-05-12 v053 after cp ali.sh umd @aliases.sh"
-echo "$lastchange"
 # source ~/aliases.sh    # or reboot
 # cp ~/aliases.sh ~/github-wilsonmar/mac-setup/aliases.sh
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
+lastchange="26-05-25 v055 cpt = cisco packet tracer @aliases.sh"
+echo "$lastchange"
 # on both MacOS and git bash on Windows.
 
 # One reason I can jump easily between Debian, Ubuntu, mac because I
@@ -103,15 +103,16 @@ alias keybase='open -a "$HOME/Applications/Keybase.app"'    # Secrets
 #fi
 
 ##### Terminal
+# Display OS, CPU, GPU, RAM, disk, and similar details with ASCII art or themed output:
 alias neofetch='fastfetch &1'
 # terminal.app
 # hyper is in /usr/local/bin
 # alias iterm='open -a "/Applications/iTerm.app"'
 # alias iterm2='open -a "$HOME/Applications/iTerm2.app"'
 
-#### MEMORY:
-alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
-# /proc & /sys folders exist in RAM Used by the kernel to store information on running processes
+#### DEVICES:
+# umd = Unmount Drives:
+alias umd="osascript -e 'tell application \"Finder\" to eject (every disk whose ejectable is true)'"
 
 #### DISKSPACE:
 alias spacefree="du -h | awk 'END{print $1}'"
@@ -121,8 +122,10 @@ elif [ "${OS_TYPE}" = "Darwin" ]; then  # it's on a Mac:
    # Last 50 files updated anywhere:
    alias f50='stat -f "%m%t%Sm %N" /tmp/* | sort -rn | head -50 | cut -f2- 2>/dev/null'
 fi
-# umd = Unmount Drives:
-alias umd="osascript -e 'tell application "Finder" to eject (every disk whose ejectable is true)'"
+
+#### MEMORY:
+alias ramfree="top -l 1 -s 0 | grep PhysMem"  # PhysMem: 30G used (3693M wired), 1993M unused.
+# /proc & /sys folders exist in RAM Used by the kernel to store information on running processes
 
 #### NETWORKING:
 #alias myip="ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2"
@@ -149,7 +152,7 @@ alias wanip4="dig @resolver1.opendns.com ANY myip.opendns.com +short"
 alias ports="lsof -i -n -P | grep TCP"
 alias listening="lsof -nP +c 15 | grep LISTEN"
    # rapportd          596 johndoe    9u     IPv6  0x93d60554f660a3a        0t0                 TCP *:50866 (LISTEN)
-
+alias cpt="open '/Applications/Cisco Packet Tracer 9.0.0/Cisco Packet Tracer 9.0.app'"
 # See https://www.perplexity.ai/search/how-to-assign-P8L9reHhTWWlLUZ9Cj1pHg
 alias randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
 # sudo ifconfig en0 ether "{RANDMAC}"
