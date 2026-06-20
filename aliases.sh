@@ -4,7 +4,7 @@
 # source ~/aliases.sh    # or reboot
 # cp ~/aliases.sh ~/github-wilsonmar/mac-setup/aliases.sh
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
-lastchange="26-05-25 v055 cpt = cisco packet tracer @aliases.sh"
+lastchange="26-06-20 v056 cargo @aliases.sh"
 echo "$lastchange"
 # on both MacOS and git bash on Windows.
 
@@ -348,12 +348,15 @@ alias gsk="gpg --list-secret-keys --keyid-format LONG"
 alias gst="gpg show-ref --tags"
 alias sign='gpg --detach-sign --armor'
 
+#### RUST:  see https://bomonike.github.io/rustlang/
+alias cr="cargo run"             # Rust .rs program file in folder
+alias crv="cargo run --verbose"  # Rust .rs program file in folder
 
 #### PYTHON:  see https://wilsonmar.github.io/python/
 alias python="python3"
 alias pip="pip3"
 # https://virtualenvwrapper.readthedocs.io/en/latest/
-alias cr="cargo run --verbose"  # Rust .rs program file in folder
+
 # conda
 alias envs="conda env list"
 alias venl="conda env list -v -v -v | grep -v '^#' | perl -lane 'print $F[-1]' | xargs /bin/ls -lrtd"
