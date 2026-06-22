@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
-# date: "2025-05-19"
-# git commit -m "v048 + fix uv python install 3.12.10 :.bash_profile"
+
+# Kiro CLI pre block. Keep at the top of this file.
+[[ -f "${HOME}/Library/Application Support/kiro-cli/shell/bash_profile.pre.bash" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/bash_profile.pre.bash"
+
+# After changing ~/.bash_profile : cp ~/.bash_profile $HOME/github-wilsonmar/mac-setup/.
+# git commit -m "26-06-22 v054 + ~/.local/bin PATH :.bash_profile"
 # Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
 
-# This PATH should also be in ~/.zshenv
-PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin
+echo "At ~/.bash_profile to ~/.local/bin"
+
+# Kiro CLI pre block. Keep at the top of this file. (There is a post block at bottom)
+
+# This PATH should also be in both ~/.zshenv & .bash_profile via ~/.bashrc :
+PATH=$HOME/.local/bin:/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin
    # Note colons separate items in $PATH.
+   # $HOME/.local/bin contains downloaded python, python
    # /usr/local/bin & /opt/homebrew do not require sudo, so that's why brew installs pgms there.
       # so should be first in PATH so Homebrew stuff is found first.
    # /usr/bin contains macOS alias, awk, base64, nohup, make, man, perl, pbcopy, sudo, xattr, zip, etc.
@@ -31,12 +40,10 @@ PATH=/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin
    # When you run sudo bash, it starts an nonlogin shell that sources .bashrc instead of .bash_profile.
    # PS1 was exported and so is defined in the new shell, but parse_git_branch is not.
 
-
-
 ### Ensure bash is the shell running (not Zsh):
 RESULT="$0"
 # ps -o comm= -p $$
-if [[ "bash" = *"${RESULT}"* ]]; then
+if [[ "${RESULT}" = *"bash"* ]]; then
   echo "*** $(bash --version | head -n 1)."
 else
   echo "*** Current shell is $RESULT (not bash)!"
@@ -50,6 +57,15 @@ fi
 # Customized from https://github.com/wilsonmar/mac-setup/blob/master/.zshrc
 if [ -f "$HOME/mac-setup.env" ]; then
     source "$HOME/mac-setup.env"
+fi
+#### See https://wilsonmar.github.io/aws-onboarding/
+if command -v aws >/dev/null; then  # found:
+   # From brew install awscli to /opt/homebrew/Cellar/awscli
+   complete -C aws_completer aws
+   # Using AWS_DEFAULT_REGION defined in mac-setup.env:
+   export AWS_DEFAULT_REGION="us-west-2"
+   export EC2_URL="https://${AWS_DEFAULT_REGION}.console.aws.amazon.com/ec2/v2/home?region=${AWS_DEFAULT_REGION}#Instances:sort=instanceId"
+   alias ec2="open ${EC2_URL}"
 fi
 
 
@@ -92,6 +108,8 @@ if [ ! -d "$BREW_OPT" ]; then  # installed:
    mkdir "$BREW_OPT"
 fi
 export PATH="$BREW_OPT:$BREW_OPT/bin:$PATH"
+
+export PATH="$HOME/Applications:/Applications:$PATH"
 
 export CFLAGS="-I$(brew --prefix readline)/include -I$(brew --prefix openssl)/include -I$(xcrun --show-sdk-path)/usr/include"
 export LDFLAGS="-L$(brew --prefix readline)/lib -L$(brew --prefix openssl)/lib"
@@ -244,6 +262,13 @@ complete -W "NSGlobalDomain" defaults;
 complete -o "nospace" -W "Contacts Calendar Dock Finder Mail Safari iTunes SystemUIServer Terminal Twitter" killall;
 
 
+#### See https://wilsonmar.github.io/xcode
+echo "$(xcode-select --version; xcode-select -p; xcodebuild -version)"
+   # xcode-select --version   # xcode-select version 2410.
+   # xcode-select -p          # /Applications/Xcode.app/Contents/Developer
+   # xcodebuild -version      # Xcode 26.3
+                              # Build version 17C529
+
 #### See https://wilsonmar.github.io/ruby-on-apple-mac-osx/
 # No command checking since Ruby was installed by default on Apple macOS:
 if ! command -v rbenv >/dev/null; then  # NOT rbenv 1.3.0
@@ -255,42 +280,50 @@ if ! command -v rbenv >/dev/null; then  # NOT rbenv 1.3.0
    fi
 fi
 
-if [ -d "$HOME/.rvm" ]; then  # Ruby version manager
+# Since RVM and Homebrew can conflict, install RVM using OpenSSL rather than Homebrew:
+# rvm pkg install openssl
+# Then install specific Ruby version using RVM (Ruby version manager):
+if [ -d "$HOME/.rvm" ]; then
+   # rvm --version
    #export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin:${PATH}"
    #[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
    echo "$( ruby --version) with .rvm"  # example: ruby 2.6.1p33 (2019-01-30 revision 66950) [x86_64-darwin18]"
    # OUTPUT: ruby 2.6.10p210 (2022-04-12 revision 67958) [universal.arm64e-darwin24]
-fi
 
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-#if -d "$HOME/.rvm/bin" then
-#   export PATH="$PATH:$HOME/.rvm/bin"
-#fi
+   # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+   #if -d "$HOME/.rvm/bin" then
+   #   export PATH="$PATH:$HOME/.rvm/bin"
+   #fi
+
+   #rvm list known           # see all available versions
+   #rvm list                 # see installed versions   #rvm list
+   #rvm install 3.3.0        # install specific version
+   #rvm use 3.3.0 --default  # set as default
+   #ruby --version           # confirm
+fi
+#export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin"
+#[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+export LC_ALL=en_US.utf-8
+
+#export PATH="$HOME/.rbenv/bin:$PATH"
+#eval "$(rbenv init -)"   # at the end of the file
 
 # added by travis gem for CI/CD:
 #if -f "~/.travis/travis.sh" then
 #   [ -f ~/.travis/travis.sh ] && source ~/.travis/travis.sh
 #fi
 
-#export PATH="$PATH:$HOME/.rvm/gems/ruby-2.3.1/bin"
-#[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-export LC_ALL=en_US.utf-8
-
-
-#export PATH="$HOME/.rbenv/bin:$PATH"
-#eval "$(rbenv init -)"   # at the end of the file
-
 
 #### See https://wilsonmar.github.io/rustlang
 if [ -d "$HOME/.cargo/bin" ]; then
-   export PATH="$HOME/.cargo/bin:$PATH"
+   export PATH="$HOME/.cargo/bin:${PATH}"
 fi
 
 
-#### See https://wilsonmar.github.io/node-install after brew install nodejs
-if [ -d "$HOME/.nvm" ]; then  # Ruby version manager
-   export NVM_DIR="$HOME/.nvm"
-   source "$HOME/.nvm/nvm.sh"  # instead of "$BREW_OPT/nvm/nvm.sh"
+#### See https://wilsonmar.github.io/node-install after brew install nodejs Node Virtual Manager:
+export NVM_DIR="$HOME/.nvm"
+if [ -f "$NVM_DIR/nvm.sh" ]; then  # Ruby version manager
+   source "$NVM_DIR/nvm.sh"  # instead of "$BREW_OPT/nvm/nvm.sh"
    #export PATH=$PATH:$HOME/.nvm/versions/node/v9.11.1/lib/node_modules
    # [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM$
    # [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
@@ -300,17 +333,15 @@ fi
 
 #### Spoof MAC address and hostname at boot => https://www.youtube.com/watch?v=ASXANpr_zX8
 # https://github.com/sunknudsen/privacy-guides/tree/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos
-# TODO: Get first-names.txt from mac-setup repo.
-
-if [ ! -d "/usr/local/sbin/" ]; then
-   mkdir /usr/local/sbin/
-fi
+# Create basedir and download file of fake machine names:
 basedir="/usr/local/sbin"
+if [ ! -d "$basedir" ]; then
+   mkdir "$basedir"
+fi
 if [ ! -f "$basedir/first-names.txt" ]; then
    sudo curl --fail --output "$basedir/first-names.txt" \
       https://raw.githubusercontent.com/sunknudsen/privacy-guides/master/how-to-spoof-mac-address-and-hostname-automatically-at-boot-on-macos/first-names.txt
 fi
-# Spoof computer name
 #first_name=$(sed "$(jot -r 1 1 2048)q;d" "$basedir/first-names.txt" | sed -e 's/[^a-zA-Z]//g')
 #model_name=$(system_profiler SPHardwareDataType | awk '/Model Name/ {$1=$2=""; print $0}' | sed -e 's/^[ ]*//')
 #computer_name="$first_name’s $model_name"
@@ -320,7 +351,10 @@ fi
 #sudo scutil --set HostName "$host_name"
 #echo "Spoofed hostname = $host_name\n"
    # such as "Cristobals-MacBook-Pro"
+
+# Randomize MAC address:
 # randmac="export RANDMAC=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//');echo ${RANDMAC}"
+
 # Spoof MAC address of Wi-Fi interface - see https://www.youtube.com/watch?v=b-8hA5Qa_F8
 mac_address_prefix=$(networksetup -listallhardwareports | awk -v RS= '/en0/{print $NF}' | head -c 8)
 mac_address_suffix=$(openssl rand -hex 3 | sed 's/\(..\)/\1:/g; s/.$//')
@@ -391,17 +425,6 @@ fi
   #fi
 
 
-#### See https://wilsonmar.github.io/aws-onboarding/
-if command -v aws >/dev/null; then  # found:
-   # From brew install awscli to /opt/homebrew/Cellar/awscli
-   complete -C aws_completer aws
-   # Using AWS_DEFAULT_REGION defined in mac-setup.env:
-   export AWS_DEFAULT_REGION="us-west-2"
-   export EC2_URL="https://${AWS_DEFAULT_REGION}.console.aws.amazon.com/ec2/v2/home?region=${AWS_DEFAULT_REGION}#Instances:sort=instanceId"
-   alias ec2="open ${EC2_URL}"
-fi
-
-
 #### See https://wilsonmar.github.io/gcp
 # See https://cloud.google.com/sdk/docs/quickstarts
 # After brew install -cask google-cloud-sdk
@@ -418,11 +441,7 @@ if command -v gcloud >/dev/null; then  # found:
 fi
 
 
-### See https://wilsonmar.github.io/sonar
-#export PATH="$PATH:$HOME/onpath/sonar-scanner/bin"
-
-
-#### for Selenium
+#### for Selenium testing:
 if [ -d "$BREW_PATH/chromedriver" ]; then  # for Selenium
    export PATH="$PATH:/${BREW_PATH}/chromedriver"
 fi
@@ -438,11 +457,11 @@ fi
 
 
 #### See https://wilsonmar/github.io/jmeter-install ::
-#export PATH="/usr/local/Cellar/jmeter/3.3/libexec/bin:$PATH"
-#export JMETER_HOME="/usr/local/Cellar/jmeter/5.4.1/libexec"
-#export ANT_HOME=/usr/local/opt/ant
-#export PATH=$ANT_HOME/bin:$PATH
 if [ -d "/usr/libexec/java_home" ]; then
+   #export PATH="/usr/local/Cellar/jmeter/3.3/libexec/bin:$PATH"
+   #export JMETER_HOME="/usr/local/Cellar/jmeter/5.4.1/libexec"
+   #export ANT_HOME=/usr/local/opt/ant
+   #export PATH=$ANT_HOME/bin:$PATH
    # TODO: Determine version of Java installed
       export CPPFLAGS="-I/usr/local/opt/openjdk@11/include"
       export JAVA_HOME=$(/usr/libexec/java_home -v 11)
@@ -497,11 +516,6 @@ fi
 # alias rv34='/usr/local/Cellar/r/3.4.4/lib/R/bin/R'
 
 
-#### See https://wilsonmar.github.io/airflow
-# PATH=$PATH:~/.local/bin
-# export AIRFLOW_HOME="$HOME/airflow-tutorial"
-
-
 #### See https://wilsonmar.github.io/python-install
 # Configure Python internal string representation to use UCS-2 (2-byte) Unicode encoding instead of UCS-4 (4-byte),
 # For backward comptibility with some older legacy systems:
@@ -514,10 +528,6 @@ fi
 # export PATH="$PATH:$HOME/Library/Caches/AmlWorkbench/Python/bin"
 # export PATH="$PATH:/usr/local/anaconda3/bin"  # for conda
 
-if command -v uv >/dev/null; then
-   # For uv python install 3.12.10 --preview --default
-   export PATH="$HOME/.local/bin:$PATH"
-fi
 
 #### See https://wilsonmar.github.io/python-install/#pyenv-install
 if [ -d "$HOME/.pyenv" ]; then  # folder was created for Python3, so:
@@ -541,7 +551,8 @@ if [ -d "$CONDA_FOLDER/bin/pip3" ]; then  # folder was created:
       eval "$__conda_setup"
    else
       if [ -f "$CONDA_FOLDER/etc/profile.d/conda.sh" ]; then
-         source "$CONDA_FOLDER/etc/profile.d/conda.sh"
+         # source "$CONDA_FOLDER/etc/profile.d/conda.sh"  # commented out by conda initialize
+         echo "commented out!"
       else
          export PATH="$CONDA_FOLDER/bin:$PATH"
       fi
@@ -553,7 +564,6 @@ fi
 
 
 #### See https://wilsonmar.github.io/golang
-# This is a custom path:
 if command -v go >/dev/null; then
    export GOHOME='$HOME/golang1'
    export GOPATH='$HOME/go'
@@ -603,14 +613,6 @@ fi
 #export LIQUIBASE_HOME='/usr/local/opt/liquibase/libexec'
 
 
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-if [ -d "$HOME/.sdkman" ]; then
-   export SDKMAN_DIR="$HOME/.sdkman"
-   [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-fi
-
-
 #### See https://wilsonmar.github.io/macos-install
 # Show aliases keys as reminder:
 source ~/aliases.sh
@@ -622,4 +624,60 @@ source ~/aliases.sh
 # https://github.com/clvv/fasd
 
 
-# END
+# END source "~/.wasmedge/env"
+# export PATH="~/gaianet/bin:$PATH"
+
+if [ -d "~/.safety" ]; then
+   [ -f "~/.safety/.safety_profile" ] && . "~/.safety/.safety_profile"
+fi
+# <<< Safety <<<
+
+# Added by OrbStack: command-line tools and integration
+# This won't be added again if you remove it.
+if [ -d "$HOME/.local/bin" ]; then
+   source ~/.orbstack/shell/init.bash 2>/dev/null || :
+fi
+
+# shellcheck source=path/to/file
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/homebrew/Caskroom/miniconda/base/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh" ]; then
+        . "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/homebrew/Caskroom/miniconda/base/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+. "$HOME/.cargo/env"
+alias python=python3
+
+export ANTIGRAVITY_PATH="~/.antigravity/antigravity/bin"
+if [ -d "$ANTIGRAVITY_PATH" ]; then  # folder was created by brew install antigravity
+   export PATH="$ANTIGRAVITY_PATH:$PATH"
+fi
+if [ -d "$HOME/.sdkman" ]; then
+   export SDKMAN_DIR="$HOME/.sdkman"
+   [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
+
+# Look into these overrides first for https://bomonike.github.io/aws-kiro:
+if [ -d "$HOME/.local/bin" ]; then
+   export PATH="$HOME/.local/bin:$PATH"
+   # For claude
+fi
+
+echo ".bash_profile finished."
+
+. "$HOME/.local/bin/env"
+
+
+# Kiro CLI post block. Keep at the bottom of this file.
+[[ -f "${HOME}/Library/Application Support/kiro-cli/shell/bash_profile.post.bash" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/bash_profile.post.bash"
+export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
+export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
