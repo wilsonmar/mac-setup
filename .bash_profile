@@ -3,17 +3,20 @@
 # Kiro CLI pre block. Keep at the top of this file.
 [[ -f "${HOME}/Library/Application Support/kiro-cli/shell/bash_profile.pre.bash" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/bash_profile.pre.bash"
 
-# After changing ~/.bash_profile : cp ~/.bash_profile $HOME/github-wilsonmar/mac-setup/.
-# git commit -m "26-06-22 v054 + ~/.local/bin PATH :.bash_profile"
+# After changing ~/.bash_profile : cp ~/.bash_profile $HOME/github-wilsonmar/mac-setup/
+export LASTCHANGE="26-06-26 v055 +HOMEBREW_NO_PATH_SHADOW_CHECK @.bash_profile"
+
+echo "At ~/.bash_profile to ~/.local/bin"
+echo "$LASTCHANGE"
+
 # Using .bash_profile intead of Zsh because shellshock scanner doesn't recognize Zsh.
 # This is ~/.bash_profile from template https://github.com/wilsonmar/mac-setup/blob/main/.bash_profile
 # This sets the environment for interactive shells.
 # This file is opened automatically by macOS by default when Bash is used.
 
-echo "At ~/.bash_profile to ~/.local/bin"
-
 # Kiro CLI pre block. Keep at the top of this file. (There is a post block at bottom)
 
+HOMEBREW_NO_PATH_SHADOW_CHECK=1
 # This PATH should also be in both ~/.zshenv & .bash_profile via ~/.bashrc :
 PATH=$HOME/.local/bin:/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/sbin
    # Note colons separate items in $PATH.
