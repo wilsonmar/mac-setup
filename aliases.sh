@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # This is ~/aliases.sh from template https://github.com/wilsonmar/mac-setup/blob/main/aliases.sh
-#
-# source ~/aliases.sh    # or reboot
-# cp ~/aliases.sh ~/github-wilsonmar/mac-setup/aliases.sh
 # Called after mac-setup.sh from ~/.bash_profile for Bash or ~/.zshrc for zsh
-lastchange="26-06-20 v056 cargo @aliases.sh"
-echo "$lastchange"
 # on both MacOS and git bash on Windows.
+
+lastchange="26-06-29 v057 csa css @aliases.sh"
+echo "$lastchange"
+# To make a change:
+#    cd $HOME
+#    source ~/aliases.sh    # or reboot
+#    cp ~/aliases.sh ~/github-wilsonmar/mac-setup/aliases.sh
+#    cd ~/github-wilsonmar/mac-setup
+#    gxp ...
 
 # One reason I can jump easily between Debian, Ubuntu, mac because I
 # have customized keyboard aliases so I use the same command across machines.
@@ -350,7 +354,8 @@ alias sign='gpg --detach-sign --armor'
 
 #### RUST:  see https://bomonike.github.io/rustlang/
 alias cr="cargo run"             # Rust .rs program file in folder
-alias crv="cargo run --verbose"  # Rust .rs program file in folder
+alias csa="clear;cargo clippy --manifest-path Cargo.toml --all -- -D warnings 2>&1"
+alias css="clear;cargo clippy --manifest-path Cargo.toml 2>&1 | grep -E "warning:|error:|Finished" | sort -u"
 
 #### PYTHON:  see https://wilsonmar.github.io/python/
 alias python="python3"
