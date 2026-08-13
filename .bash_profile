@@ -4,7 +4,7 @@
 [[ -f "${HOME}/Library/Application Support/kiro-cli/shell/bash_profile.pre.bash" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/bash_profile.pre.bash"
 
 # After changing ~/.bash_profile : cp ~/.bash_profile $HOME/github-wilsonmar/mac-setup/
-export LASTCHANGE="26-06-26 v055 +HOMEBREW_NO_PATH_SHADOW_CHECK @.bash_profile"
+export LASTCHANGE="26-08-13 v056 +RUSTPATH @.bash_profile"
 
 echo "At ~/.bash_profile to ~/.local/bin"
 echo "$LASTCHANGE"
@@ -319,7 +319,8 @@ export LC_ALL=en_US.utf-8
 
 #### See https://wilsonmar.github.io/rustlang
 if [ -d "$HOME/.cargo/bin" ]; then
-   export PATH="$HOME/.cargo/bin:${PATH}"
+   export RUSTPATH=$HOME/.cargo/bin
+   export PATH=$PATH:$RUSTPATH
 fi
 
 
