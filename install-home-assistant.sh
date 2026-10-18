@@ -1,8 +1,9 @@
 #!/bin/bash
 # install-home-assistant.sh within https://github.com/wilsonmar/mac-setup
-# lastchange: "v001 from new @install-home-assistant.sh"
+# lastchange: "v002 + auto-install xcode, brew, python, uv @install-home-assistant.sh"
 # Based on https://www.perplexity.ai/search/645b66bd-53ba-45b6-b055-d5674b19c5cb
-# This is a Bash script for running on Apple Silicon Mac.
+
+# 2. This is a Bash script for running on Apple Silicon Mac.
 # Your Mac running macOS
 # └── UTM — manages the virtual machine (https://github.com/utmapp/UTM)
 #     └── Home Assistant OS — runs inside the VM
@@ -10,7 +11,8 @@
         
 # This downloads UTM and opens UTM. see https://docs.getutm.app/scripting/reference/
 # This use UTM to create a Home Assistant OS VM (https://www.home-assistant.io/installation/macos/)
-# This installs a background watchdog to keep the VM running, continously. 
+# This installs a background watchdog to keep the VM running continously while you’re logged in. 
+
 # Continuous here means while your macOS account is logged in. 
 # It restarts the VM after login or if the VM stops, but it 
 # cannot run through shutdown, logout, or the FileVault unlock screen after a reboot.
@@ -21,6 +23,8 @@
 # TO RUN this:
 #    chmod +x install-home-assistant.sh
 #    ./install-home-assistant.sh
+
+#### SECTION 01 - Preflight
 
 set -euo pipefail
 umask 077
@@ -37,12 +41,52 @@ LOG_DIR="$HOME/Library/Logs/HomeAssistantUTM"
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 log()  { printf '\n==> %s\n' "$*"; }
 
+# POLICY: Stop running if being run on Linux or any os not macOS Silicon ARM.
 [[ "$(uname -s)" == Darwin ]] || fail "This script requires macOS."
 [[ "$(uname -m)" == arm64 ]] || fail "This script targets Apple Silicon."
 [[ "$EUID" -ne 0 ]] || fail "Run as your normal user, not with sudo."
 
+#### SECTION 02 - Toolchain bootstrap
+
+if ! xcode-select -p >/dev/null 2>&1; then
+    log "Installing Xcode Command Line Tools; accept the macOS dialog"
+    xcode-select --install || true
+    until xcode-select -p >/dev/null 2>&1; do
+        sleep 10
+    done
+fi
+
+# POLICY: Before using brew, ensure the utility is installed and install it if needed.
+ensure_brew() {
+    command -v brew >/dev/null && return
+    log "Installing Homebrew"
+    /bin/bash -c "$(/usr/bin/curl --fail --silent --show-error --location \
+        https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+}
+
+# POLICY: brew install if command -v does not find the module installed
 PYTHON="$(command -v python3 || true)"
-[[ -n "$PYTHON" ]] || fail "Install Python 3 first, then rerun."
+if [[ -z "$PYTHON" ]]; then
+    ensure_brew
+    log "Installing Python 3 with Homebrew"
+    brew install python
+    PYTHON="$(command -v python3 || true)"
+    [[ -n "$PYTHON" ]] || fail "python3 still not found after brew install."
+fi
+# POLICY: After install, check and fail if module is not found.
+
+if ! command -v uv >/dev/null; then
+    ensure_brew
+    log "Installing uv with Homebrew"
+    brew install uv
+    command -v uv >/dev/null || fail "uv still not found after brew install."
+fi
+
+#### SECTION 03 - Find default-route Network interface
+
+# use BRIDGE_IF if you set it. Don't continue if there’s no interface or if the route goes through a VPN (utun*, tun*, tap*). 
+# The VM uses a bridged network so it gets its own LAN address.
 
 # Override when needed: BRIDGE_IF=en0 bash install-home-assistant.sh
 BRIDGE_IF="${BRIDGE_IF:-$(/sbin/route -n get default 2>/dev/null |
@@ -57,6 +101,11 @@ case "$BRIDGE_IF" in
         fail "Default route uses a VPN. Set BRIDGE_IF to your LAN interface."
         ;;
 esac
+
+#### SECTION 04 - Temp workspace and cleanup
+
+# Create a temp directory and an exit trap that unmounts any disk image and deletes the directory. 
+# The download helper is curl with retries and a timeout.
 
 mkdir -p "$STATE" "$LOG_DIR" "$(dirname "$AGENT")"
 WORK="$(mktemp -d)"
@@ -75,7 +124,9 @@ download() {
         --connect-timeout 30 --output "$2" "$1"
 }
 
-# Install UTM without Homebrew or disabling Gatekeeper.
+#### SECTION 05 - Install UTM without Homebrew or disabling Gatekeeper.
+
+# If GUI /Applications/UTM.app is missing, downloads the latest UTM.dmg from GitHub.
 if [[ ! -d /Applications/UTM.app ]]; then
     log "Downloading UTM"
     download \
@@ -104,10 +155,14 @@ if [[ ! -d /Applications/UTM.app ]]; then
     MOUNT=""
 fi
 
+#### SECTION 06 - Open UTM.app using AppleScript
+
 log "Opening UTM; approve macOS automation/network prompts if requested"
+# POLICY: Explicitly specify location of utility open to avoid fakes. 
 /usr/bin/open /Applications/UTM.app
 
-# Reuse an existing VM with this name rather than overwrite its disk.
+#### SECTION 07 - Reuse the existing VM with this name rather than overwrite its disk.
+
 VM_ID="$(/usr/bin/osascript - "$VM_NAME" <<'APPLESCRIPT'
 on run argv
     tell application "UTM"
@@ -124,6 +179,10 @@ end run
 APPLESCRIPT
 )"
 
+#### SECTION 08 - If none is running, fetch the latest Home Assistant OS release metadata from GitHub 
+
+# Pick the generic ARM64 .qcow2.xz image and download it.
+# Check the image file's SHA-256 digest when one is published, and unpacks it with Python.
 if [[ -z "$VM_ID" ]]; then
     log "Finding the latest stable Home Assistant OS ARM64 image"
     download \
@@ -220,6 +279,9 @@ on run argv
 end run
 APPLESCRIPT
 
+#### SECTION 09 - Define watchdog.sh AppleScript to caffeinate every 30 seconds so the Mac stays awake.
+
+# NOTE: /usr/bin/caffeinate is a built-in macOS tool shipped with every macOS install, so it needs no Homebrew or Xcode step.
 cat > "$STATE/watchdog.sh" <<'BASH'
 #!/bin/bash
 set -u
@@ -260,6 +322,8 @@ config = {
 Path(agent).write_bytes(plistlib.dumps(config))
 PY
 
+#### SECTION 10 - Start the VM and load LaunchAgent to the URL it lists
+
 log "Starting VM; approve automation access if prompted"
 /usr/bin/osascript "$STATE/ensure-running.applescript" "$VM_ID"
 
@@ -275,3 +339,5 @@ printf 'Wait for Home Assistant to finish its first boot, then open:\n'
 printf '  http://homeassistant.local:8123\n'
 printf 'If that does not resolve, use the VM IP displayed in UTM.\n'
 printf 'Watchdog logs: %s\n' "$LOG_DIR"
+
+# WARNING: The watchdog only works while you’re logged in. It won’t survive shutdown, logout, or the FileVault unlock screen after a reboot.
